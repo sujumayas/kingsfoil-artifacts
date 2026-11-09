@@ -1,0 +1,84 @@
+<!--FIG biome-->
+<figure class="fig" data-demo="biome" id="fig-biome">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Climate → biome: drag a point across temperature and moisture</h4></div>
+  <div class="duo">
+    <div><div class="stage tm" tabindex="0" aria-label="Temperature by moisture chart; drag or use the arrow keys to move the point"><canvas width="120" height="120" aria-hidden="true"></canvas><svg class="ovl" viewBox="0 0 240 240" aria-hidden="true"></svg></div></div>
+    <div><div class="stage"><canvas width="160" height="96" aria-label="A live mini forest of the biome under the point"></canvas></div>
+      <div class="ctl">
+        <div class="seg" data-seg="mode" role="group" aria-label="Lookup"><button type="button" class="on" data-v="sandbox">Sandbox table</button><button type="button" data-v="redblob">Red Blob (e, m)</button><button type="button" data-v="luanti">Luanti points</button></div>
+        <div class="seg" data-seg="season" role="group" aria-label="Season"><button type="button" data-v="0">Spring</button><button type="button" class="on" data-v="1">Summer</button><button type="button" data-v="2">Autumn</button><button type="button" data-v="3">Winter</button></div>
+        <button type="button" class="btn ghost" data-b="reseed">New seed</button>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Two smooth noises give every point a temperature and a moisture; a small table turns the pair into a forest type with its own density, undergrowth and species weights. <b>Sandbox table</b> is the compare chain in B1 [I, Sandbox]. <b>Red Blob</b> uses elevation and moisture thresholds (taiga above e 0.6 and m 0.66, and so on) [V, S185]. <b>Luanti</b> keeps four (heat, humidity) points and the nearest wins: taiga 25/70, deciduous 60/68, rainforest 86/65, savanna 89/42 [V, S166]. Minecraft's 5 × 5 levels with a closest-biome fallback work the same way [V, S52]. Hard thresholds give straight seams, so blend near the edges [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG groves-->
+<figure class="fig" data-demo="groves" id="fig-groves">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Species weights × slow noise: from salt-and-pepper to groves</h4><span class="illu">Mixed-forest recipe; Hopkins sample illustrative</span></div>
+  <div class="duo wide-l">
+    <div class="stage"><canvas width="192" height="112" aria-label="A mixed forest whose species are picked by weight times each species' own slow noise"></canvas></div>
+    <div><div class="mass-bars" data-bars style="grid-template-columns:minmax(0,1fr)"></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Noise contrast <input type="range" data-k="con" min="0" max="100" value="100"><output data-o="con"></output></label>
+    <label class="rng">Noise scale <input type="range" data-k="sc" min="30" max="180" value="90"><output data-o="sc"></output></label>
+    <div class="seg" data-seg="view" role="group" aria-label="Draw as"><button type="button" class="on" data-v="trees">Trees</button><button type="button" data-v="dots">Dots</button><button type="button" data-v="noise">Noise of the selected species</button></div>
+    <button type="button" class="btn ghost" data-b="reseed">New seed</button>
+  </div>
+  <figcaption>The Mixed recipe is Pine 3.5, Oak 2.5, Birch 2, Spruce 1, Maple 1 [I, Sandbox]. At 0 % contrast every tree rolls the same dice and the mix is speckled. At 100 % each weight is multiplied by <code>0.3 + 1.4·noise(x/90 + i·13, y/90 + i·7)</code>, the Sandbox rule [I], so a species dominates where its own noise is high. Click a species to view its noise field. <b>H</b> is a Hopkins index (sum of squared random-point-to-plant distances over plant-to-nearest-plant distances), which Lane &amp; Prusinkiewicz use: ≈ 1 random, &lt; 1 regular, &gt; 1 clustered [V, S211]; it is computed on a small sample here. Too much contrast gives monocultures with hard seams [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG poisson-->
+<figure class="fig" data-demo="poisson" id="fig-poisson">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four ways to scatter trunks, and how often they collide</h4><span class="illu">96×96 px panels</span></div>
+  <div class="quad4">
+    <div><div class="stage"><canvas width="96" height="96" aria-label="White noise: the same number of points as Bridson, placed uniformly at random"></canvas><span class="tagl">White noise</span><div class="hud" data-hud="white"></div></div></div>
+    <div><div class="stage"><canvas width="96" height="96" aria-label="Jittered grid: one candidate per cell"></canvas><span class="tagl">Jittered grid</span><div class="hud" data-hud="jitter"></div></div></div>
+    <div><div class="stage"><canvas width="96" height="96" aria-label="Bridson Poisson-disk sampling, animated"></canvas><span class="tagl">Bridson</span><div class="hud" data-hud="bridson"></div></div></div>
+    <div><div class="stage"><canvas width="96" height="96" aria-label="Local maxima of high-frequency noise"></canvas><span class="tagl">Local-max noise</span><div class="hud" data-hud="localmax"></div></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Radius r <input type="range" data-k="r" min="5" max="14" value="9"><output data-o="r"></output></label>
+    <label class="rng">Bridson k <input type="range" data-k="k" min="1" max="30" value="24"><output data-o="k"></output></label>
+    <label class="rng">Jitter keep <input type="range" data-k="keep" min="20" max="100" value="80"><output data-o="keep"></output></label>
+    <label><input type="checkbox" data-k="disc" checked> Show r/2 discs</label>
+    <button type="button" class="btn" data-b="again">Run again</button>
+  </div>
+  <figcaption><b>Bridson</b> keeps a grid of cells r/√2 wide, so each holds at most one sample. From a random active sample (gold) it tries up to k candidates in the annulus [r, 2r] and accepts the first that is at least r from all neighbours; otherwise the sample retires. It is O(N) [V, S201]; the Sandbox uses r 9 px and k 24 [I, Sandbox]. The <b>jittered grid</b> needs no neighbours, so any chunk can be generated alone, which suits an MMO [I]. <b>Local maxima</b> of high-frequency noise give a tree where noise peaks within a radius, as Red Blob describes [V, S185]. <b>White noise</b> (what Minecraft does per chunk, before its thinning filters) overlaps all the time [V, S51]. With r/2 discs on, a valid blue-noise set never shows overlapping discs.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG edges-->
+<figure class="fig" data-demo="edges" id="fig-edges">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Clearings, a trail, a sunlit edge and an undergrowth pass</h4><span class="illu">16 px tiles; thresholds illustrative</span></div>
+  <div class="stage"><canvas width="224" height="112" aria-label="A deciduous forest built with optional clearings, path rejection, an edge density ramp and an undergrowth pass"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="clear" checked> Clearings (smoothstep of fbm)</label>
+    <label><input type="checkbox" data-k="path" checked> Trail</label>
+    <label><input type="checkbox" data-k="crown" checked> Test the trail against crown radius</label>
+    <label><input type="checkbox" data-k="edge" checked> Edge ramp over 4 tiles</label>
+    <label><input type="checkbox" data-k="under" checked> Undergrowth pass</label>
+    <label><input type="checkbox" data-k="old" checked> Big old trees only in dense cores</label>
+    <button type="button" class="btn ghost" data-b="reseed">New seed</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each structure is one cheap rule after placement. Clearings: <code>density = biomeDensity × smoothstep(c0, c1, fbm(p·0.02))</code>, reject if density &lt; rand(). Trail: reject trees near the polyline; test against the crown, not the trunk, or canopies hang over it. Edge: ramp density over 3–6 tiles and put shrubs in the ramp. Then a second, smaller-radius pass for shrubs and ferns, suppressed under dense canopy [I]. TerraFirmaCraft keeps separate tree, bush and groundcover counts [V, S53]. The cover readout compares with the study's targets [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG growth-->
+<figure class="fig" data-demo="growth" id="fig-growth">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Growth stages on a staggered tick, and self-thinning into size classes</h4><span class="illu">Rates and modulus illustrative</span></div>
+  <div class="duo wide-l">
+    <div class="stage"><canvas width="192" height="64" aria-label="A 12 by 4 tile plot of trees cycling through seven OpenTTD-style stages, updated on a hashed schedule"></canvas></div>
+    <div class="stage"><canvas width="128" height="64" aria-label="Self-thinning: plant discs grow, and when two touch the smaller one dies"></canvas></div>
+  </div>
+  <svg class="chart" viewBox="0 0 260 100" role="img" aria-label="Histogram of plant radius in seven size classes" style="max-width:360px;margin-top:8px"></svg>
+  <div class="ctl">
+    <label class="rng">Speed <input type="range" data-k="spd" min="1" max="8" value="3"></label>
+    <label><input type="checkbox" data-k="hash" checked> Mark the tiles updated this tick</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption><b>Left:</b> OpenTTD's 7 stages (growing 1–3, grown, dying 1–2, dead), where a grown tree may start dying or seed a neighbour; updates are spread with <code>11x + 9y</code> so no frame touches every tile [V, S169]. Here a tile updates when <code>(11x + 9y + tick) mod 16 = 0</code>: watch the gold corners sweep diagonally. Don't Starve loops old trees back to short [V, S34]. <b>Right:</b> self-thinning, where the smaller of two intersecting plant circles dies [V, S208, S211]; run offline for 20–50 steps per chunk to get natural size gradients [I]. Deussen used 7 size classes per species [V, S208].</figcaption>
+</figure>
+<!--/FIG-->

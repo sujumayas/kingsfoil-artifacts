@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel light and shadow: tiny algorithms for sun, fire, lanterns and the dark</h1>
+      <p class="deck">Snow, acid, rain and trees are things in the world. Light touches every pixel of every thing: it sets the hour, marks what is safe, and gives each torch, candle and crystal a personality. Each part has a classic answer a few lines long: a light byte per tile, a palette table per level, a 10 Hz flicker string, <code>height × cot(elevation)</code> for sun shadows, a polar depth row for torch shadows. Aimed at Godot 4 on the web.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-light-sandbox.html">Play the Light Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage"><canvas width="320" height="180" aria-label="Live village at 320 by 180 pixels: the day turns to golden hour and night, sun shadows swing round the obelisk, street lamps light one by one, windows glow, and a walker carries a torch along the path"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Jump to a time of day"><button type="button" data-t="0" data-h="12">Day</button><button type="button" data-t="1" data-h="17.6">Golden hour</button><button type="button" data-t="2" data-h="18.6">Twilight</button><button type="button" data-t="3" data-h="22.5">Night</button></div>
+      <figcaption>Live: the Light Sandbox's village and rules at 320×180 (albedo × light map, banded with a 4×4 Bayer matrix). The phase labels follow the study's sun-elevation table: day above 6°, golden hour 0–6°, twilight down to −12°, night below. Click a phase to jump there. The day runs in about a minute here, slower around dusk (illustrative speed).</figcaption>
+    </figure>
+  </div>
+</header>

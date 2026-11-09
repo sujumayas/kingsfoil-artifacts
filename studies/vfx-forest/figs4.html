@@ -1,0 +1,97 @@
+<!--FIG fade-->
+<figure class="fig" data-demo="fade" id="fig-fade">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Stardew's canopy fade, tick by tick, and three ways to draw it</h4><span class="illu">16 px tiles</span></div>
+  <div class="duo">
+    <div class="stage"><canvas width="128" height="96" aria-label="A walker passes through the dashed trigger rectangle behind a tree; tap to walk somewhere" style="cursor:pointer"></canvas><svg class="ovl" viewBox="0 0 128 96" aria-hidden="true"></svg></div>
+    <div><svg class="chart" viewBox="0 0 240 84" role="img" aria-label="Alpha of the front crown over the last 240 ticks"></svg>
+      <div class="ctl"><div class="seg" data-seg="mode" role="group" aria-label="Fade drawing"><button type="button" class="on" data-v="dither">Ordered dither</button><button type="button" data-v="alpha">True alpha</button><button type="button" data-v="twin">Sandbox 50 % twin</button><button type="button" data-v="layer">Whole layer</button></div>
+        <label><input type="checkbox" data-k="slow"> Slow motion ×0.25</label></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Decompiled Tree.cs: every tick <code>alpha = min(1, alpha + 0.05)</code>; if the tree is mature and the player's box meets a 3 × 4.5-tile rect (from 1 tile left and 5 tiles up of the trunk), <code>alpha = max(0.4, alpha − 0.09)</code>. Only the top fades [V, S23, S24, S25]. The net −0.04 per tick takes 1.0 → 0.4 in <b>15 ticks</b> and 0.4 → 1.0 in <b>12</b> [I, arithmetic; see §12]; the live counter counts ticks inclusively and shows 14 on the way down, because the first tick's +0.05 is clipped at 1.0. <b>Ordered dither</b> keeps the pixels on palette (Bayer 4×4, as in the CC0 screen-door shader [V, S143]); <b>true alpha</b> leaves it; the Sandbox swaps in a pre-dithered 50 % twin [I]; <b>whole layer</b> is what modulating a TileMapLayer does: every tree fades [V, S129]. Tap to walk.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG shade-->
+<figure class="fig" data-demo="shade" id="fig-shade">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Shade you can stand in, and how big a sunfleck really is</h4></div>
+  <div class="duo wide-l">
+    <div class="stage"><canvas width="144" height="96" aria-label="Trees with shadow ellipses and drifting sunflecks; tap to walk into the shade" style="cursor:pointer"></canvas></div>
+    <div><svg class="chart" viewBox="0 0 240 112" role="img" aria-label="A gap in the canopy projects a round image of the sun onto the ground"></svg>
+      <div class="stage" style="margin-top:6px"><canvas width="48" height="16" aria-label="The sunfleck at true pixel size on an 8 px grid"></canvas><span class="tagl">fleck at 32 px/m</span></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Gap height <input type="range" data-k="gap" min="2" max="30" value="8"><output data-o="gap"></output></label>
+    <label class="rng">Sun elevation <input type="range" data-k="el" min="15" max="90" value="60"><output data-o="el"></output></label>
+    <label><input type="checkbox" data-k="nsta"> NSTA 1/100 (else Minnaert 1/108)</label>
+    <label><input type="checkbox" data-k="ex" checked> Exaggerate like artists</label>
+    <label><input type="checkbox" data-k="merge" checked> Merged shadows</label>
+    <label><input type="checkbox" data-k="fleck" checked> Sunflecks</label>
+    <label><input type="checkbox" data-k="shadeOn" checked> Darken the player in shade</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each tree drops an ellipse (ry = 0.45·rx, alpha 0.30, shifted +0.35·rx); inside it the player's RGB is scaled ×(0.58, 0.64, 0.74), and 3 drifting 2×1 px flecks sit in each leafy shadow [I, Sandbox]. Untick <b>merged shadows</b> to stack alpha ellipses: overlaps go nearly black, which is why Factorio merges shadows before drawing [V, S42]. Sunflecks are pinhole images of the sun, round whatever the gap shape, ≈ 1/100 (NSTA) or 1/108 (Minnaert) of the gap height wide, and they stretch into ellipses at low sun [V, S196, S197]. At 32 px/m a 6–10 m canopy gives 2–3 px spots; artists exaggerate to 3–6 [I, note 04]. No 2D game with sunflecks was found [U].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG touch-->
+<figure class="fig" data-demo="touch" id="fig-touch">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Beside and touching: trunks block, bushes rustle, grass tramples and regrows, trees shake and fall</h4><span class="illu">0.25 s turn and 8 px grass cells illustrative</span></div>
+  <div class="stage"><canvas width="176" height="96" aria-label="A walker among two trees, shrubs and tall grass; tap to walk" style="cursor:pointer"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="shake">Shake the nearest tree</button>
+    <button type="button" class="btn" data-b="fell">Fell the nearest tree</button>
+    <button type="button" class="btn ghost" data-b="regrow">Regrow the trees</button>
+    <label><input type="checkbox" data-k="col"> Show colliders</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Only trunks collide: an ellipse with y × 1.7 and radius r + 2 (red); bushes are soft, slowing the walker to 0.7× and rustling for a moment with 2–6 leaves and a 0.5 s cooldown (teal) [I, Sandbox; note 06]. Stepping into high grass tramples it and bursts <b>4</b> leaves, as in Shattered Pixel Dungeon [V, S170]; it regrows at <b>1 % per turn</b>, as Brogue's foliage does [V, S171]. A shake rotates the top around its base by π/128 (π/64 for young trees), decaying; felling adds <code>maxShake²</code> each frame while <code>maxShake</code> grows by 0.0015, so the fall accelerates, the shadow fades as it tips, and a stump and 12–16 wood remain [V, S25, S26]. Tap to walk.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flee-->
+<figure class="fig" data-demo="flee" id="fig-flee">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Birds that notice you: a 200 ms check, a flee radius, a staggered take-off</h4><span class="illu">16 px tiles</span></div>
+  <div class="stage"><canvas width="208" height="112" aria-label="Birds on the ground in an open oak woodland; tap to walk toward them" style="cursor:pointer"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="preset" role="group" aria-label="Bird set"><button type="button" class="on" data-v="stardew">Stardew (birdie 4, woodpecker 6)</button><button type="button" data-v="game">By species (3–7 tiles)</button></div>
+    <div class="seg" data-seg="gait" role="group" aria-label="Gait"><button type="button" data-v="sneak">Sneak ×0.6</button><button type="button" class="on" data-v="walk">Walk</button><button type="button" data-v="run">Run ×1.5</button></div>
+    <label><input type="checkbox" data-k="rad" checked> Show flee radii</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew's <code>Birdie</code> checks every <b>200 ms</b> and flees within <b>4 tiles</b>; its <code>Woodpecker</code> flees at <b>6</b> [V, S25]. The game-scale set uses the study's proposal: songbird 3, gull 4, crow 5, heron 6–8 tiles, ×1.5 when running and ×0.6 when sneaking, with 50–250 ms take-off delays so the spooking ripples [I, note 06]. Real flight-initiation distances (small birds ~5–20 m) were not verified [U, S200]. In an MMO, keep birds client-side [I]. Tap to walk.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG atlas-->
+<figure class="fig" data-demo="atlas" id="fig-atlas">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Draw calls: one atlas, one material, per-instance data, and the multipliers that fill the atlas</h4><span class="illu">Batch rules simplified</span></div>
+  <div class="duo wide-l">
+    <div class="stage"><canvas width="192" height="104" aria-label="A mixed forest tinted by batch: every colour change is a new draw call"></canvas></div>
+    <div><div data-dc></div></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="atlas" checked> One atlas texture</label>
+    <label><input type="checkbox" data-k="dup"> A duplicated material per tree</label>
+    <label><input type="checkbox" data-k="inst" checked> Per-tree data in instance uniforms</label>
+    <label><input type="checkbox" data-k="light"> A PointLight2D</label>
+    <label><input type="checkbox" data-k="mm"> Undergrowth as a MultiMesh</label>
+    <label><input type="checkbox" data-k="show" checked> Tint by batch</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <p class="mini" style="margin:12px 0 4px">Variety multipliers (G6): change any factor.</p>
+  <div class="mult"></div>
+  <div class="atlas-box" style="margin-top:6px"><canvas aria-label="The variants packed as an atlas strip"></canvas></div>
+  <p class="mini" data-atlasinfo></p>
+  <figcaption>The GLES3 renderer starts a new batch on a different texture, material, blend mode or lit/unlit state, and MultiMeshes "always create a new batch" [V, S100]. Atlases took one web game from 240 to 38 draw calls [V, self-reported, S127]; Cornucopia merged plants from 2,583 calls to 3 [V, S48]. Godot 4.4's instance uniforms carry per-tree phase, season, tint and fade "without breaking batching" [V, S112]. The multiplier budget is the study's: 3 species × 2 flips × 4 tints × 5 stages × 4 seasons = 480 variants from 15 drawings [I, note 01]; here tints are simple RGB multipliers for illustration.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG chunks-->
+<figure class="fig" data-demo="chunks" id="fig-chunks">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sorting only what is near: one y-sort root vs chunks, the culling grid, baked rings</h4><span class="illu">World and counts illustrative</span></div>
+  <div class="stage"><canvas width="160" height="120" aria-label="An overview of a 1280 by 960 world with chunk lines, the camera rectangle, active chunks and the culling grid; drag to move the camera" style="cursor:move"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Sorting"><button type="button" data-v="single">One y-sort root</button><button type="button" class="on" data-v="chunk">Chunks at camera ± 1</button></div>
+    <label><input type="checkbox" data-k="grid" checked> 64 px culling grid</label>
+    <label><input type="checkbox" data-k="bake"> Bake the next ring</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Godot's <code>_collect_ysort_children</code> gathers every visible descendant, sorts, then culls; only <code>visible = false</code> children are skipped [V, S101]. So one y-sort root sorts the whole forest (green dots) every frame, while chunks of 16×16 tiles shown only at camera ± 1 sort ~9 chunks [I, note 02]. The Sandbox reads a 64 px grid with crown margins and draws 245–786 items per frame [I, Sandbox run]. Baked chunks cost 256 KB each [I, note 02]; a MultiMesh has no culling, so split it by area [V, S106]. Drag to move the camera. The world here is a jittered grid, not the Sandbox's.</figcaption>
+</figure>
+<!--/FIG-->

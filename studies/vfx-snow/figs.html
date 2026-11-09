@@ -1,0 +1,401 @@
+<!--FIG doom-->
+<figure class="fig" data-demo="doom" id="fig-1">
+  <div class="fig-h"><span class="fig-n">Fig. 1</span><h4 class="fig-t">The DOOM fire and its snow analogue, side by side</h4><span class="illu">Illustrative palettes</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="100" aria-label="DOOM PSX fire cellular automaton"></canvas><span class="tagl">DOOM PSX fire</span></div>
+      <p class="pl"><code>fire[to] = fire[from] - (rand &amp; 1)</code>, with a sideways offset in {+1, 0, −1, −2}. The bottom row is white (36) and never updated.</p></div>
+    <div><div class="stage"><canvas width="128" height="100" aria-label="Snow analogue: one byte of depth per cell"></canvas><span class="tagl">Inverse fire: snow</span></div>
+      <p class="pl" data-cap="ground">The sky adds 1 at random exposed cells. A sandpile rule slumps steep steps. The sun subtracts at random, faster at edges, which is the same random decay as the fire.</p>
+      <p class="pl" data-cap="mirror" hidden>The fire rule run upside down with a snow palette: the top row is the source and values spread downward.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="fire">Switch the fire off</button>
+    <button type="button" class="btn" data-b="snow">Stop the snowfall</button>
+    <button type="button" class="btn" data-b="sun">Let the sun out</button>
+    <div class="seg" data-seg="mode" role="group" aria-label="Snow analogue mode"><button type="button" class="on" data-v="ground">Top-down ground</button><button type="button" data-v="mirror">Mirror rule</button></div>
+  </div>
+  <figcaption>Both panels keep <b>one byte per cell, one local rule, one palette</b>. The fire's 37-entry ramp runs white → yellow → orange → red → black; the exact colours here are interpolated for the demo. Ports commonly switch the fire off by zeroing the source row <span class="cite"><b class="tag tu">U</b></span>. On the snow side the source is the sky. Wind blows from the right, so the two fences leave a thinner lee on their left.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-2">
+  <div class="fig-h"><span class="fig-n">Fig. 2</span><h4 class="fig-t">Seven generations of snow techniques, 1987 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The 2025–2026 stretch is zoomed so that Gen 6 is readable. Items without a year appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG lut-->
+<figure class="fig" data-demo="lut" id="fig-3">
+  <div class="fig-h"><span class="fig-n">Fig. 3</span><h4 class="fig-t">A GBA-style sprite flake list with a sine lookup table</h4><span class="illu">Sine amplitude illustrative</span></div>
+  <div class="stage"><canvas width="240" height="160" aria-label="Sprite snowflakes on a 240 by 160 screen"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Target flakes <input type="range" data-k="n" min="4" max="64" value="16"><output data-o="n"></output></label>
+    <label class="rng">Sway divisor <input type="range" data-k="d" min="32" max="128" step="32" value="64"><output data-o="d"></output></label>
+    <label><input type="checkbox" data-k="cols"> Spawn columns</label>
+    <label><input type="checkbox" data-k="lut" checked> Sine table</label>
+    <button type="button" class="btn" data-b="stop">Stop snowing</button>
+  </div>
+  <figcaption>Pokémon Emerald's recipe: Y is fixed point ×128 with <code>tDeltaY = (rand&amp;3)*5 + 64</code> (about 0.5–0.62 px/frame). Sway is <code>gSineTable[tWaveIndex]/64</code>; the index advances 1 or 2 per frame (one flake in four gets 2). Spawn columns are <code>((id*5)&amp;7)*30 + rand%30</code>, so flakes never clump. One flake is added or removed every 36 frames, so snow fades in over about 9.6 s. The sine-table peak is not verified, so the sway width here is a guess.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG cycle-->
+<figure class="fig" data-demo="cycle" id="fig-4">
+  <div class="fig-h"><span class="fig-n">Fig. 4</span><h4 class="fig-t">Palette-cycled flakes: the pixels never move</h4></div>
+  <div class="stage"><canvas width="160" height="100" aria-label="Night vista with palette-cycled snow"></canvas><div class="hud" data-hud></div></div>
+  <canvas class="pstrip" width="105" height="1" style="width:100%;height:16px;margin-top:6px;border:1px solid var(--line);border-radius:3px" aria-label="The palette, rotating"></canvas>
+  <div class="ctl">
+    <label class="rng">Cycle speed <input type="range" data-k="sp" min="0" max="3" step="0.1" value="1"><output data-o="sp"></output></label>
+    <label><input type="checkbox" data-k="rev"> Reveal the painted paths</label>
+    <label><input type="checkbox" data-k="eq"> Equal cycle lengths</label>
+  </div>
+  <figcaption>Each snow path is a 1-px straight band whose pixels hold consecutive indices of a cycling range. Every entry in the range is the sky colour except one or two flake colours, so the path is invisible until the range rotates. The strip under the scene is the whole palette: it is the only thing that changes. Three ranges of different lengths and speeds look organic; equal ones produce the "pulsing flash" Ferrari warns about.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG hashed-->
+<figure class="fig" data-demo="hashed" id="fig-5">
+  <div class="fig-h"><span class="fig-n">Fig. 5</span><h4 class="fig-t">Stateless hashed-cell layers: no flake list at all</h4></div>
+  <div class="stage"><canvas width="160" height="90" aria-label="Parallax snow from hashed grid cells"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Layers <input type="range" data-k="layers" min="1" max="5" value="3"><output data-o="layers"></output></label>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-100" max="100" value="-30"><output data-o="wind"></output></label>
+    <div class="seg" data-seg="grid" role="group" aria-label="Show grid cells"><button type="button" class="on" data-v="0">No grid</button><button type="button" data-v="1">Near grid</button><button type="button" data-v="2">Mid grid</button><button type="button" data-v="3">Far grid</button></div>
+    <label><input type="checkbox" data-k="smooth"> Smooth edges</label>
+  </div>
+  <figcaption>For every pixel and layer, <code>floor(q)</code> names a grid cell, a hash of that ID places at most one flake inside 0.15–0.85 of the cell, and the grid scrolls with time. Cost depends on pixels × layers, not on flake count. With <code>step()</code> and three layers the flakes sit inside the pixel art; smooth edges give the screensaver look. This is our own re-implementation from the description, not a copy of "Just snow", whose licence is CC BY-NC-SA 3.0.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG cost-->
+<figure class="fig" data-demo="cost" id="fig-6">
+  <div class="fig-h"><span class="fig-n">Fig. 6</span><h4 class="fig-t">Why layers beat particles: frame cost against a 60 fps budget</h4></div>
+  <svg class="chart" role="img" aria-label="Bar chart of frame costs in milliseconds"></svg>
+  <div class="ctl"><div class="seg" data-seg="scale" role="group" aria-label="Scale"><button type="button" class="on" data-v="log">Log scale</button><button type="button" data-v="lin">Linear scale</button></div></div>
+  <div class="readout" aria-live="polite">Hover or tap a bar for its source.</div>
+  <figcaption>ToyShop's composite rain layer cost <b>4.11 ms</b> against <b>19.45 ms</b> for 5–10K particles <span class="cite"><b class="tag tv">V</b> author-reported, <a class="sref" href="#s35">S35</a></span>. The other two bars are different systems, shown for scale: Batman: Arkham Origins' trail heightmaps (under 1 ms, vendor-reported) and our Sandbox simulation (3–9 ms on one machine, illustrative). The dashed line is 1000/60 ms.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG zflake-->
+<figure class="fig" data-demo="zflake" id="fig-7">
+  <div class="fig-h"><span class="fig-n">Fig. 7</span><h4 class="fig-t">Z-height flakes with a ground shadow dot</h4><span class="illu">Flake counts scaled</span></div>
+  <div class="stage"><canvas width="160" height="100" aria-label="Top-down scene with falling flakes and shadow dots"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Flake model"><button type="button" class="on" data-v="z">Z-height + shadow</button><button type="button" data-v="noshadow">Z-height, no shadow</button><button type="button" data-v="screen">Screen-down fall</button></div>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-100" max="100" value="-30"><output data-o="wind"></output></label>
+    <label><input type="checkbox" data-k="stems"> Show height</label>
+  </div>
+  <figcaption>Each flake stores ground (x, y) and a height z. It is drawn at (x, y − z) and lands where z reaches 0. Layers follow the Sandbox table: far 1 px pale, mid 1 px, near 2×2 with a shadow dot (260 / 150 / 46 flakes there, scaled down here). Without the dot, flakes float; with screen-down fall, they slide south across the map, which is the perspective lie of A1.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG lfsr-->
+<figure class="fig" data-demo="lfsr" id="fig-8">
+  <div class="fig-h"><span class="fig-n">Fig. 8</span><h4 class="fig-t">Same rule, two visit orders: scanline sweep vs LFSR</h4></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="64" height="64" aria-label="Tiles updated in scanline order"></canvas><span class="tagl">Scanline order</span></div></div>
+    <div><div class="stage"><canvas width="64" height="64" aria-label="Tiles updated in LFSR order"></canvas><span class="tagl">Galois LFSR, feedback 0xD8F</span><div class="hud" data-hud></div></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Snow line <input type="range" data-k="sl" min="0" max="9" value="3"><output data-o="sl"></output></label>
+    <label class="rng">Speed <input type="range" data-k="sp" min="5" max="400" value="60"><output data-o="sp"></output></label>
+    <label><input type="checkbox" data-k="hl" checked> Highlight this tick's tiles</label>
+    <button type="button" class="btn" data-b="reset">Reset</button>
+  </div>
+  <figcaption>Each visit nudges a tile's level (0–3) one step toward <code>min(height − snow line + 1, 3)</code>. On this 64×64 map, <code>mapArea&gt;&gt;8</code> = 16 tiles are visited per tick, so every tile is visited once per 256 ticks. The left map walks tiles in order and snow arrives as a sweeping line. The right map uses <code>tile = (tile&gt;&gt;1) ^ (-(tile&amp;1) &amp; feedback)</code>, so it arrives as a speckle that thickens. Drag the snow line to start a change. This re-implements the idea; OpenTTD's code is GPL-2.0.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG tiledither-->
+<figure class="fig" data-demo="tiledither" id="fig-9">
+  <div class="fig-h"><span class="fig-n">Fig. 9</span><h4 class="fig-t">Tile-state swap vs per-pixel threshold dither</h4><span class="illu">Level-to-depth mapping illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="72" aria-label="Snow by tile states"></canvas><span class="tagl">Tile states</span></div></div>
+    <div><div class="stage"><canvas width="128" height="72" aria-label="Snow by per-pixel threshold"></canvas><span class="tagl">Per-pixel threshold</span></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">snow_level <input type="range" data-k="lvl" min="0" max="100" value="35"><output data-o="lvl"></output></label>
+    <button type="button" class="btn" data-b="anim">Animate snow level</button>
+    <div class="seg" data-seg="mode" role="group" aria-label="Tile mode"><button type="button" class="on" data-v="tiles">Per-tile states</button><button type="button" data-v="swap">Whole tileset swap</button></div>
+    <label><input type="checkbox" data-k="expo" checked> Fold in exposure</label>
+    <output data-o="pops" class="mute" style="text-align:left;min-width:0"></output>
+  </div>
+  <figcaption>Both sides read one global <code>snow_level</code> and run no simulation. The left side swaps whole 8×8 tiles, so snow pops in blocks. The right side compares <code>snow_level × exposure</code> with a fixed per-pixel threshold (<code>bayer*0.55 + hash*2.5 + 0.5</code>, the Sandbox's grass rule). Coverage then grows speckle by speckle, and the eave strip and the fence's lee fill last.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG exposure-->
+<figure class="fig" data-demo="exposure" id="fig-10">
+  <div class="fig-h"><span class="fig-n">Fig. 10</span><h4 class="fig-t">Exposure painter: sky shelter, wind lee and drift rays</h4></div>
+  <div class="stage"><canvas width="160" height="90" aria-label="Exposure heat map; paint walls and trees" style="cursor:crosshair"></canvas></div>
+  <div class="readout" aria-live="polite">Hover a ground pixel to trace its upwind ray.</div>
+  <div class="ctl">
+    <div class="seg" data-seg="tool" role="group" aria-label="Paint tool"><button type="button" class="on" data-v="wall">Paint wall</button><button type="button" data-v="tree">Plant tree</button><button type="button" data-v="erase">Erase</button></div>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="expo">Exposure</button><button type="button" data-v="snow">Snow</button></div>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-100" max="100" value="-50"><output data-o="wind"></output></label>
+    <button type="button" class="btn" data-b="clear">Clear snow</button>
+  </div>
+  <figcaption>Exposure = shelter × wind lee, baked once per wind bucket (steps of 0.5). Each ground pixel steps up to 28 px upwind. If it meets an obstacle inside <code>L = 1.1·h·|wind| + 2</code>, exposure is scaled by <code>0.15 + 0.85(d/L)²</code>; between L and 1.8L it gets ×1.12, the drift band. Under canopies shelter is <code>0.12 + 0.88·r²</code>. Bright is open sky; dark is sheltered. As in the Sandbox, rays run horizontally only.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG sandpile-->
+<figure class="fig" data-demo="sandpile" id="fig-11">
+  <div class="fig-h"><span class="fig-n">Fig. 11</span><h4 class="fig-t">Sandpile relaxation: click to drop snow</h4></div>
+  <div class="stage"><canvas width="96" height="54" aria-label="Height field; click to drop snow" style="cursor:crosshair"></canvas><div class="hud" data-hud></div></div>
+  <div class="stage" style="margin-top:6px"><canvas width="96" height="30" aria-label="Cross-section of depth along the orange row"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Visits per frame <input type="range" data-k="n" min="200" max="6000" step="100" value="3000"><output data-o="n"></output></label>
+    <label class="rng">Repose step T <input type="range" data-k="t" min="1" max="10" value="3"><output data-o="t"></output></label>
+    <button type="button" class="btn" data-b="rand">Drop random piles</button>
+    <button type="button" class="btn" data-b="clear">Flatten</button>
+  </div>
+  <figcaption>Each visit picks a random cell and a random 4-neighbour. If <code>depth[i] &gt; depth[j] + T</code>, one unit moves across. The Sandbox runs 4,000 visits per step with T = 3. Cost scales with the visit count, not the field size, and the random order hides the directional bias of in-place updates. The lower strip is the depth profile along the orange row.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG caps-->
+<figure class="fig" data-demo="caps" id="fig-12">
+  <div class="fig-h"><span class="fig-n">Fig. 12</span><h4 class="fig-t">Snow caps from the "empty pixel above" rule</h4><span class="illu">k illustrative</span></div>
+  <div class="stage"><canvas width="150" height="68" aria-label="Sprites with automatic snow caps"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Snow level <input type="range" data-k="lvl" min="0" max="3" value="2"><output data-o="lvl"></output></label>
+    <label class="rng">k (thickness per px of edge distance) <input type="range" data-k="k" min="0.3" max="3" step="0.1" value="1"><output data-o="k"></output></label>
+    <label><input type="checkbox" data-k="lip" checked> 1-px cornice</label>
+    <label><input type="checkbox" data-k="hi"> Highlight top pixels</label>
+    <label><input type="checkbox" data-k="excl"> Skip heat sources</label>
+  </div>
+  <figcaption>A pixel is a top when it is solid and the pixel above is empty: <code>alpha(uv) &gt; 0 &amp;&amp; alpha(uv − texel.y) == 0</code>. The cap extends down with the snow level, thinner near the ends of each top run (<code>thickness = min(maxDepth, k·edgeDist)</code>), with an optional 1-px overhang. The automatic rule also caps things that should stay clean, such as the chimney; tick "Skip heat sources" to see what an authored mask would do.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG footprint-->
+<figure class="fig" data-demo="footprint" id="fig-13">
+  <div class="fig-h"><span class="fig-n">Fig. 13</span><h4 class="fig-t">Footprints: decal ring buffer vs conserve-and-displace stamp</h4></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="120" height="68" aria-label="Decal footprints" style="cursor:crosshair"></canvas><span class="tagl">Decals (Pokémon way)</span></div></div>
+    <div><div class="stage"><canvas width="120" height="68" aria-label="Stamped footprints in a depth field" style="cursor:crosshair"></canvas><span class="tagl">Stamp into depth</span></div>
+      <div class="stage" style="margin-top:6px"><canvas width="120" height="28" aria-label="Depth cross-section along the dashed column"></canvas></div></div>
+  </div>
+  <div class="readout" aria-live="polite"></div>
+  <div class="ctl">
+    <label class="rng">Snowfall (refill) <input type="range" data-k="fall" min="0" max="10" value="0"><output data-o="fall"></output></label>
+    <label><input type="checkbox" data-k="plat"> Platinum alpha fade</label>
+    <button type="button" class="btn" data-b="reset">Fresh snow</button>
+  </div>
+  <figcaption>Same walker on both sides; drag on either canvas to steer. <b>Left:</b> Emerald-style decals in a 32-slot ring buffer, visible for 40 frames and then a 1-bit flicker until frame 56 (about 0.95 s), or Platinum's alpha that holds 16 frames and then drops by 2 per frame. <b>Right:</b> the Sandbox stamp. Cells under the foot keep 30 %, the rest is pushed to 6 rim points, and the core is marked packed. The strip is the depth along the dashed column: a dip with raised rims. Add snowfall to watch prints refill and the packed mark fade.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG trail-->
+<figure class="fig" data-demo="trail" id="fig-14">
+  <div class="fig-h"><span class="fig-n">Fig. 14</span><h4 class="fig-t">A trail map that refills by subtraction</h4></div>
+  <div class="stage"><canvas width="120" height="68" aria-label="Trail map rendered as trodden snow" style="cursor:crosshair"></canvas></div>
+  <div class="readout" aria-live="polite"></div>
+  <div class="ctl">
+    <label class="rng">Subtract per update <input type="range" data-k="amt" min="1" max="24" value="4"><output data-o="amt"></output></label>
+    <label class="rng">Update interval <input type="range" data-k="iv" min="5" max="100" value="20"><output data-o="iv"></output></label>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="ground">Ground</button><button type="button" data-v="map">Trail map (R)</button></div>
+    <button type="button" class="btn" data-b="clear">Clear trails</button>
+  </div>
+  <figcaption>Every step adds a soft blob to an 8-bit trail map. On each update the whole map loses a fixed amount, as Batman: Arkham Origins subtracts a small value so snow "replenishes". The ground reads the value as fresh, packed or bare. In RGBA8 the smallest step is 1/255, so slow refills come in coarse steps. Drag on the canvas to walk.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG sink-->
+<figure class="fig" data-demo="sink" id="fig-15">
+  <div class="fig-h"><span class="fig-n">Fig. 15</span><h4 class="fig-t">Sinking and slowdown: depth to speed in four models</h4><span class="illu">Axis mapping illustrative</span></div>
+  <svg class="chart" role="img" aria-label="Walking speed against snow depth for four models"></svg>
+  <div class="radar-keys"></div>
+  <div class="pair" style="margin-top:8px;align-items:center">
+    <div class="ctl" style="margin:0"><label class="rng">Depth <input type="range" data-k="d" min="0" max="200" value="66"><output data-o="d"></output></label></div>
+    <div class="stage"><canvas width="64" height="20" aria-label="A walker sinking into snow"></canvas></div>
+  </div>
+  <div class="readout" aria-live="polite"></div>
+  <figcaption>Drag on the chart or the slider. The Sandbox uses <code>slow = 1 − min(0.55, d/170)</code> and hides <code>min(4, floor(d/22))</code> sprite rows under a snow rim. RimWorld moves pawns at 100 / 76 / 62 / 52 % across its depth bands. Pokémon Gen IV has four tiers: no effect, no running, walk ×½, walk ×¼. Our proposal is roughly 1.0 / 0.75 / 0.5 / 0.25–0.5 with sinks of 0 / 2 / 4 / 6 px. Mapping 200 u to 100 % depth, and giving the Pokémon tiers equal widths, are choices made for this chart.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG paths-->
+<figure class="fig" data-demo="paths" id="fig-16">
+  <div class="fig-h"><span class="fig-n">Fig. 16</span><h4 class="fig-t">Worn paths from many walkers</h4><span class="illu">Rates illustrative</span></div>
+  <div class="stage"><canvas width="96" height="54" aria-label="Town map where walkers wear paths into snow"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Walkers <input type="range" data-k="n" min="1" max="80" value="24"><output data-o="n"></output></label>
+    <label class="rng">Snowfall intensity <input type="range" data-k="snow" min="0" max="100" value="40"><output data-o="snow"></output></label>
+    <label class="rng">Time speed <input type="range" data-k="sp" min="1" max="8" value="2"><output data-o="sp"></output></label>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="snow">Snow</button><button type="button" data-v="heat">Wear byte</button></div>
+    <button type="button" class="btn" data-b="clear">Fresh snow</button>
+  </div>
+  <figcaption>One byte of wear per tile. A step adds to it; a slow sweep subtracts <code>regrow × snowfall_intensity</code>. Above one threshold the tile draws packed, above another bare. Walkers wander between the inn, smithy, well, gate and market. Lower the snowfall and the town's paths deepen; raise it and they fill in. It is cheap enough to run on a server.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG ddf-->
+<figure class="fig" data-demo="ddf" id="fig-17">
+  <div class="fig-h"><span class="fig-n">Fig. 17</span><h4 class="fig-t">Degree-day calculator</h4></div>
+  <div class="pair"><svg class="chart" role="img" aria-label="Melt per day against temperature"></svg><svg class="chart" role="img" aria-label="RimWorld melt rule against temperature"></svg></div>
+  <div class="ctl">
+    <label class="rng">Temperature <input type="range" data-k="t" min="-5" max="15" step="0.5" value="5"><output data-o="t"></output></label>
+    <label class="rng">DDF <input type="range" data-k="ddf" min="0.5" max="20" step="0.5" value="4"><output data-o="ddf"></output></label>
+    <label class="rng">1 u = <input type="range" data-k="mmu" min="1" max="10" value="2"><output data-o="mmu"></output></label>
+    <label class="rng">1 game day = <input type="range" data-k="day" min="5" max="120" step="5" value="20"><output data-o="day"></output></label>
+    <label class="rng">Cover <input type="range" data-k="cover" min="8" max="200" step="8" value="64"><output data-o="cover"></output></label>
+  </div>
+  <div class="readout" aria-live="polite"></div>
+  <figcaption>The defaults reproduce worked example B (§6c): DDF 4 mm/°C/day at +5 °C, 1 u = 2 mm, 1 game day = 20 real minutes. Realistic melt takes about 2.1 real hours to clear 64 u, too slow for a session, so scale the DDF or use a steeper rule. Left: the shaded band is the typical snow range of 2–6 mm/°C/day; the dashed line is Cordonnier's 10. Right: RimWorld's rule, 0.058 %·T² below 10 °C and 0.58 %·T above, which meet at T = 10. The length of a RimWorld tick is unknown to us.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG melt-->
+<figure class="fig" data-demo="melt" id="fig-18">
+  <div class="fig-h"><span class="fig-n">Fig. 18</span><h4 class="fig-t">Melt = temperature × sun × shade × edge</h4></div>
+  <div class="stage"><canvas width="128" height="72" aria-label="Snow field melting under the sun"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Temperature <input type="range" data-k="t" min="-4" max="8" step="0.5" value="6"><output data-o="t"></output></label>
+    <label class="rng">Sun <input type="range" data-k="sun" min="0" max="100" value="100"><output data-o="sun"></output></label>
+    <label class="rng">Speed <input type="range" data-k="sp" min="1" max="8" value="3"><output data-o="sp"></output></label>
+    <label><input type="checkbox" data-k="shade" checked> Shade term</label>
+    <label><input type="checkbox" data-k="edge" checked> Edge term</label>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="normal">Normal</button><button type="button" data-v="depth">Depth</button><button type="button" data-v="shadow">Sun shadow</button><button type="button" data-v="wet">Wet</button></div>
+    <button type="button" class="btn" data-b="reset">Reset snow</button>
+  </div>
+  <figcaption>The Sandbox rule: <code>picks = 1500·min(T,6)/4·(0.35 + 0.65·sun)</code> per step, scaled here to the smaller canvas. Each pick melts one unit with probability rate = 0.25 in cast shadow (when sun &gt; 0.4) × 0.5 if packed × surface (roof 1.4, canopy 2.2) × (0.35 + 0.5 × bare neighbours). Melted snow becomes wet ground, which then evaporates. Untick both terms to get the uniform "dissolve filter" anti-pattern; with them, patches shrink from the outside and the house's shadow keeps its strip.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG states-->
+<figure class="fig sm" data-demo="states" id="fig-19">
+  <div class="fig-h"><span class="fig-n">Fig. 19</span><h4 class="fig-t">Wet ground, slush, ice and refreeze as a state machine</h4></div>
+  <svg role="img" aria-label="State machine: powder, packed, slush, wet ground, ground, ice"></svg>
+  <div class="stage" style="margin-top:6px"><canvas width="120" height="10" aria-label="Pixel look of each state"></canvas></div>
+  <div class="readout" aria-live="polite"></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="step">Step on it</button>
+    <button type="button" class="btn" data-b="melt">Warm sunny day</button>
+    <button type="button" class="btn" data-b="night">Cold night</button>
+    <button type="button" class="btn" data-b="snow">Snowfall</button>
+    <button type="button" class="btn on" data-b="auto">Auto play</button>
+  </div>
+  <figcaption>The state machine proposed in D4, from our notes. Click a state for its numbers. The strip shows one way each state could look in pixels, left to right: powder, packed, slush, wet ground, ground, ice. The study recommends keeping it to about 5 states. Whether refreeze can trap players on ice is a gameplay decision.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG ramp-->
+<figure class="fig" data-demo="ramp" id="fig-20">
+  <div class="fig-h"><span class="fig-n">Fig. 20</span><h4 class="fig-t">Ramp builder: warm light, cold shadow</h4><span class="illu">Generated ramp illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="54" aria-label="Snow mound shaded with the ramp"></canvas></div></div>
+    <div><p class="pl">Generated ramp, deep to light</p><div class="swatches" data-gen></div>
+      <p class="pl">The Sandbox ramp (click a swatch for its shadow variant)</p><div class="swatches" data-ref></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Steps <input type="range" data-k="n" min="3" max="7" value="5"><output data-o="n"></output></label>
+    <label class="rng">Light temperature <input type="range" data-k="lw" min="0" max="100" value="70"><output data-o="lw"></output></label>
+    <label class="rng">Shadow temperature <input type="range" data-k="sc" min="0" max="100" value="85"><output data-o="sc"></output></label>
+    <label><input type="checkbox" data-k="white"> Pure white carpet</label>
+  </div>
+  <div class="readout" aria-live="polite">Click a Sandbox swatch.</div>
+  <figcaption>saint11's rule of thumb: shadows bluer and less saturated, lights yellower and more saturated. "Pure white carpet" is anti-pattern #1: the mound disappears. Keep the ramp to 4–5 steps. The ramp builder's colour maths is our own; the reference swatches and the shadow formula <code>(r·0.72, g·0.77, b·0.9 + 12)</code> come from the Sandbox code.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG bayer-->
+<figure class="fig" data-demo="bayer" id="fig-21">
+  <div class="fig-h"><span class="fig-n">Fig. 21</span><h4 class="fig-t">The 4×4 Bayer matrix: 17 levels from 2 colours</h4></div>
+  <div class="bayer-wrap">
+    <div class="bgrid" aria-label="Bayer matrix cells; hover for thresholds"></div>
+    <div><div class="stage"><canvas width="128" height="48" aria-label="Dithered gradient and ramp"></canvas></div></div>
+  </div>
+  <div class="readout" aria-live="polite"></div>
+  <div class="ctl">
+    <label class="rng">Level <input type="range" data-k="lv" min="0" max="100" value="40"><output data-o="lv"></output></label>
+    <label><input type="checkbox" data-k="noise"> Mix in hash noise</label>
+    <label><input type="checkbox" data-k="five" checked> Bottom: 5-step ramp</label>
+  </div>
+  <figcaption>The matrix <code>0 8 2 10 / 12 4 14 6 / 3 11 1 9 / 15 7 13 5</code>, normalised as <code>(M + 0.5)/16</code>. Hover a cell for its threshold. Top left: a gradient in two colours; top right: the slider's level as a flat fill. Bottom: the dithered quantisation into a 5-step ramp, <code>shade = floor(d·4 + (b − 0.5))</code>, or the plain 2-colour version. Hash noise breaks the "screen door" grid, as the Sandbox does. The exact listing is quoted from memory in our notes <span class="cite"><b class="tag tk">K</b> <a class="sref" href="#s49">S49</a><i>;</i> <b class="tag tu">U</b> for the listing</span>.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG emboss-->
+<figure class="fig" data-demo="emboss" id="fig-22">
+  <div class="fig-h"><span class="fig-n">Fig. 22</span><h4 class="fig-t">Emboss shading from neighbour differences</h4></div>
+  <div class="stage"><canvas width="128" height="72" aria-label="Snow depth field with emboss shading; drag to stamp" style="cursor:crosshair"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Shading"><button type="button" data-v="off">Off (flat)</button><button type="button" data-v="2">2-tap</button><button type="button" class="on" data-v="4">4-tap (Sandbox)</button></div>
+    <label class="rng">2-tap k <input type="range" data-k="k" min="1" max="12" value="4"><output data-o="k"></output></label>
+    <label><input type="checkbox" data-k="spark" checked> Sparkles</label>
+  </div>
+  <figcaption>The same depth field, three ways. <b>Off</b>: a flat white mask. <b>2-tap</b>: <code>slope = d(x, y) − d(x+1, y+1)</code>, shadow-blue above +k and highlight below −k. <b>4-tap</b>: <code>sl = (right − left) + (down − up)</code>, mapped to highlight / base / mid / shadow / deep at 6 / −6 / −13 / −22. Drag to stamp prints and watch the rims light up. Sparkles are a per-pixel hash with a 1/512 chance, held for 8 frames, on flat or light-facing snow only.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG daynight-->
+<figure class="fig" data-demo="daynight" id="fig-23">
+  <div class="fig-h"><span class="fig-n">Fig. 23</span><h4 class="fig-t">Day and night through the palette, with a dithered lamp pool</h4></div>
+  <div class="stage"><canvas class="scene" width="128" height="72" aria-label="Snowy scene lit by the palette"></canvas></div>
+  <canvas class="pstrip" width="56" height="2" style="width:100%;height:26px;margin-top:6px;border:1px solid var(--line);border-radius:3px" aria-label="Palette: normal row above, warm lamp row below"></canvas>
+  <div class="readout" aria-live="polite"></div>
+  <div class="ctl">
+    <label class="rng">Time of day <input type="range" data-k="h" min="0" max="1439" value="1110"><output data-o="h"></output></label>
+    <button type="button" class="btn" data-b="play">Run the clock</button>
+    <label class="rng">Lamp radius <input type="range" data-k="rad" min="6" max="60" value="30"><output data-o="rad"></output></label>
+    <label><input type="checkbox" data-k="lamp" checked> Lamp on</label>
+  </div>
+  <figcaption>The scene is an index buffer written once; scrubbing the clock only rewrites the palette (strip below: normal row on top, warm lamp row underneath). <code>daylight = clamp(1.6·sin((h − 6)/12·π), 0, 1)</code>, and the tint warms at dawn and dusk. Windows and the lamp bulb lerp toward warm as night falls. The lamp pool picks the warm palette per pixel when <code>lampMask·night·22 &gt; Bayer(x, y)</code>, so the light thins out in a dither.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-24">
+  <div class="fig-h"><span class="fig-n">Fig. 24</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot. The sum is a crude total, not a recommendation by itself.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG rates-->
+<figure class="fig" data-demo="rates" id="fig-25">
+  <div class="fig-h"><span class="fig-n">Fig. 25</span><h4 class="fig-t">The Sandbox's actual rates per exposed cell</h4><span class="illu">Toy speeds</span></div>
+  <svg class="chart" role="img" aria-label="Deposition and melt rates in depth units per second"></svg>
+  <div class="readout" aria-live="polite">Hover a bar.</div>
+  <figcaption>From worked example A, derived from the Sandbox code at 2× speed (120 sim steps/s at 60 fps). Blue bars are deposition, orange bars are sunny-noon melt at +6 °C. They are toy speeds for a watchable demo, and they depend on frame rate.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG stack-->
+<figure class="fig" data-demo="stack" id="fig-26">
+  <div class="fig-h"><span class="fig-n">Fig. 26</span><h4 class="fig-t">The layered architecture, top to bottom</h4><span class="illu">Design proposal [I]</span></div>
+  <div class="stack">
+    <div class="layers">
+      <button type="button" class="layer srv" data-l="L-weather"><b>0</b><span>Weather state<small>server-authoritative, synced</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-data"><b>1</b><span>Data layer<small>per visible chunk, client</small></span></button>
+      <button type="button" class="layer srv" data-l="L-game"><b>1′</b><span>Gameplay layer<small>server: tile band and wear</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-update"><b>2</b><span>Update layer<small>choose one per platform</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-render"><b>3</b><span>Render layer<small>one CanvasItem shader</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-flakes"><b>4</b><span>Flakes layer<small>z-flakes + hashed far layers</small></span></button>
+    </div>
+    <div class="ldet" aria-live="polite"></div>
+  </div>
+  <template id="L-weather"><h4>Weather state</h4><p>Server-authoritative and synced: intensity 0..1, temperature °C, wind (bucketed), sun factor, time and an RNG seed.</p><p>Multiplayer sync carries only this state plus seeds. Precedents: Don't Starve Together's single <code>precipitation</code> scalar and Vav Labs' depth map read by both renderer and gameplay.</p></template>
+  <template id="L-data"><h4>Data layer</h4><ul><li><code>depth</code> R8 (u8 per art pixel or 2×2)</li><li><code>packed</code> R8 (trail mark)</li><li><code>wet</code> R8 (meltwater / ice flag)</li><li><code>expo</code> R8 baked: shelter × wind lee (B5, B6)</li><li><code>sun</code> R8 baked: day-summed shadow (D3)</li></ul><p>Or one RGBA8 texture (depth, packed, wet, exposure) that uploads without a copy, as in Sandspiel. Compatibility means RGBA8 precision and no 2D HDR, so use stochastic rounding. <code>DrawableTexture2D</code> has no R8 format; pack channels with <code>modulate</code> masks.</p></template>
+  <template id="L-game"><h4>Gameplay layer (server)</h4><ul><li>tile snow band 0..3 (B2)</li><li>tile wear 0..255 (C6)</li><li>→ speed multiplier, tracking</li></ul><p>Speed comes from the server's tile band (C4). The server can store sparse "track events" (who, where, when) and let clients render them. Footprints, flakes and per-pixel melt stay local and cosmetic.</p></template>
+  <template id="L-update"><h4>Update layer</h4><ol><li><b>CPU</b>: GDScript at 5–10 Hz, stochastic picks on Noita-style dirty 64×64 chunks → <code>Image</code> → <code>ImageTexture.update()</code>, uploading only dirty chunks.</li><li><b>Shader ping-pong</b>: two SubViewports or a DrawableTexture2D pair with pull-form rules, since there is no compute on web.</li><li><b>Hybrid</b>: DrawableTexture2D stamps for cosmetic trails (<code>blit_rect</code> ADD/SUB), CPU field for the rest. Wrap the experimental API in one script.</li></ol></template>
+  <template id="L-render"><h4>Render layer</h4><p>One nearest-filtered CanvasItem shader on the ground: <code>depth &gt; threshold(Bayer + hash)</code> → emboss band → palette index → palette LUT (day/night, lamp). It combines B4 + E2 threshold, E3 emboss, E1/E4 palette and E5 sparkle.</p></template>
+  <template id="L-flakes"><h4>Flakes layer</h4><p>50–150 z-flakes with shadow dots for the near layer (CPU or MultiMesh), plus 2 cheap hashed far layers. There is no particle collision on web, so landing is computed by hand.</p></template>
+  <figcaption>Click a layer to see what it holds. Everything here is a design proposal grounded in the cited sources; none of it has been tested in Godot.</figcaption>
+</figure>
+<!--/FIG-->

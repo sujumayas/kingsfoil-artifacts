@@ -1,0 +1,111 @@
+/* ===================== forest study (#4) ===================== */
+:root{--bg:#0d120c;--bg2:#10170f;--panel:#141c13;--panel2:#111810;--line:#26341f;--line2:#3a4d2f;--ice:#a8d46c;--ice2:#6aa84c;--warm:#f0c25a;--txt:#e2ead8;--mute:#93a28a;--deep:#1d3a1a;--deep2:#4d6b3a;
+--tv:#a8d46c;--ti:#f0c25a;--tu:#c9a2ff;--tk:#6dd4c3;--bark:#8a6a4a}
+.hero{background:linear-gradient(#0a0f09,#0d120c 80%)}
+.hero h1{color:var(--ice);text-shadow:2px 3px 0 #1d3a1a,4px 6px 0 #142412}
+.hero-fig .stage{border-color:#6aa84c;box-shadow:0 0 0 3px #1b2d16}
+.hero-tiers span.on{color:var(--ice);border-bottom-color:var(--warm);background:#1a2617}
+.hero-tiers span{background:#131b12}
+.toc-play.top{margin:14px 0 2px}
+.tag.tv{background:var(--tv)}
+.btn{background:#1c2719}
+.btn.warm:hover{background:#f6d27e}
+.cite{background:rgba(168,212,108,.06)}
+.ctl input[type=range]{accent-color:#9ccc6a}
+.knob input{accent-color:#9ccc6a}
+/* generic figure grids */
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+.duo.wide-l{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.duo.wide-r{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+.tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.quad4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pl{margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.45}
+.pl b{color:var(--ice)}
+.mini{font-size:12.5px;color:var(--mute)}
+.stage svg.ovl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.stage.chk{background:#0a0f09}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin:6px 0}
+.kv dt{color:var(--mute)}.kv dd{margin:0;color:var(--txt)}
+.kv dd b{color:var(--warm);font-weight:600}
+svg.chart{background:#0a0f09;border:1px solid var(--line);border-radius:4px}
+.chart .s1{stroke:var(--ice);fill:none;stroke-width:2}
+.chart .s2{stroke:var(--warm);fill:none;stroke-width:2}
+.chart .s3{stroke:#c9a2ff;fill:none;stroke-width:2}
+.chart text.v{fill:var(--txt)}
+/* steps (tree construction) */
+.steps{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.steps button{display:flex;gap:6px;align-items:center;background:transparent;border:1px solid var(--line2);color:var(--txt);border-radius:4px;padding:5px 10px;font-size:13px;cursor:pointer}
+.steps button b{font:600 12px "IBM Plex Mono",monospace;color:#0d120c;background:var(--ice2);border-radius:3px;padding:0 5px}
+.steps button.on{border-color:var(--warm);background:#1a2617}
+.steps button.on b{background:var(--warm)}
+.stepnote{font-size:13.5px;color:#c3cdb8;background:#0a0f09;border:1px solid var(--line);border-radius:4px;padding:8px 12px;min-height:5.5em}
+.stepnote code{font-size:12px}
+/* biome chart */
+.tm{touch-action:none;cursor:crosshair}
+.tm .pt{fill:var(--warm);stroke:#0d120c;stroke-width:2}
+.tm text{font-size:7.5px;fill:#e2ead8;pointer-events:none;paint-order:stroke;stroke:rgba(13,18,12,.55);stroke-width:2px}
+.tm .axl{fill:#c3cdb8;font-size:7px}
+/* LUT */
+.lut{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.lutrow{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px;align-items:center;background:transparent;border:1px solid transparent;border-radius:3px;padding:2px 4px;cursor:pointer;color:var(--txt);font:12.5px "IBM Plex Sans",sans-serif;text-align:left}
+.lutrow .strip{margin:0;height:14px}
+.lutrow.on{border-color:var(--warm);background:#1a2617}
+.lutrow:hover{border-color:var(--line2)}
+/* cards: forest types, species */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px}
+.card{display:flex;flex-direction:column;gap:5px;text-align:left;background:#111810;border:1px solid var(--line2);border-radius:4px;padding:7px 8px 8px;color:var(--txt);cursor:pointer;font:inherit;min-width:0}
+.card canvas{width:100%;height:auto;image-rendering:pixelated;border-radius:2px;background:#000;display:block}
+.card b{font-size:13.5px;color:var(--ice);font-weight:600;line-height:1.25}
+.card small{font-size:12px;color:var(--mute);line-height:1.35}
+.card .bar{height:5px;background:#1e2a1b;border-radius:2px;overflow:hidden}
+.card .bar i{display:block;height:100%;background:var(--ice2)}
+.card.on{border-color:var(--warm);background:#1a2617}
+.card .seas{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;align-items:end;background:#0a0f09;border-radius:2px;padding:3px}
+.card .seas canvas{background:transparent}
+.detail{margin-top:10px;background:#0a0f09;border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+.detail h5{font:700 18px "Pixelify Sans",monospace;color:var(--ice);margin:0 0 6px}
+.detail .kv{font-size:13.5px}
+.sizes{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;background:#18211a;border-radius:4px;padding:8px;margin:6px 0}
+.sizes canvas{image-rendering:pixelated}
+.barkrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0}
+.barkrow canvas{image-rendering:pixelated;border:1px solid var(--line);border-radius:2px}
+/* decision table */
+table.decide tbody tr{cursor:pointer}
+table.decide tbody tr:hover{background:#172015}
+table.decide tbody tr.sel{background:#1a2617;box-shadow:inset 3px 0 0 var(--warm)}
+table.decide{font-size:13px}
+/* meters reuse */
+.meters .meter{grid-template-columns:120px minmax(0,1fr)}
+.mbar i{background:var(--ice2)}
+/* budget */
+.budget{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+.budget .ctl{flex-direction:column;align-items:stretch;gap:6px}
+.budget .ctl label.rng{flex:0 0 auto}
+.budget .ctl label.rng span{min-width:9.5em}
+.verdict{font:600 14px "IBM Plex Sans",sans-serif;padding:6px 10px;border-radius:4px;margin-top:8px}
+.verdict.ok{background:#2e4a1c;color:#d9f7a8}.verdict.bad{background:#4a1820;color:#ffb3b8}
+/* palette swatch strip used by several figs */
+.ramp{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden;vertical-align:middle}
+.ramp i{display:block;width:14px;height:12px}
+/* atlas */
+.atlas-box{background:#18211a;border:1px solid var(--line);border-radius:4px;padding:6px;overflow:auto;max-height:180px;line-height:0}
+.atlas-box canvas{image-rendering:pixelated}
+.mult{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:13px "IBM Plex Mono",monospace;color:var(--mute)}
+.mult label{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px}
+.mult input{width:52px;background:#0a0f09;border:1px solid var(--line2);color:var(--ice);border-radius:3px;padding:3px 4px;font:600 14px "IBM Plex Mono",monospace;text-align:center}
+.mult b{color:var(--warm);font-size:18px}
+.dcbar{display:grid;grid-template-columns:150px minmax(0,1fr) 46px;gap:8px;align-items:center;font-size:12.5px;color:var(--mute);margin:3px 0}
+.dcbar i{display:block;height:12px;background:var(--ice2);border-radius:2px;min-width:2px}
+.dcbar i.hot{background:#ff6b5e}
+.dcbar b{font:600 13px "IBM Plex Mono",monospace;color:var(--ice);text-align:right}
+@media (max-width:1020px){.budget,.duo.wide-l,.duo.wide-r{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.duo{grid-template-columns:minmax(0,1fr)}.tri{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.quad4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.lutrow{grid-template-columns:92px minmax(0,1fr);font-size:11.5px}.dcbar{grid-template-columns:110px minmax(0,1fr) 40px}
+  .hero h1{text-shadow:1px 2px 0 #1d3a1a}.tri .tagl{font-size:10px;padding:1px 4px}.steps button{font-size:12px;padding:4px 7px}}
+.ctl.col{flex-direction:column;align-items:stretch;gap:6px}
+.ctl.col label.rng{flex:0 0 auto}
+.mass-bars .mb{background:transparent;border:1px solid transparent;border-radius:3px;padding:2px 4px;cursor:pointer;color:var(--mute);font:inherit;font-size:12.5px;grid-template-columns:52px minmax(0,1fr) 40px;text-align:left}
+.mass-bars .mb.on{border-color:var(--warm)}
+.mass-bars .mb small{grid-column:2/4;font-size:11.5px}
+.budget .ctl.presets{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px}
+.budget .ctl.presets .btn{padding:4px 9px;font-size:12.5px}

@@ -1,0 +1,94 @@
+<!--FIG doom-->
+<figure class="fig" data-demo="doom" id="fig-doom">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Two DOOM ideas side by side: the fire, and light as a table lookup</h4><span class="illu">Palette, room and distance term illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="DOOM PSX fire cellular automaton"></canvas><span class="tagl">DOOM PSX fire</span></div>
+      <p class="pl"><code>fire[to] = fire[from] − (rand &amp; 1)</code> with a random sideways step: one number per cell, one local rule, one palette.</p></div>
+    <div><div class="stage click"><canvas width="128" height="96" aria-label="A top-down room lit by DOOM's sector light byte through a 32-row colormap; move the pointer to move the viewer"></canvas><span class="tagl">Sector byte → COLORMAP</span><div class="hud" data-hud></div></div>
+      <p class="pl">Every pixel is <code>colormap[map][texel]</code>: one fetch, no colour maths. <b>Move the pointer</b> to move the viewer the distance term is measured from.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Sector light byte <input type="range" data-k="lev" min="0" max="255" value="176"><output data-o="lev"></output></label>
+    <label><input type="checkbox" data-k="dist" checked> Diminish with distance</label>
+    <label><input type="checkbox" data-k="fake" checked> Fake contrast on walls</label>
+    <label><input type="checkbox" data-k="full" checked> Fullbright torches</label>
+    <div class="seg" data-seg="fade" role="group" aria-label="Fade target"><button type="button" class="on" data-v="black">Fade to black (DOOM)</button><button type="button" data-v="fog">Grey #939393 (Hexen FOGMAP)</button><button type="button" data-v="white">White (Build)</button></div>
+  </div>
+  <div class="cmap-box"><canvas width="256" height="35" aria-label="The 32 colormap rows plus the invulnerability row; rows in use this frame are bright"></canvas></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The engine keeps <code>LIGHTLEVELS 16</code> and <code>NUMCOLORMAPS 32</code>: the sector byte is shifted right by 4, and <code>startmap = (15 − level) × 4</code> picks the darkest row a surface may use; nearby pixels step back toward brighter rows <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s9">S9</a></span>. The strip shows all 32 rows of 64 palette entries plus the invulnerability row; rows lit up are the ones this frame used. Each darker row is re-quantised into the same palette, so hues drift as light drops <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s14">S14</a></span>. Walls along one axis get <code>lightnum−−</code>, along the other <code>lightnum++</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s10">S10</a></span>; fullbright pixels skip diminishing <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s12">S12</a></span>; Hexen fades toward grey index 23 (#939393) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s15">S15</a></span>, Build can fade to white <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s25">S25</a>, <a class="sref" href="#s26">S26</a></span>. Top-down has no depth, so here "distance" is distance from the viewer, as the study suggests <span class="cite"><b class="tag ti">I</b></span>; the curve, palette and room are illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG compose-->
+<figure class="fig" data-demo="compose" id="fig-compose">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Light is albedo × light map: build it up one term at a time</h4></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="A crop of the Sandbox village showing one lighting term at a time; hover to read a pixel"></canvas><div class="hud" data-hud></div></div></div>
+    <div>
+      <div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="view" role="group" aria-label="Layer"><button type="button" data-v="albedo">Albedo</button><button type="button" data-v="amb">× sky</button><button type="button" data-v="sunv">+ sun</button><button type="button" data-v="pts">Lamps only</button><button type="button" data-v="light">Light map</button><button type="button" class="on" data-v="final">Final</button></div>
+        <div class="seg" data-seg="hour" role="group" aria-label="Time"><button type="button" data-v="12">Noon</button><button type="button" class="on" data-v="17.6">Golden hour</button><button type="button" data-v="18.3">Dusk</button><button type="button" data-v="22">Night</button></div>
+        <div class="seg" data-seg="mode" role="group" aria-label="Compose style"><button type="button" data-v="smooth">Smooth</button><button type="button" class="on" data-v="banded">Banded + dither</button><button type="button" data-v="colormap">DOOM colormap</button></div>
+      </div>
+      <div class="readout" data-ro aria-live="polite">Hover the picture to read one pixel.</div>
+    </div>
+  </div>
+  <figcaption>Flat colours × (sky ambient + unblocked sun + point lights) <span class="cite"><b class="tag ti">I</b> <a class="sref" href="#s6">S6</a></span>. Step through the terms: a pixel in shadow gets only the bluish sky, a sunlit or lamplit one adds warm light, so "warm light, cool shadow" appears without anyone painting it, as Gurney describes shadows "lit by the relatively blue skylight" <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s198">S198</a></span>. Hover a shadowed pixel and a lit one and compare the blue-to-red ratio in the readout. The village, sky keys and light colours are the Sandbox's <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of light techniques, 1860 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1990 and zoomed for 2023–2026 so Gen 3 stays readable. Items without a single year (mid-1990s, undated, Pokémon palettes) appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tibia-->
+<figure class="fig" data-demo="tibia" id="fig-tibia">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tibia's light: one pixel per tile, max not add, and a world light from 40 to 250</h4><span class="illu">Map and burn-down speed illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="120" aria-label="A 20 by 15 tile map multiplied by its light texture; click a tile to add or remove a light"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl">
+        <div class="seg" data-seg="put" role="group" aria-label="Light to place"><button type="button" class="on" data-v="torch">Lit Torch 7/206</button><button type="button" data-v="lamp">Lamp 6/199</button><button type="button" data-v="cand">Candelabrum 6/206</button><button type="button" data-v="lava">Lava 4/193</button></div>
+      </div></div>
+    <div>
+      <p class="mini" style="margin:0 0 4px">The whole light texture: 20×15 texels</p>
+      <div class="stage" style="max-width:220px"><canvas width="20" height="15" aria-label="The 20 by 15 light texture, one texel per tile"></canvas></div>
+      <svg class="chart" viewBox="0 0 300 120" role="img" aria-label="Server world light over a game day; drag to change the hour"></svg>
+      <div class="ctl col">
+        <div class="seg" data-seg="blend" role="group" aria-label="Blend"><button type="button" class="on" data-v="max">max() per channel (Redemption)</button><button type="button" data-v="add">Add (overlaps blow out)</button></div>
+        <label><input type="checkbox" data-k="bil" checked> Bilinear stretch (off = nearest)</label>
+        <button type="button" class="btn" data-b="burn">Light a fresh torch and let it burn down</button>
+      </div>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each light is just <code>(radius, colour index)</code>, the index a cell of a 6×6×6 cube: <code>r = (c/36 % 6)·51</code>, so 206 = (255,204,102) for a torch and 199 = (255,153,51) for a lamp <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s29">S29</a>, <a class="sref" href="#s35">S35</a></span>. OTClient Redemption starts every tile at the global colour, adds <code>I = (intensity − distance)·0.2</code> clamped to 1 with <code>max()</code> per channel, uploads one pixel per tile, and stretches it bilinearly over the map with MULTIPLY; at a world light of 250 or more it skips all lights <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s27">S27</a></span>. Drag the curve: the server's day is 250, the night 40, with linear ramps 06–08 and 18–20 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s31">S31</a></span>. The burn-down runs Lit Torch 7 → Medium 6 → Small 5 → out, which in Tibia takes 10 + 5 + 5 minutes <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s35">S35</a>, <a class="sref" href="#s39">S39</a></span>; here each minute is a second. Switch to Add to see why max "never blows out" <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flood-->
+<figure class="fig" data-demo="flood" id="fig-flood">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Light that pours like water: flood fill, sky light, and night without a re-flood</h4><span class="illu">Map and colours illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="192" height="128" aria-label="A 24 by 16 tile grid; place torches, walls and roofs and watch light flood out"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl">
+        <div class="seg" data-seg="tool" role="group" aria-label="Tool"><button type="button" class="on" data-v="torch">Torch</button><button type="button" data-v="wall">Wall</button><button type="button" data-v="roof">Roof</button><button type="button" data-v="erase">Erase</button></div>
+        <label><input type="checkbox" data-k="num"> Show levels</label>
+      </div></div>
+    <div>
+      <div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="mode" role="group" aria-label="Model"><button type="button" class="on" data-v="mc">Minecraft: 0–15, −1 per step</button><button type="button" data-v="tr">Terraria-style colour decay</button></div>
+        <div class="seg" data-seg="sky" role="group" aria-label="Internal sky value"><button type="button" data-v="15">Noon 15</button><button type="button" data-v="12">Rain 12</button><button type="button" data-v="10">Thunder 10</button><button type="button" class="on" data-v="4">Midnight 4</button></div>
+        <div class="seg" data-seg="tcol" role="group" aria-label="Terraria torch colour"><button type="button" class="on" data-v="#FFF2CC">Torch</button><button type="button" data-v="#899BFF">Ice</button><button type="button" data-v="#9FFF50">Cursed</button><button type="button" data-v="#AD49FF">Corrupt</button><button type="button" data-v="#40A6FF">Mushroom</button></div>
+      </div>
+      <p class="mini" style="margin:8px 0 3px">Lightmap table, block (rows) × sky (columns): only this changes with the time</p>
+      <div class="stage" style="max-width:150px"><canvas width="16" height="16" aria-label="16 by 16 lightmap remap table"></canvas></div>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Minecraft's block light falls by 1 per taxicab step (torch 14, neighbours 13, diagonal 12), sky light pours in at 15, the client shows <code>max(sky, block)</code>, and each level is 80% as bright as the one above <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s50">S50</a>, <a class="sref" href="#s51">S51</a></span>; in top-down, "straight down" becomes "every unroofed tile". Change the sky value: night does not re-flood, the 16×16 (block × sky) table is simply re-read, so the step counter stays at zero <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s50">S50</a>, <a class="sref" href="#s51">S51</a></span>. <b>Erase a torch</b> to watch the bug-prone half: an "unlight" pass (red) clears what the torch lit, then a re-seed (blue) refills from what is left <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s53">S53</a></span>. The diamond pools are the taxicab −1 artefact the study warns about <span class="cite"><b class="tag ti">I</b></span>. The Terraria-style mode runs RGB through four sweeps (about 4·W·H work whatever the light count) with decay 0.91 per tile in air and 0.56 in solids, figures the study marks unverified though consistent with the 42- and 7-tile ranges <span class="cite"><b class="tag tu">U</b> <a class="sref" href="#s59">S59</a></span>; the torch colours are Terraria's own <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s60">S60</a></span>.</figcaption>
+</figure>
+<!--/FIG-->

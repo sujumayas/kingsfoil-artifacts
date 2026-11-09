@@ -1,0 +1,25 @@
+name: validate
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Validate (catalog, studies, manifest, links, budgets, reproducible builds, browser)
+        run: python tools/validate.py --rebuild
+      - name: Committed site/ matches a fresh build
+        run: |
+          git status --porcelain site/
+          test -z "$(git status --porcelain site/)"

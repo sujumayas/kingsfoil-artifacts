@@ -1,0 +1,101 @@
+<!--FIG lut-->
+<figure class="fig" data-demo="lut" id="fig-lut">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One indexed tree, many seasons: palette rows, index tricks and damage stages</h4><span class="illu">Dead-leaf, grey and charcoal rows illustrative</span></div>
+  <div class="duo wide-r">
+    <div><div class="pair"><div class="stage chk"><canvas width="56" height="52" aria-label="The index image: five leaf ramp indices in greys, bark in browns"></canvas><span class="tagl">indices</span></div><div class="stage"><canvas width="56" height="52" aria-label="The same tree drawn through the selected palette row"></canvas><span class="tagl">through the LUT</span></div></div>
+      <div class="ctl col">
+        <label><input type="checkbox" data-k="blossom" checked> Highlight index → pink in spring (blossom)</label>
+        <label><input type="checkbox" data-k="trans" checked> Leaf indices → transparent when bare (branches painted underneath)</label>
+        <label><input type="checkbox" data-k="snowcap" checked> Top-lit indices → white (snow cap)</label>
+      </div></div>
+    <div><div class="lut" role="group" aria-label="Palette rows"></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The sprite is drawn once with numbered colours; a small table says what each number means this season, so changing season means reading another row. The CC0 three-line shader does it with <code>COLOR = texture(palette, vec2(COLOR.r + .05, .5))</code> [V, S145]. A palette can't change the silhouette, so bare rows need branches painted under the leaves (here, the Sandbox's own recursive winter sprite) [I]. The six seasonal states follow what commercial packs ship [V, S163]. The <b>Polluted</b> rows follow Factorio's rule that each event drops a leaf stage or adds 6.7 % grey [V, S40]; grey must be a palette row, not desaturation [I]. Use nearest filtering and lossless textures for index art [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG colormap-->
+<figure class="fig" data-demo="colormap" id="fig-colormap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A grey sprite tinted by a climate colormap, or by a palette row</h4><span class="illu">Colormap colours illustrative</span></div>
+  <div class="duo wide-r">
+    <div><div class="stage tm" aria-label="Colormap triangle: drag to pick temperature and rain"><canvas width="96" height="96" aria-hidden="true"></canvas><span class="tagl">temp → · ↑ rain·T</span></div>
+      <div class="ctl"><div class="seg" data-seg="season" role="group" aria-label="Season shift (illustrative)"><button type="button" data-v="0">Spring</button><button type="button" class="on" data-v="1">Summer</button><button type="button" data-v="2">Autumn</button><button type="button" data-v="3">Winter</button></div>
+        <label><input type="checkbox" data-k="opt" checked> Last tree is a birch that opts out</label></div></div>
+    <div><div class="stage"><canvas width="184" height="96" aria-label="Six trees near the picked climate: top row tinted by RGB multiply, bottom row by the nearest palette row"></canvas><span class="tagl">top: multiply · bottom: palette row</span></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Minecraft paints leaves grey and looks the colour up in a 256 × 256 <code>foliage.png</code> with <code>T = clamp(temp)</code> and <code>R = clamp(rain)·T</code>, so only a triangle is used; spruce and birch keep fixed palettes [V, S50]. The pixel-art version picks a palette <b>row</b> from the map cell instead of multiplying RGB [I], and the colour count shows why: continuous tints drift off-palette, rows stay on it. Each tree's row can ride in an instance uniform (G2) [I]. The colormap's colours and the season shift here are illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pheno-->
+<figure class="fig" data-demo="pheno" id="fig-pheno">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The forest becomes autumn one tree at a time</h4><span class="illu">Calendar, stage dates and larch sprites illustrative</span></div>
+  <div class="stage"><canvas width="224" height="112" aria-label="Maples, birches, oaks and larches on a valley floor rising to a hill at the top right, turning on their own schedule"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Day of year <input type="range" data-k="day" min="240" max="320" value="276"><output data-o="day"></output></label>
+    <label class="rng">Hill height <input type="range" data-k="ft" min="0" max="4000" step="200" value="2000"><output data-o="ft"></output></label>
+    <label class="rng">Latitude difference <input type="range" data-k="deg" min="0" max="10" value="2"><output data-o="deg"></output></label>
+    <label><input type="checkbox" data-k="jit" checked> ±5 days per tree</label>
+    <label><input type="checkbox" data-k="dith" checked> Dithered turn over</label>
+    <label class="rng">Turn width <input type="range" data-k="w" min="1" max="3" value="2"><output data-o="w"></output></label>
+  </div>
+  <div class="readout" data-hop aria-live="polite"></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each tree reads <code>phase = season_t + species offset + elevation·k_elev + hash01(id)·0.03 − 0.015</code> and picks its palette row from its own phase, with a Bayer-dithered blend over 1–3 days [I, note 03]. The offsets (maple and birch −0.02, oak +0.03, larch +0.05) are applied here as dates, so maples and birches go first, oaks later and the larch last, the order the biology reports [V, S190, S192]. Hopkins' law gives about 4 days per degree of latitude or per 400 ft of altitude [V, S193], so the hill top turns first. Untick the dither to see the Sandbox's hard per-tree flips, which pop [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG winter-->
+<figure class="fig" data-demo="winter" id="fig-winter">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Winter: branches by recursion, snow on conifer tiers, less snow under canopy</h4><span class="illu">Recursion interpretation illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="A bare tree drawn live by recursion"></canvas></div>
+      <div class="ctl"><div class="seg" data-seg="mode" role="group" aria-label="Generator"><button type="button" class="on" data-v="windy">Windy Tree recursion</button><button type="button" data-v="lsys">L-system + pipe model</button></div>
+        <label class="rng">Fork depth <input type="range" data-k="depth" min="1" max="6" value="4"><output data-o="depth"></output></label>
+        <label class="rng">L-system iterations <input type="range" data-k="it" min="1" max="4" value="3"><output data-o="it"></output></label>
+        <label class="rng">Pipe exponent <input type="range" data-k="ex" min="20" max="30" value="25"><output data-o="ex"></output></label>
+        <label class="rng">Wind <input type="range" data-k="gust" min="0" max="12" value="5"></label></div></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="A winter stand of spruces, birches and oaks with snow on the conifer tiers and less snow on the ground beneath crowns"></canvas></div>
+      <div class="ctl"><label><input type="checkbox" data-k="tiers" checked> Whiten the top of each tier</label><label><input type="checkbox" data-k="icpt" checked> Interception (ground snow × (1 − density·0.65))</label></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption><b>Left:</b> the 140-character Windy Tree dweet recurses with thickness ×0.97, forks a ×0.6 child after 9 steps and adds <code>sin(t + counter)/149</code> to every angle [V, S91]; this is a re-implementation from those constants. The ABOP grammar <code>X→F[+X]F[−X]+X; F→FF</code> at δ 20° works at 3–4 iterations for sprites [I, note 04], and a pipe-model exponent of 2–3 gives 1 px twigs, 2–3 px limbs and 4–6 px trunks [V, S212; I]. <b>Right:</b> the Sandbox whitens the top of each conifer tier [I] (narrow, down-sloped conifers shed heavy snow [V, S195]) and cuts ground snow by canopy density × 0.65 [I, Sandbox].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sway-->
+<figure class="fig" data-demo="sway" id="fig-sway">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wind: shear vs smooth vs whole-pixel bands, gusts that travel, and the HDMA table</h4><span class="illu">8 px tiles; amplitudes illustrative</span></div>
+  <div class="tri">
+    <div><div class="stage"><canvas width="48" height="52" aria-label="Vertex shear: the whole sprite including the trunk slides"></canvas><span class="tagl">shear the quad</span><div class="hud" data-hud="t0"></div></div></div>
+    <div><div class="stage"><canvas width="48" height="52" aria-label="Smooth per-row sub-pixel sway with blended colours"></canvas><span class="tagl">smooth rows</span><div class="hud" data-hud="t1"></div></div></div>
+    <div><div class="stage"><canvas width="48" height="52" aria-label="Three crown bands shifted by whole pixels, trunk fixed"></canvas><span class="tagl">3 whole-px bands</span><div class="hud" data-hud="t2"></div></div></div>
+  </div>
+  <div class="stage" style="margin-top:10px"><canvas width="256" height="56" aria-label="A row of trees; a gust wave travels across them from left to right"></canvas></div>
+  <svg class="chart gust" viewBox="0 0 256 34" preserveAspectRatio="none" style="height:40px;margin-top:4px" role="img" aria-label="The gust profile along the row"></svg>
+  <div class="duo" style="margin-top:10px">
+    <div class="stage"><canvas width="112" height="64" aria-label="SNES HDMA: every scanline scrolls by its own table entry"></canvas><span class="tagl">HDMA scanline scroll</span></div>
+    <svg class="chart hdt" viewBox="0 0 90 112" role="img" aria-label="The 112-entry sine table and the window the pointer reads" style="max-height:190px"></svg>
+  </div>
+  <div class="ctl">
+    <label class="rng">Wind <input type="range" data-k="wind" min="0" max="100" value="60"><output data-o="wind"></output></label>
+    <label class="rng">Amplitude <input type="range" data-k="amp" min="5" max="30" value="16"><output data-o="amp"></output></label>
+    <div class="seg" data-seg="row" role="group" aria-label="Row species"><button type="button" class="on" data-v="Mixed">Mixed</button><button type="button" data-v="Spruce">Spruce</button><button type="button" data-v="Birch">Birch</button><button type="button" data-v="Palm">Palm</button></div>
+    <label><input type="checkbox" data-k="inph"> Everything in phase</label>
+  </div>
+  <figcaption><b>Top:</b> shearing the quad moves the trunk too [I]; smooth per-row offsets blend neighbours into new colours, so the counters climb (pixel crawl); the Sandbox's three bands (×2.2 / ×1.4 / ×0.7, trunk fixed) stay on palette [I, Sandbox]. <b>Middle:</b> gust strength is a wave moving over the map, <code>gust = smooth_tri(s/λ − t·v/λ)</code> with λ 24 tiles and v 3 tiles/s, and the offset grows with gust² and height over stiffness [I, note 03]; the Sandbox flex is palm 1.5, birch 1.3, oak 1.0, pine 0.55, spruce 0.45 [I]. Tick <b>in phase</b> to see the mechanical look the risks warn about. <b>Bottom:</b> SNES HDMA writes a new horizontal scroll per scanline; OpenSNES animates a 112-line sine by moving the table pointer, <code>phase = (phase + 1) % 112</code>, not by rewriting the table [V, S18, S19].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ferrari-->
+<figure class="fig" data-demo="ferrari" id="fig-ferrari">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Ferrari's trick on a crown: two reserved rim colours, rotated</h4><span class="illu">State table illustrative</span></div>
+  <div class="duo wide-l">
+    <div class="stage"><canvas width="64" height="60" aria-label="A kapok crown whose rim pixels cycle so the leaves seem to grow and shrink by a pixel"></canvas></div>
+    <div class="ctl col">
+      <label class="rng">Engine rate <input type="range" data-k="rate" min="0" max="4000" step="100" value="1600"><output data-o="rate"></output></label>
+      <label><input type="checkbox" data-k="off" checked> Offset the timing across the foliage</label>
+      <label><input type="checkbox" data-k="show"> Show the reserved pixels</label>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mark Ferrari painted two "clown colors" along leaf edges, filled with leaf-to-background gradients; cycling them makes a leaf "expand and shrink", and offsetting the timing keeps the tree from swaying "like a metronome" [V, S90]. No pixel moves; only the palette does. In the Canvas Cycle engine, steps per second = rate/280 [V, S84, S87]. In Godot this is <code>texelFetch(palette, idx + offset(t))</code> with 2–6 indices per band [I]. Note that the measured forest scenes mostly cycle water, not leaves [I].</figcaption>
+</figure>
+<!--/FIG-->

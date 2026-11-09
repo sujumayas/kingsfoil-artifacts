@@ -1,0 +1,11 @@
+# Procedural characters: built in an earlier session; its build pipeline was not preserved.
+# site/procedural-character-generation-study.html is therefore the source. Edit it in place; the validator still checks it.
+id: procgen-characters
+kind: static
+page: procedural-character-generation-study.html
+thumb:                          # homepage card: crop of the hero, 1440x900 viewport
+  from: page
+  crop: [760, 140, 1360, 478]
+  wait: 2500
+qa:
+  max_page_kb: 1200

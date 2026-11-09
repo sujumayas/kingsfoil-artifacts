@@ -1,0 +1,482 @@
+{
+ "version": 1,
+ "facets": [
+  {
+   "id": "type",
+   "label": "Type",
+   "filter": false,
+   "values": [
+    {
+     "id": "study",
+     "label": "Study",
+     "desc": "Deep, referenced research page"
+    },
+    {
+     "id": "sandbox",
+     "label": "Sandbox",
+     "desc": "Playable reference implementation of a study"
+    }
+   ]
+  },
+  {
+   "id": "genre",
+   "label": "Genre",
+   "filter": true,
+   "values": [
+    {
+     "id": "mmorpg",
+     "label": "MMORPG",
+     "desc": "Massively multiplayer RPG (e.g. Tibia-like)"
+    },
+    {
+     "id": "rpg",
+     "label": "RPG"
+    },
+    {
+     "id": "rts",
+     "label": "RTS"
+    },
+    {
+     "id": "hero-defense",
+     "label": "Hero Defense",
+     "desc": "WC3 custom-map style wave defense"
+    },
+    {
+     "id": "roguelike",
+     "label": "Roguelike"
+    },
+    {
+     "id": "survival",
+     "label": "Survival"
+    },
+    {
+     "id": "farming-sim",
+     "label": "Farming sim"
+    },
+    {
+     "id": "match-3",
+     "label": "Match-3"
+    },
+    {
+     "id": "runner",
+     "label": "Runner"
+    }
+   ]
+  },
+  {
+   "id": "perspective",
+   "label": "View",
+   "filter": true,
+   "values": [
+    {
+     "id": "top-down-3-4",
+     "label": "Top-down 3/4",
+     "desc": "Classic JRPG / Tibia oblique view"
+    },
+    {
+     "id": "top-down-orthographic",
+     "label": "Top-down (straight)"
+    },
+    {
+     "id": "isometric",
+     "label": "Isometric"
+    },
+    {
+     "id": "side-view",
+     "label": "Side view"
+    },
+    {
+     "id": "3d",
+     "label": "3D"
+    }
+   ]
+  },
+  {
+   "id": "art-style",
+   "label": "Style",
+   "filter": true,
+   "values": [
+    {
+     "id": "pixel-art",
+     "label": "Pixel art"
+    },
+    {
+     "id": "hd-2d",
+     "label": "HD-2D"
+    },
+    {
+     "id": "low-poly",
+     "label": "Low-poly"
+    },
+    {
+     "id": "painted-2d",
+     "label": "Painted 2D"
+    },
+    {
+     "id": "3d-stylized",
+     "label": "Stylized 3D"
+    }
+   ]
+  },
+  {
+   "id": "domain",
+   "label": "Topic",
+   "filter": true,
+   "values": [
+    {
+     "id": "vfx",
+     "label": "VFX",
+     "desc": "Visual effects and simulation"
+    },
+    {
+     "id": "rendering",
+     "label": "Rendering",
+     "desc": "Drawing, lighting, performance"
+    },
+    {
+     "id": "ai",
+     "label": "Game AI"
+    },
+    {
+     "id": "procgen",
+     "label": "Procedural generation"
+    },
+    {
+     "id": "animation",
+     "label": "Animation"
+    },
+    {
+     "id": "ui",
+     "label": "UI / HUD"
+    },
+    {
+     "id": "audio",
+     "label": "Audio"
+    },
+    {
+     "id": "netcode",
+     "label": "Netcode"
+    },
+    {
+     "id": "economy",
+     "label": "Economy"
+    },
+    {
+     "id": "design",
+     "label": "Game design"
+    }
+   ]
+  },
+  {
+   "id": "concept",
+   "label": "Subject",
+   "filter": false,
+   "values": [
+    {
+     "id": "snow",
+     "label": "Snow"
+    },
+    {
+     "id": "acid",
+     "label": "Acid"
+    },
+    {
+     "id": "rain",
+     "label": "Rain"
+    },
+    {
+     "id": "trees",
+     "label": "Trees & forests"
+    },
+    {
+     "id": "light",
+     "label": "Light & shadow"
+    },
+    {
+     "id": "enemy-ai",
+     "label": "Enemy AI"
+    },
+    {
+     "id": "characters",
+     "label": "Characters"
+    }
+   ]
+  },
+  {
+   "id": "technique",
+   "label": "Technique",
+   "filter": false,
+   "values": [
+    {
+     "id": "cellular-automata",
+     "label": "Cellular automata",
+     "desc": "Tiny per-cell rules (DOOM fire family)"
+    },
+    {
+     "id": "dither-threshold",
+     "label": "Dither threshold",
+     "desc": "Per-pixel fixed threshold vs a value (Bayer/noise)"
+    },
+    {
+     "id": "palette-lut",
+     "label": "Palette / LUT lighting",
+     "desc": "Colour through lookup tables and palette variants"
+    },
+    {
+     "id": "heightmap",
+     "label": "Heightmap"
+    },
+    {
+     "id": "exposure-map",
+     "label": "Exposure / shelter map"
+    },
+    {
+     "id": "sandpile",
+     "label": "Sandpile / talus"
+    },
+    {
+     "id": "z-particles",
+     "label": "Height (z) particles",
+     "desc": "Particles with ground point + height + shadow"
+    },
+    {
+     "id": "footprint-stamp",
+     "label": "Conserve-and-displace stamps"
+    },
+    {
+     "id": "liquid-flow",
+     "label": "Liquid flow (film threshold)"
+    },
+    {
+     "id": "reaction-table",
+     "label": "Material reaction tables"
+    },
+    {
+     "id": "metaballs",
+     "label": "Metaballs / threshold fields"
+    },
+    {
+     "id": "gas-diffusion",
+     "label": "Gas / fume diffusion"
+    },
+    {
+     "id": "ripple-sim",
+     "label": "Ripple simulation",
+     "desc": "Two-buffer water ripples"
+    },
+    {
+     "id": "midpoint-displacement",
+     "label": "Midpoint displacement"
+    },
+    {
+     "id": "poisson-disk",
+     "label": "Poisson-disk sampling"
+    },
+    {
+     "id": "biome-noise",
+     "label": "Climate → biome tables"
+    },
+    {
+     "id": "sprite-atlas",
+     "label": "Sprite atlas & reuse"
+    },
+    {
+     "id": "band-sway",
+     "label": "Row/band sway",
+     "desc": "Whole-pixel wind sway"
+    },
+    {
+     "id": "boids",
+     "label": "Boids / flocking"
+    },
+    {
+     "id": "occlusion-fade",
+     "label": "See-through occlusion",
+     "desc": "Fade, cutaway, silhouette"
+    },
+    {
+     "id": "spatial-grid",
+     "label": "Spatial grid culling"
+    },
+    {
+     "id": "light-map",
+     "label": "Light map",
+     "desc": "Albedo × accumulated light"
+    },
+    {
+     "id": "polar-shadow-map",
+     "label": "Polar 1D shadow map"
+    },
+    {
+     "id": "shadowcasting",
+     "label": "Shadowcasting FOV"
+    },
+    {
+     "id": "flood-fill-light",
+     "label": "Flood-fill tile light"
+    },
+    {
+     "id": "height-projection",
+     "label": "Sun shadows by height"
+    },
+    {
+     "id": "flicker-strings",
+     "label": "Flicker patterns",
+     "desc": "Quake/DOOM style light personality"
+    },
+    {
+     "id": "fsm",
+     "label": "State machines"
+    },
+    {
+     "id": "behavior-tree",
+     "label": "Behavior trees"
+    },
+    {
+     "id": "utility-ai",
+     "label": "Utility AI"
+    },
+    {
+     "id": "goap",
+     "label": "GOAP / planners"
+    },
+    {
+     "id": "ai-director",
+     "label": "AI director"
+    },
+    {
+     "id": "influence-map",
+     "label": "Influence maps"
+    },
+    {
+     "id": "flow-field",
+     "label": "Flow fields"
+    },
+    {
+     "id": "attack-tokens",
+     "label": "Attack tokens"
+    },
+    {
+     "id": "reinforcement-learning",
+     "label": "Reinforcement learning"
+    },
+    {
+     "id": "zwicky-box",
+     "label": "Morphological (Zwicky) box",
+     "desc": "Slot tables of parts"
+    },
+    {
+     "id": "paper-doll",
+     "label": "Paper-doll layering"
+    },
+    {
+     "id": "palette-swap",
+     "label": "Palette swaps / tinting"
+    },
+    {
+     "id": "kitbash-3d",
+     "label": "3D kitbashing"
+    },
+    {
+     "id": "genai",
+     "label": "Generative AI (viability)"
+    }
+   ]
+  },
+  {
+   "id": "engine",
+   "label": "Engine",
+   "filter": true,
+   "values": [
+    {
+     "id": "godot-4",
+     "label": "Godot 4"
+    },
+    {
+     "id": "godot-web-compat",
+     "label": "Godot web (Compatibility)",
+     "desc": "WebGL2 renderer limits considered"
+    },
+    {
+     "id": "web-canvas",
+     "label": "Web canvas"
+    },
+    {
+     "id": "engine-agnostic",
+     "label": "Engine-agnostic"
+    }
+   ]
+  },
+  {
+   "id": "platform",
+   "label": "Platform",
+   "filter": false,
+   "values": [
+    {
+     "id": "web",
+     "label": "Web"
+    },
+    {
+     "id": "mobile",
+     "label": "Mobile"
+    },
+    {
+     "id": "desktop",
+     "label": "Desktop"
+    },
+    {
+     "id": "low-end",
+     "label": "Low-end hardware"
+    }
+   ]
+  },
+  {
+   "id": "project",
+   "label": "Project",
+   "filter": true,
+   "values": [
+    {
+     "id": "asterion-online",
+     "label": "Asterion Online",
+     "desc": "Tibia-like MMORPG"
+    },
+    {
+     "id": "hero-defense",
+     "label": "Hero Defense",
+     "desc": "WC3-style RTS"
+    },
+    {
+     "id": "kingsfoil-rpg",
+     "label": "Kingsfoil RPG"
+    },
+    {
+     "id": "match-3",
+     "label": "Kingsfoil Match-3"
+    }
+   ]
+  },
+  {
+   "id": "maturity",
+   "label": "Maturity",
+   "filter": false,
+   "values": [
+    {
+     "id": "research",
+     "label": "Research"
+    },
+    {
+     "id": "prototype",
+     "label": "Prototype"
+    },
+    {
+     "id": "in-engine",
+     "label": "In engine"
+    },
+    {
+     "id": "shipped",
+     "label": "Shipped"
+    }
+   ]
+  }
+ ]
+}

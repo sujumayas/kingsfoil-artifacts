@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel forests: tiny algorithms for thousands of living trees</h1>
+      <p class="deck">Weather is one value spread over the world. A forest is thousands of separate objects, and each must look a little different, stand somewhere believable, turn with the seasons on its own schedule, react when someone walks past, and cost almost nothing to draw. Every one of those has a classic answer a few lines long. Aimed at Godot 4 on the web.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-forest-sandbox.html">Play the Forest Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage"><canvas width="256" height="144" aria-label="Live forest: a walker follows a trail through boreal, mixed, deciduous, rainforest and savanna stands while wind waves roll across the crowns, the seasons cycle tree by tree, and birds flee and land"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" aria-hidden="true"><span data-t="0">Spring</span><span data-t="1">Summer</span><span data-t="2">Autumn</span><span data-t="3">Winter</span></div>
+      <figcaption>Live, a 256×144 buffer running the Sandbox's rules: procedural sprites, a climate band that changes the forest type along the trail, Bridson placement, three-band whole-pixel sway driven by a travelling gust, a per-tree season offset, dither occlusion when the walker passes behind a crown, merged shadows with sunflecks, and birds that flee at 30 px. One year takes about 70 s here (illustrative speed).</figcaption>
+    </figure>
+  </div>
+</header>

@@ -1,0 +1,127 @@
+<!--FIG daylut-->
+<figure class="fig" data-demo="daylut" id="fig-daylut">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One clock, three ways to colour the day: tint, keyframed palettes, instant swap</h4><span class="illu">Scene, keys and night recipe values illustrative</span></div>
+  <div class="duo wide-r">
+    <div><div class="stage"><canvas width="128" height="72" aria-label="A small palette scene recoloured for the chosen hour"></canvas><div class="hud" data-hud></div></div>
+      <p class="mini" style="margin:6px 0 2px">Current palette (24 ramp entries + 2 emissive)</p><div class="strip" data-pal></div></div>
+    <div><svg class="chart" viewBox="0 0 400 190" role="img" aria-label="Day curves: Tibia world light and Sandbox ambient brightness over 24 hours, with the ambient colour band; drag to scrub"></svg>
+      <div class="ctl col">
+        <div class="seg" data-seg="m" role="group" aria-label="Method"><button type="button" data-v="tint">Multiply tint</button><button type="button" class="on" data-v="pal">Keyframed palettes + Purkinje night</button><button type="button" data-v="swap">Instant swap (Crystal-style)</button></div>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The chart's two curves come from the study: Tibia's server light, 40 at night and 250 by day with 2-hour linear ramps <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s31">S31</a></span>, and the brightness of the Sandbox's four ambient keys chosen by sun elevation <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>; the band beneath is the Sandbox ambient colour. <b>Multiply tint</b> is one colour over everything, the "muddy" option that also greys out lamps and windows <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s203">S203</a></span>. <b>Keyframed palettes</b> lerp every entry between neighbouring keys, the way Ferrari's <code>Palette.fade</code> does <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s210">S210</a>, <a class="sref" href="#s211">S211</a></span>; the night key follows the study's Purkinje recipe (desaturate, shift blue, darken reds most, merge adjacent ramp shades) <span class="cite"><b class="tag ti">I</b> note 04</span> and leaves emissive entries alone. <b>Instant swap</b> changes palettes in one frame, as Pokémon Crystal does, using the Kiradex multipliers for morning, evening and night, with window yellow held at 0.90 <span class="cite"><b class="tag tv">V</b> secondary, <a class="sref" href="#s205">S205</a></span>. The readout checks night against the study's floor of about 0.4 of day luma <span class="cite"><b class="tag ti">I</b> <a class="sref" href="#s205">S205</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sunproj-->
+<figure class="fig" data-demo="sunproj" id="fig-sunproj">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sun shadows: project every raised pixel by its height, or rotate a cheap shadow sprite</h4><span class="illu">Right-hand scene and light heights illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="Sandbox village crop with the obelisk sundial; drag to turn the sun"></canvas><div class="hud" data-hud></div><span class="tagl">Per-pixel projection (Sandbox)</span></div></div>
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="A walker, barrel, fence and sign with shadow sprites from the sun and the three nearest lamps; drag the lamps"></canvas><div class="hud" data-hud="r"></div><span class="tagl">Shadow tiers</span></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Sun elevation <input type="range" data-k="el" min="1" max="90" value="30"><output data-o="el"></output></label>
+    <label class="rng">Azimuth <input type="range" data-k="az" min="0" max="359" value="215"><output data-o="az"></output></label>
+    <label><input type="checkbox" data-k="remap" checked> Roofs and crowns remapped to the ground</label>
+    <label><input type="checkbox" data-k="q16"> Quantise direction to 16 steps</label>
+    <div class="seg" data-seg="tier" role="group" aria-label="Shadow tier"><button type="button" data-v="blob">Blob</button><button type="button" class="on" data-v="rot">Rotated sprite: sun + 3 nearest lights</button><button type="button" data-v="shear">Sheared silhouette</button></div>
+  </div>
+  <svg class="chart" viewBox="0 0 520 120" role="img" aria-label="Shadow length per unit height against sun elevation, with the study's sample points and the Sandbox cap"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Length = <code>h · cot(elevation)</code>: 0.58h at 60°, 1h at 45°, 1.73h at 30°, 2.75h at 20°, 5.67h at 10°, 9.5h at 6° <span class="cite"><b class="tag tk">K</b> <a class="sref" href="#s187">S187</a></span>, pointing away from the sun. The Sandbox moves each raised pixel to <code>base + dir · h · k</code> with <code>k = 0.62 · min(4, cot(max(4°, el)))</code>, roofs counted as 22 px tall and crowns 15, about 8% of crown pixels skipped as sunflecks <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Untick the remap to see the bug that rule fixes: in a 3/4 view a roof pixel high on the screen is not high in the world, so measuring its height from the screen throws long streaks. On the right are the cheap tiers <span class="cite"><b class="tag tv">V</b>/<b class="tag ti">I</b> note 03</span>: a blob, Graveyard Keeper's rotated shadow sprites with up to four shadows per object, one for the sun plus the three nearest lights <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s109">S109</a></span>, and the sprite redrawn in one colour, sheared by azimuth <span class="cite"><b class="tag ti">I</b></span>. Smoothly turning pixel shadows swim; quantising to 8–16 directions steadies them <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG twilight-->
+<figure class="fig" data-demo="twilight" id="fig-twilight">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Drive the sky by the sun's height, not the clock: golden hour, twilight and the shadow gap</h4></div>
+  <svg class="chart" viewBox="0 0 640 250" role="img" aria-label="Sun and moon elevation over 24 hours over bands for day, golden hour, civil, nautical and astronomical twilight; drag to scrub"></svg>
+  <div class="duo" style="margin-top:8px">
+    <div class="readout" data-ro aria-live="polite" style="margin:0"></div>
+    <div><div class="legend-mini"><span><i style="background:#ffc870"></i>sun elevation (Sandbox curve)</span><span><i style="background:#8ea8ff"></i>moon (casts shadows above 4°)</span><span><i style="background:#ff8f7a"></i>no cast shadows</span></div>
+      <div class="ctl"><label><input type="checkbox" data-k="oc"> Overcast</label></div></div>
+  </div>
+  <figcaption>Thresholds from the study: golden hour has no single definition (0° to 6°, or −6° to +6°); civil twilight runs to −6°, nautical to −12°, night from −18° <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s185">S185</a>, <a class="sref" href="#s186">S186</a></span>. The study's phase table maps them to rendering: above 6° day; 0–6° golden; 0 to −6° no shadows, lamps on; −6 to −12° deep blue, windows pop; below −12° night palette <span class="cite"><b class="tag ti">I</b> note 04</span>. The Sandbox curve is <code>el = 62·sin((h−6)/12·π)</code> with a moon at <code>40·sin((h−18)/12·π)</code> that casts faint blue shadows above 4° <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>; the red band is the twilight gap where neither sun nor moon casts a shadow, matching "no sharp shadows" in blue hour <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s185">S185</a></span>. The vertical axis is stretched within ±20° so the thin bands stay readable. Colour temperatures in the readout are the study's anchors <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s184">S184</a>, <a class="sref" href="#s185">S185</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lightmap-->
+<figure class="fig" data-demo="lightmap" id="fig-lightmap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">An additive light map at low resolution, then one multiply</h4><span class="illu">Light positions illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="192" height="108" aria-label="Night scene multiplied by a low-resolution light map; drag the lights"></canvas><div class="hud" data-hud></div></div></div>
+    <div><p class="mini" style="margin:0 0 4px">The light map itself, at its own resolution</p><div class="stage"><canvas width="192" height="108" aria-label="The light map at its stored resolution"></canvas></div>
+      <div class="ctl col">
+        <div class="seg" data-seg="res" role="group" aria-label="Light map resolution"><button type="button" data-v="1">Full</button><button type="button" class="on" data-v="0.5">½ (Unity default)</button><button type="button" data-v="0.25">¼ (Factorio)</button><button type="button" data-v="0.125">⅛</button></div>
+        <div class="seg" data-seg="up" role="group" aria-label="Upscale"><button type="button" data-v="near">Nearest</button><button type="button" class="on" data-v="lin">Linear</button><button type="button" data-v="bay">Linear + Bayer bands</button></div>
+        <div class="seg" data-seg="bl" role="group" aria-label="Blend"><button type="button" class="on" data-v="add">Add</button><button type="button" data-v="max">Max</button></div>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew fills <code>Game1.lightmap</code> with the ambient colour, draws each on-screen light texture into it at reduced resolution, and composites it scaled up with linear filtering <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s71">S71</a></span>. Unity's 2D renderer stores light textures at a render scale of 0.5 by default <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s107">S107</a></span> and Factorio's default light resolution became 0.25 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s69">S69</a></span>. Each stamp costs R² texels at the reduced resolution, plus one multiply per screen pixel <span class="cite"><b class="tag ti">I</b></span>: watch the stamp count fall by 4× per halving. Linear suits soft light, nearest plus Bayer suits pixel light <span class="cite"><b class="tag ti">I</b></span>; switch to Add and pile lights together to see the blow-out that Max avoids <span class="cite"><b class="tag ti">I</b></span>. Stamps use the Sandbox falloff <code>(1 − (d/R)²)²</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG godot-->
+<figure class="fig" data-demo="godot" id="fig-godot">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Godot's 2D light limits: what happens to the 16th light on a canvas item</h4><span class="illu">Which lights drop first is illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="192" height="120" aria-label="A TileMapLayer split into quadrants, each one canvas item; click to add lights"></canvas><div class="hud" data-hud></div></div>
+      <div class="gd-legend"><span><i style="background:#ff6b5e"></i>item over 15 lights (extras dropped)</span><span><i style="background:#8ea8ff"></i>dropped light</span><span><i style="background:#ffc870"></i>shadowed light (4 passes)</span></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <label class="rng"><span>Light texture size</span><input type="range" data-k="tex" min="64" max="512" step="16" value="320"><output data-o="tex"></output></label>
+        <div class="seg" data-seg="q" role="group" aria-label="Canvas item size"><button type="button" data-v="8">Quadrant 8×8 tiles</button><button type="button" class="on" data-v="16">16×16 tiles [U]</button></div>
+        <label><input type="checkbox" data-k="ubo"> Small uniform buffer (64 per render)</label>
+        <label class="rng"><span>Shadowed lights</span><input type="range" data-k="shad" min="0" max="8" value="2"><output data-o="shad"></output></label>
+        <div class="tools"><button type="button" class="btn" data-b="add">Add 20 lights</button><button type="button" class="btn ghost" data-b="clear">Clear</button></div>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each lit canvas item loops over the lights whose rectangles touch it, up to <code>MAX_LIGHTS_PER_ITEM = 16</code>, effectively 15; a render takes at most 256 lights, or 64 when the uniform buffer is under 64 KB; extras are dropped silently <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s88">S88</a></span>. A light's rectangle is its texture: forum users hit the cap with 320 px textures on 64 px sprites and fixed it below 192 px <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s95">S95</a></span>; drag the slider across 192. A TileMapLayer quadrant is one canvas item, so the cap applies per quadrant <span class="cite"><b class="tag ti">I</b></span>; the quadrant size of 16 is unverified <span class="cite"><b class="tag tu">U</b></span>. Seams appear where a light survives in one quadrant and is dropped in the next. Every shadowed point light costs 4 passes of 90° <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s88">S88</a></span>, which is why the study plans for 1–3 shadowed lights <span class="cite"><b class="tag ti">I</b></span>. The scene is drawn at ¼ of Godot pixels.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG polar-->
+<figure class="fig" data-demo="polar" id="fig-polar">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A 1D polar shadow map with the height rule: 256 distances per light, cached until something moves</h4><span class="illu">Layout illustrative; heights and radii from the Sandbox</span></div>
+  <div class="polar-box">
+    <div><div class="stage click"><canvas width="160" height="100" aria-label="Night scene with three shadowed lights; drag a light, or paint walls, fences and barrels"></canvas><div class="hud" data-hud></div></div>
+      <p class="mini" style="margin:6px 0 0">The selected light's 256 × 1 distance row (bright = far)</p><canvas class="row1d" width="256" height="1" aria-label="256 by 1 distance row"></canvas></div>
+    <div><svg class="chart" viewBox="-60 -60 120 120" role="img" aria-label="Polar plot of the selected light's 256 ray distances"></svg></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tool" role="group" aria-label="Tool"><button type="button" class="on" data-v="move">Move lights</button><button type="button" data-v="30">Wall 30</button><button type="button" data-v="5">Fence 5</button><button type="button" data-v="9">Barrel 9</button><button type="button" data-v="0">Erase</button></div>
+    <div class="seg" data-seg="ty" role="group" aria-label="Selected light"><button type="button" class="on" data-v="campfire">Campfire h 4</button><button type="button" data-v="torch">Torch h 10</button><button type="button" data-v="lamp">Street lamp h 16</button></div>
+    <label><input type="checkbox" data-k="rays"> Show rays</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>From each light the Sandbox casts 256 rays in 1-px steps and stores where each stopped; a pixel is lit if it is no farther than the stored distance for its angle <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>, the same idea as mattdesl's 256×1 polar reduce and Godot's own 2D shadow rows <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s142">S142</a>, <a class="sref" href="#s88">S88</a></span>. A ray stops only where the occluder is at least 60% of the light's height: fence 5, barrel 9, wall 30; a campfire at h 4 (threshold 2.4) is stopped by the fence, a street lamp at h 16 (threshold 9.6) shines over fence and barrels <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Lights re-cast only when dirty or moved and otherwise reuse their 256 distances, which is how the Sandbox gets by with 2–8 re-casts per frame <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a>; <b class="tag ti">I</b> Sandbox run</span>. Thin occluders can slip between rays at long range <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fov-->
+<figure class="fig" data-demo="fov" id="fig-fov">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Shadowcasting as light: recursive, symmetric and ray casting on the same tiles</h4><span class="illu">Map illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="186" height="126" aria-label="A 31 by 21 tile map lit by field of view from a lamp; drag the lamp or toggle walls"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="alg" role="group" aria-label="Algorithm"><button type="button" data-v="rec">Recursive (Bergström)</button><button type="button" class="on" data-v="sym">Symmetric (Ford)</button><button type="button" data-v="ray">Ray casting</button></div>
+        <div class="seg" data-seg="tool" role="group" aria-label="Tool"><button type="button" class="on" data-v="move">Move lamp</button><button type="button" data-v="wall">Toggle walls</button></div>
+        <label class="rng"><span>Radius</span><input type="range" data-k="r" min="3" max="14" value="9"><output data-o="r"></output></label>
+        <label><input type="checkbox" data-k="asym" checked> Mark asymmetric tiles (lit, but cannot see the lamp back)</label>
+        <label><input type="checkbox" data-k="band" checked> Brightness in 5 bands</label>
+      </div>
+      <div class="readout" data-ro aria-live="polite"></div></div>
+  </div>
+  <figcaption>Run the "what can I see?" algorithm from the lamp, clip it to the light's radius, and light what it sees with <code>max(0, 1 − d/r)</code>, quantised to a few levels <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s132">S132</a>; <b class="tag ti">I</b></span>. Bergström's recursive shadowcasting scans 8 octants row by row and never visits tiles in shadow <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s128">S128</a></span>; in Milazzo's comparison shadowcasting was the fastest of five <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s132">S132</a></span>. Ford's version uses 4 quadrants and exact fractions, lights floors whose centre is in the sector and walls if any part is, and is symmetric: if the lamp lights you, you can see the lamp <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s133">S133</a></span>. Red tiles are lit but cannot see the lamp back; basic shadowcasting shows a few <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s130">S130</a></span>, and ray casting more. The counter is tiles visited, the cost the study estimates at about πR² per light <span class="cite"><b class="tag ti">I</b> note 08</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG vissdf-->
+<figure class="fig" data-demo="vissdf" id="fig-vissdf">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Off the grid: a visibility polygon, and an SDF soft shadow with a hardness knob</h4><span class="illu">Shapes illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage click"><canvas width="160" height="100" aria-label="Visibility polygon from a lamp among boxes; drag the lamp"></canvas><div class="hud" data-hud></div><span class="tagl">Corner rays → polygon</span></div>
+      <div class="ctl"><label><input type="checkbox" data-k="soft"> Soft: 11 offset origins</label><label><input type="checkbox" data-k="rays"> Show rays</label></div></div>
+    <div><div class="stage click"><canvas width="96" height="60" aria-label="Signed distance field soft shadow; drag the light"></canvas><div class="hud" data-hud="r"></div><span class="tagl">SDF march</span></div>
+      <div class="ctl"><label class="rng">Hardness k <input type="range" data-k="k" min="2" max="128" value="16"><output data-o="k"></output></label><label class="rng">Steps <input type="range" data-k="st" min="8" max="32" value="24"><output data-o="st"></output></label><label><input type="checkbox" data-k="dith"> Dither to 5 bands</label></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left, Nicky Case's corner rays: cast a ray to every unique wall endpoint and to ±0.00001 rad either side of it, sort the hits by angle and fill the polygon; soft shadows come from 11 offset origins <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s141">S141</a></span>. Red Blob's angle sweep reaches the same shape in O(n log n) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s140">S140</a></span>. Right, a soft shadow from a distance field: march from each pixel toward the light and keep <code>res = min(res, k·h/t)</code>, where h is the distance to the nearest shape; k from 2 to 128 sets the hardness <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s144">S144</a>, <a class="sref" href="#s145">S145</a></span>. Its cost is per pixel × per light × steps, so the study keeps it to 4 lights and 16–32 steps at low resolution <span class="cite"><b class="tag ti">I</b> note 04</span>, and soft gradients fight pixel art unless dithered <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->

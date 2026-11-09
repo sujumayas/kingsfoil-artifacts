@@ -1,0 +1,434 @@
+<!--FIG doom-->
+<figure class="fig" data-demo="doom" id="fig-doom">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The DOOM fire next to its rain analogue</h4><span class="illu">Illustrative rates</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="DOOM PSX fire cellular automaton"></canvas><span class="tagl">DOOM PSX fire</span></div>
+      <p class="pl"><code>fire[to] = fire[from] − (rand &amp; 1)</code>, with a random sideways step. Values 0–36 index a black → red → yellow → white ramp.</p></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Rain analogue: a wetness byte per pixel drawn through a dither threshold, and a two-buffer ripple pond"></canvas><span class="tagl">Rain: wetness byte + ripple buffer</span><div class="hud" data-hud></div></div>
+      <p class="pl">Each hit adds to a pixel's <b>wetness byte</b>; sampled drying subtracts. A pixel shows its wet palette row once <code>wet &gt; 4 + 9·Bayer + 40·hash</code>. The pond runs <code>new = (N+S+E+W)/2 − old</code>, ×0.95.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="fire">Switch the fire off</button>
+    <button type="button" class="btn" data-b="rain">Stop the rain</button>
+    <label class="rng">Intensity <input type="range" data-k="int" min="5" max="100" value="45"><output data-o="int"></output></label>
+    <label><input type="checkbox" data-k="dith" checked> Bayer + hash threshold</label>
+  </div>
+  <figcaption>Both panels keep <b>one number per cell, one local rule, one palette</b>. Switch the fire off and it is dark within a second. Stop the rain and the ground does not switch back: it dries pixel by pixel through the same thresholds it wetted through, and the rings die away. Untick the threshold to see why it matters: with one flat threshold the whole ground flips at once instead of speckling. The constants are the Sandbox's <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>; the rain rate here is illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Six generations of rain techniques, 1908 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1990 and zoomed for 2024–2026 so that Gen 5 is readable. Items without a single year (Marshall–Palmer, "undated") appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ways-->
+<figure class="fig" data-demo="ways" id="fig-ways">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four ways to draw falling rain, and what each costs per frame</h4><span class="illu">Scaled to a 112×64 view</span></div>
+  <div class="quad">
+    <div><div class="stage"><canvas width="112" height="64" aria-label="A1: one pre-drawn rain sheet blended at 50 percent and jumped every 4 frames"></canvas><span class="tagl">A1 overlay sheet</span><div class="hud" data-hud="a"></div></div></div>
+    <div><div class="stage"><canvas width="112" height="64" aria-label="A2: landing-first sprite drops that always splash where they were aimed"></canvas><span class="tagl">A2 landing-first sprites</span><div class="hud" data-hud="b"></div></div></div>
+    <div><div class="stage"><canvas width="112" height="64" aria-label="A3: streaks with a z-height and wind slant, three depth layers"></canvas><span class="tagl">A3 z-height streaks</span><div class="hud" data-hud="c"></div></div></div>
+    <div><div class="stage"><canvas width="112" height="64" aria-label="A4: hashed-cell shader layers computed per pixel"></canvas><span class="tagl">A4 hashed cells</span><div class="hud" data-hud="d"></div></div></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tier" role="group" aria-label="Rain tier"><button type="button" data-v="0">Drizzle</button><button type="button" data-v="1">Light</button><button type="button" class="on" data-v="2">Moderate</button><button type="button" data-v="3">Heavy</button><button type="button" data-v="4">Storm</button></div>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-100" max="100" value="30"><output data-o="wind"></output></label>
+    <label><input type="checkbox" data-k="pan"> Pan the camera</label>
+    <label><input type="checkbox" data-k="land"> Show A2 landing cells</label>
+  </div>
+  <figcaption><b>A1</b> is ALttP's trick: one sheet, blended at 50 %, jumping between four offsets every 4 frames (15 Hz) and scrolling at ½ camera speed <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s13">S13</a></span>. It ignores everything below it. <b>A2</b> is Emerald's: pick the landing cell first, start the sprite at <code>land − velocity × fallFrames</code>, and the splash lands exactly there, with 10 / 16 / 24 sprites for rain, storm and downpour <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s5">S5</a></span>. <b>A3</b> is the Sandbox's: a ground point plus a height <code>z</code>, three layers, a wind slant and a splash by surface. <b>A4</b> hashes screen cells in three depth layers. The counters show the cost model: A1 and A4 cost the same at any intensity; A2 is capped; A3 grows with the drop count. Drop counts and speeds are scaled to this small view (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cost-->
+<figure class="fig" data-demo="cost" id="fig-cost">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Reported costs against one 60 Hz frame</h4><span class="illu">Different machines; not a benchmark</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="scale" role="group" aria-label="Axis scale"><button type="button" class="on" data-v="log">Log scale</button><button type="button" data-v="lin">Linear scale</button></div>
+    <span class="mute" style="font-size:13px">Tick bars to stack them into one frame:</span>
+  </div>
+  <svg class="chart costc" role="img" aria-label="Horizontal bar chart of reported rain costs in milliseconds"></svg>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>The 16.7 ms line is simply one frame at 60 Hz. ToyShop's full-screen rain layer took 4.11 ms against 19.45 ms for 5–10K CPU particles <span class="cite"><b class="tag tv">V</b> vendor, <a class="sref" href="#s58">S58</a></span>; Remember Me's four layers cost ~1.7 ms "the same whatever the strength" <span class="cite"><b class="tag tv">V</b> vendor, <a class="sref" href="#s59">S59</a></span>. Every figure comes from a different machine and year, so the stacked total is only a way to see proportions: <b>layers are flat, particles scale</b>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG curtain-->
+<figure class="fig" data-demo="curtain" id="fig-curtain">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Rain curtains: drop density times a slow noise that drifts with the wind</h4></div>
+  <div class="stage"><canvas width="160" height="90" aria-label="Rain spawned through a scrolling noise mask so sheets of heavier rain sweep across"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="rain">Rain</button><button type="button" data-v="mask">Curtain mask</button><button type="button" data-v="wet">Wetness it leaves</button></div>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-100" max="100" value="45"><output data-o="wind"></output></label>
+    <label><input type="checkbox" data-k="on" checked> Curtains on</label>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>The Sandbox's field is <code>curtain = 0.45 + 0.75·vnoise((x − 42·wind·t)/46, y/38 + 0.04·t)</code>; each drop is spawned by rejection against it (up to four tries), and background wetting reads it too <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. Switch curtains off and the same drops fall uniformly: texture, not weather. The cost is one noise lookup per spawn.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG shadow-->
+<figure class="fig" data-demo="shadow" id="fig-shadow">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Cover map and rain shadow: paint walls, roofs and trees, then turn the wind</h4></div>
+  <div class="stage"><canvas width="128" height="80" aria-label="Paintable cover map: walls and roofs block rain and cast a wind-tilted dry lee" style="cursor:crosshair"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="tool" role="group" aria-label="Paint tool"><button type="button" class="on" data-v="wall">Wall (h 9)</button><button type="button" data-v="house">Roof (h 30)</button><button type="button" data-v="tree">Tree canopy</button><button type="button" data-v="erase">Erase</button></div>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="rain">Rain</button><button type="button" data-v="exp">Exposure X-ray</button></div>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-100" max="100" value="60"><output data-o="wind"></output></label>
+    <button type="button" class="btn" data-b="reset">Reset</button>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>Drag on the canvas to paint. Roofs block rain completely (cover 0); trees use the Sandbox's canopy shelter <code>0.1 + 0.9·r²</code>. Downwind, each ground cell walks upwind up to 26 px; the first obstacle of height <code>h</code> gives a lee <code>L = 0.9·h·|wind| + 1.5</code>, and the cell's exposure is multiplied by <code>0.08 + 0.92·(d/L)²</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. It is rebuilt only when <code>round(3·wind)</code> changes, so it costs nothing per frame. The same map gates drops, splashes, wetting and soaking (E1).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dither-->
+<figure class="fig" data-demo="dither" id="fig-dither">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The wetness byte through a dither threshold</h4></div>
+  <div class="bayer-wrap">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Ground tile wetting in speckles through per-pixel thresholds"></canvas><div class="hud" data-hud></div></div></div>
+    <div>
+      <div class="bgrid" aria-label="4 by 4 Bayer matrix; cells light up when the average wetness passes their share of the threshold"></div>
+      <p class="pl mute" style="font-size:13px;margin:8px 0 0">The 4×4 Bayer cells that the average wetness has passed light up blue. The <code>40·hash</code> term then shuffles neighbours so the grid does not show.</p>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mat" role="group" aria-label="Material"><button type="button" class="on" data-v="1">Dirt</button><button type="button" data-v="0">Grass</button><button type="button" data-v="2">Stone</button><button type="button" data-v="3">Sand</button><button type="button" data-v="8">Cloth</button><button type="button" data-v="9">Metal</button></div>
+    <div class="seg" data-seg="wx" role="group" aria-label="Weather"><button type="button" class="on" data-v="rain">Raining</button><button type="button" data-v="sun">Sun</button><button type="button" data-v="shade">Sun, shaded</button></div>
+    <label class="rng">Intensity <input type="range" data-k="int" min="2" max="100" value="30"><output data-o="int"></output></label>
+    <div class="seg" data-seg="thr" role="group" aria-label="Threshold"><button type="button" class="on" data-v="bh">Bayer + hash</button><button type="button" data-v="b">Bayer only</button><button type="button" data-v="f">Flat</button></div>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>The Sandbox threshold is <code>thr = 4 + 9·Bayer + 40·hash</code>; a drawn drop adds +36 and each virtual drop +26, while drying samples pixels and removes 3 with probability <code>DRY[m]·factor·0.5</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. At drizzle (switch material to restart from dry) the ground speckles; leave it running and it still soaks, because the Sandbox has no per-tier ceiling <span class="cite"><b class="tag ti">I</b> Sandbox run</span>. Switch to Sun and the picture runs backwards. "Bayer only" reads as a grid, which is why the hash term exists.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG porosity-->
+<figure class="fig" data-demo="porosity" id="fig-porosity">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wet palette by porosity: one row for everything, or a row per material</h4></div>
+  <div class="stage"><canvas width="192" height="48" aria-label="Eight material swatches wetting from left to right"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Wet rule"><button type="button" data-v="sbx">Sandbox: one wet row</button><button type="button" class="on" data-v="por">Porosity: lerp(1, 0.2, (1−metal)·porosity)</button><button type="button" data-v="steps">Palette steps</button></div>
+    <label class="rng">Wetness <input type="range" data-k="wet" min="0" max="100" value="100"><output data-o="wet"></output></label>
+    <label><input type="checkbox" data-k="glint" checked> Film glints (WET &gt; 200)</label>
+  </div>
+  <div class="swatches pore" data-sw></div>
+  <figcaption>Bright, porous materials darken most: sand goes from 0.182 to 0.091 albedo <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s111">S111</a></span>; metals do not darken but gain a film <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s62">S62</a></span>; wet wood is about dry × (0.82, 0.58, 0.38) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s62">S62</a></span>. The Sandbox uses one row, <code>×(0.66, 0.69, 0.78)</code>, for all of them, metal included. The porosity values in the second mode are illustrative choices that land near note 04's targets (soil 50–60 % of dry, light stone 70–85 %). Glints follow the Sandbox: above <code>WET &gt; 200</code> on 5 % of stone, 8 % of roof and 28 % of metal pixels. The percentage under each swatch is wet luminance over dry.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG drying-->
+<figure class="fig" data-demo="drying" id="fig-drying">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Drying curves: the Sandbox's sampled rule, per material, in sun and shade</h4></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="sun" role="group" aria-label="Exposure"><button type="button" class="on" data-v="sun">Sun, exposed</button><button type="button" data-v="shade">Sun, shaded</button></div>
+    <label class="rng">Time <input type="range" data-k="t" min="0" max="120" value="15"><output data-o="t"></output></label>
+  </div>
+  <svg class="chart dryc" role="img" aria-label="Fraction of pixels still looking wet over time, one S-curve per material"></svg>
+  <div class="stage"><canvas width="192" height="24" aria-label="One strip per material at the chosen time"></canvas></div>
+  <div class="chips" data-mats role="group" aria-label="Materials shown"></div>
+  <figcaption>Each curve replays the Sandbox's rule on 600 pixels per material: every step, 5,000 samples per 57,600 pixels each lose 3 wetness with probability <code>DRY[m]·factor·0.5</code>, with the factor ×2.6 in sun and ×0.45 of that in shade <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. Because every pixel has its own threshold, the fraction that still <i>looks</i> wet falls as an S-curve, as Lagarde describes <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s62">S62</a></span>. The dashed curve is the shine (<code>WET &gt; 200</code>), which goes first. Rings mark the measured 50 % / 90 % times from §6e <span class="cite"><b class="tag ti">I</b> Sandbox run</span>; the full Sandbox also has puddles and borders, so the replay is close but not identical.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG puddles-->
+<figure class="fig" data-demo="puddles" id="fig-puddles">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Puddles three ways: a flood level, a flow simulation, and the soil table behind it</h4></div>
+  <div class="trio">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="C4: a painted depth mask against one rising flood level"></canvas><span class="tagl">C4 flood level</span><div class="hud" data-hud="a"></div></div>
+      <p class="pl"><code>water = sat((flood − mask) / 0.4)</code>, flood += INC[tier]·dt, −0.05 after rain.</p></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="C5: flow downhill with infiltration by material"></canvas><span class="tagl">C5 flow + infiltration</span><div class="hud" data-hud="b"></div></div>
+      <p class="pl">Rain in by material (<code>RIN</code>), out by <code>INF + evap + a·DRN</code>, moving only above <code>FILM = 0.12</code>.</p></div>
+    <div><svg class="chart fao" role="img" aria-label="FAO basic infiltration rates by soil against the rain rate of the chosen tier"></svg>
+      <p class="pl">FAO basic infiltration (mm/h): puddles form where the rain rate beats the soil.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tier" role="group" aria-label="Rain tier"><button type="button" data-v="0">Drizzle</button><button type="button" data-v="1">Light</button><button type="button" data-v="2">Moderate</button><button type="button" class="on" data-v="3">Heavy</button><button type="button" data-v="4">Storm</button></div>
+    <button type="button" class="btn" data-b="stop">Stop the rain</button>
+    <label><input type="checkbox" data-k="fast" checked> 4× time</label>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>Both canvases share one terrain: a dirt path with ruts and potholes (left), a cobble patch with joints and dips (right), grass and a sand strip. <b>C4</b> uses Remember Me's flood rates (light 0.1, moderate 0.3, heavy 0.7, falling 0.05; drizzle 0) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s59">S59</a>, <a class="sref" href="#s60">S60</a></span>; every puddle grows from its deepest point, all on one schedule. <b>C5</b> uses the Sandbox's constants <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>: nothing below Moderate, the path floods in Heavy, the stone joins in a Storm, and grass and sand never puddle. The infiltration table is FAO's <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s83">S83</a></span>; the tier's rain rate is drawn as the bar's reference line (drizzle shown at 0.5 mm/h). The C4 flood rates are in arbitrary units; this view maps them to its own depth scale (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG prints-->
+<figure class="fig" data-demo="prints" id="fig-prints">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wet and muddy footprints: the shoe carries water</h4></div>
+  <div class="stage"><canvas width="128" height="72" aria-label="A character walks from a puddle across soaked mud and onto a dry floor, leaving fading prints" style="cursor:crosshair"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="auto" checked> Walk the loop</label>
+    <label><input type="checkbox" data-k="rain"> Light rain</label>
+    <button type="button" class="btn" data-b="soak">Re-soak the mud</button>
+    <span class="mute" style="font-size:13px">or click the canvas to walk there</span>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>One step every 5 px. In a puddle: splash, a −2.5 ripple and <code>shoe = 1</code>. On soaked dirt: the floor sinks 0.02, so ruts fill via C5, and speed drops to ×0.82. On a dry floor: stamp <code>180·shoe + 60</code>, then <code>shoe ×0.8</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>, which gives the 5–8 fading prints note 03 asks for. The prints then dry with the floor's own drying rate.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG splash-->
+<figure class="fig" data-demo="splash" id="fig-splash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Splashes per surface: a 4-frame recipe, then counts per square metre</h4></div>
+  <div class="flip">
+    <div><canvas width="16" height="16" aria-label="Water: a ring that grows and fades"></canvas><span>Water</span></div>
+    <div><canvas width="16" height="16" aria-label="Stone: a tiny crown"></canvas><span>Stone</span></div>
+    <div><canvas width="16" height="16" aria-label="Mud: a brown splat and a dark dot"></canvas><span>Mud</span></div>
+    <div><canvas width="16" height="16" aria-label="Grass: a flicker"></canvas><span>Grass</span></div>
+    <div><canvas width="16" height="16" aria-label="Sand: a pock dot"></canvas><span>Sand</span></div>
+    <p class="flip-f" aria-live="polite" data-frame></p>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="play">Pause flipbook</button>
+    <button type="button" class="btn" data-b="step">Next frame</button>
+  </div>
+  <div class="stage"><canvas width="192" height="32" aria-label="Live strip: rain on water, stone, mud, grass and sand at the chosen tier"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="tier" role="group" aria-label="Rain tier"><button type="button" data-v="0">Drizzle</button><button type="button" data-v="1">Light</button><button type="button" class="on" data-v="2">Moderate</button><button type="button" data-v="3">Heavy</button><button type="button" data-v="4">Violent</button></div>
+  </div>
+  <figcaption>The stone frames follow BudgetPixel: a 2-px line, then a 4×1 hollow ring, then 2 outward dots, then nothing <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s52">S52</a></span>. A real crown lasts 10–20 ms <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s59">S59</a></span>, so a splash is 1–3 frames and rings carry the signal. The strip is 6 m × 1 m at 32 px = 1 m and spawns note 03's visible counts per m² per second: water rings 1 / 3 / 8 / 15, hard-surface crowns 1 / 2 / 5 / 10, grass flecks 0.5 / 1 / 3 / 6, and nothing in drizzle <span class="cite"><b class="tag ti">I</b> note 03</span>. Mud and sand use the crown rate here (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ripples-->
+<figure class="fig" data-demo="ripples" id="fig-ripples">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Ripples at two prices: a two-buffer simulation and a stateless ring field</h4></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Hugo Elias two-buffer ripples; click to drop a stone" style="cursor:crosshair"></canvas><span class="tagl">D1 two buffers (click)</span><div class="hud" data-hud="a"></div></div></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Ring field: 16-pixel cells, up to four ring layers added by intensity"></canvas><span class="tagl">D2 ring field</span><div class="hud" data-hud="b"></div></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Damping <input type="range" data-k="damp" min="85" max="99" value="95"><output data-o="damp"></output></label>
+    <label class="rng">Intensity <input type="range" data-k="int" min="0" max="100" value="50"><output data-o="int"></output></label>
+    <label><input type="checkbox" data-k="cells"> Show cells and layers</label>
+  </div>
+  <figcaption><b>D1</b>: <code>new = ((N+S+E+W) &gt;&gt; 1) − new; new −= new &gt;&gt; k</code>; the slope picks a highlight or shadow palette step <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s168">S168</a>, <a class="sref" href="#s169">S169</a></span>. Rings bounce and interfere; damping 0.94 suits puddles and 0.99 ponds. <b>D2</b>: Remember Me's four ring layers, each weighted by <code>sat((I − k/4)·4)</code>, so heavier rain adds layers rather than bigger rings <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s60">S60</a></span>; each ring grows as <code>r = rMax·(age/life)^0.6</code> with rMax 2–6 px and life 0.3–0.6 s, and above I = 0.7 a dithered chop replaces it <span class="cite"><b class="tag ti">I</b> notes 03, 08</span>. The counters show the price: ~17 integer ops per cell every step against 1–4 lookups per water pixel.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG drips-->
+<figure class="fig" data-demo="drips" id="fig-drips">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Roofs, awnings and trees store rain and keep dripping after it stops</h4></div>
+  <div class="drip-wrap">
+    <div class="stage"><canvas width="128" height="72" aria-label="A roof, an awning and a tree fill with rain and release drips"></canvas><div class="hud" data-hud></div></div>
+    <svg class="chart dripc" role="img" aria-label="Store levels over time, live, against the Sandbox's measured drain after a storm"></svg>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="rain">Stop the rain</button>
+    <button type="button" class="btn" data-b="fill">Fill the stores (storm)</button>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>Each store fills from the drops that hit it, and every step drips with chance <code>store × rate</code> (roof 1.2, awning 0.9, tree 0.35), draining 0.0012 / 0.0015 / 0.002 per drip <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. Stop the rain and the drips keep falling. Dots on the chart are the measured roof, awning and tree levels after a 120 s storm: the awning is under 0.02 at 33 s, roof and trees at 60.5 s <span class="cite"><b class="tag ti">I</b> Sandbox run</span>, matching Weber's throughfall idea that canopies release rain late <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s108">S108</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG soak-->
+<figure class="fig" data-demo="soak" id="fig-soak">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Character wetness: three games' meters on one character</h4></div>
+  <div class="soak-wrap">
+    <div class="stage"><canvas width="128" height="64" aria-label="A character stands in rain, under a tree, under a roof or by a fire" style="cursor:pointer"></canvas><div class="hud" data-hud></div></div>
+    <div class="meters" data-meters></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="spot" role="group" aria-label="Where the character stands"><button type="button" class="on" data-v="open">In the open</button><button type="button" data-v="tree">Under the tree</button><button type="button" data-v="roof">Under the roof</button><button type="button" data-v="fire">By the fire</button><button type="button" data-v="umb">Umbrella</button></div>
+    <div class="seg" data-seg="tier" role="group" aria-label="Rain tier"><button type="button" data-v="0">Drizzle</button><button type="button" data-v="2">Moderate</button><button type="button" class="on" data-v="4">Storm</button><button type="button" data-v="-1">No rain</button></div>
+  </div>
+  <figcaption><b>Sandbox</b>: <code>wet += 0.12·I·exposure·dt</code>, drying 0.012 / s sheltered, 0.03 in sun and 0.12 by the fire; drips above 0.45; sprite pixels go wet where <code>Bayer &lt; 17·wet</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. <b>DST</b>: max 100, penalties from 35, up to 1 per second, umbrella 90 % protection <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s34">S34</a>, <a class="sref" href="#s35">S35</a>, <a class="sref" href="#s33">S33</a></span>; trees cut wetting by 35 % <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s35">S35</a></span>. <b>Valheim</b>: Wet lasts 120 s and resets on exposure, a roof clears it, and a nearby fire removes 10 s per second <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s45">S45</a></span>. How fast DST's meter rises at each tier, and its drying rate here, are illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG bolt-->
+<figure class="fig" data-demo="bolt" id="fig-bolt">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Lightning: a midpoint-displacement bolt, an asymmetric flash, thunder by distance, and a WCAG guard</h4></div>
+  <div class="bolt-wrap">
+    <div class="stage"><canvas width="128" height="96" aria-label="Top-down town: a bolt strikes a tile and the palette flashes" style="cursor:crosshair"></canvas><div class="hud" data-hud></div></div>
+    <div>
+      <svg class="chart flashc" role="img" aria-label="Flashes over the last five seconds with a sliding one-second window count"></svg>
+      <div class="readout" aria-live="polite" data-ro></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="strike">Strike (or click a tile)</button>
+    <button type="button" class="btn" data-b="burst">Ask for 6 strikes at once</button>
+    <label class="rng">Detail <input type="range" data-k="det" min="1" max="7" value="5"><output data-o="det"></output></label>
+    <label><input type="checkbox" data-k="br" checked> Branches at 30°</label>
+    <div class="seg" data-seg="fl" role="group" aria-label="Flash curve"><button type="button" class="on" data-v="em">Emerald: shadows rise half</button><button type="button" data-v="un">Uniform white</button></div>
+    <label class="rng">Distance <input type="range" data-k="dist" min="0" max="3000" step="50" value="1000"><output data-o="dist"></output></label>
+    <label><input type="checkbox" data-calm> Reduce flashes</label>
+  </div>
+  <figcaption>The bolt recurses: <code>m = mid(a,b) + perp·(rand − 0.5)·d</code>, then <code>d/2</code> on each half until the detail level <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s176">S176</a></span>, with branches at 30° whose length is <code>× (1 − branchPoint)</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s177">S177</a></span>. The flash lifts colours toward white, but in Emerald's curve shadows rise only half as far <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Thunder arrives after <code>distance / 343 m/s</code>. WCAG 2.3.1 allows no more than three flashes in any one second <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s54">S54</a></span>; this demo queues strikes at least 1 s apart, so the window count never passes 2, even when you ask for six at once. Reduce flashes shortens the flash to 0.06 s at ×0.35, as the Sandbox does.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fire-->
+<figure class="fig" data-demo="fire" id="fig-fire">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Rain against fire: the strength meter, the steam, and three games' rules</h4></div>
+  <div class="fire-wrap">
+    <div class="stage"><canvas width="96" height="64" aria-label="A campfire weakening in the rain and going out in a burst of steam"></canvas><div class="hud" data-hud></div></div>
+    <svg class="chart firec" role="img" aria-label="Fire strength over time, and Minecraft and Don't Starve rules"></svg>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tier" role="group" aria-label="Rain tier"><button type="button" data-v="0">Drizzle</button><button type="button" data-v="1">Light</button><button type="button" data-v="2">Moderate</button><button type="button" data-v="3">Heavy</button><button type="button" class="on" data-v="4">Storm</button></div>
+    <label><input type="checkbox" data-k="roof"> Roof over the fire</label>
+    <button type="button" class="btn" data-b="light">Relight</button>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>The Sandbox fire's strength <code>F</code> grows +0.04/s, loses <code>I·EXP·0.11</code> per second and 0.004 per drop within 7 px, and below 0.12 it goes out in 18 steam puffs <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. Measured: 41.6 s at moderate, 17.8 s heavy, 12.2 s storm; it survives drizzle and light rain <span class="cite"><b class="tag ti">I</b> Sandbox run</span>. A roof sets exposure to 0, which is the BotW and RimWorld rule <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s31">S31</a>, <a class="sref" href="#s46">S46</a></span>. On the right: Minecraft's chance that a fire in rain goes out, <code>20 % + 3 %·age</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s43">S43</a></span>, and DST's faster fuel burn in rain <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s33">S33</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rules-->
+<figure class="fig" data-demo="rules" id="fig-rules">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Rain rules on a tactical grid: switch games on and off</h4></div>
+  <div class="rules-wrap">
+    <div class="stage"><canvas width="128" height="96" aria-label="Tactical grid with units, a road, forest, a building and puddles" style="cursor:pointer"></canvas><div class="hud" data-hud></div></div>
+    <div class="rules-panel">
+      <div class="chips rulechips" data-rules role="group" aria-label="Rule sets">
+        <button type="button" class="on" data-r="pkm">Pokémon</button><button type="button" data-r="fft">FFT</button><button type="button" class="on" data-r="dos">DOS2</button>
+        <button type="button" class="on" data-r="aw">Advance Wars</button><button type="button" data-r="fe">Fire Emblem 7</button><button type="button" class="on" data-r="hunt">Hunt</button>
+      </div>
+      <div class="readout rules-out" aria-live="polite" data-ro></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="rain" checked> Raining</label>
+    <div class="seg" data-seg="unit" role="group" aria-label="Selected unit"><button type="button" class="on" data-v="foot">Foot unit</button><button type="button" data-v="horse">Mounted</button><button type="button" data-v="tank">Vehicle</button></div>
+    <button type="button" class="btn" data-b="zap">Cast lightning on the puddle</button>
+  </div>
+  <figcaption>Blue tiles show where the selected unit can move with 6 points; the ring shows its vision. <b>Advance Wars</b>: +1 movement cost on plains and woods for vehicles and −1 vision <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s26">S26</a></span>. <b>Fire Emblem 7</b>: plains cost 2 on foot and 3 mounted; forests and indoors are exempt <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s27">S27</a></span>. <b>Pokémon</b>: Water ×1.5, Fire ×0.5 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s23">S23</a></span>; <b>FFT</b>: Lightning ×5/4, Fire ×3/4 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s25">S25</a></span>; <b>DOS2</b>: Shocked + Wet = Stunned, and puddles can be electrified <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s41">S41</a>, <a class="sref" href="#s40">S40</a></span>, here as our capped flood fill through connected puddle cells <span class="cite"><b class="tag ti">I</b></span>. <b>Hunt</b>: rain masks footsteps <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s48">S48</a></span>, drawn with our hearing rule × (1 − 0.5·tier) at the heavy tier <span class="cite"><b class="tag ti">I</b> note 03</span>. Base movement and vision are illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG npc-->
+<figure class="fig" data-demo="npc" id="fig-npc">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The world reacts: villagers shelter, frogs come out, butterflies hide, the barrel fills</h4></div>
+  <div class="stage"><canvas width="160" height="90" aria-label="A village square: villagers walk, then shelter under the awning when rain passes the threshold"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Intensity <input type="range" data-k="int" min="0" max="100" value="0"><output data-o="int"></output></label>
+    <div class="seg" data-seg="thr" role="group" aria-label="Shelter threshold"><button type="button" class="on" data-v="0.42">Sandbox: I &gt; 0.42</button><button type="button" data-v="0.3">Note 03 rule: rain &gt; 0.3</button></div>
+    <label><input type="checkbox" data-k="cycle" checked> Cycle the weather</label>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>The Sandbox villager shelters when <code>I &gt; 0.42</code>, so already in Moderate; 1–3 frogs appear; a barrel fills at <code>0.0036·I</code> per second <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. In Animal Crossing villagers carry umbrellas but frogs don't, and butterflies hide in rain <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s38">S38</a></span>. The umbrella villager here follows that rule. Note 03's rule sends outdoor non-amphibians to shelter above 0.3 <span class="cite"><b class="tag ti">I</b></span>. The barrel fills 30× faster than the Sandbox's here so that you can see it move (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fog-->
+<figure class="fig" data-demo="fog" id="fig-fog">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fog as an interaction: rain haze, spray mist, and evaporation mist</h4></div>
+  <div class="pair">
+    <div><svg class="chart fogc" role="img" aria-label="Weber's haze coefficient and visibility against rain rate on a log axis"></svg></div>
+    <div><div class="stage"><canvas width="128" height="72" aria-label="Spray mist rises from stone and water in heavy rain; evaporation mist rises in sun"></canvas><div class="hud" data-hud></div></div></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="wx" role="group" aria-label="Weather"><button type="button" data-v="heavy">Heavy</button><button type="button" class="on" data-v="storm">Storm</button><button type="button" data-v="sun">Sun after rain</button></div>
+    <label class="rng">Evaporation gain <input type="range" data-k="gain" min="1" max="5" value="1"><output data-o="gain"></output></label>
+    <label><input type="checkbox" data-k="xray"> Mist X-ray</label>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>Left: Weber's <code>β = 0.312·R^0.67</code> km⁻¹ <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s107">S107</a></span> and visibility <code>3.912/β</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s88">S88</a>; <b class="tag ti">I</b></span>. A screen spans only 20–40 m, so the useful output is a ratio: haze alpha ~0 / 2 / 6 / 12 / 20 % by tier <span class="cite"><b class="tag ti">I</b> note 04</span>. Right: the Sandbox's spray grid gains <code>0.05·max(0, I − 0.45)²·HARD</code> and its evaporation mist <code>0.0011·CWET²</code> in sun; both blur, drift and decay ×0.985, and are drawn where <code>12·m &gt; Bayer + 2</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a></span>. At gain ×1 the evaporation mist never crosses the draw threshold; push the gain to the 3–5× the study recommends and it appears.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG palette-->
+<figure class="fig" data-demo="palette" id="fig-palette">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Palette and pixel rules: the overcast shift, and why streak slopes snap to 2:1</h4></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="72" aria-label="Scene under an overcast palette shift"></canvas><div class="hud" data-hud="a"></div></div><div class="strip" data-strip></div></div>
+    <div><div class="stage"><canvas width="64" height="36" aria-label="Rain streaks at clean and unclean pixel slopes"></canvas><div class="hud" data-hud="b"></div></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Intensity <input type="range" data-k="int" min="0" max="100" value="100"><output data-o="int"></output></label>
+    <div class="seg" data-seg="mode" role="group" aria-label="Darkening rule"><button type="button" class="on" data-v="sbx">Sandbox tint</button><button type="button" data-v="em">Emerald 13/16</button><button type="button" data-v="sw">Starik &amp; Werman −40 %</button></div>
+    <div class="seg" data-seg="slope" role="group" aria-label="Streak slope"><button type="button" data-v="0">0</button><button type="button" data-v="0.25">1:4</button><button type="button" class="on" data-v="0.5">1:2</button><button type="button" data-v="1">1:1</button><button type="button" data-v="0.55">0.55 (Sandbox, full wind)</button></div>
+  </div>
+  <figcaption>The Sandbox tints by <code>k = 0.12 + 0.55·I</code> as <code>(1 − k, 1 − 0.88k, 1 − 0.6k)</code>, which is (0.33, 0.41, 0.60) in a storm, far darker than Emerald's <code>c·13/16</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s4">S4</a>, <a class="sref" href="#s6">S6</a></span>; Starik &amp; Werman darken by 20 % or 40 % <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s101">S101</a></span>. Streaks look clean only at 0, 1:4, 1:2 and 1:1 <span class="cite"><b class="tag ti">I</b></span>; Emerald's (−6.5, 13) is exactly 1:2 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s5">S5</a></span>. Each streak is drawn one palette step lighter than the ground with one brighter pixel <span class="cite"><b class="tag ti">I</b> from <a class="sref" href="#s97">S97</a></span>; pick 0.55 to see the jaggies of an off-grid slope.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Reactivity · Readability. The sum is a crude total, not a recommendation by itself.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG systems-->
+<figure class="fig" data-demo="systems" id="fig-systems">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">How rain touches every system of a top-down game</h4></div>
+  <div class="chips" data-sysf role="group" aria-label="Filter systems"><button type="button" class="on" data-f="all">All 14 systems</button><button type="button" data-f="vis">Visuals</button><button type="button" data-f="play">Gameplay</button><button type="button" data-f="tech">Technical</button></div>
+  <div class="sysgrid" data-grid></div>
+  <div class="sysdet readout" aria-live="polite" data-det></div>
+  <figcaption>Each tile is one row of the report's system table. Pick a tile for what changes, the technique profiles that handle it, the starting numbers and their sources. The icon strip on each tile is a tiny live preview of that system at storm intensity (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matwet-->
+<figure class="fig" data-demo="matwet" id="fig-matwet">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Materials × wetness: pick a row to rain on it, then let the sun out</h4></div>
+  <div class="mat-wrap">
+    <div class="tbl mat-tbl"><table class="mat"><thead><tr><th>Material</th><th>Darkening</th><th>Gloss</th><th>Puddling</th><th>Drying</th><th>Splash</th><th>Gameplay hook</th></tr></thead><tbody></tbody></table></div>
+    <div class="mat-demo"><div class="stage"><canvas width="96" height="64" aria-label="Mini wet-then-dry demo for the selected material"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl"><button type="button" class="btn" data-b="again">Rain again</button></div>
+      <div class="readout" aria-live="polite" data-ro></div></div>
+  </div>
+  <figcaption>Every row of §6b, clickable. The demo rains on the material for 6 s at heavy intensity, then switches to sun: glints first, then the dark stain, then puddles if the material holds them. It uses the Sandbox's DRY rates and splash kinds, and the porosity darkening of <a href="#fig-porosity">the porosity figure</a> (metal stays bright and beads). Time runs 2× (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tiers-->
+<figure class="fig" data-demo="tiers" id="fig-tiers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One intensity knob drives every tier</h4></div>
+  <div class="tier-top">
+    <div class="stage"><canvas width="160" height="90" aria-label="Live preview at the chosen intensity: drops, streak lengths, splashes, puddles, haze"></canvas><div class="hud" data-hud></div></div>
+    <div class="tier-knob">
+      <div class="knob"><label for="tierKnob" class="knob-l">Intensity <output data-o="I"></output></label>
+      <input id="tierKnob" type="range" data-k="I" min="0" max="100" value="50">
+      <div class="tier-ticks" aria-hidden="true"><span style="left:12%">Drizzle</span><span style="left:30%">Light</span><span style="left:50%">Mod.</span><span style="left:75%">Heavy</span><span style="left:100%">Storm</span></div></div>
+      <div class="readout" aria-live="polite" data-ro></div>
+    </div>
+  </div>
+  <div class="tbl tiertbl"><table class="tiers"><thead><tr><th></th><th>Drizzle</th><th>Light</th><th>Moderate</th><th>Heavy</th><th>Storm / violent</th></tr></thead><tbody></tbody></table></div>
+  <figcaption>Drag the knob; the nearest tier's column lights up and the preview runs the Sandbox's formulas at that exact intensity: drops <code>60 + 1300·I^1.25</code> (scaled to this view's area), fall speed <code>[110,170,240]·(0.55 + 0.45·I)</code>, streak length <code>[2,4,7]·(0.5 + 0.6·I)</code>, puddles from C5 and haze alpha from note 04. The table is the report's, cell for cell.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wind-->
+<figure class="fig" data-demo="wind" id="fig-wind">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wind: lean, streak length, gusts and the rain shadow, from one value</h4></div>
+  <div class="pair">
+    <div><svg class="chart windc" role="img" aria-label="Angle triangle: tan theta equals wind speed over fall speed, plus a wall's rain shadow"></svg></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Streaks drawn at the computed angle and length, snapped or exact"></canvas><div class="hud" data-hud></div></div>
+      <svg class="chart gustc" role="img" aria-label="Gust envelope: wind equals mean times one plus 0.3 times g of t"></svg></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Wind <input type="range" data-k="u" min="0" max="10" step=".5" value="5"><output data-o="u"></output></label>
+    <div class="seg" data-seg="drop" role="group" aria-label="Drop"><button type="button" data-v="2">Drizzle (~2 m/s)</button><button type="button" class="on" data-v="6.4">2 mm drop</button><button type="button" data-v="9.5">5 mm drop (~9–10 m/s)</button></div>
+    <label class="rng">Exposure <input type="range" data-k="exp" min="4" max="33" value="17"><output data-o="exp"></output></label>
+    <label class="rng">Wall <input type="range" data-k="h" min="1" max="6" step=".5" value="3"><output data-o="h"></output></label>
+    <label><input type="checkbox" data-k="snap" checked> Snap to clean slopes</label>
+  </div>
+  <figcaption><code>tan θ = u/v</code> <span class="cite"><b class="tag tk">K</b></span>: a 2 mm drop leans 9° / 25° / 38° / 57° in 1 / 3 / 5 / 10 m/s wind, and drizzle ~56° at 3 m/s <span class="cite"><b class="tag ti">I</b> note 03</span>; the 2 mm fall speed used here (~6.4 m/s) is back-solved from those angles. Streak length is <code>speed × exposure</code>, at 32 px = 1 m, which the study puts at 3–8 px. Gusts peak at 1.3× the mean <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s81">S81</a></span>, every 4–12 s with ~1 s attack and 2–3 s release <span class="cite"><b class="tag ti">I</b> note 06</span>. The dry strip behind a wall is <code>h·tan θ</code>: a 3 m wall at 5 m/s shelters ~2.3 m.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timex-->
+<figure class="fig" data-demo="timex" id="fig-timex">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Storm → sun on the Sandbox, as measured</h4></div>
+  <div class="ctl" style="margin-top:0"><label class="rng">Step <input type="range" data-k="st" min="1" max="6" value="1"><output data-o="st"></output></label></div>
+  <svg class="chart timex" role="img" aria-label="Small multiples of the measured storm-to-sun run: stores, drips, player wetness and drying times"></svg>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>All values are the §6e Sandbox run, wind fixed at 0.3, 60 Hz <span class="cite"><b class="tag ti">I</b> Sandbox run</span>. Step through the run; the band marks the stretch each step describes. The drying bars span 50 % to 90 % dry per material.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stack-->
+<figure class="fig" data-demo="stack" id="fig-stack">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The layered architecture, server to pixels</h4><span class="illu">Design proposal [I]</span></div>
+  <div class="stack">
+    <div class="layers">
+      <button type="button" class="layer srv" data-l="L-server"><b>0</b><span>WeatherDirector (server, per region)<small>state, intensity, wind, seed, strikes, tile flags</small></span></button>
+      <div class="layer-arrow">▼ broadcast on change: {state, intensity, wind, seed, next_strike}</div>
+      <button type="button" class="layer" data-l="L-data"><b>1</b><span>Data textures (client)<small>COVER · WET · WATER · RIPPLE · MIST</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-ground"><b>2</b><span>Ground shader<small>one CanvasItem shader: dither, wet LUT, water, rings, mist</small></span></button>
+      <button type="button" class="layer" data-l="L-rain"><b>3</b><span>Rain layer<small>A4 full-screen + ≤ 300 near drops</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-parts"><b>4</b><span>Pooled particles<small>splashes, drips, steam</small></span></button>
+      <button type="button" class="layer" data-l="L-hooks"><b>5</b><span>Gameplay hooks<small>E3 · F3 · F4 · F5 · F6 ← server flags</small></span></button>
+    </div>
+    <div class="ldet" aria-live="polite"></div>
+  </div>
+  <template id="L-server"><h4>WeatherDirector (server, per region)</h4><ul><li>States: CLEAR · OVERCAST · DRIZZLE · LIGHT · MODERATE · HEAVY · STORM</li><li>Schedule from a forecast table (FC6 hourly presets, FFT month odds, DST sine envelope)</li><li>Intensity eases over 20–60 s; <code>wind = base·(1 + 0.3·gust)</code>; a seed; strikes on tiles at least 1 s apart</li><li>Tile flags: wet, mud, puddle, fire. Gameplay rules read these.</li></ul><p>The server owns whatever changes outcomes; clients own the pixels. Ultima Online's weather packet was 4 bytes <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s18">S18</a></span>.</p></template>
+  <template id="L-data"><h4>Data textures (client)</h4><ul><li><b>COVER</b> R8 per tile, rebaked per wind bucket (E1, B2)</li><li><b>WET</b> R8 at 4×4 px, 8 Hz (C1, C3)</li><li><b>WATER</b> R8 at 2×2 px, 12 Hz, active list (C5)</li><li><b>RIPPLE</b> RG8 ping-pong at 30 Hz, hero ponds only (D1)</li><li><b>MIST</b> R8 at ¼ resolution, 12 Hz (G1, G2)</li></ul><p>Update on the CPU (<code>Image</code> → <code>ImageTexture.update</code>) or with <code>DrawableTexture2D</code> on Godot 4.7, which is in the Compatibility driver but marked experimental. Float targets on WebGL 2 need <code>EXT_color_buffer_float</code>, so prefer RGBA8.</p></template>
+  <template id="L-ground"><h4>Ground CanvasItem shader</h4><p><code>idx → DRY|WET row by dither → WATER row if depth &gt; P (+ D2 rings, D1 slope) → MIST row by dither → overcast / flash uniforms</code></p><p>One LUT of 256 colours × {DRY, WET, MIST, SHADOW, FLASH} rows (H1). No compute on web.</p></template>
+  <template id="L-rain"><h4>Rain layer</h4><p>One full-screen <code>canvas_item</code> running A4's hashed cells, masked by COVER, plus at most 300 landing-first near drops (A2/A3) that splash by material (C7). Curtains (A5) modulate both.</p></template>
+  <template id="L-parts"><h4>Pooled particles</h4><p>Splashes, drips and steam from one pool, drawn with a MultiMesh or a single <code>_draw()</code>. GPU particles are limited on Compatibility.</p></template>
+  <template id="L-hooks"><h4>Gameplay hooks</h4><p>A <code>rain_changed(tier)</code> signal drives NPC schedules, spawn tables, crop watering, fire rules, element multipliers and hearing and vision radii. Lightning strikes are server events that prefer tall or metal tiles and get a 1–2 s telegraph.</p></template>
+  <figcaption>Click a layer to see what it holds. Everything here is the study's design proposal; none of it has been tested in Godot.</figcaption>
+</figure>
+<!--/FIG-->

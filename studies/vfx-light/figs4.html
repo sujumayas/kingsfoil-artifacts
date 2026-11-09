@@ -1,0 +1,84 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. The sum is a crude total: a low-sum technique such as C7 can still be mandatory.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG catalogue-->
+<figure class="fig" data-demo="catalogue" id="fig-catalogue">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fifteen light personalities, each running its own colour, radius, flicker and height</h4><span class="illu">Mini scenes illustrative; values from the Sandbox</span></div>
+  <div class="cards" role="group" aria-label="Light personalities"></div>
+  <div class="detail">
+    <div class="duo wide-r"><div data-txt></div>
+      <div><div class="stage"><canvas width="192" height="96" aria-label="A larger live view of the selected light"></canvas><div class="hud" data-hud></div></div>
+        <canvas class="trace" width="384" height="56" aria-label="Brightness of the selected light over the last four seconds" style="width:100%;height:auto;margin-top:6px;background:#0b0a0f;border:1px solid var(--line);border-radius:4px"></canvas></div></div>
+  </div>
+  <figcaption>Each card runs the Sandbox's <code>TYPES</code> entry for that light: its hex colour, radius in pixels, flicker model and height, with polar shadows and the 60% height rule where the table says "Yes", against a low fence (5) and a barrel (9) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. The last four cards show the sky instead: the moon at midnight, the sun at noon, at golden hour and in twilight, with the Sandbox's sun colours and shadow lengths. Click a card to read its full row from the table. Kelvin-to-hex values are approximate <span class="cite"><b class="tag tu">U</b></span>; Tibia radii are in tiles <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s35">S35</a>–<a class="sref" href="#s38">S38</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The object interaction matrix: click a cell to see it happen</h4></div>
+  <div class="mat-wrap">
+    <div class="tbl" style="margin:0"><table class="matrix"><thead><tr><th></th><th>Sun (day)</th><th>Point light</th><th>Night</th></tr></thead><tbody></tbody></table></div>
+    <div class="mat-demo"><div class="stage"><canvas width="160" height="90" aria-label="A live crop of the Sandbox village showing the selected cell"></canvas><div class="hud" data-hud></div></div><p class="pl" data-note></p></div>
+  </div>
+  <figcaption>The table is the study's: what each class of object should do under each kind of light <span class="cite"><b class="tag ti">I</b> unless cited</span>. Clicking a cell frames the matching part of the Sandbox village, sets the hour and, where it helps, walks a character or loops the clock, so each rule can be seen rather than read. All of it runs on the same village and constants as the Sandbox <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG daynight-->
+<figure class="fig" data-demo="daynight" id="fig-daynight">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One day in the Sandbox: scrub the clock, watch the sky, shadows and lights follow</h4></div>
+  <div class="duo wide-r">
+    <div><div class="stage"><canvas width="160" height="90" aria-label="The village square at the chosen hour"></canvas><div class="hud" data-hud></div></div></div>
+    <div><svg class="chart" viewBox="0 0 420 200" role="img" aria-label="Sun elevation, Tibia world light and number of lights on over 24 hours; drag to scrub"></svg>
+      <div class="legend-mini"><span><i style="background:#ffc870"></i>sun elevation</span><span><i style="background:#8ea8ff"></i>Tibia world light ÷ 250</span><span><i style="background:#ff8f7a"></i>lights on in this village</span><span><i style="background:#6dd4c3"></i>obelisk shadow (px)</span></div></div>
+  </div>
+  <div class="dn-wrap"><div class="tbl"><table class="dn"><thead><tr><th>Hour</th><th>Sun elev.</th><th>Ambient RGB</th><th>Sun RGB</th><th>Shadow k / obelisk</th><th>Tibia light</th><th>Lights on (Sandbox)</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The rows are the study's replay of the Sandbox's <code>sky()</code> and <code>scheduleLights()</code> <span class="cite"><b class="tag ti">I</b> Sandbox run</span>, with Tibia's world light from TFS <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s31">S31</a></span>. Click a row to jump there, or drag the chart. "Shadow k" is shadow length per pixel of height, <code>0.62·min(4, cot(max(4°, el)))</code>, measured on the 28 px obelisk. The red line counts lights switched on in this page's copy of the village, which carries no light of its own, so it can sit one or two below the table. The Sandbox reaches full night ambient at −8°, earlier than nautical twilight at −12° <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s186">S186</a>; <b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG carried-->
+<figure class="fig" data-demo="carried" id="fig-carried">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Carried light as a design: what you hold, how long it lasts, and who sees you</h4><span class="illu">Burn speed and notice radius illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="The village at night following a walker who carries a light; click to walk"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="ty" role="group" aria-label="Carried light"><button type="button" class="on" data-v="torch">Torch h 10</button><button type="button" data-v="lantern">Lantern h 9</button><button type="button" data-v="orb">Light spell h 16</button></div>
+        <div class="seg" data-seg="fuel" role="group" aria-label="Fuel model"><button type="button" class="on" data-v="steps">Radius steps (Tibia)</button><button type="button" data-v="smooth">Smooth shrink</button><button type="button" data-v="none">No fuel</button></div>
+        <label><input type="checkbox" data-k="stealth" checked> Lurkers notice you inside 1.2 × your light radius</label>
+        <label><input type="checkbox" data-k="auto" checked> Walk the patrol route</label>
+        <button type="button" class="btn" data-b="refuel">Fresh fuel</button>
+      </div><div class="readout" data-ro aria-live="polite"></div></div>
+  </div>
+  <figcaption>The Sandbox carries a torch or lantern at <code>player.x ± 4</code> by facing, the lantern swaying 1 px with the stride, while the light spell eases after the player at <code>min(1, 3·dt)</code> and floats 14 px up; carried rays start at 3 px so the carrier's own feet do not block them <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. The patrol passes the barrels: a torch at 10 px is blocked by barrels (9 ≥ 6), a spell at 16 px floats over them (threshold 9.6) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Tibia's fuel is the radius stepping down, 7 → 6 → 5 tiles over 10 + 5 + 5 minutes <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s35">S35</a></span>, readable in a way a smooth shrink is not <span class="cite"><b class="tag ti">I</b></span>; here a minute is a second. In Diablo the light radius also sets when monsters react <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s48">S48</a>, <a class="sref" href="#s49">S49</a></span>, and Thief's light gem shows how visible you are <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s82">S82</a></span>; the readout's gem is the light level at the carrier's feet. For an MMO the study keeps that trade-off to special zones <span class="cite"><b class="tag ti">I</b> note 06</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG budget-->
+<figure class="fig" data-demo="budget" id="fig-budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The light budget, worked live: work units against the study's proposed limits</h4><span class="illu">Presets illustrative; no Godot timings exist yet</span></div>
+  <div class="budget">
+    <div>
+      <div class="ctl presets" style="margin-top:0"><span class="mini">Presets:</span><button type="button" class="btn" data-pre="study">Study's proposal</button><button type="button" class="btn" data-pre="sandbox">Sandbox at 21:00</button><button type="button" class="btn" data-pre="heavy">Overloaded</button></div>
+      <div class="ctl">
+        <div class="seg" data-seg="res" role="group" aria-label="Internal resolution"><button type="button" data-v="320">320×180</button><button type="button" class="on" data-v="480">480×270</button><button type="button" data-v="640">640×360</button></div>
+        <div class="seg" data-seg="lm" role="group" aria-label="Light map scale"><button type="button" data-v="1">Light map full</button><button type="button" class="on" data-v="0.5">½</button><button type="button" data-v="0.25">¼</button></div>
+        <label class="rng"><span>Stamped lights</span><input type="range" data-k="n" min="0" max="80" value="30"><output data-o="n"></output></label>
+        <label class="rng"><span>Average radius (px)</span><input type="range" data-k="r" min="10" max="120" value="80"><output data-o="r"></output></label>
+        <label class="rng"><span>Real Light2D on screen</span><input type="range" data-k="l2" min="0" max="24" value="8"><output data-o="l2"></output></label>
+        <label class="rng"><span>…of which shadowed</span><input type="range" data-k="sh" min="0" max="8" value="2"><output data-o="sh"></output></label>
+        <label class="rng"><span>CPU polar re-casts / frame</span><input type="range" data-k="rc" min="0" max="20" value="5"><output data-o="rc"></output></label>
+        <div class="seg" data-seg="pcf" role="group" aria-label="Shadow filter"><button type="button" class="on" data-v="1">Filter None (1 tap)</button><button type="button" data-v="5">PCF5</button><button type="button" data-v="13">PCF13</button></div>
+      </div>
+    </div>
+    <div><svg class="chart" viewBox="0 0 420 300" role="img" aria-label="Bars for light-map fills, Light2D counts, shadow passes and CPU ray time against the study's limits"></svg><div class="verdict" aria-live="polite"></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The arithmetic is the study's worked example: a 480×270 view with 16 px tiles is 30×17 = 510 tile texels; a half-resolution light map is 240×135 = 32,400 texels; an R = 80 px torch stamps about 5k texels at half resolution, so 30 lights ≈ 150k fills, "well under 1 ms GPU"; real Light2D should stay at 8–12 on screen with 1–3 shadowed, each shadowed light costing 4 occluder passes and 1, 5 or 13 taps; a CPU polar cast costs about 60 µs in JavaScript, and all lighting should stay under about 2–3 ms of a 16.7 ms frame <span class="cite"><b class="tag ti">I</b></span>. Godot itself caps 15 lights per item and 64 per render on small-UBO devices <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s88">S88</a></span>. Only the CPU ray time is shown in milliseconds, because that is the only timing the study has; the study notes that no WebGL2 benchmark of Godot's 2D lights exists yet <span class="cite"><b class="tag tu">U</b></span>.</figcaption>
+</figure>
+<!--/FIG-->

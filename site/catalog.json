@@ -1,0 +1,809 @@
+{
+ "version": 2,
+ "updated": "2026-11-09",
+ "site": {
+  "title": "Kingsfoil Artifacts",
+  "intro": "Research studies and playable prototypes for Kingsfoil Studios' games: Asterion Online (a Tibia-like MMORPG), a Hero Defense RTS and more."
+ },
+ "start": {
+  "id": "vfx-snow",
+  "why": "New here? The Tiny VFX series is the core of the library: five studies, each with a playable sandbox. Start with #1 Snow."
+ },
+ "series": [
+  {
+   "id": "vfx",
+   "title": "Tiny VFX algorithms",
+   "subtitle": "Top-down pixel art, one concept per study",
+   "blurb": "Old-school, super-efficient effects in the spirit of the DOOM fire. Each study has a playable sandbox.",
+   "order": [
+    "vfx-snow",
+    "vfx-acid",
+    "vfx-rain",
+    "vfx-forest",
+    "vfx-light"
+   ],
+   "upcoming": [
+    {
+     "title": "Fire & smoke",
+     "blurb": "Campfires, burning buildings, spreading fire, smoke columns: the DOOM fire's own study."
+    },
+    {
+     "title": "Water bodies",
+     "blurb": "Rivers, sea, shorelines, foam and flow maps."
+    },
+    {
+     "title": "Fog, mist & clouds",
+     "blurb": "Cloud shadows, valley fog and fog of war."
+    }
+   ],
+   "nav_label": "VFX series"
+  },
+  {
+   "id": "ai",
+   "title": "Game AI",
+   "subtitle": "Behaviour that is simple, fast and has soul",
+   "blurb": "Enemies, creatures and NPCs, from scripts to decision models.",
+   "order": [
+    "ai-rts-enemy"
+   ],
+   "upcoming": [
+    {
+     "title": "MMO creature behaviour",
+     "blurb": "Spawns, aggro, leashing and respawn rhythms for a Tibia-like world."
+    }
+   ],
+   "nav_label": "Game AI series"
+  },
+  {
+   "id": "procgen",
+   "title": "Procedural generation",
+   "subtitle": "Content by composition",
+   "blurb": "Generators that make many different-but-similar things from a few parts.",
+   "order": [
+    "procgen-characters"
+   ],
+   "upcoming": [
+    {
+     "title": "Procedural towns",
+     "blurb": "Layouts, districts and populated streets reusing the character generator."
+    }
+   ],
+   "nav_label": "Procgen series"
+  }
+ ],
+ "items": [
+  {
+   "id": "vfx-snow",
+   "type": "study",
+   "path": "/vfx-snow-topdown-pixel.html",
+   "short": "Snow",
+   "title": "Top-down pixel snow: tiny algorithms that make a winter world feel alive",
+   "summary": "Falling flakes with height, snow that piles up unevenly and drifts, footprints that move snow, sinking, melting in sun and shade, palette lighting.",
+   "series": {
+    "id": "vfx",
+    "number": 1
+   },
+   "pair": "vfx-snow-sandbox",
+   "date": "2026-11-08",
+   "thumb": "/thumbs/vfx-snow.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "snow"
+    ],
+    "technique": [
+     "dither-threshold",
+     "heightmap",
+     "exposure-map",
+     "sandpile",
+     "footprint-stamp",
+     "z-particles",
+     "palette-lut",
+     "cellular-automata"
+    ]
+   },
+   "stats": {
+    "words": 17995,
+    "techniques": 27,
+    "figures": 26,
+    "games": 46,
+    "sources": 123
+   },
+   "maturity": "research",
+   "updated": "2026-11-08",
+   "nav": "Snow"
+  },
+  {
+   "id": "vfx-acid",
+   "type": "study",
+   "path": "/vfx-acid-topdown-pixel.html",
+   "short": "Acid",
+   "title": "Top-down pixel acid: tiny algorithms for liquids that eat the world",
+   "summary": "Acid that spreads and stops, corrodes wood, iron, leather and cloth through visible stages, strips armor before flesh, fumes, stains, and slimes made of the same field.",
+   "series": {
+    "id": "vfx",
+    "number": 2
+   },
+   "pair": "vfx-acid-sandbox",
+   "date": "2026-11-08",
+   "thumb": "/thumbs/vfx-acid.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "acid"
+    ],
+    "technique": [
+     "liquid-flow",
+     "reaction-table",
+     "metaballs",
+     "gas-diffusion",
+     "dither-threshold",
+     "palette-lut",
+     "cellular-automata"
+    ]
+   },
+   "stats": {
+    "words": 18033,
+    "techniques": 29,
+    "figures": 26,
+    "games": 50,
+    "sources": 220
+   },
+   "maturity": "research",
+   "updated": "2026-11-08",
+   "nav": "Acid"
+  },
+  {
+   "id": "vfx-rain",
+   "type": "study",
+   "path": "/vfx-rain-topdown-pixel.html",
+   "short": "Rain",
+   "title": "Top-down pixel rain: tiny algorithms for drizzle, downpours and everything that gets wet",
+   "summary": "Drizzle to storm with wind and rain curtains, ripples on ponds and puddles, how each material gets wet and dries, drips, fire, lightning, gameplay effects, rain mist.",
+   "series": {
+    "id": "vfx",
+    "number": 3
+   },
+   "pair": "vfx-rain-sandbox",
+   "date": "2026-11-09",
+   "thumb": "/thumbs/vfx-rain.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "rain"
+    ],
+    "technique": [
+     "z-particles",
+     "ripple-sim",
+     "liquid-flow",
+     "dither-threshold",
+     "exposure-map",
+     "midpoint-displacement",
+     "palette-lut"
+    ]
+   },
+   "stats": {
+    "words": 17946,
+    "techniques": 31,
+    "figures": 28,
+    "games": 42,
+    "sources": 195
+   },
+   "maturity": "research",
+   "updated": "2026-11-09",
+   "nav": "Rain"
+  },
+  {
+   "id": "vfx-forest",
+   "type": "study",
+   "path": "/vfx-forest-topdown-pixel.html",
+   "short": "Forests",
+   "title": "Top-down pixel forests: tiny algorithms for thousands of living trees",
+   "summary": "Forest types from a climate table, Poisson-disk placement, species, seasons tree by tree, wind waves, walking behind trees and in their shade, birds, thousands of trees on weak hardware.",
+   "series": {
+    "id": "vfx",
+    "number": 4
+   },
+   "pair": "vfx-forest-sandbox",
+   "date": "2026-11-09",
+   "thumb": "/thumbs/vfx-forest.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "rendering"
+    ],
+    "concept": [
+     "trees"
+    ],
+    "technique": [
+     "poisson-disk",
+     "biome-noise",
+     "sprite-atlas",
+     "palette-lut",
+     "band-sway",
+     "boids",
+     "occlusion-fade",
+     "spatial-grid"
+    ]
+   },
+   "stats": {
+    "words": 17912,
+    "techniques": 32,
+    "figures": 28,
+    "games": 42,
+    "sources": 236
+   },
+   "maturity": "research",
+   "updated": "2026-11-09",
+   "nav": "Forest"
+  },
+  {
+   "id": "vfx-light",
+   "type": "study",
+   "path": "/vfx-light-topdown-pixel.html",
+   "short": "Light & shadow",
+   "title": "Top-down pixel light and shadow: tiny algorithms for sun, fire, lanterns and the dark",
+   "summary": "Day/night and sun shadows from heights, Tibia/DOOM/Quake light models, polar shadow maps and FOV, light personality, carried torches and lanterns, light through buildings.",
+   "series": {
+    "id": "vfx",
+    "number": 5
+   },
+   "pair": "vfx-light-sandbox",
+   "date": "2026-11-09",
+   "thumb": "/thumbs/vfx-light.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "rendering"
+    ],
+    "concept": [
+     "light"
+    ],
+    "technique": [
+     "light-map",
+     "palette-lut",
+     "polar-shadow-map",
+     "shadowcasting",
+     "flood-fill-light",
+     "height-projection",
+     "flicker-strings",
+     "dither-threshold"
+    ]
+   },
+   "stats": {
+    "words": 18009,
+    "techniques": 34,
+    "figures": 29,
+    "games": 47,
+    "sources": 223
+   },
+   "maturity": "research",
+   "updated": "2026-11-09",
+   "nav": "Light"
+  },
+  {
+   "id": "ai-rts-enemy",
+   "type": "study",
+   "path": "/rts-enemy-ai-study.html",
+   "short": "Enemy AI for Hero Defense",
+   "title": "Enemy AI for a Hero Defense RTS: from if/else to decision models",
+   "summary": "Thirty years of RTS and game enemy AI turned into an architecture for a WC3-style Hero Defense: mobs, waves, directors and phase bosses that are simple, fast and have soul.",
+   "series": {
+    "id": "ai",
+    "number": 1
+   },
+   "pair": null,
+   "date": "2026-11-03",
+   "thumb": "/thumbs/ai-rts-enemy.webp",
+   "tags": {
+    "genre": [
+     "rts",
+     "hero-defense"
+    ],
+    "perspective": [
+     "top-down-orthographic",
+     "3d"
+    ],
+    "art-style": [
+     "3d-stylized"
+    ],
+    "domain": [
+     "ai"
+    ],
+    "concept": [
+     "enemy-ai"
+    ],
+    "engine": [
+     "godot-4",
+     "engine-agnostic"
+    ],
+    "platform": [
+     "web",
+     "desktop"
+    ],
+    "project": [
+     "hero-defense"
+    ],
+    "technique": [
+     "fsm",
+     "behavior-tree",
+     "utility-ai",
+     "goap",
+     "ai-director",
+     "influence-map",
+     "flow-field",
+     "attack-tokens",
+     "reinforcement-learning"
+    ]
+   },
+   "stats": {
+    "words": 19241
+   },
+   "maturity": "research",
+   "updated": "2026-11-03"
+  },
+  {
+   "id": "procgen-characters",
+   "type": "study",
+   "path": "/procedural-character-generation-study.html",
+   "short": "Characters by composition",
+   "title": "Procedural character generation by composition: pixel townsfolk and 3D creature waves",
+   "summary": "Slot tables of parts (Zwicky box) for Tibia-like pixel townsfolk and 3D Hero Defense creatures: paper-doll layering, palettes, populating towns, kitbashed creatures, live generators.",
+   "series": {
+    "id": "procgen",
+    "number": 1
+   },
+   "pair": null,
+   "date": "2026-11-05",
+   "thumb": "/thumbs/procgen-characters.webp",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rts",
+     "hero-defense"
+    ],
+    "perspective": [
+     "top-down-3-4",
+     "3d"
+    ],
+    "art-style": [
+     "pixel-art",
+     "3d-stylized"
+    ],
+    "domain": [
+     "procgen"
+    ],
+    "concept": [
+     "characters"
+    ],
+    "engine": [
+     "godot-4",
+     "engine-agnostic"
+    ],
+    "platform": [
+     "web",
+     "desktop"
+    ],
+    "project": [
+     "asterion-online",
+     "hero-defense"
+    ],
+    "technique": [
+     "zwicky-box",
+     "paper-doll",
+     "palette-swap",
+     "sprite-atlas",
+     "kitbash-3d",
+     "genai"
+    ]
+   },
+   "stats": {
+    "words": 32320
+   },
+   "maturity": "research",
+   "updated": "2026-11-05"
+  },
+  {
+   "id": "vfx-snow-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-snow-sandbox.html",
+   "short": "Snow Sandbox",
+   "title": "Snow Sandbox (playable)",
+   "summary": "Playable reference implementation of the snow study.",
+   "series": {
+    "id": "vfx",
+    "number": 1
+   },
+   "pair": "vfx-snow",
+   "date": "2026-11-08",
+   "thumb": "/thumbs/vfx-snow.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "snow"
+    ],
+    "technique": [
+     "dither-threshold",
+     "heightmap",
+     "exposure-map",
+     "sandpile",
+     "footprint-stamp",
+     "z-particles",
+     "palette-lut",
+     "cellular-automata"
+    ]
+   },
+   "stats": {},
+   "maturity": "prototype",
+   "updated": "2026-11-08"
+  },
+  {
+   "id": "vfx-acid-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-acid-sandbox.html",
+   "short": "Acid Sandbox",
+   "title": "Acid Sandbox (playable)",
+   "summary": "Playable reference implementation of the acid study.",
+   "series": {
+    "id": "vfx",
+    "number": 2
+   },
+   "pair": "vfx-acid",
+   "date": "2026-11-08",
+   "thumb": "/thumbs/vfx-acid.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "acid"
+    ],
+    "technique": [
+     "liquid-flow",
+     "reaction-table",
+     "metaballs",
+     "gas-diffusion",
+     "dither-threshold",
+     "palette-lut",
+     "cellular-automata"
+    ]
+   },
+   "stats": {},
+   "maturity": "prototype",
+   "updated": "2026-11-08"
+  },
+  {
+   "id": "vfx-rain-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-rain-sandbox.html",
+   "short": "Rain Sandbox",
+   "title": "Rain Sandbox (playable)",
+   "summary": "Playable reference implementation of the rain study.",
+   "series": {
+    "id": "vfx",
+    "number": 3
+   },
+   "pair": "vfx-rain",
+   "date": "2026-11-09",
+   "thumb": "/thumbs/vfx-rain.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "rain"
+    ],
+    "technique": [
+     "z-particles",
+     "ripple-sim",
+     "liquid-flow",
+     "dither-threshold",
+     "exposure-map",
+     "midpoint-displacement",
+     "palette-lut"
+    ]
+   },
+   "stats": {},
+   "maturity": "prototype",
+   "updated": "2026-11-09"
+  },
+  {
+   "id": "vfx-forest-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-forest-sandbox.html",
+   "short": "Forest Sandbox",
+   "title": "Forest Sandbox (playable)",
+   "summary": "Playable reference implementation of the forests study.",
+   "series": {
+    "id": "vfx",
+    "number": 4
+   },
+   "pair": "vfx-forest",
+   "date": "2026-11-09",
+   "thumb": "/thumbs/vfx-forest.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "rendering"
+    ],
+    "concept": [
+     "trees"
+    ],
+    "technique": [
+     "poisson-disk",
+     "biome-noise",
+     "sprite-atlas",
+     "palette-lut",
+     "band-sway",
+     "boids",
+     "occlusion-fade",
+     "spatial-grid"
+    ]
+   },
+   "stats": {},
+   "maturity": "prototype",
+   "updated": "2026-11-09"
+  },
+  {
+   "id": "vfx-light-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-light-sandbox.html",
+   "short": "Light Sandbox",
+   "title": "Light Sandbox (playable)",
+   "summary": "Playable reference implementation of the light & shadow study.",
+   "series": {
+    "id": "vfx",
+    "number": 5
+   },
+   "pair": "vfx-light",
+   "date": "2026-11-09",
+   "thumb": "/thumbs/vfx-light.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "rendering"
+    ],
+    "concept": [
+     "light"
+    ],
+    "technique": [
+     "light-map",
+     "palette-lut",
+     "polar-shadow-map",
+     "shadowcasting",
+     "flood-fill-light",
+     "height-projection",
+     "flicker-strings",
+     "dither-threshold"
+    ]
+   },
+   "stats": {},
+   "maturity": "prototype",
+   "updated": "2026-11-09"
+  }
+ ]
+}

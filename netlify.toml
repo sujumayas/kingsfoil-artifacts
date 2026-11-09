@@ -1,0 +1,5 @@
+# Netlify serves the committed, prebuilt site/ folder. No build step on Netlify:
+# pages are built locally / by studykit and verified by GitHub Actions before merge.
+[build]
+  publish = "site"
+  command = ""

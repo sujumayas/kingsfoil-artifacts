@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acid Sandbox — top-down pixel acid that spreads, corrodes, fumes, and crawls</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c0f0a;--panel:#141a12;--line:#2a3524;--acid:#c8f25a;--acid2:#86c43a;--warm:#ffb86b;--txt:#e2ead8;--mute:#93a08a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--acid)}
+header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--acid)}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
+.hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(8,12,6,.75);padding:5px 8px;border-radius:4px;pointer-events:none;color:#eef6e4;max-width:calc(100% - 16px)}
+.bars{display:grid;grid-template-columns:auto 90px;gap:2px 8px;align-items:center;margin-top:4px}
+.bar{height:6px;background:#2a3324;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acid)}
+.bar.hp i{background:#ff6b5e}
+.msg{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font:700 22px "Pixelify Sans",monospace;color:var(--acid);text-shadow:0 2px 0 #000;pointer-events:none;display:none}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.group h3{margin:0 0 8px;font:600 12px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button,select{font:500 13px "IBM Plex Sans",sans-serif;background:#1d2619;color:var(--txt);border:1px solid #34432c;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--acid2)}
+button.on{background:var(--acid);color:#10140c;border-color:var(--acid)}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:6px}
+input[type=range]{flex:1;accent-color:#a8e04a}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h4{margin:0 0 6px;font-family:"Pixelify Sans",monospace;font-size:17px;color:var(--acid)}
+.card p{margin:0;color:#cbd5c0;font-size:14px}
+code{font:13px "IBM Plex Mono",monospace;color:var(--warm)}
+.keys{color:var(--mute);font-size:13px;margin:8px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>☣ Acid Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="vfx-acid-topdown-pixel.html">top-down pixel acid study</a> · November 2026</div>
+</header>
+<main>
+  <div class="stage">
+    <canvas id="c" width="320" height="180" aria-label="Acid simulation canvas"></canvas>
+    <div class="hud"><div id="hudt">…</div>
+      <div class="bars"><span>HP</span><div class="bar hp"><i id="b_hp"></i></div><span>Helmet</span><div class="bar"><i id="b_helm"></i></div><span>Chest (iron)</span><div class="bar"><i id="b_chest"></i></div><span>Boots (leather)</span><div class="bar"><i id="b_boots"></i></div><span>Sword (iron)</span><div class="bar"><i id="b_sword"></i></div></div>
+    </div>
+    <div class="msg" id="msg">You dissolved…</div>
+  </div>
+  <p class="keys"><b>WASD / arrows</b> to move, <b>Space</b> or <b>J</b> to swing your sword (it corrodes on every slime it hits). <b>Tap / click</b> to walk there with the Walk tool. The other tools work by clicking or dragging on the scene. Things to try: melt the iron bars on the right, feed a crate to a slime, or walk through a puddle and watch your boots go first.</p>
+  <div class="controls">
+    <div class="group"><h3>Tool</h3>
+      <div class="btns" id="tbtns">
+        <button data-t="walk" class="on">🚶 Walk</button>
+        <button data-t="acid">☣ Pour acid</button>
+        <button data-t="lime">⚪ Neutralize (lime)</button>
+        <button data-t="slime">🟢 Spawn slime</button>
+        <button data-t="item">📦 Drop item</button>
+      </div>
+      <label>Item <select id="itemsel"><option value="sword">Iron sword</option><option value="shield">Wood + iron shield</option><option value="armor">Iron chestplate</option><option value="crate">Wooden crate</option><option value="barrel">Barrel</option><option value="bones">Bones</option><option value="gold">Gold coins (immune)</option><option value="flask">Acid flask (glass)</option><option value="rug">Cloth rug</option></select></label>
+    </div>
+    <div class="group"><h3>Time</h3>
+      <label>Sim speed <input id="speed" type="range" min="1" max="8" value="1"><span id="speedv">1×</span></label>
+      <div class="btns" style="margin-top:8px"><button id="pause">Pause</button><button id="repair">Repair gear</button><button id="reset">Reset room</button></div>
+    </div>
+    <div class="group"><h3>X-ray view (the data behind the pixels)</h3>
+      <div class="btns" id="vbtns">
+        <button data-v="normal" class="on">Normal</button><button data-v="acid">Acid amount</button><button data-v="integ">Integrity</button><button data-v="gas">Fumes</button><button data-v="stain">Stain</button><button data-v="rust">Rust</button><button data-v="glow">Glow</button>
+      </div>
+    </div>
+  </div>
+  <div class="explain">
+    <div class="card"><h4>1 · One float of acid per pixel</h4><p>Acid is a single buffer (<code>Float32Array(320*180)</code>). Each step, every wet pixel sends a share of its surface height (acid plus floor height) to lower neighbours. A thin film below 0.3 can't wet dry pixels, which acts as cheap surface tension and gives puddles clean edges. A slightly lower drain trench guides spills toward the iron gate.</p></div>
+    <div class="card"><h4>2 · Materials eat acid back</h4><p>Every object pixel stores a material and an integrity value from 1 to 0. Acid touching it removes <code>rate × concentration</code> and is used up by the reaction, so a small spill stops on its own. Cloth goes fastest, then iron, leather and wood, then bone. Gold and stone are immune; glass flasks only shatter when struck. Solid things like crates, barrels and bars are eaten from their wet edge inward, one pixel at a time.</p></div>
+    <div class="card"><h4>3 · Stages, not health bars</h4><p>Integrity picks a colour stage through a Bayer-dithered threshold, so stages blend instead of popping. Iron goes clean → pitted (dark pits) → pale green salts → dull → holes. Wood darkens, chars to black, then crumbles. Once acid is gone, damaged iron <i>slowly rusts</i>, and the rust spreads to neighbouring iron.</p></div>
+    <div class="card"><h4>4 · Slimes are the same field</h4><p>A slime is a metaball: a smooth falloff blob that is squashed and stretched by a wobble phase. The renderer draws slime where <code>slimeField + 0.55·acid ≥ 1</code>, so a slime visibly melts into the puddles it crosses. Its core is see-through, so items it's digesting show inside. Slimes leave acid trails, grow by eating, split in two past 45 mass or when cut while heavier than 12 (up to a population cap), and burst into a pool when they die.</p></div>
+    <div class="card"><h4>5 · Armor before flesh</h4><p>Standing in acid wears your boots down first. Once they're gone, your HP drops with sizzle smoke and a flash. Slime contact eats the chestplate first. Your sword loses integrity on every slime it hits, and fumes slowly etch the helmet. Your boots also soak up acid and print acidic footprints that etch the floor.</p></div>
+    <div class="card"><h4>6 · Fumes, stains and time</h4><p>Evaporation and reactions feed a 160×90 fume grid that blurs, decays and drifts north. It's drawn as dithered green haze; dense fumes hurt. Shrinking puddle edges leave ring stains (the coffee-ring effect). Lime neutralizes acid into a white salt crust that fades over time.</p></div>
+    <div class="card"><h4>7 · Light from the liquid</h4><p>Every 4 frames, the acid is summed into 8×8 blocks and blurred twice, giving a green glow map. Each pixel then chooses between three palettes — dim, torch or acid-glow — through a Bayer threshold. That gives the dithered light pools of old dungeon crawlers at almost no cost.</p></div>
+  </div>
+  <p class="keys" style="margin-top:16px">→ Full research: <a href="vfx-acid-topdown-pixel.html">Top-down pixel acid study</a> · previous concept: <a href="vfx-snow-sandbox.html">Snow Sandbox</a> · next: <a href="vfx-rain-sandbox.html">Rain Sandbox</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
+</main>
+<script>
+(()=>{
+"use strict";
+const W=320,H=180,NP=W*H,GW=160,GH=90;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const img=ctx.createImageData(W,H),out32=new Uint32Array(img.data.buffer);
+let rs=99173;const rnd=()=>{rs^=rs<<13;rs^=rs>>>17;rs^=rs<<5;return (rs>>>0)/4294967296;};
+const hash2=(x,y)=>{let h=Math.imul(x*374761393+y*668265263,1274126177);h^=h>>>13;h=Math.imul(h,1274126177);return ((h^(h>>>16))>>>0)/4294967296;};
+const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+
+// ---------- palette ----------
+const BASE=[];const C=h=>{BASE.push(h);return BASE.length-1;};const mk=a=>a.map(C);
+const FLR=mk(['#40444f','#4a4f5b','#363942','#25272e']);
+const ST1=C('#4f5947'),ST2=C('#66704f'),SALT=C('#d3d8cb'),SALT2=C('#aeb6a5');
+const WL=mk(['#56556d','#45445c','#2d2c39','#6a6988']);
+const WOOD=[mk(['#b07f50','#8d603b','#5e3d26']),mk(['#80603f','#664a32','#463120']),mk(['#463528','#33281f','#221b16']),mk(['#2b231d','#221c17','#17120f'])];
+const IRON=[mk(['#d4dce6','#98a3b1','#5c6472']),mk(['#b8c0ca','#86909d','#545b67']),mk(['#a3ad98','#7c8774','#4f574a']),mk(['#70766a','#585d51','#3c4038'])];
+const IRON_PIT=C('#363b44'),IRON_SALT=C('#c0dba0');const RUST=mk(['#c0713f','#8a4a2a']);
+const BONE=[mk(['#ece4cc','#cdc3a3','#9c9275']),mk(['#ddd29f','#bdb082','#8f8462']),mk(['#b8ad83','#9a8f69','#6e664b']),mk(['#7d7558','#665f47','#4a4433'])];
+const LEATH=[mk(['#94613f','#744a30','#4c3020']),mk(['#6e4a35','#573928','#3c281b']),mk(['#47332b','#36271f','#251b16']),mk(['#2c221d','#221a16','#17120f'])];
+const CLOTH=[mk(['#b4474a','#8f3439','#612229']),mk(['#985452','#7a4041','#552d2f']),mk(['#755148','#5d3f39','#412c28']),mk(['#4a3a34','#3a2d29','#28201d'])];
+const GOLD=mk(['#ffe07a','#d9a531','#8f631c']);const GLASS=mk(['#e3f7ff','#8fc3d6','#4f7f91']);
+const AC=mk(['#f6ffa8','#d9f75e','#a2e33c','#68b42c','#3f8124','#ecff86']); // HI L M D DD EDGE
+const SL=mk(['#eeffbe','#bff26a','#8bd544','#55a030','#2c5d20','#0f200b']); // HI L M D O EYE
+const SKIN=C('#f0c09a'),EYE=C('#20161c'),TUNIC=C('#3c6fb4'),PANTS=C('#34364a'),SMOKE=C('#a6ae9c'),SMOKE_D=C('#6f7668');
+const FLAME=mk(['#fff0a0','#ffbe4a','#ff7a2e']),HOLDER=C('#2a2a33'),SHARD=C('#dff6ff'),HURT=C('#ffffff'),SWING=C('#e9f2ff');
+const N=BASE.length;
+const EMIS=new Uint8Array(N);[...AC,...SL.slice(0,4),...FLAME,HURT,SWING].forEach(i=>EMIS[i]=1);
+const RGB=[];for(const h of BASE)RGB.push([parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]);
+const pack=(r,g,b)=>(255<<24)|(Math.max(0,Math.min(255,b|0))<<16)|(Math.max(0,Math.min(255,g|0))<<8)|Math.max(0,Math.min(255,r|0));
+const palDim=new Uint32Array(N*4),palTorch=new Uint32Array(N*4),palGlow=new Uint32Array(N*4);
+(function(){const am=RGB[AC[2]];
+  for(let i=0;i<N;i++){const [r,g,b]=RGB[i];
+    const vars=[[r,g,b],[(r*.55+am[0]*.45)*1.06,(g*.55+am[1]*.45)*1.06,(b*.55+am[2]*.45)*1.0],[r*.67+150*.33,g*.67+172*.33,b*.67+108*.33],[r*.6,g*.6,b*.66]];
+    for(let v=0;v<4;v++){const [R,G,B]=vars[v],k=i+v*N;
+      if(EMIS[i]&&v!==3){palDim[k]=pack(R*.94,G*.94,B*.94);palTorch[k]=pack(R,G,B);palGlow[k]=pack(R,G,B);}
+      else{palDim[k]=pack(R*.6,G*.63,B*.76);palTorch[k]=pack(R*1.02+8,G*.9+4,B*.7);palGlow[k]=pack(R*.62,G*.92+18,B*.52+4);}}}})();
+
+// ---------- buffers ----------
+const M_FLOOR=0,M_GROUT=1,M_WALL=2,M_WOOD=3,M_IRON=4,M_BONE=5,M_LEATH=6,M_CLOTH=7,M_GOLD=8;
+const STG=[null,null,null,WOOD,IRON,BONE,LEATH,CLOTH,null];
+const RATE=[0,0,0,.55,.8,.45,.6,1.1,0],GASK=[0,0,0,.6,.9,.4,.5,.5,0];
+const M=new Uint8Array(NP),ROLE=new Uint8Array(NP),Iq=new Float32Array(NP),SOL=new Uint8Array(NP),FB=new Uint16Array(NP),FM=new Uint8Array(NP);
+const A=new Float32Array(NP),dA=new Float32Array(NP),FH=new Float32Array(NP),ST=new Uint8Array(NP),SALTB=new Uint8Array(NP),RU=new Uint8Array(NP);
+const HS=new Float32Array(NP),BY=new Uint8Array(NP),thrA=new Float32Array(NP),IDX=new Uint16Array(NP),SF=new Float32Array(NP),SPR=new Uint8Array(NP);
+let G=new Float32Array(GW*GH),G2=new Float32Array(GW*GH);
+const glow=new Float32Array(NP),T1=new Float32Array(NP),T2=new Float32Array(NP);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;HS[i]=hash2(x,y);BY[i]=BAYER[(y&3)*4+(x&3)];thrA[i]=.03+BY[i]*.004;
+  const d1=Math.hypot(x-80,(y-18)*1.25),d2=Math.hypot(x-240,(y-18)*1.25);T1[i]=Math.min(1,Math.max(0,(1-d1/125)*2.3-.35));T2[i]=Math.min(1,Math.max(0,(1-d2/125)*2.3-.35));}
+const isObj=m=>m>=M_WOOD;
+const items=[];let flasks=[],slimes=[],parts=[];
+
+function buildRoom(){
+  M.fill(0);ROLE.fill(0);Iq.fill(0);SOL.fill(0);A.fill(0);ST.fill(0);SALTB.fill(0);RU.fill(0);G.fill(0);items.length=0;flasks=[];slimes=[];parts=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
+    const wall=y<24||y>=176||x<8||(x>=312&&!(y>=84&&y<=104));
+    if(wall){M[i]=M_WALL;SOL[i]=1;FM[i]=M_WALL;let c=WL[0];
+      if(y<4||(y>=176&&y<178)||(x<8&&x>=6)||(x>=312&&x<314))c=WL[3];
+      else if(y<24&&y>=4){const row=((y-4)/5)|0,off=(row&1)*6;if((y-4)%5===4||((x+off)%12)===0)c=WL[2];else c=HS[i]<.25?WL[1]:WL[0];if(y>=21)c=WL[2];}
+      else c=WL[2];FB[i]=c;continue;}
+    const gx=(x-8)&15,gy=(y-24)&15;const tx=(x-8)>>4,ty=(y-24)>>4,tr=hash2(tx*7,ty*13);
+    if(gx===0||gy===0){FM[i]=M_GROUT;FB[i]=FLR[3];FH[i]=.03;}
+    else{FM[i]=M_FLOOR;FH[i]=.035+tr*.03;let c=tr<.33?FLR[0]:tr<.7?FLR[1]:FLR[0];if(HS[i]<.07)c=FLR[2];if(gx===1||gy===1)c=FLR[1];if(gx===15||gy===15)c=FLR[2];
+      if(tr>.85&&Math.abs((gx-gy))<1&&HS[i]<.7)c=FLR[3];FB[i]=c;}
+    M[i]=FM[i];}
+  // drain trench toward the bars (lower floor = acid runs to the gate)
+  for(let x=200;x<318;x++)for(let y=93;y<=95;y++){const i=y*W+x;if(M[i]!==M_WALL){FH[i]=-.02;FB[i]=FLR[3];FM[i]=M[i]=M_GROUT;}}
+  // iron portcullis
+  for(let y=84;y<=104;y++)for(let x=313;x<=316;x++)if((y-84)%4<2||x===313)setObj(x,y,M_IRON,(x===313?0:(y-84)%4===0?0:2),true,null);
+  for(let y=84;y<=104;y++)for(let x=317;x<320;x++){const i=y*W+x;M[i]=FM[i]=M_FLOOR;SOL[i]=0;FB[i]=FLR[2];}
+  placeItem('table',24,28);placeItem('crate',130,34);placeItem('barrel',178,40);placeItem('shield',60,84);placeItem('sword',112,150);
+  placeItem('armor',222,124);placeItem('bones',250,60);placeItem('gold',276,150);placeItem('rug',118,86);
+  for(const fx of [34,50,66,84])flasks.push({x:fx,y:33,alive:true});
+  spill(92,118,13,1.3);spill(150,60,6,.9);
+  slimes.push(newSlime(206,84,24),newSlime(60,148,14));
+  player.x=36;player.y=72;repair();
+}
+function setObj(x,y,m,role,sol,item){if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;if(M[i]===M_WALL)return;M[i]=m;ROLE[i]=role;Iq[i]=1;SOL[i]=sol?1:0;RU[i]=0;A[i]=sol?0:A[i];if(item)item.px.push(i);}
+function destroy(i){M[i]=FM[i];SOL[i]=0;Iq[i]=0;RU[i]=0;ST[i]=Math.min(255,ST[i]+60);}
+function placeItem(kind,x0,y0){const it={kind,x:x0,y:y0,px:[]};const P=(x,y,m,r,s)=>setObj(x0+x,y0+y,m,r,s,it);
+  if(kind==='sword'){for(let x=0;x<16;x++){P(x,0,M_IRON,0);P(x,1,M_IRON,x>13?1:2);}P(16,0,M_IRON,1);P(17,1,M_IRON,2);
+    for(let y=-2;y<=3;y++)P(-1,y,M_IRON,y<0?0:1);for(let x=-5;x<=-2;x++){P(x,0,M_LEATH,1);P(x,1,M_LEATH,2);}P(-6,0,M_GOLD,0);P(-6,1,M_GOLD,2);it.x+=6;}
+  else if(kind==='shield'){for(let y=-7;y<=7;y++)for(let x=-7;x<=7;x++){const r=Math.hypot(x,y*1.1);if(r>7.4)continue;
+      if(r>5.8)P(x,y,M_IRON,y<0?0:2);else if(r<1.8)P(x,y,M_IRON,x+y<0?0:1);else P(x,y,M_WOOD,(x+20)%4===0?2:(x+y<-4?0:1));}}
+  else if(kind==='armor'){for(let y=0;y<14;y++){const hw=y<3?7:y<9?6:5;for(let x=-hw;x<=hw;x++){if(y<3&&Math.abs(x)<3)continue;
+      P(x,y,(y<3&&Math.abs(x)>5)?M_LEATH:M_IRON,x===0?2:x<-2?0:(y>10?2:1));}}it.y+=6;}
+  else if(kind==='crate'){for(let y=0;y<14;y++)for(let x=0;x<16;x++){const edge=x===0||x===15||y===0||y===13,band=(x<2||x>13)&&(y<2||y>11);
+      P(x,y,band?M_IRON:M_WOOD,band?1:edge?2:y>=10?2:(y%3===0?2:(x<6?0:1)),true);}it.x+=8;it.y+=7;}
+  else if(kind==='barrel'){for(let y=0;y<15;y++)for(let x=-6;x<=6;x++){const ex=Math.abs(x)/6.6;if(ex>1)continue;const hoop=y===2||y===11;
+      P(x,y,hoop?M_IRON:M_WOOD,hoop?(x<0?0:2):(y<4?(x%3===0?2:0):(x%3===0?2:(x<-1?0:1))),true);}it.y+=7;}
+  else if(kind==='bones'){for(let y=0;y<5;y++)for(let x=0;x<6;x++){if((y===4&&(x===0||x===5)))continue;P(x,y,M_BONE,(y===2&&(x===1||x===4))?2:(x<3?0:1));}
+    for(let k=0;k<10;k++){P(8+k,1+(k>>2),M_BONE,k%5===0?2:1);P(8+k,6-(k>>2),M_BONE,k%5===0?2:0);}}
+  else if(kind==='gold'){for(let c=0;c<9;c++){const cx=(c%3)*5-5+(c>5?2:0),cy=((c/3)|0)*3-3;for(let y=-1;y<=1;y++)for(let x=-2;x<=2;x++)if(Math.abs(x)+Math.abs(y)<3)P(cx+x,cy+y,M_GOLD,y<0?0:y>0?2:1);}}
+  else if(kind==='rug'){for(let y=0;y<26;y++)for(let x=0;x<46;x++){const b=x<2||x>43||y<2||y>23,m=Math.abs(x-23)+Math.abs((y-13)*1.7)<9;P(x,y,M_CLOTH,b?2:m?0:((x+y)%6===0?2:1));}it.x+=23;it.y+=13;}
+  else if(kind==='table'){for(let y=0;y<14;y++)for(let x=0;x<72;x++){if(y>=10&&!(x<3||x>68))continue;P(x,y,M_WOOD,y>=8?2:(y%3===0?2:(x%17===0?2:0)),true);}it.x+=36;it.y+=6;}
+  else if(kind==='flask'){flasks.push({x:x0,y:y0,alive:true});return;}
+  items.push(it);}
+function spill(cx,cy,r,amt){for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){if(x<1||y<1||x>=W-1||y>=H-1)continue;const d=Math.hypot(x-cx,y-cy)/r;if(d>1)continue;const i=y*W+x;if(!SOL[i])A[i]+=amt*(1-d*d*.6)*(.85+HS[i]*.3);}}
+
+// ---------- materials: stage colour ----------
+function matIdx(m,role,q,i){if(m===M_GOLD)return GOLD[role];const T=STG[m];
+  let si=Math.floor((1-q)*3.3+(BY[i]-7.5)/16*.9);si=si<0?0:si>3?3:si;
+  if(q<.15&&HS[i]<(.15-q)*7)return -1;
+  if(m===M_IRON){if(si===1&&HS[i]<.3)return IRON_PIT;if(si===2&&HS[i]<.45)return IRON_SALT;}
+  return T[si][role];}
+
+// ---------- sim ----------
+const FILM=.3,EVAP=.00004;let bx0=1,bx1=W-2,by0=1,by1=H-2;
+function gasAdd(i,v){const x=i%W,y=(i/W)|0;G[(y>>1)*GW+(x>>1)]+=v;}
+function bubble(i,kind){parts.push({k:kind||'bub',x:i%W,y:(i/W)|0,z:0,vx:0,vy:0,vz:kind==='smoke'?10:0,life:kind==='smoke'?1.2:.45,t:0});}
+function react(j,src,conc,mul,feed){const m=M[j];const dmg=RATE[m]*conc*.0035*mul*(.5+rnd());Iq[j]-=dmg;
+  if(src>=0)A[src]=Math.max(0,A[src]-dmg*.55);gasAdd(j,dmg*GASK[m]*6);
+  if(rnd()<dmg*26)bubble(j,m===M_WOOD||m===M_CLOTH||m===M_LEATH?'smoke':'bub');
+  if(Iq[j]<=0)destroy(j);return dmg;}
+function simStep(){
+  // 1) flow (bbox of wet area)
+  const x0=Math.max(1,bx0-1),x1=Math.min(W-2,bx1+1),y0=Math.max(1,by0-1),y1=Math.min(H-2,by1+1);
+  for(let y=y0;y<=y1;y++){const r=y*W;for(let x=x0;x<=x1;x++)dA[r+x]=0;}
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x,a=A[i];if(a<.004)continue;const h=a+FH[i];let s=0,f0=0,f1=0,f2=0,f3=0,j,d,aj;
+    j=i-1;if(!SOL[j]){aj=A[j];d=h-aj-FH[j];if(d>0&&(a>FILM||aj>.004)){f0=d;s+=d;}}
+    j=i+1;if(!SOL[j]){aj=A[j];d=h-aj-FH[j];if(d>0&&(a>FILM||aj>.004)){f1=d;s+=d;}}
+    j=i-W;if(!SOL[j]){aj=A[j];d=h-aj-FH[j];if(d>0&&(a>FILM||aj>.004)){f2=d;s+=d;}}
+    j=i+W;if(!SOL[j]){aj=A[j];d=h-aj-FH[j];if(d>0&&(a>FILM||aj>.004)){f3=d;s+=d;}}
+    if(s<=0)continue;const k=Math.min(.2,a*.9/s);dA[i]-=s*k;dA[i-1]+=f0*k;dA[i+1]+=f1*k;dA[i-W]+=f2*k;dA[i+W]+=f3*k;}
+  // 2) react, stain, evaporate; recompute bbox
+  let nx0=W,nx1=0,ny0=H,ny1=0;
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x;let a=A[i]+dA[i];if(a<.004){A[i]=0;continue;}A[i]=a;
+    if(x<nx0)nx0=x;if(x>nx1)nx1=x;if(y<ny0)ny0=y;if(y>ny1)ny1=y;
+    const m=M[i];if(isObj(m)&&RATE[m]>0)react(i,i,Math.min(1,a),1);else if(m<=M_GROUT&&rnd()<.012*a&&ST[i]<255)ST[i]++;
+    if(SOL[i-1]&&RATE[M[i-1]]>0)react(i-1,i,Math.min(1,a),.6);if(SOL[i+1]&&RATE[M[i+1]]>0)react(i+1,i,Math.min(1,a),.6);
+    if(SOL[i-W]&&RATE[M[i-W]]>0)react(i-W,i,Math.min(1,a),.6);if(SOL[i+W]&&RATE[M[i+W]]>0)react(i+W,i,Math.min(1,a),.6);
+    const edge=A[i-1]===0||A[i+1]===0||A[i-W]===0||A[i+W]===0;const ev=EVAP*(edge?1.8:1)+(a<.08?.0005:0);A[i]-=ev;gasAdd(i,ev*.9);
+    if(edge&&a<.3&&rnd()<.03&&ST[i]<250)ST[i]+=2;if(a>.45&&rnd()<.0005)bubble(i);if(A[i]<.004)A[i]=0;}
+  bx0=nx0;bx1=nx1;by0=ny0;by1=ny1;if(nx0>nx1){bx0=1;bx1=0;by0=1;by1=0;}
+  // 3) fumes: blur, decay, drift north
+  for(let y=1;y<GH-1;y++)for(let x=1;x<GW-1;x++){const c=y*GW+x;const d=(G[c]*4+G[c-1]+G[c+1]+G[c-GW]+G[c+GW])/8;G2[c]=(d*.8+((G[c+GW]*4+G[c+GW-1]+G[c+GW+1])/6)*.2)*.991;}
+  const t=G;G=G2;G2=t;
+  // 4) rust, stain & salt fading (sampled)
+  for(let k=0;k<2500;k++){const i=(rnd()*NP)|0;const m=M[i];
+    if(m===M_IRON&&Iq[i]<.985&&A[i]===0&&A[i+1]===0&&A[i-1]===0){if(rnd()<.06*(1.15-Iq[i]))RU[i]=Math.min(255,RU[i]+3);
+      if(RU[i]>150&&rnd()<.03){const j=i+[1,-1,W,-W][(rnd()*4)|0];if(M[j]===M_IRON)RU[j]=Math.min(255,RU[j]+14);}if(RU[i]>220)Iq[i]-=.0002;}
+    if(ST[i]&&A[i]===0&&rnd()<.04)ST[i]--;if(SALTB[i]&&rnd()<.12)SALTB[i]--;}
+}
+
+// ---------- slimes ----------
+function newSlime(x,y,mass){return {x,y,mass,ph:rnd()*6,vx:0,vy:0,tx:x,ty:y,t:0,dir:1,blink:0,hurt:0};}
+const rad=s=>2.5+Math.sqrt(s.mass)*1.25;
+function burst(s){const r=rad(s)*1.5;spill(s.x|0,(s.y-2)|0,r|0,.5+s.mass*.025);for(let k=0;k<10;k++){const a=rnd()*6.28;parts.push({k:'drop',x:s.x,y:s.y,z:4,vx:Math.cos(a)*40,vy:Math.sin(a)*24,vz:30+rnd()*30,life:2});}}
+function split(s){const m=s.mass/2;s.mass=m;const a=rnd()*6.28;const n=newSlime(s.x+Math.cos(a)*4,s.y+Math.sin(a)*3,m);n.vx=Math.cos(a)*40;n.vy=Math.sin(a)*30;s.vx=-n.vx;s.vy=-n.vy;slimes.push(n);}
+function slimeBlocked(x,y){x|=0;y|=0;if(x<2||y<2||x>=W-2||y>=H-2)return true;const i=y*W+x;return M[i]===M_WALL||(SOL[i]&&M[i]!==M_WOOD);}
+function updateSlimes(dt){
+  for(let si=slimes.length-1;si>=0;si--){const s=slimes[si];const r=rad(s);s.t-=dt;s.hurt=Math.max(0,s.hurt-dt);
+    const pd=Math.hypot(player.x-s.x,player.y-s.y);
+    if(!player.dead&&pd<60){s.tx=player.x;s.ty=player.y;}
+    else if(s.t<=0){s.t=2+rnd()*3;let best=null,bd=90;for(const it of items){if(it.kind==='gold')continue;let alive=false;for(let k=0;k<it.px.length;k+=7)if(isObj(M[it.px[k]])){alive=true;break;}
+        if(!alive)continue;const d=Math.hypot(it.x-s.x,it.y-s.y);if(d<bd){bd=d;best=it;}}
+      if(best&&rnd()<.75){s.tx=best.x;s.ty=best.y;}else{s.tx=s.x+(rnd()-.5)*70;s.ty=s.y+(rnd()-.5)*50;}}
+    const dx=s.tx-s.x,dy=s.ty-s.y,L=Math.hypot(dx,dy);const hop=Math.max(0,Math.sin(s.ph));const sp=(L>3?16:0)*(.35+.9*hop)*(s.mass>30?.75:1);
+    s.ph+=dt*(L>3?8:3);let vx=s.vx+(L>0?dx/L*sp:0),vy=s.vy+(L>0?dy/L*sp:0);s.vx*=Math.pow(.05,dt);s.vy*=Math.pow(.05,dt);
+    const nx=s.x+vx*dt,ny=s.y+vy*dt;if(!slimeBlocked(nx,s.y))s.x=nx;else s.vx=-s.vx*.5;if(!slimeBlocked(s.x,ny))s.y=ny;else s.vy=-s.vy*.5;if(Math.abs(vx)>2)s.dir=vx>0?1:-1;
+    // digest + trail (slime acts as concentrated acid)
+    for(let k=0;k<5;k++){const a=rnd()*6.28,rr=Math.sqrt(rnd())*r*.85;const x=(s.x+Math.cos(a)*rr)|0,y=(s.y-2+Math.sin(a)*rr*.6)|0;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;
+      if(isObj(M[j])&&RATE[M[j]]>0)s.mass+=react(j,-1,1,2.2*simSpeed)*.9;}
+    const ti=((s.y|0)*W+(s.x|0));if(!SOL[ti]&&A[ti]<.3){A[ti]+=.006*simSpeed;if(ti%W<bx0)bx0=ti%W;if(ti%W>bx1)bx1=ti%W;if(((ti/W)|0)<by0)by0=(ti/W)|0;if(((ti/W)|0)>by1)by1=(ti/W)|0;}
+    if(s.mass>45&&slimes.length<6&&rnd()<dt*.5)split(s);if(s.mass>60)s.mass=60;
+    // contact with player: armor first, then flesh
+    if(!player.dead&&pd<r*.9+3){const ch=player.eq.chest;if(ch.q>0){ch.q=Math.max(0,ch.q-.09*dt);}else hurt(10*dt);
+      player.kx+=(player.x-s.x)/(pd||1)*60*dt;player.ky+=(player.y-s.y)/(pd||1)*60*dt;player.feetAcid=Math.max(player.feetAcid,.5);}
+    // lime kills slimes
+    if(s.mass<4){burst(s);slimes.splice(si,1);}}}
+
+// ---------- player ----------
+const player={x:36,y:72,dir:'down',anim:0,dist:0,foot:0,moving:false,tx:null,ty:null,hp:100,eq:{},feetAcid:0,hurtT:0,swing:0,cool:0,dead:false,deadT:0,kx:0,ky:0,sizzle:0};
+function repair(){player.eq={helm:{q:1},chest:{q:1},boots:{q:1},sword:{q:1}};player.hp=100;player.dead=false;}
+function hurt(v){player.hp-=v;player.hurtT=.12;if(player.hp<=0&&!player.dead){player.dead=true;player.deadT=2.6;document.getElementById('msg').style.display='block';
+  spill(player.x|0,(player.y-3)|0,5,.4);for(let k=0;k<14;k++)parts.push({k:'smoke',x:player.x+(rnd()-.5)*6,y:player.y,z:4+rnd()*8,vx:(rnd()-.5)*8,vy:0,vz:10+rnd()*8,life:1.5});}}
+const keys={};
+function blocked(x,y){x|=0;y|=0;for(let xx=x-2;xx<=x+2;xx++){if(xx<0||xx>=W||y<26||y>=H)return true;if(SOL[y*W+xx]||SOL[(y-1)*W+xx])return true;}return false;}
+function feetA(){const i=(player.y|0)*W+(player.x|0);return (A[i]+A[i-1]+A[i+1])/3;}
+function attack(){if(player.dead||player.cool>0)return;player.cool=.32;player.swing=.18;const sw=player.eq.sword;if(sw.q<=0)return;
+  const f={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[player.dir];const hx=player.x+f[0]*9,hy=player.y-4+f[1]*7;
+  for(const s of slimes.slice()){if(Math.hypot(s.x-hx,s.y-3-hy)<rad(s)+6){s.mass-=8;s.hurt=.15;sw.q=Math.max(0,sw.q-.06);s.vx+=f[0]*90;s.vy+=f[1]*70;
+    for(let k=0;k<5;k++)parts.push({k:'drop',x:s.x,y:s.y,z:5,vx:f[0]*40+(rnd()-.5)*50,vy:f[1]*30+(rnd()-.5)*30,vz:25+rnd()*20,life:2});
+    if(s.mass<5){burst(s);slimes.splice(slimes.indexOf(s),1);}else if(s.mass>=12&&slimes.length<10)split(s);}}
+  for(const fl of flasks)if(fl.alive&&Math.hypot(fl.x+2-hx,fl.y+3-hy)<9)breakFlask(fl);}
+function breakFlask(fl){fl.alive=false;spill(fl.x+2,fl.y+6,7,1.4);for(let k=0;k<8;k++)parts.push({k:'shard',x:fl.x+2,y:fl.y+4,z:3,vx:(rnd()-.5)*60,vy:(rnd()-.5)*40,vz:20+rnd()*20,life:1.2});
+  for(let k=0;k<6;k++){const a=rnd()*6.28;parts.push({k:'drop',x:fl.x+2,y:fl.y+5,z:4,vx:Math.cos(a)*30,vy:Math.sin(a)*20,vz:20+rnd()*20,life:2});}}
+function updatePlayer(dt){const p=player;p.cool-=dt;p.swing-=dt;p.hurtT-=dt;
+  if(p.dead){p.deadT-=dt;if(p.deadT<=0){document.getElementById('msg').style.display='none';p.x=36;p.y=72;repair();p.feetAcid=0;}return;}
+  let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.arrowright||keys.d)ix++;if(keys.arrowup||keys.w)iy--;if(keys.arrowdown||keys.s)iy++;
+  if(ix||iy)p.tx=null;else if(p.tx!==null){const dx=p.tx-p.x,dy=p.ty-p.y,L=Math.hypot(dx,dy);if(L<1.2)p.tx=null;else{ix=dx/L;iy=dy/L;}}
+  const L=Math.hypot(ix,iy)||1,af=feetA(),slow=1-Math.min(.4,af*.4),sp=40*slow;
+  let vx=ix/L*sp+p.kx,vy=iy/L*sp+p.ky;p.kx*=Math.pow(.02,dt);p.ky*=Math.pow(.02,dt);
+  const nx=p.x+vx*dt,ny=p.y+vy*dt;let mx=0,my=0;if(!blocked(nx,p.y)){mx=nx-p.x;p.x=nx;}if(!blocked(p.x,ny)){my=ny-p.y;p.y=ny;}
+  p.moving=(ix||iy)&&Math.abs(mx)+Math.abs(my)>.001;if(!p.moving&&p.tx!==null&&!(ix||iy))p.tx=null;
+  if(p.moving){p.anim+=dt*8;if(Math.abs(ix)>Math.abs(iy))p.dir=ix>0?'right':'left';else p.dir=iy>0?'down':'up';
+    p.dist+=Math.hypot(mx,my);if(p.dist>5){p.dist=0;p.foot^=1;if(p.feetAcid>.05){const fx=(p.x+(p.foot?1.5:-1.5))|0,fy=p.y|0;for(const j of [fy*W+fx,fy*W+fx-1]){if(!SOL[j]){A[j]+=p.feetAcid*.3;}}
+      bx0=Math.min(bx0,fx-2);bx1=Math.max(bx1,fx+2);by0=Math.min(by0,fy-1);by1=Math.max(by1,fy+1);p.feetAcid*=.72;}}}else p.anim=0;
+  // acid at feet: boots first, then flesh
+  if(af>.05){p.feetAcid=Math.max(p.feetAcid,Math.min(1,af));const b=p.eq.boots;if(b.q>0)b.q=Math.max(0,b.q-.035*af*dt*simSpeed);else{hurt(9*Math.min(1.5,af)*dt);p.sizzle-=dt;if(p.sizzle<=0){p.sizzle=.12;parts.push({k:'smoke',x:p.x+(rnd()-.5)*5,y:p.y,z:1,vx:(rnd()-.5)*6,vy:0,vz:14,life:.9});}}}
+  const g=G[(((p.y-8)|0)>>1)*GW+((p.x|0)>>1)]||0;if(g>.08)p.eq.helm.q=Math.max(0,p.eq.helm.q-.04*g*dt*simSpeed);if(g>.3)hurt((g-.3)*3*dt);
+}
+
+// ---------- particles ----------
+function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const q=parts[k];q.life-=dt;q.t+=dt;if(q.life<=0){parts.splice(k,1);continue;}
+  q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;
+  if(q.k==='drop'||q.k==='shard'){q.vz-=120*dt;if(q.z<=0){if(q.k==='drop'){const x=q.x|0,y=q.y|0;if(x>1&&y>1&&x<W-1&&y<H-1&&!SOL[y*W+x]){A[y*W+x]+=.35;A[y*W+x+1]+=.08;A[y*W+x-1]+=.08;bx0=Math.min(bx0,x-1);bx1=Math.max(bx1,x+1);by0=Math.min(by0,y);by1=Math.max(by1,y);}parts.splice(k,1);continue;}q.z=0;q.vz=0;q.vx*=.6;q.vy*=.6;}}
+  if(q.k==='smoke'){q.vx*=.98;}}}
+
+// ---------- glow ----------
+const BW=40,BH=23,blk=new Float32Array(BW*BH),blk2=new Float32Array(BW*BH);
+function computeGlow(){blk.fill(0);for(let y=24;y<176;y++){const by=y>>3;for(let x=8;x<312;x++){const a=A[y*W+x];if(a>0)blk[by*BW+(x>>3)]+=Math.min(a,1.2);}}
+  for(const s of slimes){const b=((s.y|0)>>3)*BW+((s.x|0)>>3);if(b>=0&&b<blk.length)blk[b]+=s.mass*.5;}
+  for(let p=0;p<2;p++){for(let y=0;y<BH;y++)for(let x=0;x<BW;x++){let s=0,w=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=BW||Y>=BH)continue;const k=(2-Math.abs(dx))*(2-Math.abs(dy));s+=blk[Y*BW+X]*k;w+=k;}blk2[y*BW+x]=s/w;}blk.set(blk2);}
+  for(let y=0;y<H;y++){const fy=Math.min(BH-1.001,Math.max(0,y/8-.5)),y0=fy|0,ty=fy-y0;for(let x=0;x<W;x++){const fx=Math.min(BW-1.001,Math.max(0,x/8-.5)),x0=fx|0,tx=fx-x0;
+    const a=blk[y0*BW+x0],b=blk[y0*BW+x0+1],c=blk[(y0+1)*BW+x0],d=blk[(y0+1)*BW+x0+1];glow[y*W+x]=Math.min(1,Math.max(0,((a+(b-a)*tx)*(1-ty)+(c+(d-c)*tx)*ty)/12-.35));}}}
+
+// ---------- render ----------
+const PF=["..hhh..",".hhhhh.",".HeseH.",".HsssH.","uccCccu","uccCccu","scCCCcs"],PB=["..hhh..",".hhhhh.",".HhhhH.",".HhhhH.","ucccccu","uccCccu","scCCCcs"],PS=["..hhh..",".hhhhh.","..Hsse.","..Hsss.",".uccc..",".ucCc..","..cCcs."];
+const LF=[[".ppppp.",".pp.pp.",".bb.bb.",".BB.BB."],[".ppppp.",".pp.pp.","..b.bb.","..B.BB."],[".ppppp.",".pp.pp.",".bb.b..",".BB.B.."]];
+const LS=[["..ppp..","..pp...","..bb...","..BB..."],["..ppp..",".p..p..",".b..b..",".B..BB."],["..ppp..","..pp...",".bb....",".BB...."]];
+const PMAP={h:['helm',M_IRON,0],H:['helm',M_IRON,2],c:['chest',M_IRON,1],C:['chest',M_IRON,2],b:['boots',M_LEATH,1],B:['boots',M_LEATH,2],s:SKIN,e:EYE,u:TUNIC,p:PANTS};
+let frame=0;
+function put(x,y,idx){if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;IDX[i]=idx;SPR[i]=1;}
+function drawPlayer(){const p=player;if(p.dead)return;const x=Math.round(p.x),y=Math.round(p.y);const fr=p.moving?[0,1,0,2][(p.anim|0)%4]:0;
+  let body,legs,flip=false;if(p.dir==='down'){body=PF;legs=LF[fr];}else if(p.dir==='up'){body=PB;legs=LF[fr];}else{body=PS;legs=LS[fr];flip=p.dir==='left';}
+  const rows=body.concat(legs),top=y-rows.length+1,flash=p.hurtT>0&&(frame&2);
+  for(let xx=-3;xx<=3;xx++){const i=(y+1)*W+x+xx;if(y+1<H&&IDX[i]<N)IDX[i]+=3*N;}
+  for(let r=0;r<rows.length;r++){const row=rows[r];for(let c=0;c<7;c++){const ch=row[flip?6-c:c];if(ch==='.')continue;const px=x-3+c,py=top+r;if(px<0||py<0||px>=W||py>=H)continue;const i=py*W+px;
+    const m=PMAP[ch];let idx;if(typeof m==='number')idx=m;else{const eq=p.eq[m[0]];idx=eq.q<=0?(m[0]==='boots'?SKIN:m[0]==='helm'?(ch==='h'?SMOKE_D:SKIN):TUNIC):matIdx(m[1],m[2],eq.q,i);if(idx<0)idx=m[0]==='boots'?SKIN:TUNIC;}
+    if(flash)idx=HURT;else if(p.hurtT>0)idx=(idx%N)+N;IDX[i]=idx;SPR[i]=1;}}
+  // sword
+  const sw=p.eq.sword;if(sw.q>0){const f={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[p.dir];
+    if(p.swing>0){const t=1-p.swing/.18;for(let k=3;k<12;k++){const a=(-1.1+t*2.2);const dx=f[0]*Math.cos(a)-f[1]*Math.sin(a),dy=f[0]*Math.sin(a)+f[1]*Math.cos(a);
+        const px=(x+dx*k)|0,py=(y-4+dy*k*.8)|0,i=py*W+px;if(px>=0&&py>=0&&px<W&&py<H){const ii=matIdx(M_IRON,k>8?0:1,sw.q,i);put(px,py,ii<0?SWING:ii);}}
+      for(let k=6;k<13;k+=2){const a=(-1.1+t*2.2)-.35;put((x+(f[0]*Math.cos(a)-f[1]*Math.sin(a))*k)|0,(y-4+(f[0]*Math.sin(a)+f[1]*Math.cos(a))*k*.8)|0,SWING);}}
+    else{const sx=p.dir==='left'?x-4:x+4,sy=y-3;for(let k=0;k<5;k++){const i=(sy-k)*W+sx;const ii=matIdx(M_IRON,k>2?0:1,sw.q,i);if(ii>=0)put(sx,sy-k,ii);}put(sx,sy+1,LEATH[0][1]);}}}
+function drawFlask(fl){if(!fl.alive)return;const S=["..k..",".gGg.","gaaAg","gaAAg","gAAAg",".ggg."],mp={k:WOOD[0][1],g:GLASS[1],G:GLASS[0],a:AC[1],A:AC[2]};
+  for(let r=0;r<6;r++)for(let c=0;c<5;c++){const ch=S[r][c];if(ch==='.')continue;let idx=mp[ch];if(ch==='a'&&((frame>>3)+c+r)%7===0)idx=AC[0];put(fl.x+c,fl.y+r,idx);}}
+function render(){
+  const t=frame/60;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,m=M[i];let idx;
+    if(m===M_WALL){IDX[i]=FB[i];continue;}
+    if(isObj(m)){idx=matIdx(m,ROLE[i],Iq[i],i);if(idx>=0&&m===M_IRON&&RU[i]>BY[i]*12+30)idx=RUST[ROLE[i]===0?0:1];}else idx=-1;
+    const a=A[i];
+    if(idx<0){idx=FB[i];if(ST[i]>BY[i]*9+18)idx=ST[i]>170?ST2:ST1;if(SALTB[i]>BY[i]*12+8)idx=SALTB[i]>150?SALT:SALT2;
+      if(a>thrA[i]){const edge=A[i-1]<=thrA[i-1]||A[i+1]<=thrA[i+1]||A[i-W]<=thrA[i-W]||A[i+W]<=thrA[i+W];
+        if(a<.12)idx+=N;else if(edge)idx=AC[5];else if(a<.22)idx+=N;else{idx=a<.7?AC[2]:a<1.4?AC[3]:AC[4];
+          const w=Math.sin(x*.35+t*1.7+Math.sin(y*.3+t*.9)*1.6)+Math.sin((x+y)*.21-t*1.3);if(w>1.5)idx=w>1.8?AC[0]:AC[1];}}}
+    else if(a>thrA[i]&&!SOL[i]){idx=a<.9?idx+N:AC[3];}
+    IDX[i]=idx;}
+  SPR.fill(0);
+  // slime fields
+  const boxes=[];
+  for(const s of slimes){const r=rad(s),sq=Math.sin(s.ph)*.13,rx=r*(1+sq),ry=r*(1-sq)*.82,cx=s.x,cy=s.y-ry*.55;
+    const X0=Math.max(1,(cx-rx*1.7)|0),X1=Math.min(W-2,(cx+rx*1.7)|0),Y0=Math.max(1,(cy-ry*1.7)|0),Y1=Math.min(H-2,(cy+ry*1.7)|0);boxes.push([X0,X1,Y0,Y1,s,cx,cy,rx,ry]);
+    for(let y=(s.y-ry*.45)|0;y<=(s.y+ry*.45)|0;y++)for(let x=(s.x-rx)|0;x<=(s.x+rx)|0;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=(x-s.x)/rx,dy=(y-s.y)/(ry*.45);if(dx*dx+dy*dy<1){const i=y*W+x;if(IDX[i]<N)IDX[i]+=3*N;}}}
+  for(const [X0,X1,Y0,Y1,s,cx,cy,rx,ry] of boxes)for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const dx=(x-cx)/rx,dy=(y-cy)/ry,d2=dx*dx+dy*dy;if(d2<2.56){const v=1-d2/2.56;SF[y*W+x]+=v*v*2.7;}}
+  for(const [X0,X1,Y0,Y1,s] of boxes)for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x,f=SF[i];if(f<.05)continue;const v=f+Math.min(A[i],1)*.55;if(v<1)continue;let idx;
+    if(f<.3&&A[i]>.1)idx=AC[2];else if(v<1.13&&A[i]<.1)idx=SL[4];else{const g=SF[i+W+1]-SF[i-W-1];idx=g>.9?SL[0]:g>.4?SL[1]:g<-.45?SL[3]:SL[2];
+      if(f>1.35&&isObj(M[i])){const o=matIdx(M[i],ROLE[i],Iq[i],i);if(o>=0)idx=o+N;}}
+    if(s.hurt>0&&(frame&2))idx=HURT;IDX[i]=idx;SPR[i]=1;}
+  for(const [X0,X1,Y0,Y1,s,cx,cy,rx,ry] of boxes){const ex=(cx+s.dir*rx*.28)|0,ey=(cy-ry*.18)|0;const bl=((frame+(s.ph*50|0))%170)<6;
+    if(!bl){put(ex-2,ey,SL[5]);put(ex+2,ey,SL[5]);put(ex-2,ey+1,SL[5]);put(ex+2,ey+1,SL[5]);}else{put(ex-2,ey+1,SL[5]);put(ex+2,ey+1,SL[5]);}
+    for(let y=Y0;y<=Y1;y++)SF.fill(0,y*W+X0,y*W+X1+1);}
+  // torches
+  for(const tx of [80,240]){put(tx,12,HOLDER);put(tx,13,HOLDER);put(tx-1,11,HOLDER);put(tx+1,11,HOLDER);const fl=(frame>>2)%3;put(tx,10,FLAME[1]);put(tx,9,FLAME[fl===0?0:1]);put(tx+(fl===1?1:0),8,FLAME[2]);put(tx-1,10,FLAME[2]);put(tx+1,10,FLAME[fl===2?1:2]);}
+  for(const fl of flasks)drawFlask(fl);
+  drawPlayer();
+  for(const q of parts){const x=q.x|0,y=(q.y-q.z)|0;if(x<0||y<0||x>=W-1||y>=H-1)continue;
+    if(q.k==='bub'){const ph=q.t/.45;if(ph<.4)put(x,y,AC[0]);else if(ph<.8){put(x-1,y,AC[5]);put(x+1,y,AC[5]);put(x,y-1,AC[5]);}else put(x,y-1,AC[0]);}
+    else if(q.k==='smoke'){if(BY[y*W+x]<q.life*12){put(x,y,q.life>.6?SMOKE:SMOKE_D);}}
+    else if(q.k==='drop'){put(x,y,AC[1]);if(q.z>2)put(x,y+1,AC[3]);}
+    else if(q.k==='shard')put(x,y,SHARD);}
+  // fume haze
+  for(let y=0;y<H;y++){const gr=(y>>1)*GW;for(let x=0;x<W;x++){const g=G[gr+(x>>1)];if(g>.02){const i=y*W+x;if(g*14>BY[i]+1&&IDX[i]<N)IDX[i]+=2*N;}}}
+  // palette pass with dithered torch / acid glow
+  const f1=.86+.14*Math.sin(frame*.37)*Math.sin(frame*.13),f2=.86+.14*Math.sin(frame*.29+1)*Math.sin(frame*.17);
+  if(view==='normal'){for(let i=0;i<NP;i++){const idx=IDX[i],b=BY[i],lg=glow[i],lt=T1[i]*f1+T2[i]*f2;
+    out32[i]=(lg*20>b+2&&lg>=lt*.6)?palGlow[idx]:(lt*19>b?palTorch[idx]:palDim[idx]);}}
+  else{for(let i=0;i<NP;i++){let v=-1;const m=M[i];
+    if(view==='acid')v=A[i]/1.5;else if(view==='integ')v=isObj(m)?Iq[i]:(m===M_WALL?-1:0);else if(view==='gas')v=G[((i/W|0)>>1)*GW+((i%W)>>1)]*3;else if(view==='stain')v=ST[i]/255;else if(view==='rust')v=m===M_IRON?.15+RU[i]/300:(m===M_WALL?-1:0);else v=glow[i];
+    out32[i]=(v<0||SPR[i])?palDim[IDX[i]]:HEAT[Math.max(0,Math.min(255,(v*255)|0))];}}
+  ctx.putImageData(img,0,0);}
+const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255;HEAT[i]=pack(t<.5?14+t*2*30:44+(t-.5)*2*200,t<.5?18+t*2*150:168+(t-.5)*2*87,t<.5?20+t*2*40:60-(t-.5)*2*10);}
+
+// ---------- loop & UI ----------
+let tool='walk',view='normal',simSpeed=1,paused=false,simAcc=0,simMs=0,last=performance.now(),down=false;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(!paused){const t0=performance.now();simAcc+=dt*60*simSpeed;let n=0;while(simAcc>=1&&n<16){simStep();simAcc--;n++;}if(simAcc>4)simAcc=0;
+    if(frame%4===0)computeGlow();simMs=simMs*.9+(performance.now()-t0)*.1;
+    updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+6)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
+    if(down&&tool!=='walk'&&tool!=='item'&&tool!=='slime')applyTool(lastPt[0],lastPt[1]);frame++;}
+  render();if(frame%6===0)hud();requestAnimationFrame(loop);}
+function hud(){let tot=0;for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++)tot+=A[y*W+x];
+  document.getElementById('hudt').textContent=`acid ${tot.toFixed(0)} u · slimes ${slimes.length} · sim ${simMs.toFixed(2)} ms`;
+  const e=player.eq,set=(id,v)=>document.getElementById(id).style.width=Math.max(0,v*100)+'%';set('b_hp',player.hp/100);set('b_helm',e.helm.q);set('b_chest',e.chest.q);set('b_boots',e.boots.q);set('b_sword',e.sword.q);}
+let lastPt=[0,0];
+function applyTool(x,y){if(tool==='acid'){for(let yy=y-3;yy<=y+3;yy++)for(let xx=x-3;xx<=x+3;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>10)continue;const i=yy*W+xx;if(!SOL[i])A[i]+=.12;}
+    bx0=Math.min(bx0,x-4);bx1=Math.max(bx1,x+4);by0=Math.min(by0,y-4);by1=Math.max(by1,y+4);}
+  else if(tool==='lime'){for(let yy=y-7;yy<=y+7;yy++)for(let xx=x-7;xx<=x+7;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>49)continue;const i=yy*W+xx;
+      if(A[i]>0){SALTB[i]=Math.min(255,SALTB[i]+A[i]*200+40);gasAdd(i,A[i]*.08);if(rnd()<.05)parts.push({k:'smoke',x:xx,y:yy,z:0,vx:0,vy:0,vz:8,life:.8});A[i]=0;}}
+    for(const s of slimes)if(Math.hypot(s.x-x,s.y-y)<rad(s)+7){s.mass-=.6;s.hurt=.1;}}}
+const toCell=e=>{const r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*W),Math.floor((e.clientY-r.top)/r.height*H)];};
+cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=toCell(e);lastPt=[x,y];
+  if(tool==='walk'){player.tx=x;player.ty=y;const near=slimes.some(s=>Math.hypot(s.x-x,s.y-y)<rad(s)+4&&Math.hypot(s.x-player.x,s.y-player.y)<22);if(near){player.tx=null;const dx=x-player.x,dy=y-player.y;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');attack();}}
+  else if(tool==='slime')slimes.push(newSlime(x,y,16));else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
+cv.addEventListener('pointermove',e=>{lastPt=toCell(e);});cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercancel',()=>down=false);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}if(k===' '||k==='j'){attack();e.preventDefault();}});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+document.querySelectorAll('#tbtns [data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;document.querySelectorAll('#tbtns [data-t]').forEach(x=>x.classList.toggle('on',x===b));});
+document.querySelectorAll('#vbtns [data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll('#vbtns [data-v]').forEach(x=>x.classList.toggle('on',x===b));});
+const spEl=document.getElementById('speed');spEl.oninput=()=>{simSpeed=+spEl.value;document.getElementById('speedv').textContent=simSpeed+'×';};
+document.getElementById('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'Resume':'Pause';e.target.classList.toggle('on',paused);};
+document.getElementById('repair').onclick=()=>repair();document.getElementById('reset').onclick=()=>{buildRoom();bx0=1;bx1=W-2;by0=1;by1=H-2;};
+buildRoom();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

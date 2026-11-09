@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Light Sandbox — top-down pixel light and shadow, from noon sun to torchlit night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0c12;--panel:#17141d;--line:#2e2838;--lamp:#ffc870;--lamp2:#e08a3a;--cool:#8ea8ff;--txt:#ece6f2;--mute:#9e94ad}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--lamp)}
+header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--lamp)}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
+.hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(8,6,12,.72);padding:4px 8px;border-radius:4px;pointer-events:none;color:#f4eefa;max-width:calc(100% - 16px)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.group h3{margin:0 0 8px;font:600 12px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button,select{font:500 13px "IBM Plex Sans",sans-serif;background:#221d2a;color:var(--txt);border:1px solid #3a3246;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--lamp2)}button.on{background:var(--lamp);color:#140f08;border-color:var(--lamp)}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:6px}
+input[type=range]{flex:1;accent-color:#ffb860}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h4{margin:0 0 6px;font-family:"Pixelify Sans",monospace;font-size:17px;color:var(--lamp)}
+.card p{margin:0;color:#d2c9dc;font-size:14px}
+code{font:13px "IBM Plex Mono",monospace;color:var(--cool)}
+.keys{color:var(--mute);font-size:13px;margin:8px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>🕯 Light Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="vfx-light-topdown-pixel.html">top-down pixel light &amp; shadow study</a> · VFX series #5 · November 2026</div>
+</header>
+<main>
+  <div class="stage"><canvas id="c" width="320" height="180" aria-label="Lighting simulation"></canvas><div class="hud" id="hud">…</div></div>
+  <p class="keys">Move with <b>WASD / arrows</b> or <b>tap</b> to walk there. Walk through the <b>left house's door</b> to lift the roof and see light come through the windows: sun patches by day, warm spill at night. Switch your carried light, then click with <b>Place light</b> to drop one. Run the clock to watch shadows swing like a sundial, lamps come on one by one at dusk, and windows go dark late at night.</p>
+  <div class="controls">
+    <div class="group"><h3>Time & sky</h3>
+      <div class="btns" id="tbtns"><button data-h="6.2">Dawn</button><button data-h="12">Noon</button><button data-h="17.6">Golden hour</button><button data-h="18.3">Dusk</button><button data-h="23">Night</button><button id="auto" class="on">Auto clock</button></div>
+      <label>Clock speed <input id="speed" type="range" min="0" max="40" value="12"><span id="spv">1×</span></label>
+      <div class="btns" style="margin-top:6px"><button id="overcast">☁ Overcast</button></div>
+    </div>
+    <div class="group"><h3>What you carry</h3>
+      <div class="btns" id="cbtns"><button data-c="none">Nothing</button><button data-c="torch" class="on">🔥 Torch</button><button data-c="lantern">🏮 Lantern</button><button data-c="orb">✨ Light spell</button></div>
+      <label>Place <select id="placesel"><option value="torch">Standing torch</option><option value="campfire">Campfire</option><option value="candle">Candle</option><option value="lantern">Hanging lantern</option><option value="magic">Magic crystal</option><option value="rune">Flickering rune lamp</option><option value="mushroom">Glow mushrooms</option></select></label>
+      <div class="btns" style="margin-top:6px"><button id="placebtn">📍 Place light (click scene)</button><button id="clearlights">Remove placed</button></div>
+    </div>
+    <div class="group"><h3>Light style</h3>
+      <div class="btns" id="mbtns"><button data-m="smooth">Smooth RGB</button><button data-m="banded" class="on">Banded + dither</button><button data-m="colormap">DOOM colormap</button></div>
+      <div class="btns" style="margin-top:6px" id="obtns"><button data-o="shadows" class="on">Light shadows</button><button data-o="sunsh" class="on">Sun shadows</button><button data-o="refl" class="on">Water reflections</button></div>
+    </div>
+    <div class="group"><h3>X-ray view</h3>
+      <div class="btns" id="vbtns"><button data-v="normal" class="on">Normal</button><button data-v="albedo">Unlit albedo</button><button data-v="light">Light map</button><button data-v="sun">Sun shadow mask</button><button data-v="occ">Occluder heights</button><button data-v="rays">Your light's rays</button></div>
+    </div>
+  </div>
+  <div class="explain">
+    <div class="card"><h4>1 · Light = albedo × light map</h4><p>The world is drawn once as plain colours, with no shading of its own. Each frame builds a light map: sky ambient, plus the sun where nothing blocks it, plus every point light. Each pixel then multiplies its colour by that light. Shadows are bluish because only the sky lights them, and lamplit spots are warm, so you get warm light and cool shadows without painting them.</p></div>
+    <div class="card"><h4>2 · Sun shadows by projecting heights</h4><p>Each object pixel knows how far it stands above its own base line (3/4 view). It casts a dot at <code>base + sunDir × height × cot(elevation)</code>, so silhouettes project like real shadows. The length is scaled by 0.62 for the 3/4 view, and the cotangent is capped so dawn and dusk shadows stay on screen. Roof and crown pixels are first moved back to the ground spot they stand over, so houses and trees cast filled footprints rather than streaks. At noon they are short and point north. At golden hour they are long, and they swing from west to east across the day; the obelisk is a sundial. A few canopy pixels let light through as sunflecks. At night the moon casts faint blue shadows.</p></div>
+    <div class="card"><h4>3 · Point-light shadows: a polar depth map</h4><p>Each shadow-casting light marches 256 rays through a ground-level occluder-height grid and stores the hit distance per angle, a 1D shadow map. A pixel is lit if its distance from the light is no more than that angle's hit distance. An occluder blocks if it is at least 60 % of the light's height, so a low fence stops the campfire but not the street lamp. Lights cache their rays and recompute only when someone walks near.</p></div>
+    <div class="card"><h4>4 · Personality = colour + flicker + reach</h4><p>Each kind of light has its own colour and rhythm. Candle: almost steady, since a single flame in still air barely flickers; real 10–12 Hz flicker needs 3 or more flames. It dips now and then in a draught. Torch and campfire: fast noise flicker with a breathing radius. Lantern: steady, swaying with your stride. Oil street lamp: almost steady. Magic crystal: slow cyan↔violet pulse. Rune lamp: cold, steady, with sudden electric blackouts. Mushrooms breathe slowly, and fireflies blink. Tiny lights skip shadows, which costs almost nothing.</p></div>
+    <div class="card"><h4>5 · Buildings: inside vs outside</h4><p>Walls are tall occluders with gaps where the door and windows are. By day, sun reaches the interior only through those gaps, so you see moving sun patches on the floor. At night the fireplace and candle shine out through the same gaps, throwing warm windows and door light onto the grass. Houses light up at dusk in a staggered order. The left house's lamps go out around 23:24 but its banked fireplace glows all night, and the right house goes dark just after midnight.</p></div>
+    <div class="card"><h4>6 · Pixel-art light styles</h4><p><b>Smooth RGB</b> is plain multiply. <b>Banded + dither</b> rounds the light to steps of 1/6 per channel (more steps where it is over-bright) with a Bayer threshold, giving retro rings of light. <b>DOOM colormap</b> turns brightness into 16 shade levels per palette colour, with dark levels shifted toward blue-violet: one table lookup per pixel, but coloured lights turn grey.</p></div>
+    <div class="card"><h4>7 · Water and characters</h4><p>Lights near the pond lay shimmering vertical glints on the water, as do the moon at night and the low sun at golden hour. You and the lantern-bearer block point lights, so you cast long shadows away from the campfire, and the sun stamps a simple 5-px-wide strip for each character.</p></div>
+  </div>
+  <p class="keys" style="margin-top:16px">→ Full research: <a href="vfx-light-topdown-pixel.html">Top-down pixel light &amp; shadow study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
+</main>
+<script>
+(()=>{
+"use strict";
+const W=320,H=180,NP=W*H;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');const img=ctx.createImageData(W,H),out32=new Uint32Array(img.data.buffer);
+let rs=777;const rnd=()=>{rs^=rs<<13;rs^=rs>>>17;rs^=rs<<5;return (rs>>>0)/4294967296;};
+const hash2=(x,y)=>{let h=Math.imul(x*374761393+y*668265263,1274126177);h^=h>>>13;h=Math.imul(h,1274126177);return ((h^(h>>>16))>>>0)/4294967296;};
+const n1=(t,s)=>{const i=Math.floor(t),f=t-i,u=f*f*(3-2*f);return hash2(i,s)*(1-u)+hash2(i+1,s)*u;};
+const vnoise=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);const a=hash2(xi,yi),b=hash2(xi+1,yi),c=hash2(xi,yi+1),d=hash2(xi+1,yi+1);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+// ---------- albedo palette ----------
+const BASE=[];const C=h=>{BASE.push(h);return BASE.length-1;};const mk=a=>a.map(C);
+const GR=mk(['#5f8f48','#6ea052','#4f7d3e','#82b25e']),FLW=mk(['#e8e4f0','#f2d15c']),DI=mk(['#a07e58','#8c6c4a']),CO=mk(['#aaa69c','#949087','#6e6a63']);
+const WA=mk(['#3e7aa6','#4a8cb8','#2c5e86']),SHORE=C('#c9b88a');
+const PL=mk(['#dccca8','#c4b392']),TIMB=C('#6a4a32'),DOOR=C('#4a3222'),GLASS=C('#7fa6c8'),WINLIT=C('#ffcf6a');
+const RFA=mk(['#a04a3a','#883c30','#5e2a24']),RFB=mk(['#4a6a9a','#3c5880','#283c5a']);
+const FLOOR=mk(['#9a7448','#86643c','#6a4e30']),BED=mk(['#c84a4a','#e8e0d0']),TABLE=C('#7a5634'),STONE=mk(['#8a8680','#6a6660','#4e4a46']),RUG=mk(['#5a4a8a','#c8a84a']);
+const CAN=mk(['#6aa856','#4f8f46','#3f7a3c','#2e5e30']),TRUNK=mk(['#6a4a32','#4e3624']),ROCK=mk(['#9a968e','#7a766e','#5a5650']);
+const BAR=mk(['#9a6a3e','#7a5230']),HOOP=C('#5a5a62'),FENCE=mk(['#a07a52','#7a5a3a']),POST=C('#3a3a44'),LAMPOFF=C('#c8c0a8'),LAMPON=C('#fff0c0');
+const OBEL=mk(['#d0c8b8','#aaa294','#807868']),CRYS=mk(['#9af0ff','#4ac8e8']),CRYSB=C('#3a5a6a'),MUSH=C('#5cffc8'),STEM=C('#d8e8e0');
+const FIRE=mk(['#fff0a0','#ffb040','#ff6a2a']),LOG=C('#6a4a32'),BRAZ=C('#4a4a52'),BULB=C('#ffd27a'),WIRE=C('#2a2a2a'),FFLY=C('#e8ff7a');
+const SKIN=C('#f0c09a'),EYE=C('#2a1b22'),HAT=C('#c8443c'),HATB=C('#efe6dc'),COAT=C('#3c6fb4'),COAT2=C('#2f5592'),LEG=C('#2a2c3a'),BOOT=C('#5a3a28');
+const ROBE=C('#6a5aa0'),ROBE2=C('#4e4280'),HOOD=C('#4a3a6a'),ORB=C('#d8ecff'),RUNE=C('#e8f0ff');
+const N=BASE.length,RGB=new Float32Array(N*3);BASE.forEach((h,i)=>{RGB[i*3]=parseInt(h.slice(1,3),16);RGB[i*3+1]=parseInt(h.slice(3,5),16);RGB[i*3+2]=parseInt(h.slice(5,7),16);});
+const EMIS=new Uint8Array(N);[...FIRE,WINLIT,LAMPON,...CRYS,MUSH,BULB,FFLY,ORB,RUNE].forEach(i=>EMIS[i]=1);
+// DOOM-style colormap: 16 shade levels per colour, dark levels hue-shifted cool (Gooch-ish)
+const CMAP=new Uint32Array(N*16);for(let i=0;i<N;i++)for(let l=0;l<16;l++){const k=l/10;let r=RGB[i*3]*k,g=RGB[i*3+1]*k,b=RGB[i*3+2]*k;if(k<.7){const w=(.7-k)/.7;r*=1-.28*w;g*=1-.2*w;b*=1+.25*w;}else if(k>1){r*=1.04;b*=.9;}
+  CMAP[i*16+l]=(255<<24)|(clamp(b|0,0,255)<<16)|(clamp(g|0,0,255)<<8)|clamp(r|0,0,255);}
+
+// ---------- world buffers (two static versions: roof on / roof off) ----------
+const GROUND=0,WALLF=1,ROOF=2,CANOPY=3,OBJ=4,WATER=5,INTER=6,WIN=7;
+function newMaps(){return {IDX:new Uint16Array(NP),CLS:new Uint8Array(NP),OB:new Int16Array(NP),IN:new Uint8Array(NP)};}
+const MOUT=newMaps(),MIN=newMaps();const OCC=new Uint8Array(NP),MV=new Uint8Array(NP),HOUSE=new Uint8Array(NP);// 1=A,2=B for window pixels
+const BY=new Uint8Array(NP);for(let y=0;y<H;y++)for(let x=0;x<W;x++)BY[y*W+x]=BAYER[(y&3)*4+(x&3)];
+function put(M,x,y,idx,cls,ob){if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;M.IDX[i]=idx;M.CLS[i]=cls;M.OB[i]=ob;}
+function both(fn){fn(MOUT);fn(MIN);}
+function occ(x,y,h,mv=true){if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;OCC[i]=Math.max(OCC[i],h);if(mv)MV[i]=1;}
+// ground
+both(M=>{for(let y=0;y<H;y++)for(let x=0;x<W;x++){const n=vnoise(x/12,y/12)*.6+vnoise(x/4,y/4)*.4,h=hash2(x,y);let c=n<.36?GR[2]:n<.62?GR[0]:GR[1];if(h<.05)c=GR[3];if(h>.994)c=FLW[(h*1e3|0)%2];put(M,x,y,c,GROUND,y);}});
+const pathPts=[[60,82,60,140],[60,100,120,100],[230,96,276,66],[226,128,260,140]];
+both(M=>{for(const [x0,y0,x1,y1] of pathPts){const L=Math.hypot(x1-x0,y1-y0);for(let s=0;s<=L;s+=.5){const x=x0+(x1-x0)*s/L,y=y0+(y1-y0)*s/L;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){if(dx*dx+dy*dy>14+hash2(x+dx|0,y+dy|0)*6)continue;const px=(x+dx)|0,py=(y+dy)|0;put(M,px,py,hash2(px,py)<.3?DI[1]:DI[0],GROUND,py);}}}});
+both(M=>{for(let y=72;y<=132;y++)for(let x=118;x<=230;x++){const row=((y-72)/5)|0,off=(row&1)*3,j=(x+off)%7===0||(y-72)%5===0;put(M,x,y,j?CO[2]:(hash2(((x+off)/7)|0,row)<.4?CO[1]:CO[0]),GROUND,y);}});
+// pond
+const POND=new Uint8Array(NP);both(M=>{for(let y=124;y<H;y++)for(let x=226;x<W;x++){const dx=(x-272)/42,dy=(y-150)/20,r=dx*dx+dy*dy;if(r<1){put(M,x,y,r>.82?WA[1]:r<.4?WA[2]:WA[0],WATER,y);POND[y*W+x]=1;MV[y*W+x]=1;}else if(r<1.18)put(M,x,y,SHORE,GROUND,y);}});
+// ---- house A (enterable) ----
+const HA={x0:20,x1:100,y0:40,y1:80};
+const isGapA=(x,y)=>(y>=79&&((x>=56&&x<=63)||(x>=30&&x<=40)||(x>=80&&x<=90)))||((x<=21||x>=99)&&y>=52&&y<=60);
+for(let y=HA.y0;y<=HA.y1;y++)for(let x=HA.x0;x<=HA.x1;x++){const wall=x<=21||x>=99||y<=41||y>=79;if(!wall)continue;const door=y>=79&&x>=56&&x<=63;const win=isGapA(x,y)&&!door;
+  if(door)continue;if(win){MV[y*W+x]=1;HOUSE[y*W+x]=1;continue;}occ(x,y,30);}
+// outside version: roof + front wall face
+for(let y=18;y<=62;y++)for(let x=18;x<=102;x++){let b=((y-18)%4===3)?RFA[1]:RFA[0];if(((x+((y>>2)&1)*3)%6)===0&&b===RFA[0])b=RFA[1];if(y===18||y===62||x===18||x===102)b=RFA[2];put(MOUT,x,y,b,ROOF,80);}
+for(let y=63;y<=80;y++)for(let x=20;x<=100;x++){let b=PL[0],cls=WALLF;if(x===20||x===100||y===63||y===80||(x-20)%20===0)b=TIMB;else if(hash2(x,y)<.2)b=PL[1];
+  if(x>=56&&x<=63&&y>=68){b=(x===56||x===63||y===68)?TIMB:DOOR;}for(const wx of [30,80])if(x>=wx&&x<=wx+10&&y>=67&&y<=75){b=(x===wx||x===wx+10||y===67||y===75||x===wx+5)?TIMB:GLASS;if(b===GLASS){cls=WIN;HOUSE[y*W+x]=1;}}put(MOUT,x,y,b,cls,80);}
+// inside version: floor, low cut walls, furniture
+for(let y=40;y<=80;y++)for(let x=20;x<=100;x++){const i=y*W+x;const wall=x<=21||x>=99||y<=41||y>=79;
+  if(wall){const gap=isGapA(x,y);const door=y>=79&&x>=56&&x<=63;put(MIN,x,y,door?FLOOR[1]:gap?GLASS:(y<=41?STONE[0]:TIMB),door?INTER:OBJ,y);if(door)MIN.IN[i]=1;continue;}
+  put(MIN,x,y,(y%4===0)?FLOOR[2]:(((x+(y>>2)*5)%11===0)?FLOOR[1]:FLOOR[0]),INTER,y);MIN.IN[i]=1;}
+for(let y=34;y<=39;y++)for(let x=20;x<=100;x++)put(MIN,x,y,y===34?STONE[2]:STONE[(x+y)%3===0?1:0],WALLF,41);
+for(let y=36;y<=46;y++)for(let x=52;x<=66;x++){const inner=x>=55&&x<=63&&y>=40;put(MIN,x,y,inner?STONE[2]:STONE[(x+y)%4===0?1:0],inner?INTER:OBJ,46);MIN.IN[y*W+x]=1;if(!inner&&y>=42)occ(x,y,8);}
+for(let y=44;y<=56;y++)for(let x=25;x<=39;x++){put(MIN,x,y,y<=47?BED[1]:BED[0],OBJ,56);MIN.IN[y*W+x]=1;occ(x,y,6);}
+for(let y=62;y<=73;y++)for(let x=44;x<=72;x++){put(MIN,x,y,(x===44||x===72||y===62||y===73)?RUG[1]:RUG[0],INTER,y);}
+for(let y=56;y<=63;y++)for(let x=74;x<=86;x++){put(MIN,x,y,y===63?FLOOR[2]:TABLE,OBJ,63);occ(x,y,5);}
+// wall torches beside the door (outside)
+// ---- house B (exterior only) ----
+const isGapB=(x,y)=>y>=63&&((x>=250&&x<=260)||(x>=288&&x<=298)||(x>=270&&x<=278));
+for(let y=30;y<=64;y++)for(let x=238;x<=310;x++){const wall=x<=239||x>=309||y<=31||y>=63;MV[y*W+x]=1;if(!wall)continue;if(isGapB(x,y)){HOUSE[y*W+x]=2;continue;}occ(x,y,34);}
+both(M=>{for(let y=12;y<=48;y++)for(let x=236;x<=312;x++){let b=((y-12)%4===3)?RFB[1]:RFB[0];if(((x+((y>>2)&1)*3)%6)===0&&b===RFB[0])b=RFB[1];if(y===12||y===48||x===236||x===312)b=RFB[2];put(M,x,y,b,ROOF,64);}
+  for(let y=49;y<=64;y++)for(let x=238;x<=310;x++){let b=PL[0],cls=WALLF;if(x===238||x===310||y===49||y===64||(x-238)%18===0)b=TIMB;else if(hash2(x,y)<.2)b=PL[1];
+    if(x>=270&&x<=278&&y>=54){b=(x===270||x===278||y===54)?TIMB:DOOR;}for(const wx of [250,288])if(x>=wx&&x<=wx+10&&y>=53&&y<=60){b=(x===wx||x===wx+10||y===53||y===60||x===wx+5)?TIMB:GLASS;if(b===GLASS){cls=WIN;HOUSE[y*W+x]=2;}}put(M,x,y,b,cls,64);}});
+for(let x=270;x<=278;x++)MV[64*W+x]=1;
+// ---- props ----
+function tree(tx,ty){both(M=>{for(let y=ty-5;y<=ty;y++)for(let x=tx-1;x<=tx+1;x++)put(M,x,y,x===tx+1?TRUNK[1]:TRUNK[0],OBJ,ty);
+  for(let y=ty-28;y<=ty-4;y++)for(let x=tx-13;x<=tx+13;x++){const dx=(x-tx)/12.5,dy=(y-(ty-16))/11,r=dx*dx+dy*dy;if(r>1+vnoise(x*.4,y*.4)*.3-.15)continue;const sh=dx+dy*.8;put(M,x,y,sh<-.5?CAN[0]:sh<.1?CAN[1]:sh<.6?CAN[2]:CAN[3],CANOPY,ty);}});
+  for(let y=ty-1;y<=ty;y++)for(let x=tx-2;x<=tx+2;x++)occ(x,y,22);}
+[[150,46],[205,40],[108,108],[26,116],[306,112],[218,172],[140,170]].forEach(([x,y])=>tree(x,y));
+function rock(cx,cy){both(M=>{for(let y=cy-4;y<=cy+3;y++)for(let x=cx-6;x<=cx+6;x++){const dx=(x-cx)/6.5,dy=(y-cy)/4;if(dx*dx+dy*dy<1){put(M,x,y,y<cy?(x<cx?ROCK[0]:ROCK[1]):ROCK[2],OBJ,cy+3);}}});for(let x=cx-5;x<=cx+5;x++)for(let y=cy;y<=cy+3;y++)occ(x,y,7);}
+rock(96,132);rock(250,100);rock(18,170);
+function barrel(cx,cy){both(M=>{for(let y=cy-9;y<=cy;y++)for(let x=cx-3;x<=cx+3;x++)put(M,x,y,(y===cy-7||y===cy-2)?HOOP:(x<cx?BAR[0]:BAR[1]),OBJ,cy);});for(let x=cx-3;x<=cx+3;x++)for(let y=cy-2;y<=cy;y++)occ(x,y,9);}
+barrel(106,78);barrel(113,82);barrel(232,62);
+// obelisk sundial
+both(M=>{for(let y=74;y<=102;y++)for(let x=171;x<=177;x++){const top=y<77;const hw=top?3-(77-y):3;if(Math.abs(x-174)>hw)continue;put(M,x,y,x<174?OBEL[0]:x===174?OBEL[1]:OBEL[2],OBJ,102);}});for(let y=100;y<=102;y++)for(let x=171;x<=177;x++)occ(x,y,28);
+// fence with string-light posts
+both(M=>{for(let x=8;x<=112;x++){for(let y=154;y<=160;y++){const post=(x-8)%13<2;if(!post&&y!==156&&y!==158)continue;put(M,x,y,post?FENCE[1]:FENCE[0],OBJ,160);}}});for(let x=8;x<=112;x++)for(let y=159;y<=160;y++)occ(x,y,5);
+// street lamp posts
+const LAMPS=[[122,76],[226,76],[122,130],[226,130]];
+both(M=>{for(const [lx,ly] of LAMPS){for(let y=ly-14;y<=ly;y++)put(M,lx,y,POST,OBJ,ly);put(M,lx-1,ly-15,POST,OBJ,ly);put(M,lx+1,ly-15,POST,OBJ,ly);put(M,lx,ly-16,POST,OBJ,ly);}});for(const [lx,ly] of LAMPS)occ(lx,ly,3);
+// brazier near house B, campfire stones, crystal stone, mushrooms
+both(M=>{for(let y=68;y<=74;y++)for(let x=280;x<=288;x++){if(y<70&&(x===280||x===288))continue;put(M,x,y,y<=69?BRAZ:(x===284?BRAZ:POST),OBJ,74);}
+  for(let k=0;k<10;k++){const a=k/10*6.283;put(M,Math.round(58+Math.cos(a)*6),Math.round(140+Math.sin(a)*3.5),STONE[k%2],OBJ,143);}for(let x=55;x<=61;x++)put(M,x,141,LOG,OBJ,141);
+  for(let y=150;y<=164;y++)for(let x=176;x<=184;x++){const hw=y<154?(y-150):4;if(Math.abs(x-180)>hw)continue;put(M,x,y,y<157?(x<180?CRYS[0]:CRYS[1]):CRYSB,y<157?OBJ:OBJ,164);}
+  for(const [mx,my] of [[210,174],[214,176],[224,175],[228,173],[219,177]]){put(M,mx,my,STEM,OBJ,my);put(M,mx-1,my-1,MUSH,OBJ,my);put(M,mx,my-1,MUSH,OBJ,my);put(M,mx+1,my-1,MUSH,OBJ,my);put(M,mx,my-2,MUSH,OBJ,my);}});
+for(let y=72;y<=74;y++)for(let x=280;x<=288;x++)occ(x,y,8);for(let x=52;x<=64;x++)for(let y=138;y<=143;y++)MV[y*W+x]=1;for(let x=176;x<=184;x++)for(let y=162;y<=164;y++)occ(x,y,14);
+for(let i=0;i<NP;i++)if(OCC[i]>0)MV[i]=MV[i]||1;for(let x=56;x<=63;x++){MV[79*W+x]=0;MV[80*W+x]=0;}
+// house A interior must stay walkable (only walls block)
+for(let y=42;y<=78;y++)for(let x=22;x<=98;x++){const i=y*W+x;if(OCC[i]===0)MV[i]=0;}
+const OCCD=new Uint8Array(NP);
+
+// ---------- lights ----------
+const RMAX=64,LW=RMAX*2+1,ANG=new Uint8Array(LW*LW),DST=new Float32Array(LW*LW);
+for(let dy=-RMAX;dy<=RMAX;dy++)for(let dx=-RMAX;dx<=RMAX;dx++){const k=(dy+RMAX)*LW+dx+RMAX;DST[k]=Math.hypot(dx,dy);ANG[k]=(Math.round((Math.atan2(dy,dx)/(2*Math.PI))*256)+256)&255;}
+const TYPES={torch:{col:'#ff8c3a',R:46,h:10,fl:'fire',sh:1},campfire:{col:'#ff7030',R:58,h:4,fl:'camp',sh:1},candle:{col:'#ffb35a',R:20,h:6,fl:'candle',sh:1},lantern:{col:'#ffc870',R:40,h:9,fl:'lantern',sh:1},
+  lamp:{col:'#ffd9a0',R:54,h:16,fl:'lamp',sh:1},fireplace:{col:'#ff7a34',R:48,h:6,fl:'camp',sh:1},brazier:{col:'#ff5a2a',R:46,h:8,fl:'fire',sh:1},magic:{col:'#7ae6ff',col2:'#b48cff',R:44,h:10,fl:'magic',sh:1},
+  rune:{col:'#dfe8ff',R:40,h:12,fl:'rune',sh:1},mushroom:{col:'#5cffc8',R:13,h:2,fl:'breath',sh:0},firefly:{col:'#d6ff6a',R:7,h:6,fl:'blink',sh:0},bulb:{col:'#ffd27a',R:9,h:8,fl:'lamp',sh:0},
+  orb:{col:'#bfe0ff',R:50,h:16,fl:'steady',sh:1},house:{col:'#ffb860',R:46,h:8,fl:'candle',sh:1}};
+const hex=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
+for(const k in TYPES){TYPES[k].c=hex(TYPES[k].col);if(TYPES[k].col2)TYPES[k].c2=hex(TYPES[k].col2);}
+const lights=[];function addLight(type,x,y,o={}){const T=TYPES[type];const L={type,x,y,T,R:T.R,h:T.h,seed:(rnd()*1e4)|0,dist:new Float32Array(256),dirty:true,on:true,I:1,...o};lights.push(L);return L;}
+const LA=[addLight('fireplace',59,47,{house:'A',indoor:1}),addLight('candle',80,57,{house:'A',indoor:1})];
+const wallT=[addLight('torch',48,82,{wall:[48,70]}),addLight('torch',71,82,{wall:[71,70]})];
+const LB=addLight('house',274,44,{house:'B'});const brazier=addLight('brazier',284,76,{flame:[284,68]});
+const lampL=LAMPS.map(([x,y],k)=>addLight('lamp',x,y+2,{lamp:k,head:[x,y-15],off:k*.35}));
+const camp=addLight('campfire',58,142,{flame:[58,139]});const crystal=addLight('magic',180,166,{});
+const mush=addLight('mushroom',219,178,{night:1});
+const bulbs=[];for(let k=0;k<8;k++){const x=14+k*13+6,sag=Math.sin((k%1+.5)*Math.PI)*3;bulbs.push(addLight('bulb',x,159,{bulb:[x,150+2],night:1}));}
+const flies=[];for(let k=0;k<14;k++)flies.push(addLight('firefly',150+rnd()*160,120+rnd()*55,{fly:1,vx:0,vy:0,night:1,z:4+rnd()*8}));
+let carried=null,carryType='torch';const placed=[];
+function flicker(L,t){const s=L.seed;switch(L.T.fl){
+  case 'fire':return .82+.18*n1(t*9,s)-(.12*Math.max(0,n1(t*3.1,s+5)-.75)*4);case 'camp':return .78+.22*n1(t*7,s)*n1(t*2.3,s+3)+.06*Math.sin(t*1.3+s);
+  case 'candle':return .95+.03*n1(t*1.5,s)-(hash2((t*3)|0,s)<.02?.22*n1(t*20,s+2):0);case 'lantern':return .95+.03*n1(t*4,s);case 'lamp':return .97+.02*n1(t*2,s);
+  case 'magic':return .72+.28*Math.sin(t*Math.PI*.9+s);case 'rune':return (hash2((t*12)|0,s)<.04||hash2((t*12)|0,s+1)<.02)?.08:1;
+  case 'breath':return .55+.45*Math.sin(t*1.2+s);case 'blink':return Math.pow(Math.max(0,Math.sin(t*1.7+s)),6);default:return 1;}}
+function castRays(L){const lx=L.x,ly=L.y,R=Math.min(RMAX-1,L.R),thr=L.h*.6,start=L.carried?3:1;for(let a=0;a<256;a++){const an=a/256*2*Math.PI,dx=Math.cos(an),dy=Math.sin(an);let d=start;
+  for(;d<R;d+=1){const px=(lx+dx*d)|0,py=(ly+dy*d)|0;if(px<0||py<0||px>=W||py>=H)break;const j=py*W+px;if(OCC[j]>=thr||OCCD[j]>=thr)break;}L.dist[a]=d+1.5;}L.dirty=false;}
+
+// ---------- sun & sky ----------
+let hour=17.2,auto=true,speed=1,overcast=false,mode='banded',opts={shadows:true,sunsh:true,refl:true},view='normal',frameN=0,t=0,ms=0,raysFrame=0;
+const SH=new Uint8Array(NP),DSH=new Uint8Array(NP),SUNP=new Uint8Array(NP);let lastSunKey='';
+function sky(h){const el=62*Math.sin((h-6)/12*Math.PI),az=(90+(h-6)/12*180)*Math.PI/180;const mel=40*Math.sin((h-18)/12*Math.PI),maz=(90+(h-18)/12*180)*Math.PI/180;
+  let amb,sun,dir=null,len=0;const lerp=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k);
+  const NIGHT=[.10,.12,.24],TWI=[.34,.28,.44],GOLDA=[.46,.42,.54],DAYA=[.5,.56,.7];
+  if(el>20){amb=DAYA;sun=[1.02,.98,.9];}else if(el>6){const k=(el-6)/14;amb=lerp(GOLDA,DAYA,k);sun=lerp([1.05,.72,.42],[1.02,.98,.9],k);}
+  else if(el>0){const k=el/6;amb=lerp(TWI,GOLDA,k);sun=lerp([.9,.42,.24],[1.05,.72,.42],k);}else if(el>-8){const k=(el+8)/8;amb=lerp(NIGHT,TWI,k);sun=[0,0,0];}else{amb=NIGHT;sun=[0,0,0];}
+  if(el>0){dir=[-Math.sin(az),Math.cos(az)];len=Math.min(4,1/Math.tan(Math.max(4,el)*Math.PI/180))*.62;}
+  else if(mel>4){sun=[.16,.19,.32];dir=[-Math.sin(maz),Math.cos(maz)];len=Math.min(3,1/Math.tan(mel*Math.PI/180))*.62;}
+  if(overcast){sun=[0,0,0];amb=el>0?lerp([.36,.36,.44],[.82,.84,.88],Math.min(1,el/25)):amb.map(v=>v*.8);dir=null;}
+  return {el,amb,sun,dir,len,svy:dir?-dir[1]:0,svx:dir?-dir[0]:0};}
+function sunShadows(S,M){SH.fill(0);if(!S.dir||!opts.sunsh)return;const [dx,dy]=S.dir,k=S.len;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,cls=M.CLS[i];if(cls===GROUND||cls===WATER||cls===INTER)continue;const ob=M.OB[i],h=ob-y;if(h<=0)continue;if(cls===CANOPY&&hash2(x*3,y*7)<.08)continue;
+    // 3/4 view: roof rows encode depth (ground y = screen y + wall height); crown rows are part height, part depth
+    let gy=ob,hh=h;if(cls===ROOF){hh=22;gy=y+22;}else if(cls===CANOPY){hh=15;gy=ob+(y-(ob-16))*.6;}
+    const sx=Math.round(x+dx*hh*k),sy=Math.round(gy+dy*hh*k),ext=cls===ROOF?3:2;for(let e=0;e<2;e++)for(let f=0;f<ext;f++){const px=sx+e,py=sy+f;if(px>=0&&py>=0&&px<W&&py<H)SH[py*W+px]=1;}}
+  // house A interior sun patches: march toward the sun; walls block, window/door gaps let it in
+  SUNP.fill(0);if(roofOff){const lim=Math.min(40,16*k/.62);for(let y=42;y<=78;y++)for(let x=22;x<=98;x++){const i=y*W+x;if(!MIN.IN[i])continue;let lit=0;
+    for(let s=1;s<=lim;s++){const px=Math.round(x-dx*s),py=Math.round(y-dy*s);if(px<0||py<0||px>=W||py>=H){lit=1;break;}const j=py*W+px;if(OCC[j]>=20){lit=0;break;}if(px<20||px>100||py<40||py>80){lit=1;break;}}SUNP[i]=lit;}}}
+
+// ---------- characters ----------
+const PF=["..hhh..",".hhhhh.",".HHHHH.",".seses.",".sssss.","yccCccy","ccccccc","ccccccc",".CcccC."],PB=["..hhh..",".hhhhh.",".HHHHH.",".hhhhh.",".sssss.","ccccccc","ccccccc","ccccccc",".CcccC."],PS=["..hhh..",".hhhhh.",".HHHHH.","..ssse.","..ssss.",".cccc..","ccccc..",".cccc..",".CccC.."];
+const LF=[[".ll.ll.",".ll.ll.",".bb.bb."],[".ll.ll.","..l.ll.","..b.bb."],[".ll.ll.",".ll.l..",".bb.b.."]],LS=[["..ll...","..ll...","..bbb.."],[".l..l..",".l...l.","bb...bb"],["..ll...",".ll....",".bb...."]];
+const PMAP={h:HAT,H:HATB,s:SKIN,e:EYE,y:HAT,c:COAT,C:COAT2,l:LEG,b:BOOT},NMAP={h:HOOD,H:HOOD,s:SKIN,e:EYE,y:ROBE2,c:ROBE,C:ROBE2,l:ROBE2,b:BOOT};
+const player={x:150,y:112,dir:'down',anim:0,moving:false,tx:null,ty:null,pstep:0};const npc={x:130,y:120,dir:'down',anim:0,moving:false,wp:0};
+const NWP=[[130,118],[220,118],[220,88],[130,88]];let roofOff=false;
+function blocked(x,y){x|=0;y|=0;for(let xx=x-2;xx<=x+2;xx++){if(xx<0||xx>=W||y<4||y>=H)return true;if(MV[y*W+xx])return true;}return false;}
+function moveC(c,vx,vy,dt,coll){const nx=c.x+vx*dt,ny=c.y+vy*dt;let mx=0,my=0;if(!coll||!blocked(nx,c.y)){mx=nx-c.x;c.x=nx;}if(!coll||!blocked(c.x,ny)){my=ny-c.y;c.y=ny;}c.moving=Math.abs(mx)+Math.abs(my)>.001;
+  if(c.moving){c.anim+=dt*8;if(Math.abs(vx)>Math.abs(vy))c.dir=vx>0?'right':'left';else c.dir=vy>0?'down':'up';}else c.anim=0;}
+const keys={};
+function setCarried(type){carryType=type;if(carried){lights.splice(lights.indexOf(carried),1);carried=null;}if(type!=='none')carried=addLight(type,player.x,player.y,{carried:1});}
+function updateChars(dt){let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.arrowright||keys.d)ix++;if(keys.arrowup||keys.w)iy--;if(keys.arrowdown||keys.s)iy++;
+  if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<1.2)player.tx=null;else{ix=dx/L;iy=dy/L;}}
+  const L=Math.hypot(ix,iy)||1;moveC(player,ix/L*40,iy/L*40,dt,true);if(player.tx!==null&&!player.moving)player.tx=null;
+  roofOff=player.x>21&&player.x<99&&player.y>41&&player.y<81;
+  const night=isNight();const [tx,ty]=NWP[npc.wp];const dx=tx-npc.x,dy=ty-npc.y,l=Math.hypot(dx,dy);if(l<1.5)npc.wp=(npc.wp+1)%NWP.length;else moveC(npc,dx/l*14,dy/l*14,dt,false);
+  npcLight.on=night;npcLight.x=npc.x+(npc.dir==='left'?-4:4);npcLight.y=npc.y+Math.round(Math.sin(npc.anim*.5)*.8);
+  if(carried){const sw=player.moving?Math.round(Math.sin(player.anim*.5)):0;if(carryType==='orb'){carried.x+=(player.x-5-carried.x)*Math.min(1,dt*3);carried.y+=(player.y-2-carried.y)*Math.min(1,dt*3);}
+    else{carried.x=player.x+(player.dir==='left'?-4:4)+(carryType==='lantern'?sw:0);carried.y=player.y+1;}}
+  for(const f of flies){f.vx+=(rnd()-.5)*30*dt;f.vy+=(rnd()-.5)*30*dt;f.vx*=.97;f.vy*=.97;f.x=clamp(f.x+f.vx*dt,140,316);f.y=clamp(f.y+f.vy*dt,110,178);}}
+const npcLight=addLight('lantern',130,120,{carriedNpc:1});
+const isNight=()=>{const el=62*Math.sin((hour-6)/12*Math.PI);return el<3;};
+function scheduleLights(){const night=isNight();
+  for(const L of lampL){const on=(hour>=18.9+L.off*.5)||(hour<5.6-L.off*.3);L.on=on;}
+  const hA=(hour>=18.4||hour<6.4)&&!(hour>=23.4&&hour<24)&&!(hour<5.5),hB=(hour>=18.9||hour<6)&&!(hour>=0.3&&hour<5.8);
+  for(const L of LA)L.on=hA||L.type==='fireplace'&&(hour>=17||hour<7);LB.on=hB;houseOn={A:hA,B:hB};for(const L of wallT)L.on=night||hour>=18.5;
+  for(const L of [mush,...bulbs,...flies])L.on=night;}
+let houseOn={A:false,B:false};
+
+// ---------- render ----------
+const LR=new Float32Array(NP),LG=new Float32Array(NP),LB2=new Float32Array(NP),IDX=new Uint16Array(NP),OBF=new Int16Array(NP),CLF=new Uint8Array(NP),INF=new Uint8Array(NP);
+function drawTpl(rows,map,x0,y0,flip,feetY,M){for(let r=0;r<rows.length;r++){const y=y0+r;if(y<0||y>=H)continue;for(let c=0;c<7;c++){const ch=rows[r][flip?6-c:c];if(ch==='.')continue;const x=x0+c;if(x<0||x>=W)continue;const i=y*W+x;
+  if(M.OB[i]>feetY&&M.CLS[i]!==GROUND&&M.CLS[i]!==INTER&&M.CLS[i]!==WATER)continue;IDX[i]=map[ch];OBF[i]=feetY;CLF[i]=OBJ;INF[i]=roofOff&&M.IN[(feetY)*W+x]?1:0;}}}
+function drawChar(c,map,M){const x=Math.round(c.x),y=Math.round(c.y);const fr=c.moving?[0,1,0,2][(c.anim|0)%4]:0;let body,legs,flip=false;
+  if(c.dir==='down'){body=PF;legs=LF[fr];}else if(c.dir==='up'){body=PB;legs=LF[fr];}else{body=PS;legs=LS[fr];flip=c.dir==='left';}const rows=body.concat(legs);drawTpl(rows,map,x-3,y-rows.length+1,flip,y,M);return rows.length;}
+function putE(x,y,idx,ob,M){x|=0;y|=0;if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;if(M&&M.OB[i]>ob&&M.CLS[i]!==GROUND&&M.CLS[i]!==INTER)return;IDX[i]=idx;OBF[i]=ob;CLF[i]=OBJ;}
+function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sky(hour);
+  const key=Math.round(hour*40)+'_'+roofOff+'_'+overcast+'_'+opts.sunsh;if(key!==lastSunKey){lastSunKey=key;sunShadows(S,M);}
+  IDX.set(M.IDX);OBF.set(M.OB);CLF.set(M.CLS);INF.set(M.IN);
+  // dynamic occluders + character sun shadows
+  OCCD.fill(0);DSH.fill(0);for(const c of [player,npc]){for(let dy=-1;dy<=0;dy++)for(let dx=-2;dx<=2;dx++){const px=(c.x|0)+dx,py=(c.y|0)+dy;if(px>=0&&py>=0&&px<W&&py<H)OCCD[py*W+px]=12;}
+    if(S.dir&&opts.sunsh){for(let h=1;h<=12;h++)for(let dx=-2;dx<=2;dx++){if(h>9&&Math.abs(dx)>1)continue;const px=Math.round(c.x+dx+S.dir[0]*h*S.len),py=Math.round(c.y+S.dir[1]*h*S.len);if(px>=0&&py>=0&&px<W&&py<H)DSH[py*W+px]=1;}}}
+  // sprites
+  const ents=[[player.y,()=>drawChar(player,PMAP,M)],[npc.y,()=>drawChar(npc,NMAP,M)]];ents.sort((a,b)=>a[0]-b[0]).forEach(e=>e[1]());
+  const ft=(frameN>>2)%3;
+  const flame=(x,y,ob,big)=>{putE(x,y,FIRE[1],ob,M);putE(x,y-1,FIRE[ft===0?0:1],ob,M);putE(x+(ft===1?1:-1)*(big?1:0),y-2,FIRE[2],ob,M);if(big){putE(x-1,y,FIRE[2],ob,M);putE(x+1,y,FIRE[ft===2?1:2],ob,M);putE(x,y-3,FIRE[ft===0?2:1],ob,M);}};
+  if(!roofOff)for(const L of wallT){putE(L.wall[0],L.wall[1]+2,POST,80,null);if(L.on)flame(L.wall[0],L.wall[1],80,false);}
+  if(roofOff){flame(59,44,46,true);putE(80,56,STEM,63,M);putE(80,55,FIRE[ft?0:1],63,M);}
+  flame(camp.flame[0],camp.flame[1],143,true);flame(brazier.flame[0],brazier.flame[1],74,true);
+  for(const L of lampL){putE(L.head[0],L.head[1]+1,L.on?LAMPON:LAMPOFF,L.y-2,M);}
+  for(const L of bulbs){const [bx,by]=L.bulb;putE(bx,by,L.on?BULB:LAMPOFF,160,M);}
+  for(let k=0;k<8;k++){const x0=8+k*13+1;for(let x=x0;x<x0+13;x++){const tt=(x-x0)/13,y=Math.round(152+Math.sin(tt*Math.PI)*3);putE(x,y,WIRE,160,M);}}
+  for(const f of flies){if(!f.on||f.I<.2)continue;putE(f.x,f.y-f.z,FFLY,f.y,null);}
+  if(crystal.I>.85&&(frameN&4))putE(180+((frameN>>3)%3)-1,151,ORB,164,M);
+  if(carried){const cx=carried.x|0,cy=player.y|0;if(carryType==='torch'){putE(cx,cy-5,TRUNK[0],cy+1,null);putE(cx,cy-6,TRUNK[0],cy+1,null);flame(cx,cy-7,cy+1,false);}
+    else if(carryType==='lantern'){putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}else{const oy=Math.round(carried.y-14+Math.sin(t*2)*1.5);putE(cx,oy,ORB,cy+1,null);putE(cx+1,oy,ORB,cy+1,null);putE(cx,oy+1,ORB,cy+1,null);putE(cx+1,oy+1,ORB,cy+1,null);}}
+  if(npcLight.on){const cx=npcLight.x|0,cy=npc.y|0;putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}
+  // ---- light map ----
+  LR.fill(0);LG.fill(0);LB2.fill(0);raysFrame=0;
+  for(const L of lights){if(!L.on){L.I=0;continue;}let I=flicker(L,t);L.I=I;if(I<.02)continue;if(L.indoor&&!roofOff&&false)continue;
+    let c=L.T.c;if(L.T.c2){const k=.5+.5*Math.sin(t*.4+L.seed);c=[c[0]+(L.T.c2[0]-c[0])*k,c[1]+(L.T.c2[1]-c[1])*k,c[2]+(L.T.c2[2]-c[2])*k];}
+    const R=Math.min(RMAX-1,Math.round(L.R*(L.T.fl==='fire'||L.T.fl==='camp'?(.94+.06*I):1))),lx=Math.round(L.x),ly=Math.round(L.y),shad=L.T.sh&&opts.shadows;
+    if(shad){const near=[player,npc].some(e=>Math.abs(e.x-L.x)<L.R+6&&Math.abs(e.y-L.y)<L.R+6);if(L.dirty||near||L.carried||L.carriedNpc){castRays(L);raysFrame++;}}
+    const cr=c[0]*I*1.25,cg=c[1]*I*1.25,cb=c[2]*I*1.25;
+    for(let dy=-R;dy<=R;dy++){const py=ly+dy;if(py<0||py>=H)continue;const row=(dy+RMAX)*LW+RMAX;for(let dx=-R;dx<=R;dx++){const px=lx+dx;if(px<0||px>=W)continue;const k=row+dx,d=DST[k];if(d>R)continue;
+      if(shad&&d>L.dist[ANG[k]])continue;const q=1-(d/R)*(d/R),f=q*q,i=py*W+px;LR[i]+=cr*f;LG[i]+=cg*f;LB2[i]+=cb*f;}}}
+  // water reflections: shimmering columns under nearby lights, moon and low sun
+  if(opts.refl){const refl=(x0,str,c)=>{for(let x=Math.round(x0)-2;x<=Math.round(x0)+2;x++){if(x<0||x>=W)continue;for(let y=124;y<H;y++){const i=y*W+x;if(!POND[i])continue;const s=Math.sin(y*1.3+t*5+x*2.1)+Math.sin(y*.7-t*3.3);if(s<.9)continue;const w=str*(1-Math.abs(x-x0)/3);LR[i]+=c[0]*w;LG[i]+=c[1]*w;LB2[i]+=c[2]*w;}}};
+    for(const L of lights){if(!L.on||L.I<.1||L.T.R<12)continue;if(L.x>226&&L.x<316&&L.y>108&&L.y<176&&!POND[(L.y|0)*W+(L.x|0)])refl(L.x,1.1*L.I,L.T.c);}
+    if(S.dir&&S.el<10&&S.el>0)refl(272+S.dir[0]*-30,1.4,S.sun);if(S.el<0&&!overcast){const mx=272-Math.cos((hour-18)/12*Math.PI)*28;refl(mx,.7,[.7,.78,1]);}}
+  // ---- compose ----
+  const [ar,ag,ab]=S.amb,[sr,sg,sb]=S.sun;const fWall=.25+.75*Math.max(0,S.svy),fObj=.45+.55*Math.max(0,S.svy+.3*Math.abs(S.svx)),fRoof=.7+.3*Math.max(0,S.svy);
+  const winI=.85+.15*n1(t*6,9);
+  for(let i=0;i<NP;i++){const idx=IDX[i];if(view==='albedo'){out32[i]=(255<<24)|(RGB[idx*3+2]<<16)|(RGB[idx*3+1]<<8)|RGB[idx*3];continue;}
+    const cls=CLF[i];let r=RGB[idx*3],g=RGB[idx*3+1],b=RGB[idx*3+2];
+    if(cls===WIN){const on=HOUSE[i]===1?houseOn.A:houseOn.B;if(on){const k=winI;out32[i]=(255<<24)|((106*k)<<16)|((207*k)<<8)|(255*k|0);continue;}}
+    if(EMIS[idx]){if(idx===LAMPON||idx===BULB||idx===FFLY||idx===MUSH||idx===ORB||FIRE.includes(idx)||CRYS.includes(idx)||idx===RUNE){out32[i]=(255<<24)|(b<<16)|(g<<8)|r;continue;}}
+    const x=i%W,y=(i/W)|0;const elev=(cls===WALLF||cls===OBJ||cls===ROOF||cls===CANOPY||cls===WIN);const bi=elev?clamp(OBF[i],0,H-1)*W+x:i;
+    let lr,lg,lb;const indoor=INF[i]||(elev&&roofOff&&INF[bi]);
+    if(indoor){const sp=SUNP[bi]?.95:0;lr=ar*.28+sr*sp;lg=ag*.28+sg*sp;lb=ab*.28+sb*sp;}
+    else{let f=1;if(cls===WALLF||cls===WIN)f=fWall;else if(cls===OBJ)f=fObj;else if(cls===ROOF)f=fRoof;else if(cls===CANOPY)f=.85;const shaded=(cls!==ROOF&&cls!==CANOPY)&&(SH[bi]||DSH[bi]);const s=shaded?0:f;lr=ar+sr*s;lg=ag+sg*s;lb=ab+sb*s;}
+    const rec=cls===ROOF?.2:cls===CANOPY?.45:1;lr+=LR[bi]*rec;lg+=LG[bi]*rec;lb+=LB2[bi]*rec;
+    if(view==='light'){out32[i]=(255<<24)|(clamp(lb*150,0,255)<<16)|(clamp(lg*150,0,255)<<8)|clamp(lr*150,0,255);continue;}
+    if(view==='sun'){const v=(SH[bi]||DSH[bi])&&!elev?40:SUNP[bi]?250:(elev?90:200);out32[i]=(255<<24)|(v<<16)|(v<<8)|v;continue;}
+    if(view==='occ'){const o=Math.max(OCC[i],OCCD[i]);out32[i]=o?(255<<24)|(40<<16)|((60+o*5)<<8)|(80+o*5):(255<<24)|((b*.3)<<16)|((g*.3)<<8)|(r*.3);continue;}
+    if(mode==='colormap'){const lum=.3*lr+.55*lg+.15*lb;const lev=clamp(Math.floor(lum*11+BY[i]/16),0,15);out32[i]=CMAP[idx*16+lev];continue;}
+    if(mode==='banded'){const B=BY[i]/16;lr=Math.floor(lr*6+B)/6;lg=Math.floor(lg*6+B)/6;lb=Math.floor(lb*6+B)/6;}
+    r*=lr;g*=lg;b*=lb;out32[i]=(255<<24)|(clamp(b|0,0,255)<<16)|(clamp(g|0,0,255)<<8)|clamp(r|0,0,255);}
+  if(view==='rays'&&carried&&carried.T.sh){const lx=carried.x,ly=carried.y;for(let a=0;a<256;a+=2){const an=a/256*2*Math.PI,d=carried.dist[a];for(let s=0;s<d;s+=2){const px=(lx+Math.cos(an)*s)|0,py=(ly+Math.sin(an)*s)|0;if(px>=0&&py>=0&&px<W&&py<H)out32[py*W+px]=(255<<24)|(80<<16)|(220<<8)|255;}}}
+  ctx.putImageData(img,0,0);ms=ms*.9+(performance.now()-t0)*.1;}
+
+// ---------- loop & UI ----------
+let last=performance.now(),placing=false;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;if(auto)hour=(hour+dt*speed*.2)%24;scheduleLights();updateChars(dt);render();frameN++;
+  if(frameN%6===0){const S=sky(hour);const hh=String(hour|0).padStart(2,'0'),mm=String(((hour%1)*60)|0).padStart(2,'0');const on=lights.filter(l=>l.on&&l.I>.02);
+    document.getElementById('hud').textContent=`${hh}:${mm} · sun ${S.el>0?Math.round(S.el)+'°':'below horizon'} · ${on.length} lights (${on.filter(l=>l.T.sh).length} with shadows) · ray re-casts ${raysFrame}/frame · ${roofOff?'indoors':'outdoors'} · ${ms.toFixed(2)} ms`;}
+  requestAnimationFrame(loop);}
+document.querySelectorAll('#tbtns [data-h]').forEach(b=>b.onclick=()=>{hour=+b.dataset.h;auto=false;document.getElementById('auto').classList.remove('on');});
+document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
+const spEl=document.getElementById('speed');const setSp=()=>{speed=spEl.value/12;document.getElementById('spv').textContent=speed.toFixed(1)+'×';};spEl.oninput=setSp;setSp();
+document.getElementById('overcast').onclick=e=>{overcast=!overcast;e.target.classList.toggle('on',overcast);};
+document.querySelectorAll('#cbtns [data-c]').forEach(b=>b.onclick=()=>{setCarried(b.dataset.c);document.querySelectorAll('#cbtns [data-c]').forEach(x=>x.classList.toggle('on',x===b));});
+document.querySelectorAll('#mbtns [data-m]').forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll('#mbtns [data-m]').forEach(x=>x.classList.toggle('on',x===b));});
+document.querySelectorAll('#obtns [data-o]').forEach(b=>b.onclick=()=>{opts[b.dataset.o]=!opts[b.dataset.o];b.classList.toggle('on',opts[b.dataset.o]);lights.forEach(l=>l.dirty=true);lastSunKey='';});
+document.querySelectorAll('#vbtns [data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll('#vbtns [data-v]').forEach(x=>x.classList.toggle('on',x===b));});
+const pb=document.getElementById('placebtn');pb.onclick=()=>{placing=!placing;pb.classList.toggle('on',placing);};
+document.getElementById('clearlights').onclick=()=>{for(const L of placed)lights.splice(lights.indexOf(L),1);placed.length=0;};
+cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H);
+  if(placing){if(placed.length>=16){const L=placed.shift();lights.splice(lights.indexOf(L),1);}placed.push(addLight(document.getElementById('placesel').value,x,y,{}));return;}player.tx=x;player.ty=y;});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+setCarried('torch');requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

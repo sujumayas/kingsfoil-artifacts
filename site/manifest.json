@@ -1,0 +1,158 @@
+[
+ {
+  "path": "/index.html",
+  "title": "Kingsfoil Artifacts",
+  "description": "Library homepage generated from catalog.json: series shelves, search, facet filters, technique atlas.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/manifest.json",
+  "title": "Site manifest",
+  "description": "List of every file on this site, used to rebuild the site before each deploy.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/procedural-character-generation-study.html",
+  "title": "Procedural Character Generation by Composition: Pixel Townsfolk and 3D Creature Waves",
+  "description": "How slot tables become cohesive characters: Tibia-style paper dolls and town generation for a 32×32 MMO, modular 3D creatures for a Hero Defense RTS, and three Experiments tabs with live WebGL generators (void bestiary, chibi fantasy party, beast-folk).",
+  "date": "2026-11-05"
+ },
+ {
+  "path": "/assets/void-bestiary-reference.webp",
+  "title": "Void Bestiary reference sheet",
+  "description": "GPT-image-2 reference image shown in the study's Experiments 1 tab.",
+  "date": "2026-11-05"
+ },
+ {
+  "path": "/assets/fantasy-taletale-reference.webp",
+  "title": "Fantasy Taletale reference sheet",
+  "description": "GPT-image-2 reference image shown in the study's Experiments 2 tab.",
+  "date": "2026-11-05"
+ },
+ {
+  "path": "/assets/fantasy-taletale-beastfolk-reference.webp",
+  "title": "Fantasy Taletale beast-folk reference sheet",
+  "description": "GPT-image-2 reference image shown in the study's Experiments 3 tab.",
+  "date": "2026-11-05"
+ },
+ {
+  "path": "/rts-enemy-ai-study.html",
+  "title": "Enemy AI for a Hero Defense RTS: From If/Else to Decision Models",
+  "description": "A graphical study of thirty years of game enemy AI, with interactive diagrams and an architecture for mobs, waves, directors and phase bosses.",
+  "date": "2026-11-03"
+ },
+ {
+  "path": "/vfx-snow-topdown-pixel.html",
+  "title": "Top-down pixel snow: tiny algorithms that make a winter world feel alive",
+  "description": "Graphical research study on efficient old-school snow for top-down pixel art: falling, accumulation, interaction, melt, rendering.",
+  "date": "2026-11-08"
+ },
+ {
+  "path": "/vfx-snow-sandbox.html",
+  "title": "Snow Sandbox (playable)",
+  "description": "Playable 320x180 snow simulation: footprints, drifts, shovel, sun melt, day/night, x-ray buffers.",
+  "date": "2026-11-08"
+ },
+ {
+  "path": "/vfx-acid-topdown-pixel.html",
+  "title": "Top-down pixel acid: tiny algorithms for liquids that eat the world",
+  "description": "Graphical research study on efficient old-school acid for top-down pixel art: liquids, material corrosion, equipment and flesh, slimes, time.",
+  "date": "2026-11-08"
+ },
+ {
+  "path": "/vfx-acid-sandbox.html",
+  "title": "Acid Sandbox (playable)",
+  "description": "Playable 320x180 acid dungeon: spreading acid, corroding items, slimes, fumes, rust, x-ray buffers.",
+  "date": "2026-11-08"
+ },
+ {
+  "path": "/vfx-rain-topdown-pixel.html",
+  "title": "Top-down pixel rain: tiny algorithms for drizzle, downpours and everything that gets wet",
+  "description": "Graphical research study on efficient old-school rain for top-down pixel art: tiers, wind, ripples, wetness by material, puddles, drips, storms, mist.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/vfx-rain-sandbox.html",
+  "title": "Rain Sandbox (playable)",
+  "description": "Playable 320x180 rainy courtyard: drizzle to storm, puddles, ripples, drips, fire, lightning, umbrella, x-ray buffers.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/vfx-forest-topdown-pixel.html",
+  "title": "Top-down pixel forests: tiny algorithms for thousands of living trees",
+  "description": "Graphical research study on top-down pixel forests: biomes, species, seasons, interaction, birds, performance.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/vfx-forest-sandbox.html",
+  "title": "Forest Sandbox (playable)",
+  "description": "Playable procedural forest world: 7 forest types, seasons, wind, occlusion modes, shade, birds, culling grid, sprite atlas.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/vfx-light-topdown-pixel.html",
+  "title": "Top-down pixel light and shadow: tiny algorithms for sun, fire, lanterns and the dark",
+  "description": "Graphical research study on 2D/top-down pixel lighting: sun, artificial and carried light, personality, object interaction, performance.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/vfx-light-sandbox.html",
+  "title": "Light Sandbox (playable)",
+  "description": "Playable lighting village: day/night, sun shadows, polar shadow maps, enterable house, carried lights, colormap mode.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/catalog.json",
+  "title": "Catalog (v2)",
+  "description": "Rich data model: items, series, tags, stats, pairs. Source of truth for the homepage.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/taxonomy.json",
+  "title": "Taxonomy",
+  "description": "Controlled vocabulary of facets and tag values.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/ai-rts-enemy.webp",
+  "title": "Thumbnail ai-rts-enemy.webp",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/procgen-characters.webp",
+  "title": "Thumbnail procgen-characters.webp",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/vfx-acid.png",
+  "title": "Thumbnail vfx-acid.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/vfx-forest.png",
+  "title": "Thumbnail vfx-forest.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/vfx-light.png",
+  "title": "Thumbnail vfx-light.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/vfx-rain.png",
+  "title": "Thumbnail vfx-rain.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/vfx-snow.png",
+  "title": "Thumbnail vfx-snow.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ }
+]

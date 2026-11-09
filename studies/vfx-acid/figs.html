@@ -1,0 +1,419 @@
+<!--FIG doom-->
+<figure class="fig" data-demo="doom" id="fig-1">
+  <div class="fig-h"><span class="fig-n">Fig. 1</span><h4 class="fig-t">The DOOM fire and a corrosion-front analogue, side by side</h4><span class="illu">Illustrative palettes and rates</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="DOOM PSX fire cellular automaton"></canvas><span class="tagl">DOOM PSX fire</span></div>
+      <p class="pl"><code>fire[to] = fire[from] − (rand &amp; 1)</code> with a random sideways step. Values 0–36 index a black → red → yellow → white ramp. The source row is 36.</p></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Corrosion front: the same rule over an iron plate, but damage never heals"></canvas><span class="tagl">Inverse fire: a corrosion front</span><div class="hud" data-hud></div></div>
+      <p class="pl">Same rule, two changes: the cell keeps its <b>worst</b> value (<code>max</code>), so scars stay; and each step only succeeds with a hardness chance. The bottom row is acid.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="fire">Switch the fire off</button>
+    <button type="button" class="btn" data-b="acid">Cut the acid off</button>
+    <button type="button" class="btn" data-b="reset">New plate</button>
+    <label class="rng">Plate hardness <input type="range" data-k="hard" min="0" max="95" value="55"><output data-o="hard"></output></label>
+    <label><input type="checkbox" data-k="dith" checked> Bayer stage dither</label>
+  </div>
+  <figcaption>Both panels keep <b>one number per cell, one local rule, one palette</b>. Switch the fire off and it goes dark within a second; cut the acid off and the eaten plate <b>stays eaten</b>. That difference is the whole study: acid is a verb that changes the world, and its strength runs out as it travels, like The Powder Toy's acid <code>life</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s88">S88</a></span>. The plate's colours are the Sandbox's iron stages: clean, dark pits, pale salts, dull, then a hole showing acid.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-2">
+  <div class="fig-h"><span class="fig-n">Fig. 2</span><h4 class="fig-t">Seven generations of acid techniques, 1981 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The 2025–2026 stretch is zoomed so that Gen 6 is readable. Items without a single year (ranges like "Ultima V–VII", or "undated in our notes") appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG floor-->
+<figure class="fig" data-demo="floor" id="fig-3">
+  <div class="fig-h"><span class="fig-n">Fig. 3</span><h4 class="fig-t">DOOM's floor: an 8-tic flipbook and a 32-tic damage clock, decoupled</h4></div>
+  <div class="stage"><canvas width="160" height="80" aria-label="Tile map with animated nukage tiles and a walker"></canvas><div class="hud" data-hud></div></div>
+  <svg class="chart tics" role="img" aria-label="Tic timeline showing frame changes every 8 tics and damage checks every 32 tics"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Floor special"><button type="button" class="on" data-v="5">Nukage (5)</button><button type="button" data-v="10">Hellslime (10)</button><button type="button" data-v="20">Strong (20)</button></div>
+    <label><input type="checkbox" data-k="suit"> Radiation suit</label>
+    <label><input type="checkbox" data-k="phase" checked> Offset tile phases</label>
+    <button type="button" class="btn" data-b="dash">Dash across</button>
+    <button type="button" class="btn" data-b="walk">Walk slowly</button>
+  </div>
+  <figcaption>The flats change frame every <b>8 tics</b> (<code>pic = basepic + ((leveltime/8 + i) % numpics)</code>); damage applies only when <code>!(leveltime &amp; 0x1f)</code>, every <b>32 tics</b> ≈ 0.91 s at 35 tics/s. Orange ticks on the strip are damage checks; a lit marker means you were standing on the hazard at that moment. A quick dash takes 0 or 1 hit depending on <i>global</i> time, never on the art. With the suit on, only the 20-damage floor leaks, when <code>P_Random() &lt; 5</code>. Untick phase offsets to see every tile pulse in sync.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG zerosim-->
+<figure class="fig" data-demo="zerosim" id="fig-4">
+  <div class="fig-h"><span class="fig-n">Fig. 4</span><h4 class="fig-t">Zero-sim surfaces: Quake's turbulence warp and a palette-cycled pool</h4><span class="illu">Procedural textures</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Acid texture warped by a sine table"></canvas><span class="tagl" data-lab="warp">Quake turbulence</span></div>
+      <div class="ctl">
+        <div class="seg" data-seg="warp" role="group" aria-label="Warp type"><button type="button" class="on" data-v="quake">Quake warp</button><button type="button" data-v="quant">±1 px quantised</button><button type="button" data-v="sheen">Sandbox sheen</button></div>
+        <label class="rng">Amplitude <input type="range" data-k="amp" min="0" max="8" step="1" value="4"><output data-o="amp"></output></label>
+        <label class="rng">Speed <input type="range" data-k="spd" min="0" max="40" value="20"><output data-o="spd"></output></label>
+      </div></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Acid pool animated only by rotating palette entries"></canvas><span class="tagl">Palette cycling</span><div class="hud" data-hud></div></div>
+      <canvas class="pstrip" width="16" height="1" style="width:100%;height:16px;margin-top:6px;border:1px solid var(--line);border-radius:3px" aria-label="The palette, rotating"></canvas>
+      <div class="ctl">
+        <label class="rng">Cycle rate <input type="range" data-k="rate" min="0" max="12" step=".5" value="5"><output data-o="rate"></output></label>
+        <label><input type="checkbox" data-k="blend" checked> BlendShift</label>
+        <label><input type="checkbox" data-k="idx"> Show indices</label>
+      </div></div>
+  </div>
+  <figcaption>Left: <code>sturb = (s + turb[t &amp; 127]) &amp; 63</code> with <code>sintable[i] = AMP + sin(i·2π/128)·AMP</code>; animation only slides the table pointer at <code>SPEED</code> entries per second (20 in Quake, so a full cycle takes ~6.4 s). Quantising the offset to ±1 px stops the shimmer that unquantised warps cause on pixel art. The third option is the Sandbox's two-sine sheen, which swaps deep acid to the light colour above 1.5 and to the highlight above 1.8. Right: the pixels never change; 8 entries of the strip rotate through the cycled range. BlendShift cross-fades neighbouring entries so slow cycles glide.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG flow-->
+<figure class="fig" data-demo="flow" id="fig-5">
+  <div class="fig-h"><span class="fig-n">Fig. 5</span><h4 class="fig-t">Flow with a film threshold: puddles that stop, with crisp edges</h4></div>
+  <div class="stage"><canvas width="176" height="96" aria-label="Stone floor with grout lines and a drain trench; click to spill acid"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">FILM <input type="range" data-k="film" min="0" max="0.6" step="0.01" value="0.3"><output data-o="film"></output></label>
+    <label><input type="checkbox" data-k="evap"> Evaporation</label>
+    <label><input type="checkbox" data-k="xray"> X-ray: acid amount</label>
+    <button type="button" class="btn" data-b="reset">Clear floor</button>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption><b>Click or drag to spill.</b> Each wet cell sends a share of its surface height (acid + floor) to lower 4-neighbours, never more than 90 % of what it holds (<code>k = min(0.2, a·0.9/s)</code>), double-buffered. A cell thinner than <code>FILM</code> cannot wet a dry neighbour, so the outline freezes; drag FILM to 0 and the same spill smears forever. Grout sits lower than tiles and a trench runs to the right wall, so acid creeps into the grid and pools in the drain. With evaporation off the counter shows that flow is exactly conservative.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG pipes-->
+<figure class="fig" data-demo="pipes" id="fig-6">
+  <div class="fig-h"><span class="fig-n">Fig. 6</span><h4 class="fig-t">Level grid vs virtual pipes: diamonds or sloshing</h4><span class="illu">Toy constants</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Integer level grid flow"></canvas><span class="tagl">Level grid, 0–7</span></div>
+      <p class="pl">Each source block (4×4 px cells here) spreads <code>level − 1</code> to its 4-neighbours, as in Minecraft's 0–7 levels; the last three drops stay as sources. Equalising by <code>/4</code> on a square grid makes <b>diamonds</b>.</p></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Virtual pipes flow with momentum"></canvas><span class="tagl">Virtual pipes</span><div class="hud" data-hud></div></div>
+      <p class="pl">Each edge stores a flux: <code>f = max(0, f + Δt·g·Δh)</code>, outflows scaled by <code>K = min(1, d/(Σf·Δt))</code>, then <code>d += Δt·(in − out)</code>. Flux has memory, so the liquid <b>sloshes</b>.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="drop">Drop a column on both</button>
+    <label class="rng">Pipe friction <input type="range" data-k="fr" min="0" max="0.2" step="0.005" value="0.02"><output data-o="fr"></output></label>
+    <label><input type="checkbox" data-k="bowl" checked> Sloped bowl floor</label>
+  </div>
+  <figcaption>Click either panel to drop acid on both at the same spot. Virtual pipes (Mei, Decaudin and Hu 2007, after O'Brien and Hodgins 1995) are the upgrade when you want waves. lisyarus damps the stored flow with <code>(1 − friction)^dt</code>; set friction near 0 to watch it ring. Pipes are a gather rule, so they port to fragment shaders; Jákó measured them at 25.7 ms on CPU vs 0.295 ms on GPU at 128².</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG goop-->
+<figure class="fig" data-demo="goop" id="fig-7">
+  <div class="fig-h"><span class="fig-n">Fig. 7</span><h4 class="fig-t">A goop grid with combination rules: acid as one row in a chemistry set</h4></div>
+  <div class="goop-wrap">
+    <div class="stage"><canvas width="160" height="96" aria-label="Tile grid where you paint liquids and statuses"></canvas><div class="hud" data-hud></div></div>
+    <ol class="goop-log readout" aria-live="polite" aria-label="Rule log"></ol>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tool" role="group" aria-label="Paint"><button type="button" class="on" data-v="acid">Acid</button><button type="button" data-v="water">Water</button><button type="button" data-v="oil">Oil</button><button type="button" data-v="fire">Fire</button><button type="button" data-v="shock">Shock</button><button type="button" data-v="cryo">Cryo</button><button type="button" data-v="unit">Move unit</button><button type="button" data-v="erase">Erase</button></div>
+    <button type="button" class="btn" data-b="reset">Reset board</button>
+  </div>
+  <figcaption><b>Paint on the board.</b> Rules from the profile: shock spreads <b>instantly</b> across a connected water pool (Gungeon); fire creeps tile by tile through oil, a <b>gradual</b> front; cryo freezes water and turns acid into frozen acid (Into the Breach), and fire melts frozen acid back (Noita's Frozen Acid + Fire → Acid). Water poured on acid dilutes it (level adds, concentration drops). A unit that stops on acid picks up ACID (weapon damage ×2) and the pool becomes ground; walking that unit into water cures it, but the water tile becomes acid. Two propagation speeds, instant and gradual, are the key design lever.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG ripple-->
+<figure class="fig" data-demo="ripple" id="fig-8">
+  <div class="fig-h"><span class="fig-n">Fig. 8</span><h4 class="fig-t">Hugo Elias' ripple buffer on an acid pool, quantised to ±1 px and ±1 palette step</h4></div>
+  <div class="stage"><canvas width="144" height="80" aria-label="Acid pool with ripples; click to splash"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Damping <input type="range" data-k="damp" min="0.85" max="0.995" step="0.005" value="0.94"><output data-o="damp"></output></label>
+    <label><input type="checkbox" data-k="pops" checked> Bubble pops</label>
+    <label><input type="checkbox" data-k="seed3" checked> Seed 3×3 (not 1 px)</label>
+    <label><input type="checkbox" data-k="hbuf"> Show height buffer</label>
+  </div>
+  <figcaption><b>Click the pool to splash.</b> <code>B2 = (B1[x−1] + B1[x+1] + B1[y−1] + B1[y+1])/2 − B2</code>, times 0.94, then swap. The render offset is <code>(h[x−1] − h[x+1], h[y−1] − h[y+1])</code> clamped to ±1 px, and the slope shifts the colour by ±1 palette step. Cells outside the acid mask are walls, so rings reflect off the puddle's edge. Untick 3×3 seeding to see Matyka's "really ugly picture" from a single-pixel poke. Our notes found no shipped acid game documented with this; the Sandbox does not have it yet.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG react-->
+<figure class="fig" data-demo="react" id="fig-9">
+  <div class="fig-h"><span class="fig-n">Fig. 9</span><h4 class="fig-t">Reaction rules that spend the acid: three published recipes</h4><span class="illu">Hardness values illustrative</span></div>
+  <div class="stage"><canvas width="144" height="72" aria-label="Acid pixels wandering into a block of material"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="model" role="group" aria-label="Rule"><button type="button" class="on" data-v="tpt">Powder Toy</button><button type="button" data-v="sand">Sandspiel</button><button type="button" data-v="ours">Sandbox</button><button type="button" data-v="noita">Noita-style (free)</button></div>
+    <div class="seg" data-seg="mat" role="group" aria-label="Material"><button type="button" data-v="3">Wood</button><button type="button" class="on" data-v="4">Iron</button><button type="button" data-v="5">Bone</button><button type="button" data-v="7">Cloth</button><button type="button" data-v="8">Gold</button></div>
+    <button type="button" class="btn" data-b="pour">Pour 60 acid pixels</button>
+    <button type="button" class="btn" data-b="reset">Reset</button>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption><b>Powder Toy</b>: acid starts with <code>life = 75</code>; while life &gt; 50 it dissolves a neighbour with <code>chance(Hardness, 1000)</code> and loses 1 life; at ≤ 50 it dies on touching anything, so it gets ~25 dissolves. Neighbouring acid equalises half its life difference. <b>Sandspiel</b>: strength 100–150, each dissolve costs 60, gone below 80, so one pixel eats 1–2 cells; walls are immune. <b>Sandbox</b>: <code>damage = RATE × conc × 0.0035 × (0.5..1.5)</code> and the acid pays 0.55 × damage (rates are the report's; hardness numbers here are ours). <b>Noita-style</b>: the acid survives the reaction and only evaporation stops it, so it digs forever.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG stages-->
+<figure class="fig" data-demo="stages" id="fig-10">
+  <div class="fig-h"><span class="fig-n">Fig. 10</span><h4 class="fig-t">Integrity → colour stage through a Bayer threshold</h4></div>
+  <div class="stage"><canvas width="168" height="44" aria-label="Six items rendered at the chosen integrity"></canvas></div>
+  <canvas class="qbar" width="168" height="12" style="width:100%;height:auto;margin-top:6px;border:1px solid var(--line);border-radius:3px" aria-label="Every stage of each material across integrity 1 to 0"></canvas>
+  <div class="ctl">
+    <label class="rng">Integrity q <input type="range" data-k="q" min="0" max="1" step="0.005" value="0.62"><output data-o="q"></output></label>
+    <button type="button" class="btn" data-b="anim">Animate 1 → 0</button>
+    <label><input type="checkbox" data-k="dith" checked> Bayer dither</label>
+    <label><input type="checkbox" data-k="cues" checked> Iron pits and salts</label>
+    <label><input type="checkbox" data-k="map"> Show stage index</label>
+  </div>
+  <figcaption><code>si = floor((1 − q)·3.3 + (bayer − 7.5)/16·0.9)</code>, clamped to 0–3, then <code>STAGE[material][si][role]</code> with role = light, mid or dark pixel. Without dither the boundaries sit at q ≈ 0.70, 0.39 and 0.09; the dither spreads each by about ±0.13, so stages bleed instead of popping. Below q = 0.15 holes open where <code>hash &lt; (0.15 − q)·7</code>. Iron adds dark pits at stage 1 and pale green salts at stage 2: shape cues, not only colour. The strip under the items sweeps q from 1 (left) to 0 (right) for each material.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG fronts-->
+<figure class="fig" data-demo="fronts" id="fig-11">
+  <div class="fig-h"><span class="fig-n">Fig. 11</span><h4 class="fig-t">Corrosion fronts: Mérillou's random walk, a crate eaten from the wet edge, then rust</h4><span class="illu">Time compressed</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Iron plate with pitting fronts; drag to scratch"></canvas><span class="tagl">Mérillou pitting</span><div class="hud" data-hud></div></div>
+      <svg class="chart spark" role="img" aria-label="Corroded mass over time against the curve k times t to the power n"></svg>
+      <div class="ctl">
+        <label class="rng">k_str (scratch) <input type="range" data-k="kstr" min="1" max="8" step="0.5" value="4"><output data-o="kstr"></output></label>
+        <label class="rng">Thickness <input type="range" data-k="th" min="1" max="8" value="3"><output data-o="th"></output></label>
+        <button type="button" class="btn" data-b="plate">New plate</button>
+      </div></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Crate beside an acid pool; solid pixels react only with wet neighbours"></canvas><span class="tagl" data-ph>Wet edge</span><div class="hud" data-hud2></div></div>
+      <div class="ctl">
+        <button type="button" class="btn" data-b="pour">Pour against the crate</button>
+        <label class="rng">Time × <input type="range" data-k="tx" min="1" max="40" value="12"><output data-o="tx"></output></label>
+        <label><input type="checkbox" data-k="rx"> X-ray: rust</label>
+      </div></div>
+  </div>
+  <figcaption>Left, <b>drag to scratch</b> the plate (scratches raise the seed odds by <code>k_str</code>; the greasy band lowers them). A front pixel corrodes a random clean 8-neighbour; a pixel already surrounded deepens instead; depth past the thickness is a <b>hole</b>. The chart compares corroded mass with Mérillou's <code>w = k·tⁿ</code>, n = 0.516 (scaled to fit). Right: solid pixels react only with <b>wet 4-neighbours</b> at <code>mul = 0.6</code>; a destroyed pixel becomes floor with a +60 stain scar and acid flows in, so the hole advances. Once the acid has dried, damaged iron rusts and spreads to clean iron (<code>rust &gt; 150</code>: 3 % chance to add 14 to a neighbour).</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG dissolve-->
+<figure class="fig" data-demo="dissolve" id="fig-12">
+  <div class="fig-h"><span class="fig-n">Fig. 12</span><h4 class="fig-t">Dissolve three ways: burn edge, Bayer threshold and fizzlefade</h4></div>
+  <div class="trio">
+    <div><div class="stage"><canvas width="48" height="48" aria-label="Burn-edge dissolve"></canvas></div><p class="pl"><b>Burn edge</b>, pixel variant: <code>e = integrity − noise·0.25</code>; discard below 0, darken under 0.55, acid rim under 0.08.</p></div>
+    <div><div class="stage"><canvas width="48" height="48" aria-label="Bayer threshold dissolve"></canvas></div><p class="pl"><b>Ordered dither</b>: visible iff <code>integrity &gt; bayer4x4[x&amp;3][y&amp;3]</code>. Stable, no jitter.</p></div>
+    <div><div class="stage"><canvas width="48" height="48" aria-label="Fizzlefade dissolve"></canvas></div><p class="pl"><b>Fizzlefade</b>: a 17-bit LFSR (XOR 0x12000) visits every pixel exactly once.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Dissolve <input type="range" data-k="p" min="0" max="1" step="0.005" value="0.45"><output data-o="p"></output></label>
+    <button type="button" class="btn" data-b="anim">Animate</button>
+    <div class="seg" data-seg="drv" role="group" aria-label="Driver"><button type="button" class="on" data-v="sim">Driven by where acid touched</button><button type="button" data-v="flat">Canned dissolve_value</button></div>
+    <label><input type="checkbox" data-k="smooth"> smoothstep edges</label>
+  </div>
+  <figcaption>The shield's integrity map grows from the lower-left corner, where an acid splash "touched" it. Switch to the canned driver and all three effects ignore where the acid was, which is the risk the profile names. Ticking smoothstep shows how soft edges and filtered noise smear pixel art; the pixel variant uses <code>step</code> and texel-resolution noise.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG armour-->
+<figure class="fig" data-demo="armour" id="fig-13">
+  <div class="fig-h"><span class="fig-n">Fig. 13</span><h4 class="fig-t">Armour before flesh: boots first, then HP, then footprints</h4><span class="illu">Boot wear × 8</span></div>
+  <div class="armour-wrap">
+    <div class="stage"><canvas width="176" height="64" aria-label="A character walks through an acid puddle"></canvas><div class="hud" data-hud></div></div>
+    <div class="pipe" aria-live="polite">
+      <div class="pp" data-p="acid"><b>Acid at feet</b><span data-v="acid">0.00</span></div>
+      <div class="pp" data-p="boots"><b>Boots wear</b><span>−0.035 × footAcid / s</span><i class="pbar"><i data-bar="boots"></i></i></div>
+      <div class="pp" data-p="hp"><b>Flesh takes HP</b><span>−9 × min(1.5, footAcid) / s</span><i class="pbar hp"><i data-bar="hp"></i></i></div>
+      <div class="pp" data-p="prints"><b>Footprints</b><span>every 5 px: deposit 0.3 × footAcid, keep 72 %</span></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="go">Walk through</button>
+    <label><input type="checkbox" data-k="boots" checked> Boots equipped</label>
+    <label><input type="checkbox" data-k="ff"> Fast-forward boot wear (× 40)</label>
+    <button type="button" class="btn" data-b="repair">Repair boots</button>
+  </div>
+  <figcaption>The Sandbox's rules. While boots have integrity, the puddle wears them and HP does not move: "my boots are going" is a warning you can see first. With no boots, HP drops and a smoke speck rises from the feet every 0.12 s; a hit flashes the sprite white on alternate frames for 0.12 s. Speed falls by up to 40 % in deep acid. Wet feet print acid every 5 px and keep 72 % of their load, so a trail lasts about 10 prints. Boot wear at real Sandbox speed is slow; fast-forward it to see the hand-off from gear to flesh.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG dot-->
+<figure class="fig" data-demo="dot" id="fig-14">
+  <div class="fig-h"><span class="fig-n">Fig. 14</span><h4 class="fig-t">When does acid hurt? Damage-over-time models on one clock</h4><span class="illu">Meter and taper values illustrative</span></div>
+  <svg class="chart dotc" role="img" aria-label="Line chart of HP over time for several damage models"></svg>
+  <div class="ctl">
+    <label class="rng">Max HP <input type="range" data-k="hp" min="50" max="2000" step="50" value="400"><output data-o="hp"></output></label>
+    <label class="rng">Leave the hazard at <input type="range" data-k="exit" min="2" max="60" value="20"><output data-o="exit"></output></label>
+  </div>
+  <div class="chips" data-models role="group" aria-label="Models shown"></div>
+  <div class="readout" aria-live="polite" data-ro>Hover the chart to read every model at that second.</div>
+  <figcaption>Sourced numbers: DOOM nukage 5 and strong floors 20 per 32 tics; Factorio's medium-spitter puddle 28.8 DPS; Elden Ring's Lake of Rot <b>2 % + 30</b> per second and Swamp of Aeonia <b>2 % + 8</b>, which keep ticking after you leave (a coating); Risk of Rain 2's poison, 10 % of max HP over 10 s, which cannot kill. Illustrative: a Gungeon-style meter that fills in 2 s while you stand in goop and then deals 10 % of max HP, and note 04's tapering burn (4, 3, 2, 2, 1, 1 per second). Re-applying the poison and the taper while you stand in the hazard is our assumption. Raise max HP: percentage models scale, flat ones do not.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG field-->
+<figure class="fig" data-demo="field" id="fig-15">
+  <div class="fig-h"><span class="fig-n">Fig. 15</span><h4 class="fig-t">Slimes as one threshold field shared with the acid</h4></div>
+  <div class="stage"><canvas width="176" height="96" aria-label="Draggable slimes over acid puddles"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Threshold <input type="range" data-k="thr" min="0.5" max="1.6" step="0.01" value="1"><output data-o="thr"></output></label>
+    <label class="rng">Acid weight <input type="range" data-k="aw" min="0" max="1.2" step="0.05" value="0.55"><output data-o="aw"></output></label>
+    <label><input type="checkbox" data-k="heat"> Field heatmap</label>
+    <label><input type="checkbox" data-k="sq" checked> Squash and stretch</label>
+    <label><input type="checkbox" data-k="see" checked> See-through (F &gt; 1.35)</label>
+  </div>
+  <figcaption><b>Drag the slimes.</b> Each slime splats <code>(1 − d²/2.56)²·2.7</code> into one field; slime is drawn where <code>F + 0.55·min(acid, 1) ≥ 1</code>. Alone, the edge sits exactly at d = 1; on deep acid it grows to d ≈ 1.23 and the slime's skirt becomes puddle. Two slimes close together merge with no extra code. Dark outline where the value is under 1.13 on dry floor, shading from <code>F[x+1,y+1] − F[x−1,y−1]</code>, and objects show through, acid-tinted, where F &gt; 1.35 (drag a slime over the sword). Radius is <code>2.5 + √mass·1.25</code>; squash is ±13 % on a sine phase.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG split-->
+<figure class="fig" data-demo="split" id="fig-16">
+  <div class="fig-h"><span class="fig-n">Fig. 16</span><h4 class="fig-t">Split, grow, merge and burst: a slime's life in mass units</h4></div>
+  <div class="stage"><canvas width="176" height="88" aria-label="Slimes splitting and bursting into acid pools"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="hit">Hit the biggest (−8 mass)</button>
+    <button type="button" class="btn" data-b="feed">Feed a crate</button>
+    <label><input type="checkbox" data-k="merge"> Re-merge when left alone</label>
+    <label><input type="checkbox" data-k="area"> Area-conserving radius (R/√2)</label>
+    <button type="button" class="btn" data-b="reset">Reset</button>
+  </div>
+  <div class="mass-bars" aria-live="polite" data-bars></div>
+  <figcaption>Sandbox rules: a hit removes 8 mass; if ≥ 12 remains and there are fewer than 10 slimes, it splits in half with opposite velocities. A slime above 45 mass splits on its own about once every 2 s while there are fewer than 6; mass is capped at 60. Below 5 (hit) it <b>bursts</b>: a disc of acid of radius 1.5 r and amount <code>0.5 + 0.025·mass</code> plus 10 droplets, and the pool then behaves like any acid. Re-merging is the Skyward Sword ChuChu verb; the Sandbox does not have it, so this toggle is illustrative (touching for 2 s merges). Halving mass with a 2.5 px radius offset does not conserve area; tick R/√2 to compare.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG engulf-->
+<figure class="fig" data-demo="engulf" id="fig-17">
+  <div class="fig-h"><span class="fig-n">Fig. 17</span><h4 class="fig-t">Engulf and digest, with the item visible inside</h4><span class="illu">Digestion ×6, grace timer illustrative</span></div>
+  <div class="stage"><canvas width="160" height="80" aria-label="A slime seeking and digesting items"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="kill">Kill the slime</button>
+    <button type="button" class="btn" data-b="reset">New room</button>
+    <label><input type="checkbox" data-k="timer" checked> Kill-before-digest grace (3 s)</label>
+  </div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>Every 2–5 s the slime picks the nearest non-gold item (75 % of the time). Each frame it tests 5 random points inside 0.85 r; corrodible pixels there take damage at 2.2× and the slime gains 0.9 mass per unit eaten. Gold is ignored. Where the field passes 1.35 the item is drawn under the body, acid-tinted, so you can see what was taken. With the grace timer on (note 09's proposal), digestion waits 3 s after engulfing, a window to kill it and get the item back.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG fumes-->
+<figure class="fig" data-demo="fumes" id="fig-18">
+  <div class="fig-h"><span class="fig-n">Fig. 18</span><h4 class="fig-t">Fumes: a coarse gas grid with blur, decay and drift</h4></div>
+  <div class="stage"><canvas width="160" height="90" aria-label="Fume grid over a room; click to puff"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="rule" role="group" aria-label="Rule"><button type="button" class="on" data-v="sbx">Sandbox: blur + drift × 0.991</button><button type="button" data-v="spd">SPD: average − 1</button></div>
+    <label><input type="checkbox" data-k="src" checked> Acid eating a chestplate</label>
+    <label><input type="checkbox" data-k="drift" checked> Drift north</label>
+    <label><input type="checkbox" data-k="harm"> Outline harm zone</label>
+  </div>
+  <figcaption><b>Click to puff.</b> Sandbox: <code>d = (4G + ΣN4)/8</code>, <code>below = (4G[c+W] + G[c+W±1])/6</code>, <code>G' = (0.8·d + 0.2·below)·0.991</code>, a half-life of ≈ 1.3 s. Haze is drawn where <code>G·14 &gt; bayer + 1</code>, which starts at 0.07; harm starts at 0.3 at <code>(G − 0.3)·3</code> HP/s, so you always see fumes before they hurt. SPD's rule is one line on integer cells: <code>off = sum ≥ count ? sum/count − 1 : 0</code>, where the −1 is free evaporation. A quiet puddle's evaporation never becomes visible; a reaction does: fumes mean "something is being eaten".</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG ring-->
+<figure class="fig" data-demo="ring" id="fig-19">
+  <div class="fig-h"><span class="fig-n">Fig. 19</span><h4 class="fig-t">Stains, drying rings and a lime counter with salt residue</h4><span class="illu">Time compressed</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="72" aria-label="A puddle drying and leaving a ring"></canvas><span class="tagl">Let it dry</span><div class="hud" data-hud></div></div></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="A puddle neutralised by lime; click to throw lime"></canvas><span class="tagl">Throw lime (click)</span><div class="hud" data-hud2></div></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Time × <input type="range" data-k="tx" min="1" max="60" value="20"><output data-o="tx"></output></label>
+    <label><input type="checkbox" data-k="xr"> X-ray: stain</label>
+    <button type="button" class="btn" data-b="reset">New puddles</button>
+  </div>
+  <figcaption>Left: floor under acid gains +1 stain with chance <code>0.012 × acid</code>, and a drying edge thinner than 0.3 gains +2 with chance 0.03. The puddle thins without shrinking (the film rule froze its outline), so the edge keeps drying in place and a <b>ring</b> builds, as in Dorsey's "deposit where moisture leaves". Dry stain fades by 1 with chance 0.04 per sample. Right: lime within 7 px sets acid to 0, adds <code>salt += acid × 200 + 40</code> and a fume puff of <code>acid × 0.08</code>: a white crust that says "you fixed it". Salt fades with chance 0.12 per sample.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG glow-->
+<figure class="fig" data-demo="glow" id="fig-20">
+  <div class="fig-h"><span class="fig-n">Fig. 20</span><h4 class="fig-t">Glow from 8×8 block sums, chosen per pixel through Bayer</h4></div>
+  <div class="stage"><canvas width="160" height="96" aria-label="Dark room lit by torches and glowing acid; click to pour"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="final">Final</button><button type="button" data-v="mask">Palette choice</button><button type="button" data-v="glow">Glow value</button></div>
+    <label><input type="checkbox" data-k="blocks"> Show 8×8 blocks</label>
+    <label><input type="checkbox" data-k="torch" checked> Torches</label>
+    <button type="button" class="btn" data-b="clear">Clear acid</button>
+  </div>
+  <figcaption><b>Click to pour.</b> Sum <code>min(acid, 1.2)</code> over each 8×8 block (plus 0.5 × mass per slime), blur the small grid twice with a 1-2-1 tent, sample it bilinearly, then <code>glow = clamp(v/12 − 0.35, 0, 1)</code>. Each pixel picks one of three palettes: <b>glow</b> if <code>glow·20 &gt; bayer + 2</code> and it beats 0.6 × torch light, else <b>torch</b> if <code>torch·19 &gt; bayer</code>, else <b>dim</b>. Emissive colours (acid, slime, flame) stay bright in every palette. Torches flicker between 0.72 and 1.0. The "Palette choice" view shows which palette each pixel took.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG ramp-->
+<figure class="fig" data-demo="ramp" id="fig-21">
+  <div class="fig-h"><span class="fig-n">Fig. 21</span><h4 class="fig-t">Ramp builder and colour-blind check: acid vs poison</h4><span class="illu">Simulation approximate</span></div>
+  <div class="stage"><canvas width="176" height="72" aria-label="An acid pool and a poison pool side by side"></canvas><span class="tagl">Acid (left) · poison (right)</span></div>
+  <div class="swatches" data-sw></div>
+  <div class="ctl">
+    <div class="seg" data-seg="ramp" role="group" aria-label="Acid ramp"><button type="button" class="on" data-v="ooze">Eight Hues of Toxic Ooze</button><button type="button" data-v="sbx">Sandbox acid ramp</button><button type="button" data-v="custom">Custom</button></div>
+    <label class="rng">Shadow hue <input type="range" data-k="sh" min="200" max="320" value="275"><output data-o="sh"></output></label>
+    <label class="rng">Light hue <input type="range" data-k="li" min="40" max="160" value="78"><output data-o="li"></output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="cvd" role="group" aria-label="Colour vision"><button type="button" class="on" data-v="none">Typical</button><button type="button" data-v="prot">Protan</button><button type="button" data-v="deut">Deutan</button><button type="button" data-v="trit">Tritan</button><button type="button" data-v="grey">Greyscale</button></div>
+    <label><input type="checkbox" data-k="cues" checked> Shape and motion cues</label>
+  </div>
+  <figcaption>Lospec's ramp runs <code>#0e0314 → #d5ffcc</code>: inky purple shadows rising through teal to pale highlights that lose saturation. The custom builder bends the same idea. Note 06's rule is to separate acid from poison by <b>shape and motion</b>, not hue: acid gets bubbles, rising steam and a jagged dark etch ring; poison gets drifting motes, a soft edge and purple. Switch to a colour-vision simulation (an approximate matrix model) and untick the cues to judge how much work hue alone is doing; with the cues on, bubbles, steam and motes still tell the pools apart in greyscale. The report's accessibility source was blocked, so no prevalence figure is cited.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-22">
+  <div class="fig-h"><span class="fig-n">Fig. 22</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot. The sum is a crude total, not a recommendation by itself.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG materials-->
+<figure class="fig" data-demo="materials" id="fig-23">
+  <div class="fig-h"><span class="fig-n">Fig. 23</span><h4 class="fig-t">Acid × materials: pick a row to pour acid on it</h4></div>
+  <div class="mat-wrap">
+    <div class="tbl mat-tbl"><table class="mat"><thead><tr><th>Material</th><th>Sandbox RATE</th><th>Proposal</th><th>Visual stages</th><th>Byproduct / cue</th><th>Gameplay hook</th></tr></thead><tbody></tbody></table></div>
+    <div class="mat-demo"><div class="stage"><canvas width="96" height="64" aria-label="Mini corrosion demo for the selected material"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl"><button type="button" class="btn" data-b="again">Pour again</button><button type="button" class="btn" data-b="lime">Lime it</button></div>
+      <div class="readout" aria-live="polite" data-ro></div></div>
+  </div>
+  <figcaption>Every row of the report's matrix, clickable. The demo uses the Sandbox's RATE and fume factors and its stage ramps; stone only stains, gold never changes, glass is a flask that breaks and becomes the spill, and flesh is a damage-over-time with tint and steam, never wounds. Every Sandbox material spends the same <b>0.55 acid per unit of integrity</b>; RATE only sets speed. Time runs 4× (illustrative).</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG equip-->
+<figure class="fig" data-demo="equip" id="fig-24">
+  <div class="fig-h"><span class="fig-n">Fig. 24</span><h4 class="fig-t">Equipment models over N acid hits</h4></div>
+  <div class="eq-rows" data-rows></div>
+  <div class="ctl">
+    <label class="rng">Acid hits N <input type="range" data-k="n" min="0" max="40" value="6"><output data-o="n"></output></label>
+    <label class="rng">Then rest (turns) <input type="range" data-k="rest" min="0" max="60" value="0"><output data-o="rest"></output></label>
+    <button type="button" class="btn" data-b="roll">Re-roll the dice</button>
+  </div>
+  <figcaption>Each bar is one model's state after N contacts. <b>NetHack</b>: a weapon striking acid erodes with 1/6 per hit, three tiers, −1 damage per tier. <b>Brogue</b>: −1 enchant every hit, warned first, floor −10. <b>D&amp;D 5e</b>: −1 cumulative, destroyed at −5. <b>DCSS</b>: a temporary stack lands with <code>!x_chance_in_y(corr, corr + 28)</code>, −4 AC per stack, duration grows by <code>10 + 2d4</code> (cap 50) and wears off with rest. <b>Sandbox sword</b>: −0.06 integrity per hit on a slime, empty after ~17. <b>XCOM 2</b> shred: −2 armour per acid grenade. Drag "rest" to see which losses recover.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG timex-->
+<figure class="fig" data-demo="timex" id="fig-25">
+  <div class="fig-h"><span class="fig-n">Fig. 25</span><h4 class="fig-t">One spill over 30 minutes: alive, then calm, then remembered</h4></div>
+  <svg class="chart timex" role="img" aria-label="Four small charts on a shared logarithmic time axis: wetted area, acid units, stain pixels and rust pixels"></svg>
+  <div class="ctl"><label class="rng">Step <input type="range" data-k="st" min="1" max="7" value="1"><output data-o="st"></output></label></div>
+  <div class="readout" aria-live="polite" data-ro></div>
+  <figcaption>Every point is a number from the worked example (a headless replay of the Sandbox's <code>simStep()</code>, so illustrative and dependent on its constants). The time axis is logarithmic: seconds of spread, 90 s of thinning, then tens of minutes of stain and rust. Wetted area and acid are from the radius-10 spill; rust is from the smaller spill at the chestplate's edge.</figcaption>
+</figure>
+<!--/FIG-->
+
+<!--FIG stack-->
+<figure class="fig" data-demo="stack" id="fig-26">
+  <div class="fig-h"><span class="fig-n">Fig. 26</span><h4 class="fig-t">The layered architecture, server to pixels</h4><span class="illu">Design proposal [I]</span></div>
+  <div class="stack">
+    <div class="layers">
+      <button type="button" class="layer srv" data-l="L-server"><b>0</b><span>Server gameplay<small>tile acid level, items, stacks, gas</small></span></button>
+      <div class="layer-arrow">▼ tile events + seeds</div>
+      <button type="button" class="layer" data-l="L-data"><b>1</b><span>Data layer<small>8-bit textures per visible chunk</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-cpu"><b>2</b><span>CPU update<small>scatter rules, dirty boxes</small></span></button>
+      <button type="button" class="layer" data-l="L-gpu"><b>2′</b><span>GPU update (Godot 4.7)<small>gather rules via DrawableTexture2D</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-render"><b>3</b><span>Render layer<small>one CanvasItem shader per layer</small></span></button>
+      <div class="layer-arrow">▼</div>
+      <button type="button" class="layer" data-l="L-slime"><b>4</b><span>Slimes<small>CanvasGroup threshold</small></span></button>
+    </div>
+    <div class="ldet" aria-live="polite"></div>
+  </div>
+  <template id="L-server"><h4>Server gameplay (authoritative)</h4><ul><li>Per-tile acid level 0–3 + liquid enum + flags (Into the Breach / CDDA style), 1–2 B per tile</li><li>Item stages 0–3 (the server owns them; the client owns the look)</li><li>Corrosion stacks (C3) and per-tile gas at turn rate (SPD rule)</li></ul><p>Clients receive tile events and seeds and run the pixel simulation as cosmetic, allowed to diverge. Never sync per-pixel acid.</p></template>
+  <template id="L-data"><h4>Data layer (client)</h4><ul><li>Acid amount (+ concentration): R8 or RG8, 1 cell per 4 px (4×4 per 16-px tile), or per pixel near the camera</li><li>Integrity: R8 per object sprite; per pixel only for world objects (doors, bars, crates)</li><li>Stain / salt / rust: R8 each, or packed RGBA8</li><li>Fumes: R8 at half or quarter resolution (Sandbox: 160×90)</li></ul><p>Compatibility is RGBA8 for colour precision and float formats on WebGL 2 are unconfirmed, so stay 8-bit.</p></template>
+  <template id="L-cpu"><h4>CPU path</h4><p><code>PackedByteArray</code> per active chunk with dirty bounding boxes; liquid at 10–15 Hz, corrosion 2–5 Hz, gas 4–10 Hz, stain fade 0.2 Hz; upload with <code>ImageTexture.update()</code>.</p><p>This handles the <b>scatter</b> rules: moves, random consumption, corrosion fronts.</p></template>
+  <template id="L-gpu"><h4>GPU path (optional, experimental)</h4><p><code>DrawableTexture2D.blit_rect()</code> with <code>texture_blit</code> shaders, up to 4 inputs and outputs per blit, for <b>gather</b> rules only: diffusion, fumes, stain decay. ProfesorShader's CC0 flow sim shows the ping-pong pattern.</p><p>No compute shaders, no RenderingDevice, no particle trails or SDF collision on Compatibility. Wrap the API in one script.</p></template>
+  <template id="L-render"><h4>Render layer</h4><p>One CanvasItem shader per layer: palette-index lookup through a LUT, a Bayer threshold for acid edges and stage changes, stage ramps per material, fume haze as a palette variant. Canvas shaders can read <code>texture_sdf</code> for distance to walls if walls have LightOccluder2D.</p></template>
+  <template id="L-slime"><h4>Slimes</h4><p>Soft radial sprites inside a CanvasGroup, thresholded in the group's shader (<code>step(0.5, a)</code>) and quantised to 2–3 tones. To merge with puddles, the group shader also samples the acid texture. CanvasGroup threshold docs were not checked [U].</p></template>
+  <figcaption>Click a layer to see what it holds. Everything here is a design proposal grounded in the cited sources; none of it has been tested in Godot.</figcaption>
+</figure>
+<!--/FIG-->

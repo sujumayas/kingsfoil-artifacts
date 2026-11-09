@@ -1,0 +1,5 @@
+# Pinned: study pages must rebuild byte-for-byte (markdown rendering is part of the output).
+markdown-it-py==4.2.0
+PyYAML==6.0.3
+playwright==1.63.0
+Pillow==12.3.0

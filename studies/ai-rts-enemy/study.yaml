@@ -1,0 +1,11 @@
+# RTS enemy AI: built in an earlier session; its build pipeline was not preserved.
+# site/rts-enemy-ai-study.html is therefore the source. Edit it in place; the validator still checks it.
+id: ai-rts-enemy
+kind: static
+page: rts-enemy-ai-study.html
+thumb:                          # homepage card: crop of the hero, 1440x900 viewport
+  from: page
+  crop: [850, 40, 1440, 372]
+  wait: 2500
+qa:
+  max_page_kb: 1200

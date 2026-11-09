@@ -1,0 +1,92 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Aliveness · Variety. The sum is a crude total: a low-sum technique such as G4 can still be mandatory.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG types-->
+<figure class="fig" data-demo="types" id="fig-types">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Eight forest types, each grown live from its recipe</h4><span class="illu">Dead / burnt recipe illustrative</span></div>
+  <div class="cards" role="group" aria-label="Forest types"></div>
+  <div class="detail">
+    <div class="duo wide-r"><div data-txt></div>
+      <div><div class="stage"><canvas width="224" height="112" aria-label="A larger live view of the selected forest type"></canvas><div class="hud" data-hud></div></div>
+        <div class="ctl"><div class="seg" data-seg="season" role="group" aria-label="Season"><button type="button" data-v="0">Spring</button><button type="button" class="on" data-v="1">Summer</button><button type="button" data-v="2">Autumn</button><button type="button" data-v="3">Winter</button></div></div></div></div>
+  </div>
+  <figcaption>Each card runs the Sandbox's <code>BIOMES</code> recipe (species weights, density and undergrowth) through the same Bridson placement and sprite generator [I, Sandbox]; the bar is trees per 320×180 screen from the study's table, 34 (savanna) to 330 (mixed) [I, Sandbox run]. Click a card to read its row and see it larger in any season. The dead / burnt type is not in the Sandbox; it is drawn here with charred snags, grey snags and a few seedlings on ash, as an illustration of the table's proposal [I]. Design to visual canopy cover, not real stem counts [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG species-->
+<figure class="fig" data-demo="species" id="fig-species">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Twelve species in four seasons and six sizes</h4></div>
+  <div class="cards" role="group" aria-label="Species"></div>
+  <div class="detail">
+    <div class="duo"><div data-txt></div>
+      <div><div class="sizes" aria-label="Six size variants"></div>
+        <div class="barkrow"><span class="mini">Bark</span><canvas class="barkc" aria-label="A bark swatch drawn with the species' bark ramp"></canvas><span data-ramps></span></div>
+        <div class="stage" style="max-width:300px"><canvas class="flexc" width="96" height="56" aria-label="An oak and the selected species swaying in the same wind"></canvas><div class="hud" data-hud="flex"></div></div>
+        <div class="ctl"><div class="seg" data-seg="season" role="group" aria-label="Season"><button type="button" data-v="0">Spring</button><button type="button" class="on" data-v="1">Summer</button><button type="button" data-v="2">Autumn</button><button type="button" data-v="3">Winter</button></div>
+          <label class="rng">Wind <input type="range" data-k="wind" min="0" max="100" value="70"></label></div></div></div>
+  </div>
+  <figcaption>Every sprite is generated at load by the Sandbox's own code: 12 species × 6 sizes (0.75–1.35) × 4 seasons [I, Sandbox]. Crowns are lit from the top-left and the lower-right rim takes the darkest entry, mirroring Slynyrd's crescent-and-highlight recipe [V, S181; I]. The sway preview uses the Sandbox's flex multiplier against an oak at 1.0. Click a species for its row of the table, its six sizes, its bark and its leaf ramps.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG decide-->
+<figure class="fig" data-demo="decide" id="fig-decide">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pick a game type, see its occlusion</h4><span class="illu">Colour-0 holes approximated</span></div>
+  <div class="tbl" style="margin:0 0 10px"><table class="decide"><thead><tr><th>Game type</th><th>Recommended</th><th>Why</th><th>Avoid</th></tr></thead><tbody></tbody></table></div>
+  <div class="stage"><canvas width="208" height="112" aria-label="A walker and a second character in a deciduous forest, drawn with the selected occlusion method"></canvas></div>
+  <div class="ctl"><div class="seg" data-seg="occ" role="group" aria-label="Occlusion mode"><button type="button" data-v="dither">Dither</button><button type="button" data-v="alpha">Fade 40 %</button><button type="button" data-v="cutaway">Cutaway</button><button type="button" data-v="silhouette">Silhouette</button><button type="button" data-v="none">None</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a row of the study's table (or a mode) and the walker in blue uses that method; the green character stands in for a party member or an enemy. The readout answers the three questions: does the player stay visible, does the forest stay solid, and is there an extra pass. In an MMO, occlusion is client-side and per viewer [I]. Approximations: colour-0 leaf holes are shown as 3 of 16 pixels dropped, and the A2 row shows the overlay with no per-tree occlusion.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG boids-->
+<figure class="fig" data-demo="boids" id="fig-boids">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A flock over the canopy: priority rules, seven neighbours, a wrap box, flaps and shadows</h4><span class="illu">Weights from the study's pseudocode; scale illustrative</span></div>
+  <div class="stage"><canvas width="208" height="112" aria-label="A flock of birds with ground shadows; move the pointer to scare them" style="cursor:crosshair"></canvas></div>
+  <div class="duo" style="margin-top:8px;align-items:center">
+    <div class="stage" style="max-width:260px"><canvas width="40" height="18" aria-label="The drawn flap frames and the true wingbeat wave sampled at 60 fps"></canvas><span class="tagl">frames vs real wingbeat</span></div>
+    <div class="ctl col">
+      <label class="rng">Wingbeat <input type="range" data-k="hz" min="14" max="27" value="20"><output data-o="hz"></output></label>
+      <label class="rng">Flap frames <input type="range" data-k="frames" min="2" max="4" value="2"><output data-o="frames"></output></label>
+      <label class="rng">Animation rate <input type="range" data-k="fps" min="8" max="15" value="10"><output data-o="fps"></output></label>
+    </div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Birds <input type="range" data-k="n" min="6" max="60" value="30"><output data-o="n"></output></label>
+    <div class="seg" data-seg="nb" role="group" aria-label="Neighbours"><button type="button" class="on" data-v="topo">k nearest</button><button type="button" data-v="metric">Radius 40 px</button></div>
+    <label class="rng">k <input type="range" data-k="k" min="2" max="12" value="7"><output data-o="k"></output></label>
+    <label><input type="checkbox" data-k="prio" checked> Priority-capped</label>
+    <label><input type="checkbox" data-k="wrap" checked> Wrap box just off-screen</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Reynolds ranks the rules (avoid collisions, match velocity, centre on the flock) and allocates acceleration in that order, which beats averaging [V, S220]; untick it to watch averaged rules cancel. Starlings track "a fixed number of 6-7 nearest neighbours" [V, S221, S222]. Birds leaving the box reappear on the far side, the <i>Batman Returns</i> "bat teleportation" [V, S95]. Real wingbeats are 14–27 Hz, too fast to show, so draw 2–4 frames at 8–15 fps [V, S223; I]. Each shadow sits at the bird's ground point and fades with height [I]. Move the pointer over the flock to scare it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG budget-->
+<figure class="fig" data-demo="budget" id="fig-budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The performance budget, worked live</h4><span class="illu">Middle preset and densities illustrative</span></div>
+  <div class="budget">
+    <div>
+      <div class="ctl presets" style="margin-top:0"><span class="mini">Presets:</span><button type="button" class="btn" data-pre="savanna">Savanna (≈ 550)</button><button type="button" class="btn" data-pre="mixed">Middle (1,100)</button><button type="button" class="btn" data-pre="rain">Dense rainforest (≈ 1,770)</button></div>
+      <div class="ctl">
+        <label class="rng"><span>Tree sprites on screen</span><input type="range" data-k="items" min="200" max="5500" step="50" value="1100"><output data-o="items"></output></label>
+        <label class="rng"><span>Undergrowth chunks</span><input type="range" data-k="und" min="0" max="25" value="9"><output data-o="und"></output></label>
+        <label class="rng"><span>Characters and UI calls</span><input type="range" data-k="ui" min="0" max="40" value="8"><output data-o="ui"></output></label>
+        <label class="rng"><span>Baked chunks kept</span><input type="range" data-k="baked" min="0" max="25" value="9"><output data-o="baked"></output></label>
+        <label class="rng"><span>Trees per tile</span><input type="range" data-k="dens" min="5" max="60" value="30"><output data-o="dens"></output></label>
+        <div class="seg" data-seg="atlas" role="group" aria-label="Atlas size"><button type="button" class="on" data-v="1024">Atlas 1024² (4 MB)</button><button type="button" data-v="2048">2048² (16 MB)</button></div>
+        <div class="seg" data-seg="seasons" role="group" aria-label="Seasons"><button type="button" class="on" data-v="lut">Seasons by LUT</button><button type="button" data-v="sheets">4 season sheets</button></div>
+      </div>
+    </div>
+    <div><svg class="chart" viewBox="0 0 400 284" role="img" aria-label="Bars for sprites, draw calls, sort, upload and memory against the study's targets"></svg><div class="verdict" aria-live="polite"></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The arithmetic is the table's: 480×270 internal resolution, 16 px tiles, ≈ 550–1,770 items on screen; a target of fewer than 1,500 tree sprites and 50 draw calls; trunks + canopy + shadows + ~9 undergrowth chunks + particles + birds ≈ 15–30 calls with characters and UI; 128 B of instance data per item in a 16,384-item buffer (2 MB, triple-buffered); 1024² atlas 4 MB, 2048² 16 MB; 256 KB per baked chunk; the Sandbox's 288 sprites ≈ 0.84 MB, or one season's ≈ 52k px plus a ≈ 3 KB LUT [I, note 02; I, note 08; V, S100]. The CPU ceilings are the community Bunnymark figures, ~5k script-moved sprites on a laptop and 2k on an old phone [V, community, S126]. None of this has been measured in Godot yet [I].</figcaption>
+</figure>
+<!--/FIG-->

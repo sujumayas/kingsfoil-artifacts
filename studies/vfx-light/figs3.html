@@ -1,0 +1,138 @@
+<!--FIG kelvin-->
+<figure class="fig" data-demo="kelvin" id="fig-kelvin">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The colour of each light: a Kelvin scale with the study's anchors, and colours that sit off it on purpose</h4><span class="illu">Kelvin-to-RGB curve is an illustrative approximation</span></div>
+  <div class="kstrip" data-strip></div>
+  <div class="kmarks" data-marks></div>
+  <div class="duo">
+    <div><div class="stage click"><canvas width="128" height="72" aria-label="A small night scene lit by one light of the chosen colour; drag the light"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl"><label class="rng">Temperature <input type="range" data-k="k" min="0" max="1000" value="190"><output data-o="k"></output></label><label class="rng">Brightness <input type="range" data-k="b" min="15" max="100" value="62"><output data-o="b"></output></label></div></div>
+    <div><svg class="chart" viewBox="0 0 300 150" role="img" aria-label="Kruithof-style mood grid: temperature against brightness, with the current light marked"></svg>
+      <p class="mini" style="margin:8px 0 2px">Shipped and quoted colours (click to light the scene)</p><div class="vocab" data-vocab></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Anchors from the study: match 1,700 K; candle and sunrise/sunset 1,850 K; incandescent 2,400 K; soft white 2,700 K; warm white 3,000 K; golden hour ~3,500 K; noon 5,500–6,000 K; overcast 6,500 K; blue sky 15,000–27,000 K <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s184">S184</a>, <a class="sref" href="#s185">S185</a></span>. The strip's colours come from a common curve fit and are illustrative; the study's own hex values for candle (#FF8B14), fire and tungsten are marked unverified <span class="cite"><b class="tag tu">U</b> note 04</span>. The chips are shipped colours: Terraria's torch #FFF2CC and its Ice, Cursed, Corrupt, Jungle and Mushroom torches <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s60">S60</a></span>, RimWorld's lamp (214,148,94) <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s68">S68</a></span> and the Kiradex lamp cone #B3853D <span class="cite"><b class="tag tv">V</b> secondary, <a class="sref" href="#s205">S205</a></span>; cyan, violet and green sit off the Kelvin line and signal the unnatural <span class="cite"><b class="tag ti">I</b> note 04</span>. The mood grid is Kruithof's: dim and warm pleasant, dim and cold gloomy <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s196">S196</a></span>, which Fotios 2017 found no empirical support for <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s197">S197</a></span>; use it as an art rule, where dim and cold reads as eerie <span class="cite"><b class="tag ti">I</b></span>. Artists warn against 100% saturation <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s203">S203</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flickerdata-->
+<figure class="fig" data-demo="flickerdata" id="fig-flickerdata">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flicker as data: play a Quake light style at 10 Hz, and DOOM's four light thinkers at 35 Hz</h4><span class="illu">DOOM min/max levels illustrative</span></div>
+  <div class="duo">
+    <div>
+      <div class="qs-list" data-qs role="group" aria-label="Quake style presets"></div>
+      <input class="qs-in" type="text" spellcheck="false" maxlength="64" aria-label="Type your own style string, letters a to z" value="mmnmmommommnonmmonqnmmo">
+      <div class="qs-strip" data-strip aria-hidden="true"></div>
+      <div class="lampwrap" data-lamps></div>
+      <div class="ctl"><label><input type="checkbox" data-k="off" checked> Offset each lamp's phase</label></div>
+      <p class="warn" data-warn></p>
+    </div>
+    <div>
+      <div data-doom></div>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Quake plays each style at 10 Hz: <code>i = (int)(cl.time*10)</code>, <code>value = (map[i % len] − 'a') × 22</code>, so 'a' is 0, 'm' 264 ≈ normal and 'z' 550, about double <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s17">S17</a>, <a class="sref" href="#s18">S18</a></span>. The presets are the study's quoted strings, attributed to John Romero in 1993 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s23">S23</a></span>; they are GPL data, so write your own <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s7">S7</a>; note 07</span>. Type letters into the box to try one. With phases synced, a row of identical lamps pulses as one, the "whole town pulses" risk <span class="cite"><b class="tag ti">I</b></span>. On the right, DOOM's thinkers run at 35 tics a second: fire flicker drops by <code>(rand&amp;3)·16</code> every 4 tics; the broken-light flash is dark for <code>(rand&amp;7)+1</code> tics and bright for <code>(rand&amp;64)+1</code>, so 1 or 65 tics; strobes stay bright 5 tics and dark 15 or 35; glow moves ±8 per tic <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s7">S7</a>, <a class="sref" href="#s8">S8</a></span>. Traces show the raw signal; the lamp swatches on this page never swing by more than 10% more than three times a second, the WCAG flash limit the study cites <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s200">S200</a></span>, so fast strobes are shown slowed.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flicker-->
+<figure class="fig" data-demo="flicker" id="fig-flicker">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The flicker personality lab: fire wavers, a lone candle barely moves, magic breathes, electric light dies</h4><span class="illu">Bundle waveform and Brogue ranges illustrative</span></div>
+  <div class="persona" data-p role="group" aria-label="Flicker personalities (pick up to three)"></div>
+  <div class="duo wide-r">
+    <div><div class="stage"><canvas width="120" height="68" aria-label="A small scene lit by the first selected personality"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl col"><label><input type="checkbox" data-k="breath" checked> Fire radius breathes ×(0.94 + 0.06·I)</label><label><input type="checkbox" data-k="step"> Quantise to 5 bands, step at 10 Hz</label><label><input type="checkbox" data-k="calm"> Reduce flicker (accessibility option)</label></div></div>
+    <div><canvas class="trace" width="420" height="140" aria-label="Brightness traces of the selected personalities over the last four seconds" style="width:100%;height:auto;background:#0b0a0f;border:1px solid var(--line);border-radius:4px;image-rendering:auto"></canvas>
+      <div class="legend-mini" data-leg></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Real flames oscillate at 10–12 Hz only in bundles of three or more; one or two candles burn steady and non-periodic <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s192">S192</a></span>, so the lone candle here is the Sandbox's slow drift with rare draught dips, and the bundle is an illustrative 10.8 Hz shimmer. Recipes from the study's notes: torch <code>1 − 0.18·|noise(6t)| − 0.07·noise(11t)</code>, magic <code>0.85 + 0.15·sin(2π·0.5t + phase)</code>, electric <code>rand &lt; 0.03 per frame → 0.1</code> <span class="cite"><b class="tag ti">I</b> notes 03 and 04</span>; the Sandbox's fire, campfire, lantern, lamp, magic, rune, mushroom and firefly models are its own code <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Brogue re-rolls each light's radius and colour every turn <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s83">S83</a></span>, stepped here at 7 Hz because turn-based jitter at 60 fps strobes <span class="cite"><b class="tag ti">I</b> note 07</span>. Fast noise reads as fire, slow sine as magic, dropouts as dread <span class="cite"><b class="tag ti">I</b></span>. The readout counts swings above 10%: anything over three a second fails WCAG over a big area <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s200">S200</a></span>, which is why the study wants a "reduce flicker" option <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG mixing-->
+<figure class="fig" data-demo="mixing" id="fig-mixing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">When lights overlap: add and clamp, max, add-then-normalise, or let the brighter one win the hue</h4><span class="illu">Light colours and positions illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="96" aria-label="Three overlapping coloured lights; drag them, hover to read the mix"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="m" role="group" aria-label="Mixing method"><button type="button" data-v="add">Add + clamp</button><button type="button" data-v="max">Max</button><button type="button" class="on" data-v="norm">HDR add, rescale</button><button type="button" data-v="lum">Luminance-weighted</button></div>
+        <label><input type="checkbox" data-k="dark"> Add a Brogue darkness light {−20,−20,−20}</label>
+        <label><input type="checkbox" data-k="jit"> Brogue jitter: re-roll radius and colour (7 Hz)</label>
+      </div>
+      <div class="readout" data-ro aria-live="polite">Hover where lights overlap.</div></div>
+  </div>
+  <figcaption>Milazzo lists the options: add and saturate ("decent"); blend; or <b>add in high range, then rescale by the largest channel</b>, so yellow + red = (510,255,0) → (255,127,0), orange, "the best option in general" <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s132">S132</a></span>. Tibia and Minecraft use max, which never blows out but never mixes <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s27">S27</a>, <a class="sref" href="#s50">S50</a></span>. Cataclysm: DDA weights colour by luminance, so the brighter source wins the hue <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s84">S84</a></span>. Brogue's lights can be negative and eat light, and each light re-rolls its radius and colour from its own ranges, e.g. a torch {75,38,15, 0,15,7} <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s83">S83</a></span> (AGPL: study only).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG nature-->
+<figure class="fig" data-demo="nature" id="fig-nature">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Nature under light: canopy shade with sunflecks, a pond that answers every lamp, fireflies and glowing mushrooms</h4></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="Pond corner of the Sandbox village; move the pointer to carry a lantern"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="h" role="group" aria-label="Time"><button type="button" data-v="12">Noon</button><button type="button" data-v="17.85">Low sun</button><button type="button" class="on" data-v="22.5">Night</button></div>
+        <label><input type="checkbox" data-k="refl" checked> Water reflections</label>
+        <label><input type="checkbox" data-k="fleck" checked> Sunflecks (~8% of crown pixels let the sun through)</label>
+        <label><input type="checkbox" data-k="lan" checked> Carry a lantern under the pointer</label>
+      </div><div class="readout" data-ro aria-live="polite"></div></div>
+  </div>
+  <figcaption>In the Sandbox, crown pixels cast sun shadow except about 8% (<code>hash &lt; .08</code>), which become flecks; crowns receive point light at 45% <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Each light with R ≥ 12 near the pond draws a 5-px column of glints, kept where <code>sin(1.3y + 5t + 2.1x) + sin(0.7y − 3.3t) ≥ 0.9</code>; the low sun (0–10°) and the moon draw one too <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Fireflies blink as <code>max(0, sin 1.7t)⁶</code> and mushrooms breathe; neither casts shadows <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Move the pointer along the shore. Keep glow life near water and grass, or it reads as noise <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG buildings-->
+<figure class="fig" data-demo="buildings" id="fig-buildings">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Buildings: tall walls with holes, sun patches by day, hearth spill by night, and a roof that lifts</h4></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="House A of the Sandbox village; click to walk the character in or out"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <label class="rng"><span>Hour</span><input type="range" data-k="h" min="0" max="23.9" step="0.1" value="15.5"><output data-o="h"></output></label>
+        <div class="seg" data-seg="roof" role="group" aria-label="Roof"><button type="button" data-v="auto">Roof: auto</button><button type="button" data-v="on">On</button><button type="button" class="on" data-v="off">Cut away</button></div>
+        <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="final">Final</button><button type="button" data-v="mask">Sun mask</button><button type="button" data-v="occ">Occluders</button><button type="button" data-v="light">Light map</button></div>
+        <label><input type="checkbox" data-k="gaps" checked> Door and window gaps in the walls</label>
+        <div class="tools"><button type="button" class="btn" data-b="in">Walk inside</button><button type="button" class="btn ghost" data-b="out">Walk outside</button></div>
+      </div><div class="readout" data-ro aria-live="polite"></div></div>
+  </div>
+  <figcaption>The Sandbox's houses are occluders 30 and 34 px tall with gaps for the door and windows. Inside, pixels get 28% of the sky ambient plus sun patches, found by marching up to 40 px toward the sun (walls of 20 or more block); the fireplace and candle are shadowed point lights that shine out through the same gaps; two pre-built versions of the world swap when the player is inside house A <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Roofs take only 20% of point light, so interior light does not leak through them <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>, and lit windows skip lighting altogether, as Pokémon Crystal's window yellow stays bright <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s205">S205</a></span>. Untick the gaps to get the anti-pattern: a black box <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Try the hour at about 15 with the roof cut away, then at 21.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG banding-->
+<figure class="fig" data-demo="banding" id="fig-banding">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pixel light falls off in steps: bands, Bayer dither, hue-shifted ramps, and the colormap's grey problem</h4><span class="illu">Ground and ramps illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="96" aria-label="One light pool on cobbles and grass in the chosen style; drag the light"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl col" style="margin-top:0">
+        <div class="seg" data-seg="m" role="group" aria-label="Style"><button type="button" data-v="smooth">Smooth</button><button type="button" data-v="band">Bands</button><button type="button" class="on" data-v="bayer">Bands + Bayer</button><button type="button" data-v="gooch">Hue-shift ramp</button><button type="button" data-v="cmap">DOOM colormap</button><button type="button" data-v="rings">Glow rings</button></div>
+        <div class="seg" data-seg="f" role="group" aria-label="Falloff"><button type="button" data-v="lin">Linear</button><button type="button" class="on" data-v="smooth">t²(3−2t)</button><button type="button" data-v="quad">Quadratic</button><button type="button" data-v="geo">0.8ⁿ</button></div>
+        <label class="rng"><span>Bands N</span><input type="range" data-k="n" min="2" max="8" value="6"><output data-o="n"></output></label>
+        <label><input type="checkbox" data-k="mult"> Multiplicative steps (×0.6 per band)</label>
+        <div class="seg" data-seg="c" role="group" aria-label="Light colour"><button type="button" class="on" data-v="#ff8c3a">Torch</button><button type="button" data-v="#7ae6ff">Magic cyan</button></div>
+      </div>
+      <svg class="chart" viewBox="0 0 260 90" role="img" aria-label="Falloff profile: smooth curve and the stepped version"></svg></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Dank Tomb on PICO-8 uses 6 light levels, "kind of a sweet spot" <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s222">S222</a></span>; the study's banded formula is <code>floor(smooth·N + bayer4(px)/16)/N</code> with N = 4–6 <span class="cite"><b class="tag ti">I</b></span>, which the Sandbox runs with N = 6 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Falloff curves: linear, smooth <code>t²(3 − 2t)</code>, quadratic, or Minecraft's geometric 0.8ⁿ <span class="cite"><b class="tag ti">I</b> note 03; <b class="tag tv">V</b> <a class="sref" href="#s51">S51</a></span>; brightness perception is compressive, hence the ×0.6 option <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s194">S194</a>, <a class="sref" href="#s195">S195</a>; <b class="tag ti">I</b> note 04</span>. The hue-shift ramp is Gooch's warm/cool blend with b = y = 0.4, α = 0.2, β = 0.6 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s176">S176</a></span>, quantised to palette steps: shadow turns blue and lit turns warm. The DOOM colormap mode is the Sandbox's: 16 levels per colour, cool shift below 0.7, looked up by luminance only, so switch to magic cyan and the light turns grey <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s6">S6</a></span>. Glow rings are 2–3 dithered rings of brighter palette colours instead of a transparent blur <span class="cite"><b class="tag ti">I</b> note 06</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG normals-->
+<figure class="fig" data-demo="normals" id="fig-normals">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Normal-mapped sprites, and the demoscene's 2D bump trick</h4><span class="illu">Sprites and height maps generated, illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage click"><canvas width="96" height="60" aria-label="Pixel props lit through a generated normal map; move the pointer to move the torch"></canvas><div class="hud" data-hud></div><span class="tagl">Normal map</span></div>
+      <div class="ctl"><div class="seg" data-seg="v" role="group" aria-label="View"><button type="button" class="on" data-v="lit">Lit</button><button type="button" data-v="nrm">Normal map</button><button type="button" data-v="flat">No normals</button></div><label><input type="checkbox" data-k="q" checked> Quantise normals (17 directions)</label><label class="rng">Light height <input type="range" data-k="lh" min="4" max="60" value="18"></label></div></div>
+    <div><div class="stage click"><canvas width="96" height="60" aria-label="Bricks lit by a 2D bump lookup; move the pointer to move the light"></canvas><div class="hud" data-hud="r"></div><span class="tagl">2D bump: lightmap[128+dx][128+dy]</span></div>
+      <div class="ctl"><label class="rng">Bump depth <input type="range" data-k="bd" min="0" max="6" step="0.5" value="3"></label></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left: each pixel stores which way it faces, and a torch lights the side facing it. Shipped games draw these by hand: Graveyard Keeper paints light from four sides and merges them, Dead Cells and Animal Well paint normals manually <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s109">S109</a>, <a class="sref" href="#s110">S110</a>, <a class="sref" href="#s119">S119</a></span>; 3D generators give "incorrect results on pixel art" and DynaPix found 16–20 colours enough for a normal map <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s179">S179</a>, <a class="sref" href="#s180">S180</a></span>, hence the quantise option. Smooth normals look plastic, and top-down ground faces up, so only walls, props and characters gain <span class="cite"><b class="tag ti">I</b> note 04</span>. Right: treat brightness as height, take <code>dx = h(i,j) − h(i−1,j)</code> and <code>dy = h(i,j) − h(i,j−1)</code>, and read <code>lightmap[128+dx][128+dy]</code> from a 256×256 radial map offset by the light's position <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s218">S218</a>, <a class="sref" href="#s219">S219</a></span>: 2–3 fetches per pixel per light <span class="cite"><b class="tag ti">I</b> note 08</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rc-->
+<figure class="fig" data-demo="rc" id="fig-rc">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Radiance cascades, conceptually: few rays near each pixel, more rays far away</h4><span class="illu">Conceptual: probe counts and the right panel are illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="Probe grid of one cascade over a scene with two lights; hover to show a probe's rays, drag the orange light"></canvas><div class="hud" data-hud></div><span class="tagl">Probes; hover for one probe's rays</span></div>
+      <div class="ctl"><div class="seg" data-seg="c" role="group" aria-label="Cascade"><button type="button" data-v="0">Cascade 0</button><button type="button" class="on" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button></div></div></div>
+    <div><div class="stage"><canvas width="40" height="22" aria-label="Brute-force reference: 64 rays per pixel at quarter resolution"></canvas><span class="tagl">Brute-force reference, ¼ res</span></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Light bounces and tints nearby walls. The penumbra idea behind radiance cascades: distant light needs more angular and less spatial resolution <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s166">S166</a></span>. In this sketch each cascade has a quarter as many probes as the last and four times as many rays, each covering a longer interval (an illustrative layout); the study cites cascades from 256 rays at 1/16 resolution down to 4 or 16 base rays at full resolution, against a naive 1024² × 512 rays ≈ 500 million per frame, "roughly 100x" too slow <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s166">S166</a></span>. Here each cascade costs about the same number of rays, which is the point. The right panel is not radiance cascades: it is a brute-force reference, 64 rays per pixel at quarter resolution, showing the soft, coloured result RC approximates. Ringing is "still an active area of research", and the Godot port needs compute, which web Compatibility lacks <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s166">S166</a>, <a class="sref" href="#s168">S168</a></span>.</figcaption>
+</figure>
+<!--/FIG-->

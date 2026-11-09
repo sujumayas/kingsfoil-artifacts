@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""Site validator — what CI runs on every push and pull request.
+
+  python tools/validate.py              all checks
+  python tools/validate.py --no-browser skip the Playwright pass (fast, ~2 s)
+  python tools/validate.py --rebuild    also rebuild every recipe study and fail if output changed
+
+Checks
+  1. catalog.json / taxonomy.json valid, index.html + manifest.json up to date   (tools/build_index.py --check)
+  2. every study folder matches the catalog (ids, pages, reports, sandboxes)
+  3. manifest.json lists exactly the files in site/
+  4. every local link and image in every page resolves
+  5. no external images (img/video/audio/source/CSS url) — pages must be self-contained
+  6. page-weight budget (study.yaml qa.max_page_kb; sandboxes 600 KB; others 300 KB)
+  7. browser: no console/page errors, no horizontal overflow at 390 px          (studykit.qa)
+  8. --rebuild: recipes reproduce the committed pages byte-for-byte
+"""
+import sys, re, json, hashlib, subprocess, pathlib
+from html.parser import HTMLParser
+from urllib.parse import urlsplit, unquote
+
+REPO = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO))
+import studykit
+from studykit import SITE
+
+args = set(sys.argv[1:])
+fails, warns = [], []
+def fail(m): fails.append(m)
+def warn(m): warns.append(m)
+def step(n): print(f"\n── {n}")
+
+# 1 ────────────────────────────────────────────
+step("1 catalog, taxonomy, index freshness")
+r = subprocess.run([sys.executable, str(REPO / "tools/build_index.py"), "--check"], capture_output=True, text=True)
+print(r.stdout.strip() or r.stderr.strip())
+if r.returncode: fail("build_index --check failed:\n" + r.stdout + r.stderr)
+
+# 2 ────────────────────────────────────────────
+step("2 studies ↔ catalog")
+cat = studykit.catalog(); items = {i["id"]: i for i in cat["items"]}
+studies = studykit.all_studies(); sids = {s.id for s in studies}
+for s in studies:
+    if s.id not in items: fail(f"studies/{s.dir.name}: id '{s.id}' not in catalog.json"); continue
+    if s.dir.name != s.id: fail(f"studies/{s.dir.name}: folder name must equal id '{s.id}'")
+    if "/" + s.out_name != items[s.id]["path"]: fail(f"{s.id}: study.yaml page '{s.out_name}' ≠ catalog path '{items[s.id]['path']}'")
+    if not s.out_path.exists(): fail(f"{s.id}: site/{s.out_name} missing")
+    if s.kind == "recipe":
+        for need in [s.dir / "build.py", s.report_path]:
+            if not need.exists(): fail(f"{s.id}: missing {need.relative_to(REPO)}")
+        if s.sandbox_name:
+            pair = items[s.id].get("pair")
+            if not pair or items[pair]["path"] != "/" + s.sandbox_name:
+                fail(f"{s.id}: sandbox '{s.sandbox_name}' not paired in catalog")
+            if not s.sandbox_src or not s.sandbox_src.exists(): fail(f"{s.id}: sandbox source missing")
+            elif not (SITE / s.sandbox_name).exists(): fail(f"{s.id}: site/{s.sandbox_name} missing — run `python -m studykit build {s.id}`")
+            elif s.sandbox_src.read_bytes() != (SITE / s.sandbox_name).read_bytes():
+                fail(f"{s.id}: site/{s.sandbox_name} differs from {s.sandbox_src.relative_to(REPO)} — edit the source, then `python -m studykit build {s.id}`")
+for i in cat["items"]:
+    if i["type"] == "study" and i["id"] not in sids: fail(f"catalog study '{i['id']}' has no studies/{i['id']}/study.yaml")
+print(f"{len(studies)} studies checked")
+
+# 3 ────────────────────────────────────────────
+step("3 manifest ↔ files")
+man = {e["path"] for e in json.loads((SITE / "manifest.json").read_text())}
+files = {"/" + str(p.relative_to(SITE)) for p in SITE.rglob("*") if p.is_file() and not any(x.startswith(".") for x in p.relative_to(SITE).parts)}
+for p in sorted(files - man - {"/_headers", "/_redirects"}): fail(f"file not in manifest.json: {p}")
+for p in sorted(man - files): fail(f"manifest.json lists missing file: {p}")
+print(f"{len(files)} files, {len(man)} manifest entries")
+
+# 4–6 ──────────────────────────────────────────
+step("4–6 links, external images, page weight")
+class Refs(HTMLParser):
+    def __init__(s): super().__init__(); s.refs = []; s.ext_media = []; s.ids = set()
+    def handle_starttag(s, tag, attrs):
+        a = dict(attrs)
+        if "id" in a: s.ids.add(a["id"])
+        for k in ("href", "src", "poster"):
+            v = a.get(k)
+            if not v: continue
+            if tag in ("img", "video", "audio", "source") or k == "poster":
+                if re.match(r"(https?:)?//", v): s.ext_media.append(v)
+            if tag == "link" and a.get("rel") in ("preconnect", "dns-prefetch"): continue
+            s.refs.append((tag, v))
+budget_for = {s.out_name: s.cfg.get("qa", {}).get("max_page_kb", 900) for s in studies}
+pages = sorted(p for p in SITE.glob("*.html"))
+for p in pages:
+    txt = p.read_text(); rp = Refs(); rp.feed(txt)
+    for tag, v in rp.refs:
+        u = urlsplit(v)
+        if u.scheme in ("http", "https", "mailto", "data", "javascript") or v.startswith("//"): continue
+        if not u.path:
+            if u.fragment and u.fragment not in rp.ids and tag == "a": warn(f"{p.name}: anchor #{u.fragment} not found")
+            continue
+        target = (SITE / unquote(u.path).lstrip("/")) if u.path.startswith("/") else (p.parent / unquote(u.path))
+        if target.is_dir(): target = target / "index.html"
+        if u.path.startswith("/.netlify/"):
+            fail(f"{p.name}: contains a Netlify-injected tag ({v}) — this page was saved from the live site; remove it"); continue
+        if not target.exists(): fail(f"{p.name}: broken local link {v}")
+    for v in rp.ext_media: fail(f"{p.name}: external media {v}")
+    for m in re.finditer(r"url\(\s*['\"]?(https?:[^'\")]+)", txt): fail(f"{p.name}: external CSS url {m.group(1)[:80]}")
+    kb = p.stat().st_size / 1024
+    budget = budget_for.get(p.name, 600 if "sandbox" in p.name else 300)
+    if kb > budget: fail(f"{p.name}: {kb:.0f} KB exceeds budget {budget} KB")
+    elif kb > budget * 0.85: warn(f"{p.name}: {kb:.0f} KB is within 15% of its {budget} KB budget")
+print(f"{len(pages)} pages scanned")
+
+# 8 (before the browser pass, so the browser sees rebuilt pages) ──
+if "--rebuild" in args:
+    step("8 reproducible builds")
+    recipes = [s for s in studies if s.kind == "recipe"]
+    outs = [s.out_path for s in recipes] + [SITE / s.sandbox_name for s in recipes if s.sandbox_name]
+    before = {o: hashlib.sha256(o.read_bytes()).hexdigest() for o in outs if o.exists()}
+    r = subprocess.run([sys.executable, "-m", "studykit", "build", "--all"], cwd=REPO, capture_output=True, text=True)
+    if r.returncode: fail("studykit build failed:\n" + r.stderr[-2000:])
+    for o in outs:
+        if before.get(o) != hashlib.sha256(o.read_bytes()).hexdigest():
+            fail(f"site/{o.name} is not reproducible from its source (rebuilt output differs) — run `python -m studykit build` and commit")
+    print(f"{len(outs)} outputs rebuilt")
+
+# 7 ────────────────────────────────────────────
+if "--no-browser" not in args:
+    step("7 browser (390 px phone): console errors, overflow")
+    from studykit.qa import browse
+    res = browse([p.name for p in pages])
+    for page, issues in res.items():
+        print(("  ✔ " if not issues else "  ✘ ") + page)
+        for i in dict.fromkeys(issues): fail(f"{page}: {i}")
+
+print("\n" + "═" * 60)
+for w in warns: print("WARN ", w)
+for f in fails: print("FAIL ", f)
+print(f"{'PASS' if not fails else 'FAIL'} — {len(fails)} failures, {len(warns)} warnings")
+sys.exit(1 if fails else 0)

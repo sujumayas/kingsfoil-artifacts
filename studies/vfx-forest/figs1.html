@@ -1,0 +1,66 @@
+<!--FIG doom-->
+<figure class="fig" data-demo="doom" id="fig-doom">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The DOOM fire next to a forest analogue: one byte, one local rule, one palette</h4><span class="illu">Illustrative rates and winter row</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="DOOM PSX fire cellular automaton"></canvas><span class="tagl">DOOM PSX fire</span></div>
+      <p class="pl"><code>fire[to] = fire[from] − (rand &amp; 1)</code>, with a random sideways step. Values 0–36 index a black → red → yellow → white ramp.</p></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Forest analogue: a canopy depth byte per pixel, relaxed one pass per step and drawn through a seasonal palette row; drag to cut gaps"></canvas><span class="tagl">Forest: canopy depth byte</span><div class="hud" data-hud></div></div>
+      <p class="pl">Each leaf cell stores its <b>depth into the canopy</b>: <code>D = min(D of 4 neighbours) + 1</code>, capped at 4, one pass per step, so depth spreads inward the way the fire spreads up. A cell shows ramp entry <code>2 + shadow − lit</code> from its season's palette row. <b>Drag</b> to cut gaps.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="fire">Switch the fire off</button>
+    <button type="button" class="btn" data-b="fell">Thin the canopy</button>
+    <div class="seg" data-seg="season" role="group" aria-label="Season row"><button type="button" data-v="0">Spring</button><button type="button" class="on" data-v="1">Summer</button><button type="button" data-v="2">Autumn</button><button type="button" data-v="3">Winter</button></div>
+    <label><input type="checkbox" data-k="cyc"> Cycle two rim colours (Ferrari)</label>
+  </div>
+  <figcaption>Both panels keep <b>one number per cell, one local rule, one palette</b>, the series' reference idea from the DOOM PSX fire [V, S1]. On the right, a gap opened by dragging is filled back in by a neighbour rule (a gap with three or more leafy neighbours turns leafy), and the depth byte re-relaxes around it in a few frames, so the shading heals by itself. The season buttons swap only the palette row (C1), and the rim option rotates two reserved colours along leaf edges (D3). The spring, summer and autumn rows are the Sandbox's oak palettes [I, Sandbox]; the winter row and all rates are illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of forest techniques, 1889 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1990 and zoomed for 2023–2026 so that Gen 3 is readable. Items without a single year ("Gen II", "undated", "upcoming") appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG layers-->
+<figure class="fig" data-demo="layers" id="fig-layers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Three ways to walk behind a tree: a ceiling layer, a canopy sheet, and Tibia's diagonals</h4><span class="illu">16 px tiles, illustrative scene</span></div>
+  <div class="tri">
+    <div><div class="stage"><canvas width="96" height="80" aria-label="A1: tree tops on a ceiling layer always drawn over the walker; optional colour-0 leaf gaps"></canvas><span class="tagl">A1 two layers</span></div></div>
+    <div><div class="stage"><canvas width="96" height="80" aria-label="A2: a y-sorted grove under a full-screen canopy or fog overlay at 32 opacity levels"></canvas><span class="tagl">A2 overlay</span></div></div>
+    <div><div class="stage"><canvas width="96" height="80" aria-label="A3: Tibia draws each 2x2-tile tree up and to the left of its tile and paints tiles diagonal by diagonal"></canvas><svg class="ovl" viewBox="0 0 96 80" aria-hidden="true"></svg><span class="tagl">A3 Tibia order</span></div></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="tint"> A1: tint floor (teal) and ceiling (gold) layers</label>
+    <label><input type="checkbox" data-k="holes" checked> A1: colour-0 leaf gaps</label>
+    <div class="seg" data-seg="ov" role="group" aria-label="A2 overlay"><button type="button" class="on" data-v="canopy">Canopy 0x9E</button><button type="button" data-v="fog">Fog 0x9D</button><button type="button" data-v="none">None</button></div>
+    <label class="rng">A2 opacity <input type="range" data-k="ova" min="0" max="100" value="45"></label>
+    <label><input type="checkbox" data-k="diag" checked> A3: show the diagonal draw order</label>
+  </div>
+  <figcaption><b>A1</b> cuts every tree at a tile row: the trunk row goes on the floor layer, the rows above on a ceiling layer that always draws over the player, as GBA metatiles do with BG priority [V, S6]. With colour-0 gaps on, some dark leaf pixels are transparent, as GBC colour 0 never covers sprites [V, S17]. <b>A2</b> keeps normal sorting and lays one semi-transparent sheet over the screen; SNES colour math works at 32 levels [V, S12], so the slider snaps to 1/31 steps. Its real parallax and blend mode are unconfirmed [U]. <b>A3</b> draws each 2×2-tile tree up and to the left of its own tile and paints the map diagonal by diagonal from the top left [V, S13, S14]; the numbers show the order, the box the walker's tile. Whatever sits on a later diagonal covers it, with no fade at all.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG treebuild-->
+<figure class="fig" data-demo="treebuild" id="fig-treebuild">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Building a pixel tree in five steps</h4><span class="illu">Constants k1, k2 illustrative</span></div>
+  <div class="steps" role="group" aria-label="Construction step"><button type="button" class="on"><b>1</b>Silhouette</button><button type="button"><b>2</b>Clusters</button><button type="button"><b>3</b>Ramp</button><button type="button"><b>4</b>Outlines</button><button type="button"><b>5</b>Trunk and bark</button></div>
+  <div class="duo">
+    <div class="stage"><canvas width="64" height="64" aria-label="A pixel tree under construction; click to add a leaf bundle" style="cursor:copy"></canvas><div class="hud" data-hud></div></div>
+    <div><div class="stepnote" aria-live="polite"></div>
+      <div class="ctl col">
+        <div class="seg" data-seg="shape" role="group" aria-label="Silhouette"><button type="button" data-v="cone">Conical</button><button type="button" class="on" data-v="sphere">Spherical</button><button type="button" data-v="flame">Flame</button></div>
+        <label class="rng">Bundles <input type="range" data-k="n" min="5" max="9" value="7"><output data-o="n"></output></label>
+        <label class="rng">Colours <input type="range" data-k="steps" min="4" max="5" value="5"></label>
+        <label class="rng">Light angle <input type="range" data-k="light" min="180" max="300" value="233"></label>
+        <label class="rng">Outline threshold <input type="range" data-k="thr" min="0" max="12" value="3"></label>
+        <div class="seg" data-seg="sp" role="group" aria-label="Bark and leaf ramp"><button type="button" class="on" data-v="0">Oak</button><button type="button" data-v="1">Birch</button><button type="button" data-v="2">Pine</button></div>
+        <button type="button" class="btn ghost" data-b="clear">Remove added bundles</button>
+      </div></div>
+  </div>
+  <figcaption>The stepper follows the A4 recipe: Slynyrd's 2×2 leaf units in ball-shaped bundles, "4 or 5 colors per bundle" and one consistent light [V, S181]; shading by depth into the canopy as Reeves &amp; Blau did for particle trees [V, S206], written as a palette index [I]; outlines only where depth jumps, as in Deussen &amp; Strothotte [V, S210]; and a species silhouette function from Weber &amp; Penn [V, S207]. Keep the light on the same side for every asset, or the world breaks [I].</figcaption>
+</figure>
+<!--/FIG-->
