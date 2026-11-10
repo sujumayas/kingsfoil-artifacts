@@ -95,6 +95,12 @@ The recipe and the validator enforce the mechanics. These are the content rules:
 - Animations use `requestAnimationFrame` and pause offscreen (IntersectionObserver).
 - The sandbox, when the study has one, is a playable version of the report's recommended architecture.
 
+- **Parallel builders need a shared contract.** Before the report is written, put the sandbox spec in
+  `notes/SANDBOX-SPEC.md` (including the §7 layer list, so §7, §8 and the sandbox agree). Once the report exists, put
+  the fixed figure names and their file owners in `notes/FIGURES-PLAN.md`. Then the report writer, the sandbox
+  builder and two figure builders can run at the same time. Give one of the figure builders sole ownership of
+  `build.py` and `core.js`. `vfx-fire` was built this way.
+
 After `studykit qa <id> --shots`, look at the screenshots yourself: the top of the page and two or three figures.
 
 ## 6. Quality checklist

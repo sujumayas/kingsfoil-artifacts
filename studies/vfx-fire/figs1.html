@@ -1,0 +1,181 @@
+<!--FIG doomfire-->
+<figure class="fig" data-demo="doomfire" id="fig-doomfire">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The DOOM PSX fire: one byte per pixel, one rule, 37 colours</h4></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="160" height="120" aria-label="The DOOM PSX fire running on a 160 by 120 heat buffer; drag across it to blow the flames sideways"></canvas><div class="hud" data-hud></div></div></div>
+    <div>
+      <pre class="code" data-lang="per pixel"><code>p = fire[src]
+if p == 0: fire[src - W] = 0
+else:
+    r   = round(random() * 3)   <span class="cm"># 0..3</span>
+    dst = src - r + 1 + wind    <span class="cm"># +1..-2</span>
+    fire[dst - W] = p - (r &amp; 1) <span class="cm"># -0 or -1</span></code></pre>
+      <div class="readout" data-ro aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Decay chance <input type="range" data-k="pd" min="10" max="90" value="50"><output data-o="pd"></output></label>
+    <label class="rng">Wind (px per row) <input type="range" data-k="wind" min="-20" max="20" value="0"><output data-o="wind"></output></label>
+    <button type="button" class="btn" data-b="ext">Extinguish (bottom row to 0)</button>
+    <button type="button" class="btn ghost" data-b="canon">Canonical values</button>
+  </div>
+  <div class="cmap-box"><canvas width="37" height="1" aria-label="The 37-entry DOOM fire palette, heat 0 on the left to 36 on the right; entries in use this frame are marked" data-pal></canvas></div>
+  <p class="mini" style="margin:4px 0 0">The 37-entry palette, heat 0 (left) to 36 (right). The bar under it shows how many pixels use each entry this frame.</p>
+  <div class="stage" style="margin-top:4px;background:#0c0807"><canvas width="370" height="28" data-hist aria-label="Histogram of heat values in the buffer"></canvas></div>
+  <figcaption>Heat runs 0 to 36 and the bottom row is fixed at 36. Each pixel copies the one below into a column shifted by +1 to −2, minus <code>rand &amp; 1</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s1">S1</a></span>. Because <code>round(random()*3)</code> is not uniform, decay happens half the time, flames reach about 72 rows and the fire leans left by about 0.5 px per row. That lean is the built-in wind <span class="cite"><b class="tag ti">I</b></span>. Raise the decay chance and the flames shrink, lower it and they fill the buffer. Drag across the fire to push it, or extinguish it and watch the flames die from the bottom up. The readout measures the mean flame height live.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ancestors-->
+<figure class="fig" data-demo="ancestors" id="fig-ancestors">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The DOOM fire's ancestors on the same seed: Elias, Lode and Parusel</h4><span class="illu">Buffer sizes and palette illustrative</span></div>
+  <div class="tri">
+    <div><div class="stage click"><canvas width="96" height="72" aria-label="Hugo Elias fire with a scrolling cooling map; drag to paint a shape into the cooling map"></canvas><span class="tagl">Elias cooling map</span></div>
+      <p class="pl"><code>p = avg4 − cool(x, y + off)</code>. <b>Drag</b> to paint a shape into the map.</p></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Lode Vandevenne fire kernel"></canvas><span class="tagl">Lode kernel</span></div>
+      <p class="pl"><code>(f[y+1][x−1] + f[y+1][x] + f[y+1][x+1] + f[y+2][x]) × 32 / 129</code></p></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Adam Parusel fire, average of four neighbours minus one"></canvas><span class="tagl">Parusel avg − 1</span></div>
+      <p class="pl"><code>(left + right + up + down) / 4 − 1</code>, checking 0 first.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Lode divisor <input type="range" data-k="div" min="400" max="500" value="403"><output data-o="div"></output></label>
+    <label><input type="checkbox" data-k="map"> Show Elias's cooling map</label>
+    <button type="button" class="btn ghost" data-b="clear">Clear painted shapes</button>
+    <button type="button" class="btn ghost" data-b="seed">New seed</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>All three average neighbours, which is why they look soft next to the DOOM fire. Elias keeps a hidden map of how fast each spot cools, made by sprinkling points and smoothing about 20 times, and scrolls it up with the flames, so dark spots become tall tongues and shapes drawn into the map appear "created in flame" <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s8">S8</a></span>. Lode's divisor must be slightly larger than 4: exactly 4 rises forever and 5 dies far too fast <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s9">S9</a></span>. Parusel seeds the bottom two rows with 100 to 150 plus random 3×3 hotspots of 255 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s10">S10</a></span>. Parusel's flames lose only 1 per row, so they are taller than this 72-row buffer. All three share one palette built from the study's six-step ramp, so only the rule differs.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG agetable-->
+<figure class="fig" data-demo="agetable" id="fig-agetable">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Cheaper still: an age table that reads no neighbours, and fire from random samples</h4><span class="illu">Tables and colours illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="40" height="24" aria-label="Apple II style age-table fire, 40 cells wide"></canvas><span class="tagl">Age table, 40 wide</span><div class="hud" data-hud="a"></div></div>
+      <p class="pl">Scroll up, set the bottom row white, then each cell with 50% chance becomes <code>table[c &amp; 7]</code>. Even entries go to black, so cells drop out and tongues form.</p></div>
+    <div><div class="stage"><canvas width="64" height="64" aria-label="PICO-8 style Monte Carlo fire, random pixels updated each frame"></canvas><span class="tagl">Monte Carlo, 64×64</span><div class="hud" data-hud="b"></div></div>
+      <p class="pl">Pick a random pixel, read <code>c = pget(x, y + rnd(2))</code>, <code>if rnd(50) &lt; c then c = t[c]</code>, draw a radius-1 circle. No full-screen pass.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Age step chance <input type="range" data-k="pc" min="10" max="90" value="50"><output data-o="pc"></output></label>
+    <label class="rng">Samples per frame <input type="range" data-k="n" min="100" max="3000" step="50" value="900"><output data-o="n"></output></label>
+    <label class="rng">Fires on screen <input type="range" data-k="fires" min="1" max="6" value="2"><output data-o="fires"></output></label>
+    <label><input type="checkbox" data-k="fixed" checked> Fixed cost (share the samples)</label>
+  </div>
+  <div class="legend-mini" data-tab></div>
+  <figcaption>Left, qkumba's 64-byte Apple II fire on a 40×48 screen, of which the bottom 24 rows are shown: 1 random step and 1 table lookup per cell, no neighbour reads <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s12">S12</a></span>. The table row under the pictures is the one used here. Right, kometbomb's 116-character PICO-8 fire with the PICO-8 colour numbers <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s13">S13</a></span>. With a fixed cost the number of updated pixels stays the same however many fires are on screen, so each fire gets fewer samples and flickers more <span class="cite"><b class="tag ti">I</b></span>. Untick it and the cost grows with the fires instead.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of fire techniques, 1972 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1990 and zoomed for 2023 to 2026 so Gen 3 stays readable. Undated items, such as Hugo Elias's VGA fire, appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flameloop-->
+<figure class="fig" data-demo="flameloop" id="fig-flameloop">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A drawn flame loop: 4 tones, 4 frames, a still base and a tip that breaks away</h4></div>
+  <div class="duo wide-r">
+    <div>
+      <div class="stage" style="max-width:220px"><canvas width="20" height="20" aria-label="One torch flame, 4-frame loop, enlarged"></canvas><div class="hud" data-hud></div></div>
+      <div class="stage" style="margin-top:6px;max-width:220px"><canvas width="44" height="16" aria-label="The 4 frames of the loop side by side; the current one is underlined" data-strip></canvas></div>
+    </div>
+    <div>
+      <div class="stage"><canvas width="160" height="40" aria-label="A row of 8 torches on posts" data-row></canvas><span class="tagl" data-rowlab>Phase from tile</span></div>
+      <div class="readout" data-ro aria-live="polite"></div>
+      <div class="ctl">
+        <label class="rng">Frame rate <input type="range" data-k="fps" min="4" max="12" value="10"><output data-o="fps"></output></label>
+        <label><input type="checkbox" data-k="seed" checked> Seed phase from tile</label>
+        <label><input type="checkbox" data-k="tip" checked> Detaching tip</label>
+      </div>
+    </div>
+  </div>
+  <figcaption>Hottest in the core: near-white, yellow, orange, deep red at the edge, no brown <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s28">S28</a></span>. The base stays still and the silhouette changes at the top, where a tongue forms and breaks off; 8 to 12 fps is common <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s28">S28</a>, <a class="sref" href="#s29">S29</a></span>. Untick the tip and the loop turns into a wobbling jelly <span class="cite"><b class="tag ti">I</b></span>. The torch row uses Stardew's phase, <code>frame = ((ms + x·3047 + y·88) % 400) / 100</code> <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s114">S114</a></span>. Untick the seed and all eight start on frame 0 together, the anti-pattern from §10 <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s33">S33</a></span>. The sprite is drawn for this page.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG loopspeed-->
+<figure class="fig" data-demo="loopspeed" id="fig-loopspeed">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bigger fires puff slower: f = 1.5 / √D</h4><span class="illu">Flame drawing illustrative</span></div>
+  <div class="duo wide-l">
+    <div><svg class="chart" viewBox="0 0 420 230" role="img" aria-label="Puff frequency against fire width on a log axis, with candle, torch, brazier, campfire, bonfire, burning house and wildfire front marked; drag to choose a width"></svg></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="A flame whose size and puffing rate follow the chosen width"></canvas><div class="hud" data-hud></div></div>
+      <div class="readout" data-ro aria-live="polite"></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Fire width D <input type="range" data-k="d" min="0" max="1000" value="560"><output data-o="d"></output></label>
+  </div>
+  <figcaption>Flames puff because a ring vortex sheds at a rate set by width, <code>f ≈ 1.5 / √D</code> with D in metres, and fuel barely matters <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s51">S51</a></span>. The marked sizes and their loop choices are the study's art-direction table in §6a <span class="cite"><b class="tag ti">I</b></span>. The live flame puffs at the real rate for the chosen width; the readout turns it into frames per loop at 10 fps. Drag on the chart or move the slider.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ramp-->
+<figure class="fig" data-demo="ramp" id="fig-ramp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Build a fire ramp, then use it two ways: drawn frames or palette cycling</h4><span class="illu">Ramp maths illustrative</span></div>
+  <div class="stage" style="margin-bottom:8px"><canvas width="6" height="1" style="height:30px" data-ramp aria-label="The six-step ramp: black, dark red, red, orange, yellow, pale yellow-white"></canvas></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="80" height="56" aria-label="A campfire drawn as a 4-frame loop with the ramp"></canvas><span class="tagl">Drawn frames</span></div>
+      <p class="pl">Four drawings, swapped at 10 fps. The shape changes.</p></div>
+    <div><div class="stage"><canvas width="80" height="56" aria-label="A still picture of a flame and a lava pool animated only by rotating palette entries"></canvas><span class="tagl">Palette cycling</span></div>
+      <p class="pl">One still picture. <code>palette[base + (i + t) % n] = ramp[i]</code> moves the colours, not the pixels.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Hue shift per step <input type="range" data-k="hue" min="0" max="16" value="11"><output data-o="hue"></output></label>
+    <label class="rng">Saturation <input type="range" data-k="sat" min="30" max="100" value="88"><output data-o="sat"></output></label>
+    <label class="rng">Cycle every <input type="range" data-k="k" min="2" max="12" value="5"><output data-o="k"></output></label>
+    <label><input type="checkbox" data-k="brown"> Put brown in the ramp</label>
+    <label><input type="checkbox" data-k="white"> Pure white in the body</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hot things glow dark red, then cherry red, orange, yellow and white as they heat up <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s53">S53</a></span>. The study's recipe is six steps from black through dark red, red, orange and yellow to a pale yellow-white kept for the hottest base, with cool edges toward maroon, never brown <span class="cite"><b class="tag ti">I</b></span>. Set hue shift to 0 and the ramp turns into a flat red; tick brown and the fire reads as smoke or dirt <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s28">S28</a></span>; tick white and nothing is left for flashes <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s38">S38</a></span>. Cycling, as in Ferrari's scenes, is lovely for lava and coals and stiff for open flames <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s17">S17</a>, <a class="sref" href="#s20">S20</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG embers-->
+<figure class="fig" data-demo="embers" id="fig-embers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A fixed pool of 256 embers, coloured by age</h4><span class="illu">Starting values to test, not cited</span></div>
+  <div class="stage click"><canvas width="144" height="72" aria-label="A campfire throwing embers; click to throw a burst of impact sparks"></canvas><div class="hud" data-hud></div></div>
+  <div class="stage" style="margin-top:6px"><canvas width="256" height="6" data-pool aria-label="The 256 pool slots; colour shows each ember's age, black slots are free"></canvas></div>
+  <p class="mini" style="margin:3px 0 0">The pool itself: 256 slots in a ring. The write head moves right and reuses the oldest slot.</p>
+  <div class="ctl">
+    <label class="rng">Embers per second <input type="range" data-k="rate" min="0" max="40" value="10"><output data-o="rate"></output></label>
+    <label class="rng">Wind <input type="range" data-k="wind" min="-40" max="40" value="6"><output data-o="wind"></output></label>
+    <label class="rng">Gravity (px/s²) <input type="range" data-k="g" min="-20" max="120" value="-14"><output data-o="g"></output></label>
+    <button type="button" class="btn" data-b="burst">Impact sparks</button>
+  </div>
+  <figcaption>The study's starting values: campfire 6 to 12 embers per second, life 0.6 to 1.5 s, launched up at 15 to 40 px/s with ±20° spread, gravity −10 to −20 px/s² for buoyant embers and +60 to +120 for impact sparks <span class="cite"><b class="tag ti">I</b></span>. Colour by age: pale yellow to 20%, yellow-orange to 50%, red to 85%, then dark red blinking at 15 Hz instead of an alpha fade <span class="cite"><b class="tag ti">I</b></span>. Positions round to whole pixels. A ring buffer means spawning never allocates, and 256 embers at about 7 operations each stay under 2,000 operations per frame <span class="cite"><b class="tag ti">I</b></span>. The PICO-8 version uses the same age-to-colour idea <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s16">S16</a></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG puffs-->
+<figure class="fig" data-demo="puffs" id="fig-puffs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A chimney column from one rule: rise, slide a little more each frame, grow, fade</h4></div>
+  <div class="duo wide-l">
+    <div><div class="stage"><canvas width="160" height="100" aria-label="A house with a chimney emitting grey smoke puffs that rise, drift, grow and fade"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="readout" data-ro aria-live="polite" style="margin-top:0"></div>
+      <div class="ctl col">
+        <label class="rng">Wind (× Stardew's push) <input type="range" data-k="wind" min="-30" max="30" value="10"><output data-o="wind"></output></label>
+        <label class="rng">Spawn every <input type="range" data-k="every" min="200" max="1500" step="50" value="600"><output data-o="every"></output></label>
+        <div class="seg" data-seg="draw" role="group" aria-label="Fade style"><button type="button" class="on" data-v="dither">Dithered fade</button><button type="button" data-v="alpha">Alpha fade</button></div>
+      </div></div>
+  </div>
+  <figcaption>Stardew's <code>addSmokePuff</code>: a 10×10 grey sprite at alpha 0.75, fading 0.002 per update, <code>motion (0, −0.5)</code>, <code>acceleration (0.002, 0)</code>, scale 2 growing 0.02 per update <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s114">S114</a></span>. At 60 updates per second that is a life of 375 frames (about 6.25 s), a rise of about 47 art pixels and a drift of about 140 screen pixels <span class="cite"><b class="tag ti">I</b></span>. Stardew draws at 4× zoom, so this page divides its pixel numbers by 4. The sideways acceleration alone bends the column. One puff per 600 ms keeps about 10 alive <span class="cite"><b class="tag ti">I</b></span>. The alpha fade leaves the palette; the dithered one does not <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dither-->
+<figure class="fig" data-demo="dither" id="fig-dither">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Thin smoke without new colours: Bayer threshold, alpha blending and fill patterns</h4><span class="illu">Cloud shape illustrative</span></div>
+  <div class="tri">
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Smoke drawn with a 4 by 4 Bayer threshold"></canvas><span class="tagl">Bayer 4×4</span><div class="hud" data-hud="a"></div></div></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Smoke drawn with alpha blending"></canvas><span class="tagl">Alpha blend</span><div class="hud" data-hud="b"></div></div></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Smoke drawn with five fixed fill patterns"></canvas><span class="tagl">Fill patterns</span><div class="hud" data-hud="c"></div></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Density <input type="range" data-k="den" min="0" max="100" value="60"><output data-o="den"></output></label>
+    <div class="seg" data-seg="kind" role="group" aria-label="Smoke colour"><button type="button" class="on" data-v="smoke">Wood smoke</button><button type="button" data-v="steam">Steam</button><button type="button" data-v="oil">Oil smoke</button></div>
+    <label><input type="checkbox" data-k="anchor" checked> Anchor pattern to the world</label>
+  </div>
+  <div class="stage" style="margin-top:6px;max-width:340px"><canvas width="68" height="4" data-levels aria-label="The 17 coverage levels of the 4 by 4 Bayer matrix"></canvas></div>
+  <p class="mini" style="margin:3px 0 0">The 17 Bayer levels, 0/16 to 16/16.</p>
+  <figcaption>The matrix rows <code>0 8 2 10 / 12 4 14 6 / 3 11 1 9 / 15 7 13 5</code>, divided by 16, give 17 levels; a pixel is drawn when its coverage beats the cell <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s21">S21</a>, <a class="sref" href="#s22">S22</a></span>. The count in each corner is the number of distinct colours on screen: dithering keeps the palette, alpha blending invents dozens of colours. Fill patterns have only 5 levels, so the cloud edge steps. Untick the anchor and the pattern travels with the drifting cloud, which shimmers <span class="cite"><b class="tag ti">I</b></span>. Grey, white and black smoke follow the study's colour-as-state rule <span class="cite"><b class="tag tv">V</b> <a class="sref" href="#s54">S54</a></span>.</figcaption>
+</figure>
+<!--/FIG-->

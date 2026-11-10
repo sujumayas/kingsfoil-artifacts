@@ -1,0 +1,32 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. The sum is a crude total: a low-sum technique such as D8, determinism for the MMO, can still be mandatory.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG budget-->
+<figure class="fig" data-demo="budget" id="fig-budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The web budget, measured: pick a fire rule, a smoke option and an engine</h4><span class="illu">Phone factor is a guess</span></div>
+  <div class="budget">
+    <div>
+      <div class="ctl" style="margin-top:0">
+        <span class="mini">Engine</span>
+        <div class="seg" data-seg="eng" role="group" aria-label="Engine"><button type="button" data-v="js">JavaScript (V8)</button><button type="button" class="on" data-v="gd">GDScript</button></div>
+        <span class="mini">Server fire rule</span>
+        <div class="seg" data-seg="fire" role="group" aria-label="Fire rule"><button type="button" class="on" data-v="act">Active list</button><button type="button" data-v="full">Full sweep</button></div>
+        <span class="mini">Smoke on the client</span>
+        <div class="seg" data-seg="smoke" role="group" aria-label="Smoke option"><button type="button" data-v="sca">Smoke CA 320×180</button><button type="button" class="on" data-v="sca80">Smoke CA 80×45</button><button type="button" data-v="adv">Advect + decay</button><button type="button" data-v="st64">Stam 64×64</button><button type="button" data-v="st320">Stam 320×180</button></div>
+        <label class="rng"><span>Phone slowdown</span><input type="range" data-k="ph" min="10" max="60" value="10"><output data-o="ph"></output></label>
+      </div>
+      <div class="verdict" aria-live="polite"></div>
+    </div>
+    <div><svg class="chart" viewBox="0 0 440 320" role="img" aria-label="Log-scale bars of the measured times in milliseconds, with lines at 1 ms, 2 ms and the 16.7 ms frame"></svg></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a number from §6d, measured on an Apple M4 Pro with Node v26.5.0 and Godot 4.7 headless <span class="cite"><b class="tag ti">I</b></span>. Amber bars are JavaScript, blue bars GDScript; a missing bar was not measured. The 80×45 smoke CA in GDScript is the study's estimate, about 0.3 ms <span class="cite"><b class="tag ti">I</b></span>. The lines are the study's proposals: under 1 ms per 4 Hz server tick, under about 2 ms of fire and smoke work per client frame, inside a 16.7 ms frame <span class="cite"><b class="tag ti">I</b></span>. The phone slider multiplies every bar; the study guesses phones are 3 to 6 times slower and measured none <span class="cite"><b class="tag tu">U</b></span>. Flames and embers are counted in operations, not milliseconds: 20 DOOM torch patches are about 10k updates, 256 embers under 2,000 operations.</figcaption>
+</figure>
+<!--/FIG-->

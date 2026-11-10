@@ -1,6 +1,6 @@
 {
  "version": 2,
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "site": {
   "title": "Kingsfoil Artifacts",
   "intro": "Research studies and playable prototypes for Kingsfoil Studios' games: Asterion Online (a Tibia-like MMORPG), a Hero Defense RTS and more."
@@ -20,13 +20,10 @@
     "vfx-acid",
     "vfx-rain",
     "vfx-forest",
-    "vfx-light"
+    "vfx-light",
+    "vfx-fire"
    ],
    "upcoming": [
-    {
-     "title": "Fire & smoke",
-     "blurb": "Campfires, burning buildings, spreading fire, smoke columns: the DOOM fire's own study."
-    },
     {
      "title": "Water bodies",
      "blurb": "Rivers, sea, shorelines, foam and flow maps."
@@ -1062,6 +1059,129 @@
      "difficulty-ladder",
      "playtest-metrics",
      "checkpoint-retry"
+    ]
+   },
+   "maturity": "prototype"
+  },
+  {
+   "id": "vfx-fire",
+   "type": "study",
+   "path": "/vfx-fire-topdown-pixel.html",
+   "title": "Top-down pixel fire and smoke: tiny algorithms for campfires, spreading fire, smoke and combat fire",
+   "short": "Fire & smoke",
+   "nav": "Fire",
+   "summary": "The DOOM fire and its ancestors, drawn flame loops, tile fire spread with wind and rain, dithered smoke and steam, Tibia fire fields, burning status and explosions.",
+   "series": {
+    "id": "vfx",
+    "number": 6
+   },
+   "date": "2026-11-10",
+   "updated": "2026-11-10",
+   "thumb": "/thumbs/vfx-fire.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "rendering"
+    ],
+    "concept": [
+     "fire"
+    ],
+    "technique": [
+     "cellular-automata",
+     "fire-spread",
+     "advection-field",
+     "damage-over-time",
+     "palette-lut",
+     "dither-threshold",
+     "z-particles",
+     "gas-diffusion",
+     "reaction-table"
+    ]
+   },
+   "stats": {
+    "words": 20012,
+    "techniques": 39,
+    "figures": 26,
+    "games": 37,
+    "sources": 145
+   },
+   "pair": "vfx-fire-sandbox"
+  },
+  {
+   "id": "vfx-fire-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-fire-sandbox.html",
+   "title": "Top-down pixel fire and smoke Sandbox (playable)",
+   "series": {
+    "id": "vfx",
+    "number": 6
+   },
+   "short": "Fire & smoke sandbox",
+   "summary": "Playable companion to the study.",
+   "pair": "vfx-fire",
+   "date": "2026-11-10",
+   "updated": "2026-11-10",
+   "thumb": "/thumbs/vfx-fire.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "rendering"
+    ],
+    "concept": [
+     "fire"
+    ],
+    "technique": [
+     "cellular-automata",
+     "fire-spread",
+     "advection-field",
+     "damage-over-time",
+     "palette-lut",
+     "dither-threshold",
+     "z-particles",
+     "gas-diffusion",
+     "reaction-table"
     ]
    },
    "maturity": "prototype"

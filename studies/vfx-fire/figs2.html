@@ -1,0 +1,211 @@
+<!--FIG spread-->
+<figure class="fig" data-demo="spread" id="fig-spread">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tile fire spread: chance, not certainty, makes the front round</h4><span class="illu">Grid size and 10 Hz demo tick illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="128" height="96" aria-label="A grass field where fire spreads tile by tile; click to start a fire"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="pre" role="group" aria-label="Presets"><button type="button" data-v="sq">Square</button><button type="button" data-v="dia">Diamond</button><button type="button" class="on" data-v="round">Round</button><button type="button" data-v="die">Dies out</button><button type="button" data-v="fix">Longer burn fixes it</button></div>
+        <div class="seg" data-seg="nb" role="group" aria-label="Neighbourhood"><button type="button" data-v="4">4 neighbours</button><button type="button" class="on" data-v="8">8 neighbours (Moore)</button></div>
+        <label class="rng">Ignite chance p <input type="range" data-k="p" min="5" max="100" value="50"><output data-o="p"></output></label>
+        <label class="rng">Diagonal factor <input type="range" data-k="df" min="40" max="100" value="70"><output data-o="df"></output></label>
+        <label class="rng">Burn ticks T <input type="range" data-k="T" min="1" max="10" value="1"><output data-o="T"></output></label>
+        <label class="rng">Moisture <input type="range" data-k="m" min="0" max="90" value="0"><output data-o="m"></output></label>
+        <label class="rng">Wind direction <input type="range" data-k="wd" min="0" max="359" step="15" value="0"><output data-o="wd"></output></label>
+        <label class="rng">Wind speed <input type="range" data-k="V" min="0" max="10" value="0"><output data-o="V"></output></label>
+        <button type="button" class="btn" data-b="reset">Restart from the centre</button>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each burning tile rolls once per neighbour per tick with <code>p = base × (1 − moisture) × wind × (diagonal ? 0.707 : 1)</code> [I, note 03]. With p = 1 the front is a diamond (0.71) or a square (1.41), and a 0.707 diagonal factor alone still leaves 1.33; p of about 0.35 to 0.6 rounds it [I, note 03, measured]. A neighbour catches with <code>1 − (1 − p)^T</code>, so p = 0.3 dies with one burn tick and lives with 3 to 6. Wind uses Alexandridis's <code>exp(V·(0.045 + 0.131·(cos θ − 1)))</code>, ×1.57 downwind and ×0.11 upwind at 10 m/s [V, S58].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costchart-->
+<figure class="fig" data-demo="costchart" id="fig-costchart">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What fire and smoke cost per tick: keep a list of burning tiles, keep smoke grids small</h4></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="eng" role="group" aria-label="Engine"><button type="button" class="on" data-v="both">JS and GDScript</button><button type="button" data-v="js">JS (V8) only</button><button type="button" data-v="gd">GDScript only</button></div>
+    <label><input type="checkbox" data-k="ph"> Show a phone, 3 to 6 times slower</label>
+  </div>
+  <svg class="chart" viewBox="0 0 640 390" role="img" aria-label="Log-scale bar chart of measured milliseconds per tick for fire CA and smoke methods, with the 16.7 ms frame line; click a row for details"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>All bars are the study's own timings on an Apple M4 Pro with Node v26.5.0 and Godot 4.7 headless, 200 ticks averaged [I, note 03, measured]. The active list is 10x cheaper than a full sweep in JS and 35x in GDScript at 320x180, and 186x at 1024x1024. GDScript runs these loops 15 to 50 times slower than V8, which is why the study keeps per-cell grids at or under 128x128 in GDScript and its smoke at 80x45 or 64x64. Phones were not measured.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG percolation-->
+<figure class="fig" data-demo="percolation" id="fig-percolation">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Percolation: below a fuel density, even a certain fire stays local</h4><span class="illu">Curve from small 64x40 grids, so it is smoothed near the threshold</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="120" height="80" aria-label="Random fuel map; fire lit along the left edge spreads to every touching fuel tile"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Fuel density <input type="range" data-k="d" min="300" max="800" step="5" value="560"><output data-o="d"></output></label>
+        <div class="seg" data-seg="nb" role="group" aria-label="Neighbourhood"><button type="button" class="on" data-v="4">4 neighbours</button><button type="button" data-v="8">8 neighbours</button></div>
+        <button type="button" class="btn ghost" data-b="new">New map</button>
+      </div></div>
+  </div>
+  <svg class="chart" viewBox="0 0 640 190" role="img" aria-label="Chance that fire crosses the map against fuel density, for 4 and 8 neighbours, with the thresholds marked; drag to set the density" style="margin-top:8px"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Fire here always spreads to touching fuel, so only the layout matters. On a square grid the site threshold is 0.592746 for 4 neighbours and about 0.407 for 8 [V, S57]. Below it a fire stays local; above it can cross the map. Spacing fuel under the threshold is a cheap griefing limit for a shared world, next to fireproof towns and per-fire budgets [I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fc2budget-->
+<figure class="fig" data-demo="fc2budget" id="fig-fc2budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Far Cry 2's budget: each Molotov buys 60 spreading points, each cell costs 8</h4><span class="illu">Damage base, burn length and map illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="192" height="120" aria-label="Grass field; click to throw a Molotov, click a burning patch again to add a second one"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Wind direction <input type="range" data-k="wd" min="0" max="359" step="15" value="0"><output data-o="wd"></output></label>
+        <label class="rng">Wind strength <input type="range" data-k="ws" min="0" max="100" value="80"><output data-o="ws"></output></label>
+        <label><input type="checkbox" data-k="nob"> No budget</label>
+        <button type="button" class="btn ghost" data-b="reset">Fresh field</button>
+      </div>
+      <svg class="chart" viewBox="0 0 330 64" role="img" aria-label="Meter of spreading points left for the latest fire" style="margin-top:8px"></svg></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A Molotov gives a grass patch 60 spreading points and each new cell costs 8, so about 7 cells; two Molotovs give 120, about 15 [V, S64]. Damage to each neighbour is scaled by <code>dot(wind, direction)</code>, which pushes a bell-shaped front downwind [V, S64]. Without the cap fire could burn the map, and its developer called unlimited spread "just not fun" [V, S65]. Brown grass shows heat that arrived after the budget ran out, so the edge fades instead of stopping at an invisible wall [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG extinguish-->
+<figure class="fig" data-demo="extinguish" id="fig-extinguish">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Rain and water: put out the burning tiles, wet the rest, and let steam tell the story</h4><span class="illu">Spread chance and fuel ticks illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="160" height="100" aria-label="Burning grass patch; click or drag to throw water"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="rain" role="group" aria-label="Rain"><button type="button" data-v="off">No rain</button><button type="button" class="on" data-v="shower">Passing shower</button><button type="button" data-v="steady">Steady rain</button></div>
+        <button type="button" class="btn" data-b="light">Light a new fire</button>
+        <button type="button" class="btn ghost" data-b="dry">Dry season (moisture 0)</button>
+      </div>
+      <div class="readout" data-ro aria-live="polite"></div></div>
+  </div>
+  <figcaption>Tiles go fresh, igniting for one tick, burning, embers, ash [I]. Rain follows Minecraft: spread is blocked if rain falls on the target or its 4 neighbours, and a burning tile goes out with 20% + 3% per age point per tick [V, S66]. Wet tiles turn blue, rain adds 8 moisture per tick, sun dries 1, and ignition is multiplied by <code>1 − moisture/255</code> [I], so a doused tile can burn again once it dries. Each tile put out releases a white steam puff [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG netbytes-->
+<figure class="fig" data-demo="netbytes" id="fig-netbytes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sending a fire to many players: every changed tile, only ignitions, or just the seed</h4><span class="illu">Byte sizes illustrative; demo grid radius 60</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="121" height="121" aria-label="Client A's view of a growing fire; tiles that differ from client B are magenta"></canvas><div class="hud" data-hud></div><span class="tagl">Client A (magenta = differs from B)</span></div>
+      <div class="ctl">
+        <div class="seg" data-seg="rng" role="group" aria-label="Random numbers"><button type="button" class="on" data-v="hash">hash(seed, tile, tick)</button><button type="button" data-v="stream">Shared RNG stream</button></div>
+        <button type="button" class="btn ghost" data-b="again">New seed</button>
+      </div></div>
+    <div><svg class="chart" viewBox="0 0 360 290" role="img" aria-label="Bytes per tick on a log scale as the fire grows, for a full diff, ignition events and seed lockstep"></svg>
+      <div class="ctl"><label class="rng">Players watching <input type="range" data-k="pl" min="1" max="100" value="20"><output data-o="pl"></output></label></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A full diff sends 5 bytes per changed tile; the study's radius-100 front changed 800 to 1,900 tiles a tick, 4 to 9.5 KB [I, note 03, measured]. Ignition events send about 4 bytes per new burning tile, and clients derive burn-out from a hashed burn time [I, note 03]. Lockstep sends only inputs but needs bit-identical results [V, S63]. Both clients here run the same rules, client B walking its tile list in reverse; switch to a shared RNG stream and they drift apart, which is why rolls come from <code>hash(seed, x, y, tick)</code> [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG smokefield-->
+<figure class="fig" data-demo="smokefield" id="fig-smokefield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A smoke field at 80x45: pull smoke from upwind and below, fade it, dither it</h4><span class="illu">Scene, wobble and decay values illustrative</span></div>
+  <div class="stage click"><canvas width="320" height="180" aria-label="Village scene with a campfire and chimney whose smoke drifts in the wind; click to add or remove a burning tile"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Method"><button type="button" class="on" data-v="adv">Advection + decay</button><button type="button" data-v="ca">Integer smoke CA</button></div>
+    <div class="seg" data-seg="r" role="group" aria-label="Rendering"><button type="button" class="on" data-v="dith">4x4 Bayer dither</button><button type="button" data-v="alpha">Alpha blend</button></div>
+    <div class="seg" data-seg="col" role="group" aria-label="Smoke colour"><button type="button" class="on" data-v="smoke">Wood smoke</button><button type="button" data-v="steam">Steam</button><button type="button" data-v="oil">Oil</button></div>
+    <label class="rng">Wind <input type="range" data-k="w" min="-30" max="30" value="12"><output data-o="w"></output></label>
+    <label class="rng">Decay per tick <input type="range" data-k="dec" min="900" max="995" value="980"><output data-o="dec"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each burning tile adds about +40 per tick to a grid much coarser than the screen [I, note 03]. Advection traces each cell back through a fixed wind plus an upward term and samples there, with no pressure solve [V, S49; I, note 03]. The integer CA is <code>d = (2c + left + right + 3·below + above) &gt;&gt; 3</code>, then <code>d − 1</code>, which drifts smoke screen-up and fades it linearly [I, note 03]. Colour is free state: white steam, grey wood, black oil [V, S54].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG smokesight-->
+<figure class="fig" data-demo="smokesight" id="fig-smokesight">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Smoke that blocks sight: count opaque tiles along the line</h4><span class="illu">Smoke clouds and target positions illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="144" height="96" aria-label="Tile map with drifting smoke; drag the blue viewer; dark tiles are out of sight"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="lim" role="group" aria-label="Sight rule"><button type="button" data-v="1">Stop at 1 opaque tile</button><button type="button" class="on" data-v="2">Stop at 2 (DCSS)</button><button type="button" data-v="inf">Smoke is cosmetic</button></div>
+        <label class="rng">Opaque above <input type="range" data-k="thr" min="40" max="230" value="128"><output data-o="thr"></output></label>
+      </div>
+      <p style="font-size:13px;color:var(--mute);margin:8px 0 0">Green lines reach a target. Yellow marks the part of a blocked line that is still in sight, red the part past the blocking smoke. Solid grey tiles are opaque, speckled ones are thin smoke.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>DCSS stops line of sight after 2 opaque cloud tiles, and steam and coloured smokes are opaque [V, S92]. The study's proposal thresholds each tile's smoke byte (above 128 is opaque) and counts opaque tiles along the Bresenham line [I, note 03]. In Into the Breach, units in smoke cannot attack or repair [V, S111]. Sight-blocking smoke has to run on the server, or players with different smoke see different things [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tibiafield-->
+<figure class="fig" data-demo="tibiafield" id="fig-tibiafield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia fire field is an item that decays in three stages, and two sources disagree on the timing</h4></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="64" height="40" aria-label="A fire field tile shrinking through its stages and a character stepping onto it"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="rd" role="group" aria-label="Timing source"><button type="button" class="on" data-v="wiki">TibiaWiki (9 s ticks)</button><button type="button" data-v="tfs">TFS 1.4 code (10 s ticks)</button></div>
+        <label class="rng">Step on at <input type="range" data-k="ts" min="0" max="440" value="20"><output data-o="ts"></output></label>
+        <label class="rng">Playback speed <input type="range" data-k="sp" min="5" max="60" value="20"><output data-o="sp"></output></label>
+      </div></div>
+  </div>
+  <svg class="chart" viewBox="0 0 640 210" role="img" aria-label="Stage bars for both timing readings, damage tick marks, and cumulative damage after stepping on" style="margin-top:8px"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>In TFS the field is item 1487, then 1488, then 1489, then gone, each stage 120 s; 1487 deals 20 on entry and then 7 ticks of 10, 10 s apart; 1488 drops the 20 and 1489 is harmless [V, S96]. TibiaWiki gives 20 plus "10 fire damage over 7 turns, every 9 seconds", with stages of 3:20, 2:28 and 1:38 [V, S93, S95]. Both reach 90 damage. One item swap per stage is cheap to send and easy to read [I, note 01].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG burnstatus-->
+<figure class="fig" data-demo="burnstatus" id="fig-burnstatus">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five ways to burn a creature: HP over 12 seconds</h4><span class="illu">100 HP, Terraria's 7 s duration and turn length illustrative</span></div>
+  <svg class="chart" viewBox="0 0 640 210" role="img" aria-label="HP over time for Terraria, Enter the Gungeon, Mewgenics, Pokémon and the Asterion proposal"></svg>
+  <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px">
+    <div><div class="stage"><canvas data-c width="40" height="36" aria-label="Terraria creature"></canvas></div><p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Terraria, 1 every 0.25 s</p></div>
+    <div><div class="stage"><canvas data-c width="40" height="36" aria-label="Gungeon creature"></canvas></div><p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Gungeon, 4 DPS for 4 s, tinted red</p></div>
+    <div><div class="stage"><canvas data-c width="40" height="36" aria-label="Mewgenics creature"></canvas></div><p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Mewgenics, stacks then −1</p></div>
+    <div><div class="stage"><canvas data-c width="40" height="36" aria-label="Pokémon creature"></canvas></div><p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Pokémon, 1/16 per turn</p></div>
+    <div><div class="stage"><canvas data-c width="40" height="36" aria-label="Asterion proposal creature"></canvas></div><p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Asterion, stacks × 4 every 2 s</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Turn length <input type="range" data-k="tr" min="1" max="4" step="0.5" value="2"><output data-o="tr"></output></label>
+    <label class="rng">Starting stacks <input type="range" data-k="st" min="1" max="8" value="5"><output data-o="st"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Terraria's On Fire! is 4 HP/s shown as 1 damage every 0.25 s [V, S80]. Gungeon enemies mostly take 4 DPS for 4 s, tinted red with flames on the sprite [V, S104]. Mewgenics deals its stacks at the start of a turn, then drops one [V, S103]. Pokémon's 1/16 per turn comes from search snippets [U, S106]. The Asterion proposal deals <code>stacks × 4</code> every 2 s and then loses a stack [I]. The visual floor is the same for all: a red tint, 2 or 3 small flames on the body, one number per server tick [I, notes 06 and 09].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG explosion-->
+<figure class="fig" data-demo="explosion" id="fig-explosion">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Explosion anatomy at 10 fps: flash, ring, fireball, smoke, debris, scorch</h4><span class="illu">Shapes and radii illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="72" aria-label="An explosion played frame by frame"></canvas><div class="hud" data-hud></div></div></div>
+    <div><p style="font-size:13px;color:var(--mute);margin:0 0 4px">The 12 frames (click one to jump)</p>
+      <div class="stage click"><canvas width="288" height="18" aria-label="Filmstrip of the 12 frames"></canvas></div>
+      <div class="ctl">
+        <button type="button" class="btn" data-b="play">Pause</button><button type="button" class="btn ghost" data-b="back">Back</button><button type="button" class="btn ghost" data-b="step">Step</button>
+        <div class="seg" data-seg="sk" role="group" aria-label="Screen shake"><button type="button" data-v="none">No shake</button><button type="button" class="on" data-v="light">Light, 1 px</button><button type="button" data-v="heavy">Heavy, 3 px</button></div>
+        <label><input type="checkbox" data-k="hs" checked> Hitstop on the flash</label>
+        <label><input type="checkbox" data-k="deb" checked> Debris</label>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The frame plan follows the study: frame 1 a white flash, 2 to 4 fast yellow-orange growth, 5 to 7 slower growth with dark edges eating in, 8 to 12 grey puffs rising and dithering out, a ring on 2 to 5 and a few debris pixels with gravity, then a fading scorch [I, notes 06 and 09]. Slynyrd's rule is circles that thin into rings, expansion "rapid at first" that then "slows significantly", and colour from white-hot to grey smoke [V, S35]. At 320x180 a light shake is 1 px and a heavy one 2 to 4 px, in whole pixels [I, note 06]; hitstop freezes the moment of impact [V, S39].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lava-->
+<figure class="fig" data-demo="lava" id="fig-lava">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Lava: dark crust drifting over hot cracks, and water turns it to rock and steam</h4><span class="illu">Pool shape, noise scales and cooling speed illustrative</span></div>
+  <div class="stage click"><canvas width="160" height="90" aria-label="A lava pool; click or drag to pour water"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Lava method"><button type="button" class="on" data-v="crust">Crust over cracks (two noise reads)</button><button type="button" data-v="cyc">Palette cycling</button></div>
+    <button type="button" class="btn ghost" data-b="reset">Melt the rock</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The crust recipe uses two noise reads: slow, low-frequency noise above 0.55 draws crust in 2 dark entries, and faster noise fills the cracks with 3 or 4 hot entries, the threshold breathing with <code>sin(t × 0.3)</code> and everything quantised to the pixel grid [I, note 09]. The hot colours are the CC0 shader's (1, 0.133, 0), (1, 0.467, 0) and (1, 0.933, 0) [V, S135]. Palette cycling costs almost nothing [I, note 09]. Water on lava follows the interaction table: the tile becomes rock and the client spawns a short steam puff [I, notes 02, 04, 09], as Minecraft, Terraria and Noita all do in their own way [V, S68, S82, S79].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG haze-->
+<figure class="fig" data-demo="haze" id="fig-haze">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Heat haze: slide each row by a sine, in whole pixels</h4><span class="illu">Scene and haze region illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="100" aria-label="A house behind a bonfire, with rows above the fire wobbling"></canvas><div class="hud" data-hud></div></div></div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:10px;align-items:start">
+      <div class="ctl" style="margin-top:0">
+        <label class="rng">Amplitude <input type="range" data-k="A" min="0" max="16" value="4"><output data-o="A"></output></label>
+        <label class="rng">Frequency <input type="range" data-k="f" min="10" max="150" value="50"><output data-o="f"></output></label>
+        <label><input type="checkbox" data-k="rd" checked> Whole pixels (round)</label>
+        <div class="seg" data-seg="m" role="group" aria-label="Wave"><button type="button" class="on" data-v="row">Row offsets</button><button type="button" data-v="dra">Rows and columns (Dracula X)</button></div>
+      </div>
+      <svg class="chart" viewBox="0 0 120 200" role="img" aria-label="Offset per row inside the haze region"></svg>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The SNES wrote a horizontal offset per scanline from a sine table with HDMA [V, S24, S25]. The study's recipe is <code>offset_x(row) = round(A · sin(row·0.5 + t·6) · falloff(row))</code> with A = 1 px at 320x180 [I, notes 08 and 09]. Untick whole pixels to see why sub-pixel offsets are a risk: they blend neighbours and shimmer [I]. Dracula X's fire wobbles one layer sideways and another up and down (a forum reconstruction) [V, S27]. In Godot, offset the fire's own texture rather than reading the screen, because of open Compatibility bugs [V, S121].</figcaption>
+</figure>
+<!--/FIG-->

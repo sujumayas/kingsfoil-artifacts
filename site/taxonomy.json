@@ -193,6 +193,10 @@
      "label": "Light & shadow"
     },
     {
+     "id": "fire",
+     "label": "Fire & smoke"
+    },
+    {
      "id": "enemy-ai",
      "label": "Enemy AI"
     },
@@ -328,6 +332,21 @@
      "id": "flicker-strings",
      "label": "Flicker patterns",
      "desc": "Quake/DOOM style light personality"
+    },
+    {
+     "id": "fire-spread",
+     "label": "Tile fire spread",
+     "desc": "Fuel, moisture and wind on a grid, active list, seeded ticks"
+    },
+    {
+     "id": "advection-field",
+     "label": "Advected smoke field",
+     "desc": "Low-res scalar field pushed by wind, with decay"
+    },
+    {
+     "id": "damage-over-time",
+     "label": "Damage over time",
+     "desc": "Burn stacks, field ticks and status visuals"
     },
     {
      "id": "fsm",

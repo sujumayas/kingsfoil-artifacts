@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel fire and smoke: tiny algorithms for campfires, spreading fire, smoke and combat fire</h1>
+      <p class="deck">The DOOM fire is one byte of heat per pixel and one rule that copies heat upward. This study is that fire's own: torches and campfires, grass fires that spread over tiles with wind and rain, smoke that drifts and hides things, and fire fields that hurt. Each part has a classic answer a few lines long. A number per cell holds the truth and a palette or sprite turns it into pixels. Aimed at Godot 4 on the web and a server-authoritative MMO.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-fire-sandbox.html">Play the Fire Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage click"><canvas width="320" height="180" aria-label="Live village edge at 320 by 180 pixels: a campfire, three torches and a smoking chimney, while a grass fire spreads downwind across the meadow; click the meadow to start a fire"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Scenes"><button type="button" data-t="0">Campfire</button><button type="button" data-t="1">Wildfire</button><button type="button" data-t="2">Rain</button><button type="button" data-t="3">Fireball</button></div>
+      <figcaption>Live: a 40×23 tile grid at 8 px per tile, ticked at 4 Hz. Each burning tile rolls an ignition chance per neighbour from the study's material table (dry grass 0.40, green grass 0.15, trees 0.25), scaled by the Alexandridis wind factor and by 0.7 on diagonals. Flames are 4-frame loops seeded by tile, smoke is an 80×45 field drawn through a 4×4 Bayer matrix, and rain puts tiles out with Minecraft's 20% + 3% per age step. Click the meadow to light it. Layout, speeds and regrowth are illustrative.</figcaption>
+    </figure>
+  </div>
+</header>
