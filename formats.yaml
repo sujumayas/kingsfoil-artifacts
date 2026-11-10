@@ -1,0 +1,29 @@
+# Study formats: the registered page structures a study can use.
+# A format fixes how a study is built: which recipe it is cloned from, whether it has a sandbox,
+# how its pages are named and which report layout its recipe parses.
+# How to choose one, and how to add a new one: docs/FORMATS.md. The validator checks every study against this file.
+#
+# status:   active  = use for new studies; `template` is a shipped recipe study of this format
+#           draft   = being created by its first study; scaffolds clone `base`; promote to active once that study ships
+#           legacy  = existing pages only; `studies` lists them; never used for new studies
+# sandbox:  required | optional | none
+# page / sandbox_page: name patterns, {id} = the study id
+
+formats:
+  vfx-pixel:
+    status: active
+    title: Tiny VFX study with a playable sandbox
+    use_for: One visual effect or rendering concept for top-down pixel art, researched as a family of small
+      old-school algorithms, with a 320x180 canvas sandbox that plays the recommended architecture.
+    template: vfx-light
+    sandbox: required
+    page: "{id}-topdown-pixel.html"
+    sandbox_page: "{id}-sandbox.html"
+    doc: docs/formats/vfx-pixel.md
+
+  legacy-static:
+    status: legacy
+    title: Static page whose build pipeline was lost
+    use_for: The two studies built before the repo existed. Edit their pages in place.
+    studies: [ai-rts-enemy, procgen-characters]
+    sandbox: none

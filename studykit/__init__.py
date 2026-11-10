@@ -28,6 +28,11 @@ def taxonomy() -> dict:
     return json.loads((SITE / "taxonomy.json").read_text())
 
 
+def formats() -> dict:
+    """The registered study formats (formats.yaml → formats), keyed by format id. See docs/FORMATS.md."""
+    return yaml.safe_load((REPO / "formats.yaml").read_text())["formats"]
+
+
 @dataclass
 class Study:
     id: str                      # catalog id, e.g. "vfx-light"
@@ -38,6 +43,10 @@ class Study:
     @property
     def kind(self) -> str:        # "recipe" (built here) or "static" (page in site/ is the source)
         return self.cfg.get("kind", "recipe")
+
+    @property
+    def format(self) -> str | None:   # a formats.yaml id, e.g. "vfx-pixel"
+        return self.cfg.get("format")
 
     @property
     def out_name(self) -> str:

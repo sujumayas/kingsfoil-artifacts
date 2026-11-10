@@ -1,24 +1,52 @@
 name: validate
+# Pull requests only: main is updated by merging a validated PR, so a second run on push would be duplicate work.
 on:
-  push:
   pull_request:
   workflow_dispatch:
+# A new push to the same PR cancels the run still in progress.
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the PR base is needed to find changed pages
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: pip
       - name: Install
+        run: pip install -r requirements.txt
+      # The browser pass is the slow part, so it only covers pages this PR changed.
+      # Pages that did not change were checked when they were merged. A manual run checks every page.
+      - name: Pages changed by this PR
+        id: pages
         run: |
-          pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
-      - name: Validate (catalog, studies, manifest, links, budgets, reproducible builds, browser)
-        run: python tools/validate.py --rebuild
+          if [ -n "${{ github.base_ref }}" ]; then
+            since="origin/${{ github.base_ref }}"
+            n=$(git diff --name-only "$since...HEAD" -- 'site/*.html' | wc -l)
+          else
+            since=""; n=all
+          fi
+          echo "since=$since" >> "$GITHUB_OUTPUT"
+          echo "count=$n" >> "$GITHUB_OUTPUT"
+          echo "changed pages: $n"
+      - name: Install Chromium
+        if: steps.pages.outputs.count != '0'
+        run: python -m playwright install --with-deps chromium
+      - name: Validate (catalog, formats, manifest, links, budgets, reproducible builds, browser on changed pages)
+        run: |
+          if [ "${{ steps.pages.outputs.count }}" = "0" ]; then
+            python tools/validate.py --rebuild --no-browser
+          elif [ -n "${{ steps.pages.outputs.since }}" ]; then
+            python tools/validate.py --rebuild --since=${{ steps.pages.outputs.since }}
+          else
+            python tools/validate.py --rebuild
+          fi
       - name: Committed site/ matches a fresh build
         run: |
           git status --porcelain site/

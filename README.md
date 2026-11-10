@@ -14,6 +14,7 @@ site/                 the deployed website (committed, prebuilt). Netlify publis
   taxonomy.json       controlled vocabulary of facets and tag values
   manifest.json       flat file inventory (used to verify that a deploy never drops a page)
   index.html          generated from catalog.json, do not edit by hand
+formats.yaml          registered study formats: template recipe, sandbox rule, page names, format doc
 studies/<id>/         one folder per study (id = catalog id)
   study.yaml          config: page names, report, sandbox, thumbnail recipe, QA budget
   report.md           the research report (the text of the page)
@@ -23,7 +24,7 @@ studies/<id>/         one folder per study (id = catalog id)
   notes/              raw research notes and sources
 studykit/             shared toolkit: paths, catalog-driven series nav, build runner, browser QA, scaffolding
 tools/                build_index.py (homepage), validate.py (CI), thumbs.py (card thumbnails)
-docs/                 roadmap and how-tos
+docs/                 how-tos (ADDING-A-STUDY, RESEARCH, FORMATS), one doc per format in docs/formats/, roadmap
 ```
 
 `ai-rts-enemy` and `procgen-characters` are **static** studies: their build pipelines were not preserved,
@@ -34,7 +35,8 @@ so `site/<page>.html` is the source and is edited in place.
 ```bash
 pip install -r requirements.txt && python -m playwright install chromium
 
-python -m studykit list                 # all studies
+python -m studykit list                 # all studies, with series and format
+python -m studykit formats              # registered study formats and who uses them
 python -m studykit build vfx-rain       # rebuild one study page + publish its sandbox (or --all)
 python -m studykit qa vfx-rain --shots  # browser QA on desktop + phone, screenshots in .shots/
 python -m studykit index                # regenerate index.html + manifest.json from catalog.json
@@ -44,19 +46,21 @@ python tools/validate.py --no-browser   # fast static checks (~2 s)
 
 ## Adding a study
 
-See [docs/ADDING-A-STUDY.md](docs/ADDING-A-STUDY.md). In short:
-`studykit new` → research + report → `studykit register` → sandbox, figures, recipe → `studykit build` →
+See [docs/ADDING-A-STUDY.md](docs/ADDING-A-STUDY.md), with [docs/RESEARCH.md](docs/RESEARCH.md) for the
+research method and [docs/FORMATS.md](docs/FORMATS.md) for choosing (or adding) a series and a format. In short:
+agree series + format → `studykit new` → research + report → `studykit register` → sandbox, figures, recipe → `studykit build` →
 `tools/thumbs.py` → `studykit index` → `studykit check` → commit and push.
 
-## Guarantees (checked by CI on every push)
+## Guarantees (checked by CI on every pull request)
 
 - `catalog.json` uses only `taxonomy.json` values; studies have the required facets and 3–10 techniques
+- every study declares a format from `formats.yaml` and follows its sandbox rule; legacy formats take no new studies
 - `index.html` and `manifest.json` are up to date, and the manifest lists exactly the files in `site/`
 - every recipe study rebuilds **byte-for-byte** from its sources, and every sandbox in `site/` equals its source
 - no broken local links, no external images, page-weight budgets respected
-- no console errors and no horizontal overflow on a 390 px phone
+- no console errors and no horizontal overflow on a 390 px phone, for the pages the PR changes (a manual run of the workflow checks every page)
 
 ## Deploying
 
 Netlify is linked to this repo and publishes `site/` from `main` (no build step on Netlify).
-Push to a branch, let CI pass, then merge to `main`.
+Push to a branch, open a PR, let CI pass, then merge to `main`. CI runs on pull requests only, so a direct push to `main` is not validated.

@@ -3,13 +3,14 @@
   python -m studykit build [ID ...|--all]   build study pages (recipes) and publish their sandboxes
   python -m studykit index                  rebuild site/index.html + manifest from catalog.json
   python -m studykit qa ID [--shots]        browser QA for one study (console errors, overflow, links)
-  python -m studykit new ID --series S --title "..." [--from vfx-light] [--page NAME.html]   scaffold a new study
+  python -m studykit new ID --series S --title "..." [--format F] [--no-sandbox] [--page NAME.html]   scaffold a new study
+  python -m studykit formats                registered study formats (formats.yaml) and the studies using them
   python -m studykit register ID             validate studies/ID/catalog-entry.json and add it to catalog.json
   python -m studykit check                  full validator (what CI runs)
-  python -m studykit list                   list studies
+  python -m studykit list                   list studies with series and format
 """
 import argparse, runpy, shutil, subprocess, sys
-from . import REPO, SITE, load, all_studies
+from . import REPO, SITE, load, all_studies, formats, catalog
 
 
 def build(ids):
@@ -39,10 +40,12 @@ def main(argv=None):
     sub.add_parser("index")
     q = sub.add_parser("qa"); q.add_argument("id"); q.add_argument("--shots", action="store_true")
     n = sub.add_parser("new"); n.add_argument("id"); n.add_argument("--series", required=True); n.add_argument("--title", required=True)
-    n.add_argument("--from", dest="template", default="vfx-light"); n.add_argument("--page")
+    n.add_argument("--format", dest="fmt", help="formats.yaml id; default: the format of the series' newest study")
+    n.add_argument("--no-sandbox", action="store_true", help="skip the sandbox (formats where it is optional)"); n.add_argument("--page")
     rg = sub.add_parser("register"); rg.add_argument("id")
     sub.add_parser("check")
     sub.add_parser("list")
+    sub.add_parser("formats")
     a = ap.parse_args(argv)
     if a.cmd == "build":
         build(a.ids)
@@ -53,15 +56,24 @@ def main(argv=None):
         sys.exit(0 if qa_study(load(a.id), shots=a.shots) else 1)
     elif a.cmd == "new":
         from .scaffold import new_study
-        new_study(a.id, a.series, a.title, a.template, a.page)
+        new_study(a.id, a.series, a.title, a.fmt, a.page, a.no_sandbox)
     elif a.cmd == "register":
         from .scaffold import register
         register(a.id)
     elif a.cmd == "check":
         sys.exit(subprocess.call([sys.executable, str(REPO / "tools/validate.py")]))
     elif a.cmd == "list":
+        series = {i["id"]: i.get("series", {}).get("id", "-") for i in catalog()["items"]}
         for s in all_studies():
-            print(f"{s.id:22} {s.kind:7} site/{s.out_name}" + (f"  + site/{s.sandbox_name}" if s.sandbox_name else ""))
+            print(f"{s.id:22} {series.get(s.id, '-'):8} {s.format or '-':14} {s.kind:7} site/{s.out_name}"
+                  + (f"  + site/{s.sandbox_name}" if s.sandbox_name else ""))
+    elif a.cmd == "formats":
+        used = {}
+        for s in all_studies(): used.setdefault(s.format, []).append(s.id)
+        for fid, f in formats().items():
+            src = f"template {f['template']}" if f.get("template") else f"base {f['base']}" if f.get("base") else ""
+            print(f"{fid}  [{f['status']}]  sandbox {f['sandbox']}  {src}\n  {f['title']}\n  use for: {f.get('use_for', '')}"
+                  + (f"\n  doc: {f['doc']}" if f.get("doc") else "") + f"\n  studies: {', '.join(used.get(fid, [])) or 'none yet'}\n")
 
 
 if __name__ == "__main__":
