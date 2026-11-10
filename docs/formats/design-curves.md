@@ -67,6 +67,10 @@ structural conditions, the twin candidates, the principles and the evidence grad
 0. **Current build** (`01-current-build.md`). Reads our game's repo, play logs and bot runs, never the web.
    Curve tables from the real constants, friction and fun at minute 5 / 30 / 120, what is not instrumented,
    and every tuning knob with its file and line. Can start before the others.
+0b. **Player telemetry** (`02-telemetry.md` plus `telemetry-aggregates.json`), when the game has real player runs
+   (Curves #2 MatchRPG did). Funnel and hazard by stage, learning by lifetime run, death types, version comparisons,
+   with player-weighted numbers next to run-weighted ones. Raw data stays out of the repo: notes and the page carry
+   aggregates only, no player ids, no cell under 3 players. Figures read the aggregates file.
 1. **Twin selection and lineage A**: the oldest twins and the patterns they started.
 2. **Twin lineage B**: the modern twins and how they refined those patterns.
 3. **Natural experiments**: patch notes, difficulty reworks, mode additions, published telemetry, with player reaction.
@@ -368,6 +372,9 @@ index_chips: [{q: 'wc3|warcraft', label: 'Warcraft III maps'}]
 ```
 
 Title and meta description come from the catalog entry. The hero (`hero.html`) uses `@@TITLE@@` and `@@SERIES@@`.
+`studykit new` copies the template's `hero.html` with its copy and lab link but not its hero demo: rewrite the deck,
+the caption and the link, and register a `hero` demo. Demo files that wrap their code in a block must export shared
+helpers (Curves #2 uses `globalThis.MR`) for later demo files.
 Place a hand-made figure anywhere outside §7 by writing `@@FIG:name@@` on its own line in `report.md`.
 The build fails with a message when a card misses a marker, a scorecard row disagrees with its card, a twin cell lacks
 its ●/◐/○ mark, or a backlog score is wrong or out of order.
