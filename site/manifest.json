@@ -172,5 +172,23 @@
   "title": "Hearthguard curve lab (interactive)",
   "description": "Playable companion to the study.",
   "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/curves-matchrpg.png",
+  "title": "Thumbnail curves-matchrpg.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/curves-matchrpg.html",
+  "title": "MatchRPG difficulty and learning curves: board pressure, depth scaling, mastery tiers and the endless descent",
+  "description": "Difficulty, learning and power curves for MatchRPG's sliding match-3 descent, read from 859 real player runs: structural twins from Tetris and 10000000 to Balatro, natural experiments, pattern cards, a Curve Spec, a playtest protocol and a curve lab.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/curves-matchrpg-lab.html",
+  "title": "MatchRPG difficulty and learning curves Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-09"
  }
 ]

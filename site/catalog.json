@@ -76,13 +76,10 @@
    "subtitle": "What made curves fun in games built like ours",
    "blurb": "One Kingsfoil game per study. Patterns from structural twins, traced through patch notes and postmortems, turned into a Curve Spec we can tune and playtest.",
    "order": [
-    "curves-hearthguard"
+    "curves-hearthguard",
+    "curves-matchrpg"
    ],
    "upcoming": [
-    {
-     "title": "MatchRPG",
-     "blurb": "Match-3 RPG: board randomness, enemy scaling and the talent curve."
-    },
     {
      "title": "SpeedRunner",
      "blurb": "Precision platformer: instant restart, level ramps and assists."
@@ -948,6 +945,123 @@
      "coop-scaling",
      "difficulty-ladder",
      "playtest-metrics"
+    ]
+   },
+   "maturity": "prototype"
+  },
+  {
+   "id": "curves-matchrpg",
+   "type": "study",
+   "path": "/curves-matchrpg.html",
+   "title": "MatchRPG difficulty and learning curves: board pressure, depth scaling, mastery tiers and the endless descent",
+   "short": "MatchRPG curves",
+   "nav": "MatchRPG",
+   "summary": "Difficulty, learning and power curves for MatchRPG's sliding match-3 descent, read from 859 real player runs: structural twins from Tetris and 10000000 to Balatro, natural experiments, pattern cards, a Curve Spec, a playtest protocol and a curve lab.",
+   "series": {
+    "id": "curves",
+    "number": 2
+   },
+   "date": "2026-11-09",
+   "updated": "2026-11-09",
+   "thumb": "/thumbs/curves-matchrpg.png",
+   "tags": {
+    "genre": [
+     "match-3",
+     "rpg",
+     "roguelike",
+     "runner"
+    ],
+    "perspective": [
+     "side-view"
+    ],
+    "art-style": [
+     "painted-2d"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat"
+    ],
+    "platform": [
+     "web",
+     "mobile",
+     "desktop"
+    ],
+    "project": [
+     "match-3"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "difficulty-curves"
+    ],
+    "technique": [
+     "sawtooth-curve",
+     "difficulty-ladder",
+     "playtest-metrics",
+     "checkpoint-retry"
+    ]
+   },
+   "stats": {
+    "words": 19725,
+    "techniques": 15,
+    "figures": 23,
+    "games": 30,
+    "sources": 95
+   },
+   "pair": "curves-matchrpg-sandbox"
+  },
+  {
+   "id": "curves-matchrpg-sandbox",
+   "type": "sandbox",
+   "path": "/curves-matchrpg-lab.html",
+   "title": "MatchRPG difficulty and learning curves Sandbox (playable)",
+   "series": {
+    "id": "curves",
+    "number": 2
+   },
+   "short": "MatchRPG curves sandbox",
+   "summary": "Playable companion to the study.",
+   "pair": "curves-matchrpg",
+   "date": "2026-11-09",
+   "updated": "2026-11-09",
+   "thumb": "/thumbs/curves-matchrpg.png",
+   "tags": {
+    "genre": [
+     "match-3",
+     "rpg",
+     "roguelike",
+     "runner"
+    ],
+    "perspective": [
+     "side-view"
+    ],
+    "art-style": [
+     "painted-2d"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat"
+    ],
+    "platform": [
+     "web",
+     "mobile",
+     "desktop"
+    ],
+    "project": [
+     "match-3"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "difficulty-curves"
+    ],
+    "technique": [
+     "sawtooth-curve",
+     "difficulty-ladder",
+     "playtest-metrics",
+     "checkpoint-retry"
     ]
    },
    "maturity": "prototype"

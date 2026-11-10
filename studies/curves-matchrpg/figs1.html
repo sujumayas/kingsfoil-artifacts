@@ -1,0 +1,181 @@
+<!-- MatchRPG curve figures. Demos in demos1.js (14 figures) and demos3.js (experiments, walls, mercy, ladder). -->
+<!--FIG survival-->
+<figure class="fig" data-demo="survival" id="fig-survival">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Survival by encounter</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 236" role="img" aria-label="Step line of the share of story runs still alive at each of the 180 encounters, with elite and boss slots marked"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="w" role="group" aria-label="Weighting"><button type="button" class="on" data-v="run">Run-weighted</button><button type="button" data-v="player">Player-weighted</button></div>
+    <label><input type="checkbox" data-k="log"> Log scale</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The yellow line is the share of 651 story runs that reached each encounter, from 859 runs by 21 players on v0.6 and v0.7 [K]. Blue triangles mark the elites at encounters 12 and 24 of each world and red diamonds the world boss at 36. Almost every drop sits on one of those 15 marks. The green line weights each of the 18 story players equally, and the data has it only at the 20 key stages. Player-weighted, 28% reach W2 against 44% run-weighted, because the heaviest players go deepest. Hover or tap for an encounter.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hazard-->
+<figure class="fig" data-demo="hazard" id="fig-hazard">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hazard by slot type and world</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 226" role="img" aria-label="Grouped bars of the share of encounter attempts that end the run, for normal, elite and boss slots in each of the five worlds"></svg>
+  <div class="ctl"><div class="seg" data-seg="s" role="group" aria-label="Scale"><button type="button" class="on" data-v="lin">Linear</button><button type="button" data-v="log">Log</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each bar is the share of attempts at that slot that ended the run, from the 651 story runs [K]. Normal is the attempt-weighted mean of encounters 1-11, 13-23 and 25-35. Elite pools encounters 12 and 24. A normal encounter ends 0.2% to 0.8% of attempts. An elite ends 13% to 20%, and a world boss 30% to 42%. Faded bars rest on fewer than 30 attempts. All of W5 is 10 attempts from 6 players. The label under each world is the number of players in its first segment. Switch to log to see the normal bars, and hover a world for each elite by name.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stairs-->
+<figure class="fig" data-demo="stairs" id="fig-stairs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Enemy power stairs vs hero power</h4><span class="illu">Sawtooth illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Log chart of enemy HP and attack multipliers over 180 encounters, rising in steps every 12 encounters, with the hero's base attack multiplier at the levels players first beat each boss"></svg>
+  <div class="ctl">
+    <label class="rng">DEPTH_POWER <input type="range" min="25" max="65" step="5" value="45" data-k="dp"><output data-o="dp">0.45</output></label>
+    <label><input type="checkbox" data-k="saw"> Preview a world sawtooth</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Depth power is <code>1 + floor(n / DEPTH_EVERY) × DEPTH_POWER</code> with <code>DEPTH_EVERY</code> 12 and <code>DEPTH_POWER</code> 0.45 [K]. HP takes the full power and attack takes 0.5 + 0.5 × power. Elites add <code>ELITE_ATK</code> 1.2 and <code>ELITE_HIT</code> 1.5 from encounter 24 [K]. Each step lands on an elite slot (triangles), and nothing drops at a world start. Hollow diamonds are the world bosses, whose fixed HP ignores the slider. Green dots are the hero's base attack at the median level of each first boss kill in v0.5 data (L24 to L39) [K]. Hollow green circles are note 01's example build with Forge 5 and Blade picks [I]. Base attack grows 4.5×, normal HP 10.4×. The sawtooth restarts each world at 55% of its last step and is our illustration [I]. Hover for an encounter.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG scroll-->
+<figure class="fig" data-demo="scroll" id="fig-scroll">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scroll ramp per tier clock vs run length</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 270" role="img" aria-label="Lines of scroll speed in pixels per real second over 600 seconds for the four tier clocks, above a strip of story run lengths"></svg>
+  <div class="ctl">
+    <label class="rng">BASE_SCROLL <input type="range" min="10" max="30" step="1" value="18" data-k="b"><output data-o="b">18</output></label>
+    <label class="rng">SCROLL_ACCEL <input type="range" min="5" max="40" step="1" value="15" data-k="a"><output data-o="a">0.15</output></label>
+    <label class="rng">MAX_SCROLL <input type="range" min="40" max="90" step="1" value="60" data-k="m"><output data-o="m">60</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Speed is <code>min(BASE_SCROLL + run_time × SCROLL_ACCEL, MAX_SCROLL)</code> px per dungeon second, and dungeon time is real time × the tier clock (<code>TierDefs.CLOCK</code> 0.65, 0.85, 1.1, 1.25) [K]. So each line is clock × min(18 + 0.15 × clock × t, 60) in real seconds. Dots mark full speed, 255 s at gold and 431 s at bronze. Elite fights and arenas pause the ramp, which the lines leave out. The grey strip shows story runs grouped by end depth (590 runs not resumed from a checkpoint), each band placed at its median length [K]. The median story run (177 s) ends before any tier reaches full speed. The p90 (369 s) ends after silver, gold and diamond do. These three constants are unchanged since the first commit.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG deaths-->
+<figure class="fig" data-demo="deaths" id="fig-deaths">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">HP deaths vs dark deaths by world</h4></div>
+  <div class="ctl"><div class="seg" data-seg="by" role="group" aria-label="Group by"><button type="button" class="on" data-v="world">By world</button><button type="button" data-v="kind">By encounter kind</button></div></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 226" role="img" aria-label="Stacked bars of how story runs ended in each world: slain, caught by the dark, other or won"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each bar splits the story runs that ended in a world by how they ended, from 651 story runs [K]. "HP death" is "Slain by X", "dark" is "Caught by the dark" and "other" is a retreat or a blank reason. The dark's share climbs from 10% in W1 to 33% in W3 as the scroll speeds up. Faded bars have fewer than 30 runs. Switch to encounter kind for the sharper split. 86% of runs that end at a normal encounter end in the dark, while elite and boss losses are 94% and 100% HP deaths.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG learning-->
+<figure class="fig" data-demo="learning" id="fig-learning">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Depth by lifetime run</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 240" role="img" aria-label="Median and 75th percentile story depth by lifetime run cohort on a log run axis, with a power-law fit and the three world 1 wall depths"></svg>
+  <div class="ctl"><label><input type="checkbox" data-k="np"> Only the 11 players seen from their first runs</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Points are story depth by the player's lifetime run number (<code>run_no</code>), median filled and p75 hollow, at the middle of each cohort. The faint bars show each cohort's span [K]. Dashed lines mark the W1 walls at 441 m (Ogre King), 879 m and 1,315 m (Old Mossback). For the first 25 runs the median sits on one wall after another. The purple line fits depth ∝ n<sup>0.52</sup> to note 07's six finer cells [I]. Treat it as a description only, since a power law fitted to pooled medians overstates the slope (Heathcote 2000). Hollow-centre points rest on fewer than 5 players. The 51+ cohort is 3 players.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pace-->
+<figure class="fig" data-demo="pace" id="fig-pace">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pace stays flat while depth rises</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 268" role="img" aria-label="Two stacked panels by lifetime run cohort: moves per second stays near 0.46, story depth climbs from 441 to 2,644 metres"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both panels use the same five run cohorts from the story runs of 21 players [K]. Top, median moves per second stays between 0.448 and 0.475 across 50 runs. Bottom, median depth climbs from 441 m to 2,644 m by runs 26-50. The tick above each point is the p75. Pace is a trait here, so the climb comes from decisions and meta power, not speed. The 51+ cohort (hollow) is 3 players. Hover a cohort for its tier mix.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tiers-->
+<figure class="fig" data-demo="tiers" id="fig-tiers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Depth by tier: the clock equalises</h4></div>
+  <div class="ctl"><div class="seg" data-seg="band" role="group" aria-label="Start level band"><button type="button" class="on" data-v="all">All</button><button type="button" data-v="1-10">Start L1-10</button><button type="button" data-v="11-20">L11-20</button><button type="button" data-v="21+">L21+</button></div></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 212" role="img" aria-label="For each mastery tier, the median story depth with a bar to the 75th percentile, beside the tier's clock"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The dot is a tier's median story depth and the bar runs to its p75. The aggregates hold no p25, so this is half an IQR [K]. The left labels give each tier's clock (<code>TierDefs.CLOCK</code>, 0.65 to 1.25) and median moves per second, and the thin line under each row draws the clock as 1,000 m × clock. Gold and diamond reach the same depth to within 1 m (1,316 vs 1,317 m) at 0.443 vs 0.506 moves per second, which is what the clock is for. Bronze has 13 story runs from 2 players and is suppressed. The start-level buttons hold meta power roughly fixed. Silver at L1-10 still lags (441 vs 880 m, 9 players).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG xpwall-->
+<figure class="fig" data-demo="xpwall" id="fig-xpwall">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Levels by run number at the first wall</h4><span class="illu">Illustrative model</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 236" role="img" aria-label="Hero level after each of 60 runs for players who always end at the same wall, from the Ogre King to the Warden"></svg>
+  <div class="ctl"><div class="seg" data-seg="rule" role="group" aria-label="XP rule"><button type="button" class="on" data-v="cap">Since v0.7.9</button><button type="button" data-v="full">Before v0.7.9</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each line is a player who ends every run at the same wall, from note 01's XP model. A run pays 51 XP at the Ogre King, 166 at the Broodmother, 317 at Old Mossback and 1,091 at the Warden. Those numbers assume 72% of normal slots are enemies and a lost elite fight pays a quarter of its XP [I]. Levels need <code>40L + 2L × max(0, L − 8)</code> XP [K]. Since v0.7.9 a run's XP counts whole up to its first level, then a third (<code>XP_PAST_LEVEL</code>) [K]. Dotted lines show the other rule. The red player is level 5 at run 10 and 11 at run 50 under both rules, because 51 XP never fills a level. The cap costs the Warden player 4 levels by run 50. The model leaves out the elite wound, so real players leave the red line sooner. Purple lines mark talent rows.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG endless-->
+<figure class="fig" data-demo="endless" id="fig-endless">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Endless growth and the lap lift</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 236" role="img" aria-label="Log chart of depth power over 540 endless encounters: linear stairs on lap 1, compounding after encounter 180, with where real endless runs end"></svg>
+  <div class="ctl"><label class="rng">ENDLESS_POWER <input type="range" min="4" max="25" step="1" value="12" data-k="e"><output data-o="e">0.12</output></label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Lap 1 keeps story stats, so depth power climbs the 0.45 stairs to 7.75 at encounter 180 [K]. Past the bottom it compounds by <code>ENDLESS_POWER</code> 0.12 every 12 encounters, so enemies double about every 73 encounters [K]. Later laps also lift every world to W5 base stats (<code>lap_lift</code>), so normal HP is 33.2 × power there [K]. The green band is the middle half of 192 endless runs by 11 players, by encounters cleared (107 to 323) [K]. The dashed lines mark the median (250.5) and p75 (323). Power is 14× at the median end and 27× at the p75. Drag the slider to see how fast the wall moves.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sessions-->
+<figure class="fig" data-demo="sessions" id="fig-sessions">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sessions and time to the next run</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 300" role="img" aria-label="Quantile strips of runs per sitting and per active day, above cumulative curves of seconds until the next run"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Top, quantile strips. The box is p25 to p75, the tick the median, the line runs to p90. A sitting is split at gaps over 30 minutes between run uploads, giving 304 sittings and 134 active player-days from 21 players [K]. Bottom, the share of next runs started within t seconds. Green points are end of one run to start of the next across all runs, from note 08 (p25 37 s, 36% within 60 s, median 139 s, 63% within 10 minutes). Pink points stay inside a sitting and subtract the next run's own length, so they run shorter (median 53 s). The data has only these points, and the lines just join them. Hover a dot.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tetris-->
+<figure class="fig" data-demo="tetris" id="fig-tetris">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Speed tables: Tetris, Canabalt and MatchRPG</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 240" role="img" aria-label="Four speed curves on a shared progress axis: NES Tetris gravity, TGM gravity with its dip and 20G, Canabalt run speed and MatchRPG's scroll"></svg>
+  <div class="ctl"><div class="seg" data-seg="y" role="group" aria-label="Y axis"><button type="button" class="on" data-v="log">× start speed, log</button><button type="button" data-v="lin">Share of top speed</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each table runs 0 to 1 on its own span. NES Tetris covers levels 0-29 at 48 down to 1 frames per cell. TGM covers levels 0-999, with dots at its published gravity points and straight lines between them. Its dip at level 200 drops back to 4/256 G and level 500 jumps to 20G. Canabalt covers 100 to 800 px/s over its first 60 s [V]. MatchRPG is the gold clock over the p90 story run of 369 s, from <code>BASE_SCROLL</code> 18 to <code>MAX_SCROLL</code> 60 [K]. Note that progress means levels for the Tetris games and seconds for the others. MatchRPG's 3.3× range is the mildest of the four, and it is the only one that tops out early and stays flat.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG experiments-->
+<figure class="fig" data-demo="experiments" id="fig-experiments">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Natural experiments by scope area</h4><span class="illu">Reaction scores are author judgement</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="area" role="group" aria-label="Scope area"><button type="button" class="on" data-v="all">All</button><button type="button" data-v="w">Walls</button><button type="button" data-v="b">Board</button><button type="button" data-v="l">Learning</button><button type="button" data-v="e">Endless</button></div>
+    <div class="seg" data-seg="grade" role="group" aria-label="Evidence grade"><button type="button" class="on" data-v="all">All grades</button><button type="button" data-v="E1">E1</button><button type="button" data-v="E2">E2</button><button type="button" data-v="E3">E3</button></div>
+  </div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 214" role="img" aria-label="Dot chart of the 20 natural experiments in the table above, one row per scope area, placed left to right by how players reacted"></svg>
+  <div class="chips" data-list role="group" aria-label="Matching rows"></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each numbered dot is one row of the table above, read from the same rows, and its colour is the row's evidence grade. The rows are the scope area we filed it under, so walls and mercy, board pressure, learning and tiers, or endless and ladders [I]. Left to right is our reading of the reaction on four steps, from worse or split to a clear gain [I]. Square dots are MatchRPG's own changes (#16 to #20) [K]. The clear gains come from easing hard levels for the players who stall (#12, #13) and from settings the player can see and own, such as rank floors and sliders (#7, #9). Our own five rows sit at "no clear effect" or worse, because each version window changed more than one thing and a different mix of players. Filter by area or grade, then click a dot or a row button for the change, the reaction and the lesson.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG walls-->
+<figure class="fig" data-demo="walls" id="fig-walls">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wall cadence: Candy Crush vs MatchRPG</h4><span class="illu">Illustrative model</span></div>
+  <div class="ctl"><div class="seg" data-seg="land" role="group" aria-label="Landing after each wall"><button type="button" class="on" data-v="0">Today, LANDING 0</button><button type="button" data-v="3">A2 proposal, LANDING 3</button></div></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 318" role="img" aria-label="Three stacked strips: a schematic of King's hard-then-lighter level rhythm, MatchRPG's measured loss rate at each of the first 72 encounters with fight lengths at the walls, and normal enemy HP with and without a three-encounter landing"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Top, King's rule as a schematic. Height is difficulty and width is level length, and both are made up [I]. King keeps hard levels short ("the longer the level is, the less likely it is to be fun", GDC 2024) and often follows a hard level with a lighter one (Davies, 2026) [V, E2]. Middle, the share of attempts that ended the run at each of MatchRPG's first 72 encounters, from 651 story runs, on a log scale [K]. The label over each wall is its median seconds to kill. Elites take 7 to 8 s and spike to 13% to 21%. The bosses spike to 30% to 37% and take 33 to 38 s, so MatchRPG's hardest beats are also its longest, which is the case King warns against. Bottom, the HP of a normal enemy (world roster average × depth power) [K]. Today the step lands on the elite, so the first enemy after the Ogre King has 34 HP against 23 before it. The A2 toggle shows <code>LANDING</code> 3, which keeps the three encounters after each wall on the old step, as our proposal [I]. Hover or tap for an encounter.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG mercy-->
+<figure class="fig" data-demo="mercy" id="fig-mercy">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hidden mercy at the wall</h4><span class="illu">Illustrative model</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="boss" role="group" aria-label="Wall"><button type="button" class="on" data-v="ogre">Ogre King</button><button type="button" data-v="moss">Old Mossback today</button><button type="button" data-v="moss650">Mossback A3 + C2</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">WOUND_STEP <input type="range" min="0" max="20" step="1" value="15" data-k="st"><output data-o="st">0.15</output></label>
+    <label class="rng">WOUND_MAX <input type="range" min="0" max="60" step="5" value="60" data-k="mx"><output data-o="mx">0.60</output></label>
+  </div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 290" role="img" aria-label="Top, the wall's HP at each attempt as losses pile up. Bottom, the modelled chance that a new player has cleared it by each attempt, with and without the wound"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The wound is <code>HP × (1 − min(WOUND_STEP × losses, WOUND_MAX))</code> until the wall is beaten once [K]. Today it reaches only the Ogre King (232 HP, 0.15 per loss to 0.60). C2 proposes 0.05 to 0.25 for Old Mossback on top of A3's cut from 765 to 650 HP, which leaves 488 HP after five losses [I]. Top bars are the wall's HP at each attempt. Bottom, the yellow line is the modelled chance a new player has made the first clear by that attempt, and the grey dashes are the same wall with no wound. The model treats a fight as a race, so the chance to win an attempt is p<sup>HP share</sup> [I]. It sets p so the median first clear lands on the measured one, 3 attempts for the Ogre King (p75 4, 15 players) and 7 for Old Mossback (p75 8.5, 10 players) [K]. The Ogre King's median counts v0.6 players who had no wound. Per-attempt win rates (87.5% and 63.4%) mix in veterans, so the model does not use them. Watch how far the yellow median moves at each cap.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ladder-->
+<figure class="fig" data-demo="ladder" id="fig-ladder">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A ladder after the first clear</h4><span class="illu">MatchRPG steps 7-10 and order illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 318" role="img" aria-label="Four difficulty ladders side by side: a proposed ten-step MatchRPG ladder, Peglin's 20 cruciball levels, Slay the Spire's 20 ascensions and Balatro's 8 stakes"></svg>
+  <div class="ctl"><button type="button" class="btn" data-b="win">Clear with every open step on</button><button type="button" class="btn" data-b="reset">Reset</button></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a rung to read what it changes. The MatchRPG column is card E1's proposal. Step 1 opens when Astaroth falls, and each later step opens on a clear with every step below it on [I]. Steps 1 to 6 are the card's examples, coloured by kind, red for enemy stats, yellow for a cut to healing or supply and purple for new behaviour. Steps 7 to 10 are open slots, filled so the ladder keeps the card's mix of about 40% stats, 40% cuts and 20% behaviour, and the order is ours [I]. Peglin's cruciball, Slay the Spire's ascensions and Balatro's stakes come from their wikis [V, E3]. All three stack, so each level keeps every rule below it. Peglin had to limit step 19 in v1.0.6, which is why E1 caps total enemy stat inflation at +40% and never puts two hard draws in one encounter.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG weights-->
+<figure class="fig" data-demo="weights" id="fig-weights">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Run-weighted vs player-weighted funnel</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 220" role="img" aria-label="Paired bars of the share of story runs reaching the world 1 boss, worlds 2 to 5 and the win, counted by run and by player"></svg>
+  <div class="ctl"><div class="seg" data-seg="m" role="group" aria-label="Weighting"><button type="button" class="on" data-v="both">Both</button><button type="button" data-v="run">Run-weighted</button><button type="button" data-v="player">Player-weighted</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Yellow counts every one of the 651 story runs. Green gives each of the 18 story players a total weight of 1 [K]. The gap is widest early. 44% of runs reach W2 but the average player gets there in 28% of their runs, because the 4 heaviest players made 53% of story runs and go deeper. Drop those 4 and W2 is 42%. A balance target set on run counts would mostly describe those 4. The win bar uses story wins (6 runs). Hover a stage.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG abtest-->
+<figure class="fig" data-demo="abtest" id="fig-abtest">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Detectable effect by test design</h4><span class="illu">Illustrative model</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 236" role="img" aria-label="Minimum detectable change in story depth against runs per player, for a between-player split and a per-run switchback"></svg>
+  <div class="ctl"><label class="rng">Runs per player <input type="range" min="4" max="80" step="2" value="40" data-k="r"><output data-o="r">40</output></label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The smallest change in mean story depth a test can find with 80% power at two-sided 5%, using note 09's arithmetic [I]. The inputs come from the live data. The SD inside a player is 1,258 m and between players about 500 m [K]. The red split gives 10 players each arm and uses Lehr's 16 s²/d². The green switchback flips the knob per run inside each of 10 active players and uses the paired 8 s²/d². At 40 runs per player the switchback finds about 360 m, a quarter of a world. The split stays near 700 m however long it runs, because the 500 m gap between players does not average away.</figcaption>
+</figure>
+<!--/FIG-->

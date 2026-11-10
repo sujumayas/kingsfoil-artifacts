@@ -1,0 +1,23 @@
+# Study config — read by studykit and by the recipe (build.py) via studykit.ctx(__file__).
+id: curves-matchrpg   # must match the item id in site/catalog.json (run `python -m studykit register curves-matchrpg`)
+format: design-curves   # formats.yaml; layout and rules in docs/formats/design-curves.md
+kind: recipe
+page: curves-matchrpg.html
+report: report.md
+sandbox:
+  page: curves-matchrpg-lab.html
+  source: sandbox.html
+qa:
+  max_page_kb: 900
+page_text:                # study-specific copy the design-curves recipe reads
+  game: MatchRPG          # must match the "*In <game>.*" card marker
+  lab_name: the curve lab
+  lab_blurb: Drag the knobs from the Curve Spec (scroll ramp, depth power, tier clocks, boss HP, endless growth, meta power per run) and watch enemy power against hero power, the run's time to full speed and the walls a new player meets across the descent.
+  context_title: Context
+  byline_month: November 2026
+figs_after: {A1: [walls], C2: [mercy], E1: [ladder]}
+index_chips: [{q: "10000000|build a boat", label: "10000000 family"}, {q: "tetris|canabalt|bejeweled", label: "Speed ramps"}, {q: "candy crush|king", label: "Candy Crush"}, {q: "balatro|peglin|landlord|slay the spire|hades", label: "Roguelite ladders"}, {q: "puzzle quest|dragons|marvel|gems of war|empires", label: "Match-3 RPGs"}, {q: "lichess|chess|hearthstone|clash", label: "Ranked ladders"}]
+thumb:                    # homepage card: crop of the live hero chart, 1440x900 viewport
+  from: page
+  crop: [744, 200, 1335, 533]
+  wait: 5000
