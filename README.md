@@ -51,16 +51,16 @@ research method and [docs/FORMATS.md](docs/FORMATS.md) for choosing (or adding) 
 agree series + format → `studykit new` → research + report → `studykit register` → sandbox, figures, recipe → `studykit build` →
 `tools/thumbs.py` → `studykit index` → `studykit check` → commit and push.
 
-## Guarantees (checked by CI on every push)
+## Guarantees (checked by CI on every pull request)
 
 - `catalog.json` uses only `taxonomy.json` values; studies have the required facets and 3–10 techniques
 - every study declares a format from `formats.yaml` and follows its sandbox rule; legacy formats take no new studies
 - `index.html` and `manifest.json` are up to date, and the manifest lists exactly the files in `site/`
 - every recipe study rebuilds **byte-for-byte** from its sources, and every sandbox in `site/` equals its source
 - no broken local links, no external images, page-weight budgets respected
-- no console errors and no horizontal overflow on a 390 px phone
+- no console errors and no horizontal overflow on a 390 px phone, for the pages the PR changes (a manual run of the workflow checks every page)
 
 ## Deploying
 
 Netlify is linked to this repo and publishes `site/` from `main` (no build step on Netlify).
-Push to a branch, let CI pass, then merge to `main`.
+Push to a branch, open a PR, let CI pass, then merge to `main`. CI runs on pull requests only, so a direct push to `main` is not validated.

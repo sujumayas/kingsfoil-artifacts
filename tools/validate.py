@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Site validator — what CI runs on every push and pull request.
+"""Site validator — what CI runs on every pull request.
 
   python tools/validate.py              all checks
   python tools/validate.py --no-browser skip the Playwright pass (fast, ~2 s)
   python tools/validate.py --rebuild    also rebuild every recipe study and fail if output changed
+  python tools/validate.py --since=REF  browser pass only for site/*.html pages changed since REF (CI uses the PR base)
 
 Checks
   1. catalog.json / taxonomy.json valid, index.html + manifest.json up to date   (tools/build_index.py --check)
@@ -24,7 +25,8 @@ sys.path.insert(0, str(REPO))
 import studykit
 from studykit import SITE
 
-args = set(sys.argv[1:])
+args = {a for a in sys.argv[1:] if not a.startswith("--since=")}
+since = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--since=")), None)
 fails, warns = [], []
 def fail(m): fails.append(m)
 def warn(m): warns.append(m)
@@ -150,10 +152,18 @@ if "--rebuild" in args:
     print(f"{len(outs)} outputs rebuilt")
 
 # 7 ────────────────────────────────────────────
-if "--no-browser" not in args:
-    step("7 browser (390 px phone): console errors, overflow")
+browser_pages = [p.name for p in pages]
+if since and "--no-browser" not in args:
+    r = subprocess.run(["git", "diff", "--name-only", f"{since}...HEAD", "--", "site/"], cwd=REPO, capture_output=True, text=True)
+    if r.returncode: fail(f"git diff against {since} failed: {r.stderr.strip()}")
+    changed = {pathlib.PurePath(f).name for f in r.stdout.split()}
+    browser_pages = [n for n in browser_pages if n in changed]
+    if not browser_pages:
+        step("7 browser: skipped, no pages changed since " + since)
+if "--no-browser" not in args and browser_pages:
+    step(f"7 browser (390 px phone): console errors, overflow — {len(browser_pages)} page(s)")
     from studykit.qa import browse
-    res = browse([p.name for p in pages])
+    res = browse(browser_pages)
     for page, issues in res.items():
         print(("  ✔ " if not issues else "  ✘ ") + page)
         for i in dict.fromkeys(issues): fail(f"{page}: {i}")
