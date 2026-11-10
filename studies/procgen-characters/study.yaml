@@ -1,6 +1,7 @@
 # Procedural characters: built in an earlier session; its build pipeline was not preserved.
 # site/procedural-character-generation-study.html is therefore the source. Edit it in place; the validator still checks it.
 id: procgen-characters
+format: legacy-static           # formats.yaml; pipeline lost, edit the page in place
 kind: static
 page: procedural-character-generation-study.html
 thumb:                          # homepage card: crop of the hero, 1440x900 viewport

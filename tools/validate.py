@@ -7,7 +7,7 @@
 
 Checks
   1. catalog.json / taxonomy.json valid, index.html + manifest.json up to date   (tools/build_index.py --check)
-  2. every study folder matches the catalog (ids, pages, reports, sandboxes)
+  2. every study folder matches the catalog (ids, pages, reports, sandboxes); every study follows its format (formats.yaml)
   3. manifest.json lists exactly the files in site/
   4. every local link and image in every page resolves
   5. no external images (img/video/audio/source/CSS url) — pages must be self-contained
@@ -58,7 +58,38 @@ for s in studies:
                 fail(f"{s.id}: site/{s.sandbox_name} differs from {s.sandbox_src.relative_to(REPO)} — edit the source, then `python -m studykit build {s.id}`")
 for i in cat["items"]:
     if i["type"] == "study" and i["id"] not in sids: fail(f"catalog study '{i['id']}' has no studies/{i['id']}/study.yaml")
+for i in cat["items"]:
+    if i["type"] == "sandbox" and i.get("pair") in items and i.get("series") != items[i["pair"]].get("series"):
+        fail(f"sandbox '{i['id']}': series must match its study '{i['pair']}'")
 print(f"{len(studies)} studies checked")
+
+# 2b ───────────────────────────────────────────
+step("2b formats (formats.yaml, docs/FORMATS.md)")
+fmts = studykit.formats(); by_id = {s.id: s for s in studies}
+for fid, f in fmts.items():
+    st, sb = f.get("status"), f.get("sandbox")
+    if st not in ("active", "draft", "legacy"): fail(f"format {fid}: status must be active, draft or legacy"); continue
+    if sb not in ("required", "optional", "none"): fail(f"format {fid}: sandbox must be required, optional or none")
+    if f.get("doc") and not (REPO / f["doc"]).exists(): fail(f"format {fid}: doc {f['doc']} missing")
+    if st == "legacy": continue
+    for k in ("title", "use_for", "page", "doc") + (("sandbox_page",) if sb != "none" else ()):
+        if not f.get(k): fail(f"format {fid}: missing '{k}'")
+    if st == "active":
+        t = by_id.get(f.get("template"))
+        if not t or t.kind != "recipe" or t.format != fid:
+            fail(f"format {fid}: template '{f.get('template')}' must be a recipe study whose study.yaml says format: {fid}")
+    else:
+        b = by_id.get(f.get("base"))
+        if not b or b.kind != "recipe": fail(f"format {fid}: base '{f.get('base')}' must be a recipe study")
+        warn(f"format {fid} is a draft: promote it once its first study ships (docs/FORMATS.md §3)")
+for s in studies:
+    f = fmts.get(s.format)
+    if not f: fail(f"{s.id}: format '{s.format}' is not in formats.yaml"); continue
+    if f["status"] == "legacy" and s.id not in f.get("studies", []):
+        fail(f"{s.id}: format '{s.format}' is legacy and only allowed for {f.get('studies', [])}")
+    if f["sandbox"] == "required" and not s.sandbox_name: fail(f"{s.id}: format '{s.format}' requires a sandbox")
+    if f["sandbox"] == "none" and s.sandbox_name: fail(f"{s.id}: format '{s.format}' has no sandbox, but study.yaml declares one")
+print(f"{len(fmts)} formats, {len(studies)} studies checked")
 
 # 3 ────────────────────────────────────────────
 step("3 manifest ↔ files")
