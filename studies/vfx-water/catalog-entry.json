@@ -1,0 +1,70 @@
+{
+ "id": "vfx-water",
+ "type": "study",
+ "path": "/vfx-water-topdown-pixel.html",
+ "title": "Top-down pixel water: tiny algorithms for shorelines, rivers, lakes and sea, and water you can wade through",
+ "short": "Bodies of water",
+ "nav": "Water",
+ "summary": "Dual-grid shores with foam and waves that run up the beach, two-phase river flow, depth bands and palette cycling, reflections, Kelvin wakes, wading and fishing, and Tibia-style server rules.",
+ "series": {
+  "id": "vfx",
+  "number": 7
+ },
+ "date": "2026-11-10",
+ "updated": "2026-11-10",
+ "thumb": "/thumbs/vfx-water.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "rendering"
+  ],
+  "concept": [
+   "water"
+  ],
+  "technique": [
+   "autotile-dual-grid",
+   "distance-field",
+   "flow-map",
+   "palette-cycling",
+   "wake-trails",
+   "ripple-sim",
+   "liquid-flow",
+   "dither-threshold",
+   "heightmap",
+   "reaction-table"
+  ]
+ },
+ "stats": {
+  "words": 19878,
+  "techniques": 35,
+  "figures": 30,
+  "games": 32,
+  "sources": 147
+ },
+ "pair": "vfx-water-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel water Sandbox (playable)",
+  "path": "/vfx-water-sandbox.html"
+ }
+}

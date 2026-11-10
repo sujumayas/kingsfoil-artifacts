@@ -1,0 +1,23 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. The sum is a crude total: F1, water as tile flags on one shared clock, sums only 21 but an MMO cannot do without it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG budget-->
+<figure class="fig" data-demo="budget" id="fig-budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The web budget: cited costs and estimates against a 16.7 ms frame</h4><span class="illu">Nothing measured for this study</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="v" role="group" aria-label="Chart"><button type="button" class="on" data-v="ms">Milliseconds</button><button type="button" data-v="ops">Texture reads per frame</button></div>
+    <label><input type="checkbox" data-k="bake" checked> Bake the distance field</label>
+  </div>
+  <svg class="chart budget-chart" viewBox="0 0 440 250" role="img" aria-label="Log-scale bars of the costs in section 6c, coloured by evidence tag"></svg>
+  <div class="legend-mini"><span><i style="background:#6fe0d2"></i>V, cited figure</span><span><i style="background:#e8c88a"></i>I, our estimate</span><span><i style="background:#c9a2ff"></i>U, unverified</span></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a row of §6c. We ran no benchmarks for this study, so bar colour shows the evidence: cited figures, our estimates, or an unverified forum number. The millisecond chart shows the three costs given in ms, none of them a web measurement: the pipe simulation ran in CUDA on a GTX 970 [V, S74], and terrain connect is a Godot user report [V, S44]. The lines are the study's rule from #6, keep all water work under about 2 ms of a 16.7 ms frame [I]. The second chart counts texture reads at 320×180 = 57,600 pixels. Untick <b>Bake</b> to compute distance in the shader, about 36 fetches per pixel by one forum estimate [U, S50], against 1 for a baked field. Bake on load, look up per pixel, spawn sprites per event [I].</figcaption>
+</figure>
+<!--/FIG-->

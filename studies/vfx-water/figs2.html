@@ -1,0 +1,270 @@
+<!--FIG currents-->
+<figure class="fig" data-demo="currents" id="fig-currents">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Forced currents: the tile moves you one tile at a time until something blocks the push</h4><span class="illu">Art scroll speed and rock layout illustrative</span></div>
+  <div class="stage click"><canvas width="256" height="80" aria-label="Three lanes race east: walking on sand, surfing on still water, and riding a current; click a lane tile to place or remove a rock"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="spd" role="group" aria-label="Playback speed"><button type="button" class="on" data-v="1">Real time</button><button type="button" data-v="0.2">Slow motion</button></div>
+    <button type="button" class="btn" data-b="reset">Race again</button>
+    <button type="button" class="btn ghost" data-b="clear">Remove rocks</button>
+  </div>
+  <svg class="chart" viewBox="0 0 400 152" role="img" aria-label="Bars of how many pixels each lane moved in each of the last 36 video frames" style="margin-top:8px;max-width:560px"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Top lane walks, middle lane surfs, bottom lane rides an eastward current. Pokémon Emerald moves a walker 16 steps of 1 px per tile, a surfer 8 steps of 2 px, and a current 6 steps of 2, 3, 3, 2, 3, 3 px [V, S62]. On 16 px tiles at 60 fps that is 3.75, 7.5 and 10 tiles per second [I, note 04]. <code>DoForcedMovement</code> checks the tile ahead in the push direction; if it is blocked, the player gets control back [V, S61]. Click a lane to drop a rock and watch the push end there. Always end a push at a blocking tile or the shore [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG waterfall-->
+<figure class="fig" data-demo="waterfall" id="fig-waterfall">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A waterfall in three parts: bright lip, darkening strip, splash locked to the flow</h4><span class="illu">Drawn at 32 px tiles; band colours illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="128" aria-label="A river runs over a cliff edge: a bright lip, a falling strip that darkens, a foam ring and rising mist dots in the pool below"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="mode" role="group" aria-label="Strip animation"><button type="button" class="on" data-v="scroll">Scroll the strip</button><button type="button" data-v="cyc">Cycle 4 band colours</button></div>
+        <label class="rng">Fall speed <input type="range" data-k="sp" min="16" max="128" step="8" value="48"><output data-o="sp"></output></label>
+        <label class="rng">Mist <input type="range" data-k="mist" min="0" max="3" value="2"><output data-o="mist"></output></label>
+        <label><input type="checkbox" data-k="sync" checked> Splash in sync with the flow</label>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Untick the sync box: the splash keeps its own clock and the loop stops reading as one fall.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Slynyrd splits a waterfall into mouth, flow and splash. The mouth is brighter, the vertical bands darken as they fall and break up at the base, and the splash "loops in sync with the flow" [V, S69]. The study's starting values for 32 px tiles are a strip 1 tile wide and 2 to 4 tall, scrolled at 32 to 64 px/s or palette-cycled through 4 to 8 band colours, a 4 to 6 frame foam ring, and 1 to 3 mist pixels per 100 ms that rise and fade over 0.5 to 1 s [I, note 04]. Mist is plain 1 px white dots, because alpha would leave the palette [I]. Emerald's waterfall runs 4 frames of 16 video frames, 1.07 s a loop [V, S16].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flowca-->
+<figure class="fig" data-demo="flowca" id="fig-flowca">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flowing water as levels 0 to 7: spread one block per tick, aim for the nearest drop, then sleep</h4><span class="illu">Top-down grid; layout and chunk size illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="192" height="112" aria-label="A grid with walls, holes and a water source; each wet cell shows its level from 0 at the source to 7 at the thin edge; click or drag to paint"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="tool" role="group" aria-label="Paint tool"><button type="button" class="on" data-v="src">Source</button><button type="button" data-v="wall">Wall</button><button type="button" data-v="hole">Hole</button><button type="button" data-v="erase">Erase</button></div>
+        <label class="rng">Tick <input type="range" data-k="ms" min="100" max="1000" step="50" value="250"><output data-o="ms"></output></label>
+        <button type="button" class="btn" data-b="reset">Reset map</button>
+        <button type="button" class="btn ghost" data-b="dry">Remove all sources</button>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Dark rims mark sources (level 0). Water that reaches a hole falls (level 8) and swirls. Paint a second source next to the first and the cell between them becomes a source too.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Minecraft stores sources as level 0 and flowing water as 1 to 7, with 8 for falling water. It spreads 1 block every 5 game ticks, 4 blocks per second, up to 7 blocks. It searches up to 4 blocks for a drop and flows only toward the sides with the lowest weight. A flowing cell touching 2 sources on solid ground becomes a source [V, S56]. Noita updates its world in 64x64 chunks with dirty rects [V, S59]; the gold dashes show which chunks changed last tick. Once nothing changes, the sim costs nothing. A 64x64 local sim is about 16,000 neighbour checks per tick, estimated under 0.1 ms in fast code [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG depthramp-->
+<figure class="fig" data-demo="depthramp" id="fig-depthramp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Depth bands: shift the hue as you go deeper, do not just darken</h4><span class="illu">Ramp colours are our picks</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="pre" role="group" aria-label="Water body"><button type="button" class="on" data-v="sea">Sea</button><button type="button" data-v="river">River</button><button type="button" data-v="swamp">Swamp</button><button type="button" data-v="cave">Cavern tint</button></div>
+    <label><input type="checkbox" data-k="dith" checked> Bayer dither at band edges</label>
+  </div>
+  <div class="pair" style="margin-top:8px">
+    <div><div class="stage"><canvas width="128" height="80" aria-label="A lake coloured by plain darkening of one blue"></canvas></div><div data-sw style="display:flex;border-radius:3px;overflow:hidden;margin-top:6px;border:1px solid var(--line)"></div><p style="margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Plain darkening: one hue, scaled darker.</p></div>
+    <div><div class="stage"><canvas width="128" height="80" aria-label="The same lake coloured by a hue-shifted ramp: teal shallows to a less saturated violet-blue deep"></canvas></div><div data-sw style="display:flex;border-radius:3px;overflow:hidden;margin-top:6px;border:1px solid var(--line)"></div><p style="margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Hue-shifted: teal shallows, less saturated violet-blue deep.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The depth here is a BFS distance from the shore, cut into 4 bands with <code>floor(d × 4) / 4</code> [I, note 02]. Deeper bands should be darker and less saturated, with the hue moved away from green and blue so the deep sea fights warm sprites less [V, S104]. Shallow water takes the texture of the ground below it [V, S104, S105]. The study's budget is about 8 to 9 colours per body of water: deep 2, mid 2, shallow tint 1 to 2, highlight, foam and wet sand [I, note 06]. Terraria has 12 water styles, from forest blue to cavern murky purple [V, S121]. The swamp recipe of olive to dark teal-brown, with no foam and no reflections, is the study's proposal [I, note 09].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG noisebands-->
+<figure class="fig" data-demo="noisebands" id="fig-noisebands">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The default indie water shader: two noises slide apart, multiply, and pick a band</h4><span class="illu">Noise tiles and colours illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="96" aria-label="Water surface made from two scrolling noises multiplied and cut into colour bands, with white highlights where the product crosses a threshold"></canvas><div class="hud" data-hud></div></div>
+      <div class="stage" style="margin-top:6px"><canvas width="192" height="48" aria-label="Three panels: noise layer A, noise layer B, and their product with the highlight threshold"></canvas></div>
+      <p style="margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Strip: layer A, layer B (scrolling the other way), and A × B with highlight pixels in white.</p></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Speed <input type="range" data-k="sp" min="10" max="200" step="5" value="50"><output data-o="sp"></output></label>
+        <label class="rng">Colour bands <input type="range" data-k="n" min="2" max="8" value="4"><output data-o="n"></output></label>
+        <label class="rng">Highlight threshold <input type="range" data-k="thr" min="30" max="60" value="44"><output data-o="thr"></output></label>
+        <div class="seg" data-seg="ratio" role="group" aria-label="Speed ratio of the two layers"><button type="button" data-v="1">Speeds 1 : 1</button><button type="button" class="on" data-v="07">Speeds 1 : 0.7</button></div>
+        <div class="seg" data-seg="ps" role="group" aria-label="Pixel size"><button type="button" data-v="1">Pixel 1</button><button type="button" class="on" data-v="2">Pixel 2</button><button type="button" data-v="4">Pixel 4</button></div>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Pixel Water for Godot 4.3 scrolls two noises at (0.05, 0.05) and (−0.05, −0.05), multiplies them, and lights highlights with <code>smoothstep(0.275, 0.4, depth)</code> [V, S87]. Pond Water snaps UVs with <code>floor(UV × pixel_amount) / pixel_amount</code> and colour with <code>round(noise × color_amount) / color_amount</code> [V, S91]. A 64 px tile at 0.05 UV/s repeats every 20 s, so the study scrolls the layers at 1 : 0.7 to hide the repeat [I, note 02]. It reads as water at once and as nobody's water after a minute [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG caustics-->
+<figure class="fig" data-demo="caustics" id="fig-caustics">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Caustics on the shallow floor only, and glints picked by a hash</h4><span class="illu">Cell sizes, drift and colours illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="96" aria-label="A beach on the left and water getting deeper to the right; a bright moving net of caustics on the shallow bands and single-pixel glints"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label><input type="checkbox" data-k="cau" checked> Caustics (2 Voronoi layers)</label>
+        <label><input type="checkbox" data-k="gate" checked> Only on the 2 shallowest bands</label>
+        <div class="seg" data-seg="st" role="group" aria-label="Posterise steps"><button type="button" data-v="2">2 steps</button><button type="button" class="on" data-v="3">3 steps</button></div>
+        <label><input type="checkbox" data-k="gl" checked> Hash glints</label>
+        <label class="rng">Glint chance per cell <input type="range" data-k="rate" min="0" max="30" value="12"><output data-o="rate"></output></label>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Untick the band gate: the net spreads over deep water and the sea stops saying "you can stand here".</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A Voronoi caustic lights pixels where the nearest and second-nearest feature points are almost equally far, which costs 9 cell hashes per pixel per layer, so bake it [V, S92, S93; I, note 02]. The gate keeps caustics on depth bands 1 and 2, posterised to 2 or 3 palette steps [I, notes 02, 05]. Glints follow <code>if hash(cell, floor(t / 0.2)) &lt; p</code>, a 1 to 2 px near-white flash for a moment, desaturated toward white rather than cyan [I, note 06]. The chance here is per 4x4 cell. Too many glints turn into noise [I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG reflect-->
+<figure class="fig" data-demo="reflect" id="fig-reflect">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Reflections in 3/4 view: flip each object about its own feet, never the screen</h4><span class="illu">Scene and wobble rate illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="112" aria-label="A tree, a sign post and a walker on a shore above a pond, with their darkened, wobbling reflections in the water"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="mode" role="group" aria-label="Reflection method"><button type="button" class="on" data-v="mirror">Per-object copy</button><button type="button" data-v="screen">Screen flip</button><button type="button" data-v="off">None (swamp)</button></div>
+        <label class="rng">Row wobble <input type="range" data-k="amp" min="0" max="3" value="1"><output data-o="amp"></output></label>
+        <label class="rng">Darken toward water <input type="range" data-k="dk" min="20" max="80" step="5" value="45"><output data-o="dk"></output></label>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The study's plan is one extra sprite per shore object with <code>flip_v</code>, modulated darker, a per-row sine x offset snapped to whole pixels, and clipped to a water mask [I, note 02]. Flowa duplicates and flips its sprites the same way and stays under 200 draw calls per level [V, S97]. A screen flip reads <code>hint_screen_texture</code>, which costs a full back-buffer copy, and forum reports say it breaks in web exports [V, S95, S96]. Switch to Screen flip and the grass lands in the pond. Murky swamp water should not reflect at all [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rings-->
+<figure class="fig" data-demo="rings" id="fig-rings">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One fixed pool of ring sprites for every swimmer, bobber and stone</h4><span class="illu">Rain rate and burst size illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="160" height="96" aria-label="A lake surface; click to drop a ring; an idle swimmer makes two rings every 800 ms"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="pre" role="group" aria-label="Ring timing"><button type="button" class="on" data-v="std">8 × 150 ms</button><button type="button" data-v="bob">Bobber, alpha 0.75</button><button type="button" data-v="fast">8 × 75 ms</button></div>
+        <label class="rng">Pool size <input type="range" data-k="pool" min="8" max="64" step="4" value="32"><output data-o="pool"></output></label>
+        <label><input type="checkbox" data-k="swim" checked> Idle swimmer</label>
+        <label><input type="checkbox" data-k="rain"> Drops, 6 per second</label>
+        <button type="button" class="btn" data-b="burst">Drop 20 at once</button>
+      </div></div>
+  </div>
+  <svg class="chart" viewBox="0 0 400 60" role="img" aria-label="The ring pool as a row of slots: lit slots are live rings, the arrow is the next slot to fill" style="margin-top:8px;max-width:560px"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew's idle swimmer counts <code>swimTimer</code> down from 800 ms and spawns a ring at 400 ms and at 0 ms. The ring is 8 frames at <code>150 − (|xVel| + |yVel|) × 3</code> ms with alpha fading 0.003 per tick, about 1.2 s of life, and a bobber spawns the same ring at alpha 0.75 [V, S107, S108]. The study sizes the pool at 32 to 64 rings and draws them as ellipses squashed to about 1/3 height, 1 px wide, one palette step lighter than the water [I, note 08]. Shrink the pool and press the burst button: the oldest rings are recycled, flashing red in the slot row. At 0.6 s of life rings read as rain [I, note 08].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG kelvin-->
+<figure class="fig" data-demo="kelvin" id="fig-kelvin">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Kelvin wake from spawn spacing: drop a pair every few pixels and the 19.47° V draws itself</h4><span class="illu">Route, turn rate and particle life illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="192" height="112" aria-label="A rowing boat on open water leaving a V-shaped wake; click or drag to steer it"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Speed <input type="range" data-k="sp" min="6" max="60" step="2" value="40"><output data-o="sp"></output></label>
+        <label class="rng">Spawn spacing <input type="range" data-k="gap" min="4" max="12" value="6"><output data-o="gap"></output></label>
+        <div class="seg" data-seg="mode" role="group" aria-label="Spawn rule"><button type="button" class="on" data-v="dist">By distance</button><button type="button" data-v="time">By time (anti-pattern)</button></div>
+        <label><input type="checkbox" data-k="lines" checked> Show the 19.47° lines</label>
+        <button type="button" class="btn ghost" data-b="auto">Back to the auto route</button>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Click or drag on the water to steer. When the boat stops, the pool drains to zero.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>For walkers, swimmers and rowboats the wake's half-angle is arcsin(1/3) = 19.47° at any speed, because deep-water group velocity is half the phase velocity [V, S78, S79]. tan 19.47° = 0.354, so an arm moves 1 px sideways per 2.8 px of travel [I, note 05]. The recipe spawns two dots behind the stern every 6 to 8 px, pushed sideways by <code>distance_behind × 0.354</code>, each fading over 0.8 to 1.2 s, plus 1 or 2 transverse bars right behind the mover [I, note 08]. Spawning by time instead makes the arms bunch up when slow [I]. Fast boats above a hull Froude number of about 0.5 narrow toward 10° [V, S79]; this demo stays in the slow case.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wading-->
+<figure class="fig" data-demo="wading" id="fig-wading">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wading by tile type: knees in the shallows, head only when swimming, no step into the deep</h4><span class="illu">Walker size and base speed illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="144" height="56" aria-label="A walker crosses grass, sand, shallow water and swimmable water, then stops at deep water and turns back"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Walker speed on grass <input type="range" data-k="sp" min="10" max="40" step="2" value="22"><output data-o="sp"></output></label>
+        <label><input type="checkbox" data-k="tint" checked> Tint below the waterline (untick to hide)</label>
+        <label><input type="checkbox" data-k="ring" checked> One ring per footstep</label>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Bands from left: grass 150, sand 160, shallow 200, swimmable, deep (blocked).</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia's step time is <code>TerrainFactor / Speed × DiagonalFactor</code>. Grass is 150 and sand 160 [V, S37]; shallow water, bog and muddy water are 200 per the fan wiki [U, S36], so wading is about 1.33x slower than grass. Swimmable tiles run <code>swimming.lua</code> on StepIn, which puts on a swim outfit and clears burning and poison, and StepOut removes it [V, S24, S25]. The study puts the knee cut about 6 px up a 32 px sprite and tints the part below 50% toward the water instead of hiding it, with one ring per footstep [I, notes 06, 08]. Never let a tile look shallow and block, or look deep and let you walk [I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG splash-->
+<figure class="fig" data-demo="splash" id="fig-splash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Splashes: a few frames of droplets, a ring, then delete the item, unless it is a log you chose to float</h4><span class="illu">Drop height, drift and bubble timing illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="160" height="96" aria-label="A dock over water; click the water to drop an item, a stone or a log"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="obj" role="group" aria-label="Object to drop"><button type="button" class="on" data-v="item">Item</button><button type="button" data-v="rock">Stone</button><button type="button" data-v="log">Log</button></div>
+        <div class="seg" data-seg="mode" role="group" aria-label="Rule"><button type="button" class="on" data-v="tibia">Tibia: everything sinks</button><button type="button" data-v="cozy">Cozy: logs float</button></div>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Each type keeps its own splash timing. The server needs one flag and no item physics.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew's <code>sinkDebris</code> plays the ring sheet for 3 frames at 150 ms for debris, and other items get 2 frames at 300 ms, a sound, and removal [V, S109]. In Tibia every water and swamp ground is a <code>trashholder</code>: a thrown item is destroyed with a blue bubble effect, green in swamps [V, S22]. The study's recipe is a 3 to 5 frame burst of 1 to 2 px droplets in foam colour, then a ring that grows over about 0.5 s [I, note 06]. Deleting items surprises players who drop one by accident; Tibia accepts that, and a cozy RPG may float a few props instead [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG bobbing-->
+<figure class="fig" data-demo="bobbing" id="fig-bobbing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Floating things: 1 px of sine on their own phase, a slow drift, a stop at the shore</h4><span class="illu">Objects and river layout illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="192" height="96" aria-label="A river with drifting logs and a bottle, a moored boat and lily pads, all bobbing out of step; drifting things pile up on a sandbar"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Bob amplitude <input type="range" data-k="amp" min="0" max="3" value="1"><output data-o="amp"></output></label>
+        <label class="rng">Period, logs and boats <input type="range" data-k="per" min="15" max="50" step="5" value="35"><output data-o="per"></output></label>
+        <label class="rng">Drift <input type="range" data-k="dr" min="0" max="12" value="6"><output data-o="dr"></output></label>
+        <label><input type="checkbox" data-k="same"> Same phase for all (anti-pattern)</label>
+        <label><input type="checkbox" data-k="frz"> Freeze bobbing (reduced motion)</label>
+        <button type="button" class="btn ghost" data-b="reset">Release the stuck ones</button>
+      </div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew bobs a swimmer with <code>yOffset = cos(t_ms / 2000) × 4</code>, 4 px at 4x zoom, so 1 art pixel [V, S107]. The study's values are 1 px at 320x180, since 2 px reads as bouncing; a period of 1.5 to 2.5 s for small items and 3 to 4 s for logs and boats; a phase from <code>hash(id)</code>; and a drift of 4 to 8 px/s along the tile flow that stops at shore tiles [I, notes 06, 08]. Floating items are clipped at a waterline like wading sprites. Bobbing is the motion most likely to bother sensitive players, so keep it to 1 px and let an option freeze it [V, S138; I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fishing-->
+<figure class="fig" data-demo="fishing" id="fig-fishing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fishing: wait, tease, bite, react, and a chance curve that stops at 50%</h4><span class="illu">Wait played 4x faster, regrow timer 60x faster</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="128" height="96" aria-label="An angler on a beach with a bobber on the water; click to cast and to reel in when the bobber goes under"></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl">
+        <button type="button" class="btn" data-b="act">Cast / reel</button>
+        <label><input type="checkbox" data-k="bait" checked> Bait (× 0.5)</label>
+      </div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="mode" role="group" aria-label="Fishing rule"><button type="button" class="on" data-v="stardew">Tease + 800 ms window</button><button type="button" data-v="server">Server roll + theatre</button><button type="button" data-v="tibia">Tibia one click</button></div>
+        <label class="rng">Fishing skill <input type="range" data-k="sk" min="10" max="100" value="40"><output data-o="sk"></output></label>
+      </div>
+      <svg class="chart" viewBox="0 0 320 212" role="img" aria-label="Catch chance against fishing skill: rises from 10% at skill 10 and caps at 50% from skill 77" style="margin-top:8px"></svg></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew rolls a bite time of <code>random(600, 30000 − 250 × FishingLevel)</code> ms, halved by bait, and gives you <code>maxTimeToNibble = 800</code> ms to react; miss it and a new bite time is rolled [V, S108]. Nintendo says Animal Crossing fish usually nibble 2 or 3 times before the "kerplunk" [V, S117]. The study's MMO version keeps the server roll and lets the client play 0 to 3 nibble rings over 1 to 3 s, then a bite with the bobber fully under and a 2-ring burst [I, note 06]. TFS rolls <code>min(max(10 + (skill − 10) × 0.597, 10), 50)</code>% per use [V, S23]; the dashed line is a fan fit for ice fishing [V, S34]. Fished-out tiles turn back after 1,200 s and still splash in the meantime [V, S22, S34].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG reactions-->
+<figure class="fig" data-demo="reactions" id="fig-reactions">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Element reactions as tile swaps and timed field items</h4><span class="illu">Durations, patch sizes and drift rate illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="192" height="112" aria-label="A river and lake of shallow water tiles; click a tile to apply fire, frost, lightning or oil"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="el" role="group" aria-label="Element"><button type="button" class="on" data-v="frost">Frost</button><button type="button" data-v="fire">Fire</button><button type="button" data-v="bolt">Lightning</button><button type="button" data-v="oil">Oil</button></div>
+        <label class="rng">Lightning cap <input type="range" data-k="cap" min="1" max="8" value="4"><output data-o="cap"></output></label>
+        <label><input type="checkbox" data-k="nocap"> No cap (griefing risk)</label>
+        <button type="button" class="btn ghost" data-b="clear">Clear all fields</button>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Try oil, then fire on the slick. Or steam first, then lightning into it.</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The study's Asterion table: an ice spell on shallow water makes walkable ICE that decays back; fire on water makes a STEAM field that blocks sight; energy on water makes an ELECTRIFIED field by a flood fill capped at 3 to 5 tiles; oil drifts with the flow and burns on fire contact [I, note 08]. DOS2 turns ice on water into a frozen surface and fire on water into a steam cloud, and shock on steam electrifies the cloud [V, S126]. Each reaction is one field item with a duration, like Tibia's fire fields [I, note 08]. Tick "No cap" and one bolt covers the lake, which is why the study caps it in tiles [I, note 08].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG heightfield-->
+<figure class="fig" data-demo="heightfield" id="fig-heightfield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A lake-size heightfield next to a ring pool: interference and bounces, at a price per cell</h4><span class="illu">Drop size and lake shape illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="80" height="45" aria-label="An 80 by 45 cell heightfield lake with ripples spreading, crossing and bouncing off the shore; click to drop"></canvas><div class="hud" data-hud></div></div><p style="margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Elias two-buffer ripple, 80 × 45 cells.</p></div>
+    <div><div class="stage click"><canvas width="160" height="90" aria-label="The same lake with one ring sprite per drop"></canvas></div><p style="margin:6px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Ring pool, same drops, same speed.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="hz" role="group" aria-label="Simulation rate"><button type="button" data-v="10">10 Hz</button><button type="button" class="on" data-v="15">15 Hz</button><button type="button" data-v="30">30 Hz</button></div>
+    <label class="rng">Damping <input type="range" data-k="damp" min="850" max="995" step="5" value="970"><output data-o="damp"></output></label>
+    <label><input type="checkbox" data-k="auto" checked> Auto drops</label>
+    <button type="button" class="btn ghost" data-b="calm">Calm the lake</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each cell becomes <code>(N + S + E + W) / 2 − old</code>, then shrinks by the damping; ports use 0.99 and 0.9 [V, S76, S77]. That is the leapfrog wave equation at r² = 1/2, right on the 2D stability limit, so rings always travel 0.707 cells per tick [I, note 05]. At 30 ticks/s on 4 px cells they grow about 85 px/s, too fast for a calm lake, so run it at 10 to 15 Hz. Integer damping <code>h −= h &gt;&gt; n</code> gives 0.969 at n = 5 and 0.9375 at n = 4 [I, note 05]. The grid costs the same when the lake is calm; the ring pool costs nothing [I, note 08].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG waveparticles-->
+<figure class="fig" data-demo="waveparticles" id="fig-waveparticles">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Wave particles: rings of moving dots that split as they spread, so cost follows motion</h4><span class="illu">Speed, fade and pool size illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="192" height="108" aria-label="Boats on open water launch expanding rings of wave particles; click to drop a ring"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <div class="seg" data-seg="src" role="group" aria-label="Moving sources"><button type="button" data-v="0">No boats</button><button type="button" class="on" data-v="1">1 boat</button><button type="button" data-v="3">3 boats</button></div>
+        <label class="rng">Split when neighbours drift <input type="range" data-k="sp" min="3" max="10" value="4"><output data-o="sp"></output></label>
+        <label><input type="checkbox" data-k="split" checked> Split in three</label>
+      </div>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--mute);line-height:1.45">Untick the split and the fronts break into gaps as they grow. Pick "No boats" and the count falls to zero.</p></div>
+  </div>
+  <svg class="chart" viewBox="0 0 400 142" role="img" aria-label="Log-scale line of how many particles are alive over the last 10 seconds, against the 57,600 cells a 320 by 180 grid touches every tick" style="margin-top:8px;max-width:560px"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Yuksel, House and Keyser's wave particles (SIGGRAPH 2007) are "simple, fast, and unconditionally stable": every disturbance launches moving bumps and objects make new waves by moving [V, S81]. Each particle stores origin, position, direction, amplitude, spread angle and birth time, and splits into three at one third amplitude when its neighbours drift apart [I, note 05]. Dots here are coloured by the height of their front. The 2D port is a CPU array of a few hundred dots with a palette index by amplitude and no heightfield, while a 320x180 grid touches 57,600 cells every tick, even when calm [I, note 05]. No shipped game is named on the project page [V, S81].</figcaption>
+</figure>
+<!--/FIG-->

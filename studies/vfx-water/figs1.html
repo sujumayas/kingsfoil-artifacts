@@ -1,0 +1,173 @@
+<!--FIG tileclock-->
+<figure class="fig" data-demo="tileclock" id="fig-tileclock">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One clock for every water tile: frames, holds and the per-tile phase trap</h4><span class="illu">Tile art drawn for this page</span></div>
+  <div class="stage"><canvas width="160" height="80" aria-label="A strip of beach and four rows of animated sea tiles, each 16 pixels, all driven by one clock or by a random phase per tile"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="ph" role="group" aria-label="Tile phase"><button type="button" class="on" data-v="sync">Shared clock</button><button type="button" data-v="rand">Random phase per tile</button></div>
+    <label><input type="checkbox" data-k="wrap" checked> Art wraps at tile edges</label>
+    <label><input type="checkbox" data-k="grid"> Show tile grid</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Hold per frame <input type="range" data-k="hold" min="2" max="40" value="16"><output data-o="hold"></output></label>
+  </div>
+  <div class="ctl presets" role="group" aria-label="Timings from section 6a">
+    <span class="mini">§6a presets</span>
+    <button type="button" class="btn ghost" data-pre="alttp">ALttP 3 × 9</button>
+    <button type="button" class="btn ghost on" data-pre="ladx">LA DX 4 × 16</button>
+    <button type="button" class="btn ghost" data-pre="ladxc">LA DX current 4 × 4</button>
+    <button type="button" class="btn ghost" data-pre="emer">Emerald 8 × 16</button>
+    <button type="button" class="btn ghost" data-pre="stardew">Stardew 10 × 200 ms</button>
+    <button type="button" class="btn ghost" data-pre="tibia">Tibia 16 × 500 ms</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Console water swaps 3 to 8 frames, each held for 9 to 26 video frames, and every water tile on screen changes at the same moment [V, S15, S17]. Link's Awakening DX holds calm water 16 video frames and currents 4, so fast water runs 4 times faster in the same game [V, S18]. Untick <b>Art wraps</b> and the shared clock makes the whole sea pulse as a grid, the first anti-pattern in §10. Pick <b>Random phase</b> and the grid breaks up, but the foam line on the beach row tears at every tile seam [I, note 03]. Tibia's 16 phases at 500 ms are a forum figure, so its 8 s loop is our inference [V, S27; U, S30]. Hold times are converted at 60 Hz [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of water techniques, 1887 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1985 so Kelvin's 1887 wake angle fits, and zoomed for 2021 to 2026 so Gen 3 stays readable. Gen 0 is the science that the game techniques borrow from.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG palcycle-->
+<figure class="fig" data-demo="palcycle" id="fig-palcycle">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Palette cycling: the picture never changes, four palette slots do</h4><span class="illu">Scene and colours illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage"><canvas width="128" height="72" aria-label="A still coast and stream painted with 16 palette indices; four reserved highlight slots rotate their colours"></canvas></div></div>
+    <div>
+      <p class="mini" style="margin:0 0 4px">The 16-entry palette. The 4 underlined slots are reserved for highlights and rotate.</p>
+      <div class="stage"><canvas width="256" height="30" data-pal aria-label="The 16 palette entries; the last four are reserved and change every step"></canvas></div>
+      <div class="ctl col">
+        <label class="rng">Cycle rate <input type="range" data-k="rate" min="1" max="30" value="8"><output data-o="rate"></output></label>
+        <div class="seg" data-seg="mode" role="group" aria-label="Cycle mode"><button type="button" class="on" data-v="rot">Rotate 4 slots</button><button type="button" data-v="pp">Ping-pong 0, 1, 2, 1</button></div>
+        <label><input type="checkbox" data-k="blend"> BlendShift (fade between steps)</label>
+        <label><input type="checkbox" data-k="only"> Grey out everything that never changes</label>
+      </div>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mark Ferrari's scenes are one flat 256-colour image with no layers; only palette entries move [V, S9, S10]. Each step writes 4 palette entries and redraws 0 pixels of the picture. DPaint stores the speed as a rate where 16384 means 60 steps per second, and the scale is linear [V, S12]. Pokémon Crystal cycles one water colour through its palette's colours 0, 1, 2, 1, so the loop never shows the jump a one-way rotation shows when the ramp ends differ [V, S13]. BlendShift fades neighbouring colours into each other during the shift, which hides the stepping at slow rates [V, S9]. Grey out the rest to see how few pixels carry all the motion.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hdma-->
+<figure class="fig" data-demo="hdma" id="fig-hdma">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Row-offset waves: one sideways scroll value per scanline</h4><span class="illu">Scene illustrative</span></div>
+  <div class="hdma-wrap">
+    <div class="stage"><canvas width="160" height="96" aria-label="A still underwater scene with rocks, a pillar, weed and a fish, each row shifted sideways by a sine"></canvas><span class="tagl">Picture</span></div>
+    <div class="stage"><canvas width="40" height="96" aria-label="The per-scanline offset table drawn as bars" data-tab></canvas><span class="tagl">Table</span></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Amplitude <input type="range" data-k="amp" min="0" max="16" value="2"><output data-o="amp"></output></label>
+    <label class="rng">Period <input type="range" data-k="per" min="8" max="96" value="32"><output data-o="per"></output></label>
+    <label class="rng">Speed <input type="range" data-k="spd" min="1" max="30" value="5"><output data-o="spd"></output></label>
+    <label><input type="checkbox" data-k="snap" checked> Snap to whole pixels</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>On the SNES, HDMA writes the BG1 horizontal scroll register ($210D) on every scanline, 2 bytes per line, so the wobble costs no CPU per pixel [V, S20, S21]. The right-hand strip is that table, one bar per row. In Godot the same idea is a shader that offsets <code>UV.x</code> by <code>A × sin(y × k + t × w)</code>, snapped to whole pixels and keyed to world y [I, note 01]. Use 1 to 2 px for calm water and 4 to 16 px only for heat or dream effects. Untick the snap to see the mixels that sub-pixel offsets make. Whole-screen wobble is the highest motion-sickness risk in this study, so pair it with the reduced-motion option of H2 [I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tibiapattern-->
+<figure class="fig" data-demo="tibiapattern" id="fig-tibiapattern">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tibia's sea: 500 ms phases on one clock, sprite picked by world position</h4><span class="illu">Texture drawn for this page</span></div>
+  <div class="stage"><canvas width="192" height="112" aria-label="A sea of 16-pixel tiles drawn from one 64-pixel texture; each tile picks its quarter of the texture by its world position"></canvas></div>
+  <div class="ctl">
+    <span class="mini">Pattern</span>
+    <div class="seg" data-seg="pat" role="group" aria-label="Pattern size"><button type="button" data-v="1">1×1</button><button type="button" data-v="2">2×2</button><button type="button" class="on" data-v="4">4×4</button></div>
+    <label class="rng">Phases <input type="range" data-k="ph" min="4" max="16" value="16"><output data-o="ph"></output></label>
+    <label><input type="checkbox" data-k="grid"> Show tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>OTClient animates ground items at <code>ITEM_TICKS_PER_FRAME = 500</code>, with phase <code>(millis % (500 × phases)) / 500</code>, so every copy of a water tile is in sync on every client and no water state crosses the network [V, S27]. Ground items pick their sprite by <code>position.x % numPatternX</code> and <code>position.y % numPatternY</code>, so a 4×4 texture covers the sea without a visible 1-tile repeat [V, S27]. Switch to 1×1 to see the grid come back. The 16-phase count is from forum posts [U, S29, S30]; at 500 ms it gives the 8 s loop [I]. Patterns only hide repetition if the texture wraps across its own edges, as this one does [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dualgrid-->
+<figure class="fig" data-demo="dualgrid" id="fig-dualgrid">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Paint a coast: blob 47, edge-only Wang 16, or the dual grid's 16</h4><span class="illu">Tile art drawn for this page</span></div>
+  <div class="stage click"><canvas width="240" height="168" aria-label="A 10 by 7 map of land and water cells; click or drag to paint, and the shore tiles with their case numbers update"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="s" role="group" aria-label="Autotile scheme"><button type="button" data-v="blob">Blob 47</button><button type="button" data-v="wang">Wang 16 (edges)</button><button type="button" class="on" data-v="dual">Dual grid 16</button></div>
+    <label><input type="checkbox" data-k="lab" checked> Case numbers</label>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="island">Island</button><button type="button" class="btn ghost" data-b="lake">Lake</button><button type="button" class="btn ghost" data-b="random">Random</button><button type="button" class="btn ghost" data-b="clear">Clear</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click or drag to paint land and water. The blob set looks at 8 neighbours and counts a corner only when both edges next to it match, which leaves 47 of the 256 cases [V, S39]. An edge-only set of 16 cannot draw inner corners, and the red cells are the places it fails [V, S40]. The dual grid draws its tiles on a second grid shifted half a tile, so each drawn tile reads 4 map corners and indexes a 16-entry table; "the dual-grid way needs 15" if all-water draws nothing [V, S40, S41]. Diagonal saddles (cases 6 and 9 here) have no cited rule, so this page resolves them toward water every time [I, note 03]. Godot's terrain matcher was reported at 4 to 5 ms per call, so rebuild from your own index cache instead [V, S44].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG overlayshore-->
+<figure class="fig" data-demo="overlayshore" id="fig-overlayshore">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Overlay shores: animate one water tile, lay still shore pieces on top</h4><span class="illu">Tile art drawn for this page</span></div>
+  <div class="stage click"><canvas width="160" height="96" aria-label="A coast where every water cell shows the same animated water tile and static see-through shore pieces sit on top; click a cell to flip land and water"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="ov" checked> Shore overlays</label>
+    <label><input type="checkbox" data-k="only"> Show the overlay pieces alone</label>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ultima VI, through the Nuvie engine, makes 32 shore tiles transparent with a mask and draws them over 4 animated base water tiles, so the border set reuses the moving water underneath [V, S19]. Tibia users describe the same layering, a shore ground with water animation plus a floor ground [U, S30]. About 12 pieces cover the cases: 4 edges, 4 outer corners and 4 inner corners [I, note 03]. Animated art drops from 16 or 47 border tiles × N frames to N frames of one water tile [I, note 01]. Click cells to change the coast; the pieces never animate, only the water under them does. Overlays must line up with the base at every frame, or the seam flickers [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG distfield-->
+<figure class="fig" data-demo="distfield" id="fig-distfield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Distance to shore, step by step: BFS 4-way, BFS 8-way or chamfer 3-4</h4></div>
+  <div class="stage click"><canvas width="192" height="120" aria-label="A 48 by 30 tile coast with an island; the distance to shore spreads outward one ring at a time; drag to paint land or water"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Method"><button type="button" data-v="4">BFS 4-way</button><button type="button" class="on" data-v="8">BFS 8-way</button><button type="button" data-v="c">Chamfer 3-4</button></div>
+    <button type="button" class="btn" data-b="run">Run again</button>
+    <button type="button" class="btn ghost" data-b="reset">Reset map</button>
+    <label><input type="checkbox" data-k="fast"> Fast</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every water tile next to land starts at 1 and every land tile next to water at −1, then the field grows one ring per step; each cell settles once, so the work is O(N) [I, note 03]. Compare the band shapes around the island. 4-way BFS gives diamonds that look wrong around headlands, 8-way gives squares, and the chamfer's two raster passes with weights 3 and 4 give rounder bands for the same cost, because 4/3 is close to √2 [V, S49; I, note 03]. Drag to paint and the field reruns, as it would once per map or per tide step. Stored as a byte with 128 at the shoreline, a 256×256 map is 64 KB, uploaded as 1 texel per tile [I, notes 02, 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG foamwaves-->
+<figure class="fig" data-demo="foamwaves" id="fig-foamwaves">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A beach that reads: foam crests, a run-up that slides back, wet sand that dries</h4><span class="illu">Starting numbers from §4 B4, illustrative</span></div>
+  <div class="stage"><canvas width="160" height="80" aria-label="Top view of a beach: foam crests move toward the sand, a thin sheet of water runs up and retreats, and a darker wet band fades"></canvas><span class="tagl">Top view</span></div>
+  <div class="stage" style="margin-top:6px"><canvas width="160" height="30" aria-label="Cross-section through the middle of the beach showing the slope, the waves and the run-up"></canvas><span class="tagl">Cross-section</span></div>
+  <div class="ctl">
+    <label class="rng">Wave period <input type="range" data-k="T" min="15" max="80" value="40"><output data-o="T"></output></label>
+    <label class="rng">Run-up <input type="range" data-k="A" min="2" max="6" value="3"><output data-o="A"></output></label>
+    <label class="rng">Foam band <input type="range" data-k="fb" min="3" max="6" value="4"><output data-o="fb"></output></label>
+    <label><input type="checkbox" data-k="wet" checked> Wet-sand band</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Foam is <code>fract(phase) &lt; width</code> on a phase built from the distance to shore, with the wavelength shrinking near the coast because shallow water slows waves and crests bunch up [I, notes 02, 05]. The run-up is <code>A × max(0, sin(2πt/T))</code> with A = 2 to 4 px, and the wet band fades over about 1 s after it retreats [I, notes 03, 05]. Three sand shades make the wet band a palette swap [I, note 03]. A lighter spray line at the shore and darker wet sand make the water read as higher than the land [V, S104]. Real swash takes 5 to 15 s, which feels sluggish; 3 to 5 s reads as waves, and under about 2 s looks nervous [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tide-->
+<figure class="fig" data-demo="tide" id="fig-tide">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tide as a level against height: 4 server steps, 1 byte each</h4><span class="illu">Height map and period illustrative</span></div>
+  <div class="stage"><canvas width="160" height="100" aria-label="A height map with an island, a sandbar and an islet; the sea level rises and falls and the sandbar path opens and floods"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Tide level <input type="range" data-k="lv" min="60" max="200" value="128"><output data-o="lv"></output></label>
+    <label><input type="checkbox" data-k="auto" checked> Auto (24 s cycle here)</label>
+    <div class="seg" data-seg="v" role="group" aria-label="View"><button type="button" data-v="steps">Server cells</button><button type="button" class="on" data-v="smooth">Client, smoothed</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every tile has a height, and water is wherever the height is below the sea level, the same depth-mask idea study #3 used for puddles [V, S4]. The level follows the §7 sketch, <code>128 + 40 × sin(2π × phase)</code>, quantised to 4 steps, so the grid rebuilds a few times per cycle and only the step goes on the network [I, note 03]. Cells that flip at a step flash amber. <b>Server cells</b> shows the truth the server owns; <b>Client, smoothed</b> passes the fractional level to the shader so the shoreline and foam slide between steps [I, note 03]. The sandbar path to the islet opens and floods, the kind of tide reveal that is a known mechanic [V, S53]. We propose 20 to 40 minutes per cycle for the MMO; Tibia has no tides as far as we found [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flowmap-->
+<figure class="fig" data-demo="flowmap" id="fig-flowmap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flow maps: one phase stretches and snaps, two phases half a cycle apart never do</h4><span class="illu">Texture and speeds illustrative</span></div>
+  <div class="stage click"><canvas width="128" height="80" aria-label="A river section with a rock; a ripple texture slides along a per-cell flow field; drag to draw new flow directions"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Blending"><button type="button" data-v="single">Single phase</button><button type="button" class="on" data-v="two">Two-phase</button></div>
+    <label class="rng">Cycle speed <input type="range" data-k="sp" min="10" max="100" value="35"><output data-o="sp"></output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="arr" checked> Flow arrows</label>
+    <label><input type="checkbox" data-k="noise"> Noise phase offset per cell</label>
+    <button type="button" class="btn ghost" data-b="reset">Reset flow</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The flow field here is 1 vector per 8 px cell, the per-tile direction a tile engine already has [I, note 02]. Drag across the river to redraw it. With one phase the texture slides along the flow, stretches where the flow splits around the rock and snaps back at the end of each cycle. Valve's fix runs two layers "offset half a phase" with weights <code>w = 1 − |1 − 2 × progress|</code> that sum to 1 [V, S54, S55]. Here the two layers are blended by weight and then cut into palette bands, so every pixel stays a palette colour, and the UV is snapped to whole pixels [I, note 02]. The noise offset breaks the pulse that both layers share [V, S54]. In Left 4 Dead 2 swamps testers "took 17% fewer wrong turns" with flow-mapped water [V, S54].</figcaption>
+</figure>
+<!--/FIG-->
