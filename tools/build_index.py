@@ -332,7 +332,9 @@ upsert("/catalog.json", "Catalog (v2)", "Rich data model: items, series, tags, s
 upsert("/taxonomy.json", "Taxonomy", "Controlled vocabulary of facets and tag values.", cat["updated"])
 for f in sorted(glob.glob(f"{SITE}/thumbs/*")):
     upsert("/thumbs/" + os.path.basename(f), "Thumbnail " + os.path.basename(f), "Card thumbnail", cat["updated"])
-for i in cat["items"]:
+for i in cat["items"]:  # new pages join the manifest; existing entries keep their text
+    if i["path"] not in known and os.path.exists(SITE + i["path"]):
+        upsert(i["path"], i["title"], i.get("summary", ""), i.get("date", cat["updated"]))
     if i["path"] not in known: errors.append("manifest missing " + i["path"])
 missing = [e["path"] for e in man if not os.path.exists(SITE + e["path"])]
 if missing: print("WARNING: manifest lists missing files:", missing)

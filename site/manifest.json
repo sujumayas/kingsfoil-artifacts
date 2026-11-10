@@ -154,5 +154,23 @@
   "title": "Thumbnail vfx-snow.png",
   "description": "Card thumbnail",
   "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/curves-hearthguard.webp",
+  "title": "Thumbnail curves-hearthguard.webp",
+  "description": "Card thumbnail",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/curves-hearthguard.html",
+  "title": "Hearthguard difficulty and learning curves: what made hero defense fun, and the minimum rules that recreate it",
+  "description": "Difficulty, learning and power curves for Hearthguard's co-op hero defense: structural twins from WC3 maps to Deep Rock Galactic, 21 natural experiments, 15 pattern cards, a Curve Spec, a 5-player playtest protocol and a curve lab.",
+  "date": "2026-11-09"
+ },
+ {
+  "path": "/curves-hearthguard-lab.html",
+  "title": "Hearthguard curve lab (interactive)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-09"
  }
 ]

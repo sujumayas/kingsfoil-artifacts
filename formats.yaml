@@ -27,3 +27,15 @@ formats:
     use_for: The two studies built before the repo existed. Edit their pages in place.
     studies: [ai-rts-enemy, procgen-characters]
     sandbox: none
+
+  design-curves:
+    status: active
+    title: Difficulty and learning curve study for one Kingsfoil game
+    use_for: One Kingsfoil game's difficulty and learning curves, researched through structural twins, pattern
+      lineages and natural experiments, ending in a Curve Spec, a playtest protocol and a ranked backlog.
+      Optional curve lab sandbox that plots the spec.
+    template: curves-hearthguard
+    sandbox: optional
+    page: "{id}.html"
+    sandbox_page: "{id}-lab.html"
+    doc: docs/formats/design-curves.md

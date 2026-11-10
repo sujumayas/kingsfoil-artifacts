@@ -5,3 +5,4 @@ site/.netlify/
 .netlify/
 .DS_Store
 node_modules/
+.venv/

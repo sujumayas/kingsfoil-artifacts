@@ -35,7 +35,7 @@ studies already covered (with URLs), the scope, the goal, and the researcher rul
 ## 2. Research with parallel agents
 
 Split the goal into 6–8 non-overlapping research agents and launch them in one message. Adapt the angles
-to the topic. The default split:
+to the topic. A format doc can replace this split with its own method; `design-curves` does. The default split:
 
 1. **History and classic era**: the oldest and simplest approaches, the games that defined them,
    community and modding knowledge (wikis, forums, data-mining), the numbers players notice.

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hearthguard curve lab</title>
+<meta name="description" content="Drag Hearthguard's tuning constants and see the power ratio, Hearth margin, levels and gold across a whole run. A model of the code at b509a56, not the game.">
+<style>
+:root{--bg:#0e0c12;--panel:#17141d;--text:#e8e2f0;--muted:#a59db3;--warm:#ffc870;--blue:#8ea8ff;--red:#ff8f7a;--green:#7fd6a0;--grid:#1d1924;--line:#2a2433}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+header h1{margin:0 0 4px;font-size:1.5rem;letter-spacing:.01em}
+header p{margin:0 0 6px;color:var(--muted)}
+header nav a{margin-right:14px}
+.layout{display:grid;gap:16px;margin-top:14px;grid-template-columns:minmax(0,1fr);grid-template-areas:"sum" "main" "knobs" "hearth" "level"}
+@media (min-width:900px){.layout{grid-template-columns:340px minmax(0,1fr);grid-template-areas:"knobs sum" "knobs main" "knobs hearth" "knobs level"}
+ .knobs-in{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}}
+.panel{background:var(--panel);border-radius:10px;padding:14px;min-width:0}
+.panel h2{margin:0 0 4px;font-size:1.05rem}
+.cap{color:var(--muted);font-size:.85rem;margin:4px 0 0}
+#sum{grid-area:sum}#lab-main{grid-area:main}#knobs{grid-area:knobs;padding:0;background:none}#hearth{grid-area:hearth}#level{grid-area:level}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{background:var(--grid);border-radius:8px;padding:10px}
+.card .k{font-size:.78rem;color:var(--muted)}
+.card .v{font-size:1.3rem;font-weight:650;font-variant-numeric:tabular-nums}
+.card .s{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--muted);margin:6px 0 2px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend i.d{border-top-style:dashed}
+.chart{width:100%}
+.chart svg{display:block;width:100%;height:auto}
+.knobs-in{background:var(--panel);border-radius:10px;padding:12px 14px}
+fieldset{border:0;border-top:1px solid var(--line);margin:0;padding:10px 0 8px}
+fieldset:first-of-type{border-top:0}
+legend{font-weight:650;font-size:.92rem;padding:0}
+.src{font-size:.72rem;color:var(--muted);margin:1px 0 6px;overflow-wrap:anywhere}
+.row{display:grid;grid-template-columns:72px minmax(0,1fr) 54px;align-items:center;gap:8px;margin:3px 0}
+.row label{font-size:.82rem}
+.row output{font-variant-numeric:tabular-nums;text-align:right;font-size:.85rem;color:var(--warm)}
+.row.mod output{font-weight:700}
+input[type=range]{width:100%;accent-color:var(--warm);margin:0;height:26px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+button{font:inherit;font-size:.85rem;background:var(--grid);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button.on{border-color:var(--warm);color:var(--warm)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.85rem;margin:4px 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#status{font-size:.8rem;color:var(--green);min-height:1.2em;margin-top:6px}
+#fallback{display:none;width:100%;height:170px;margin-top:6px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;font:12px/1.4 ui-monospace,Menlo,monospace}
+.note{font-size:.8rem;color:var(--muted)}
+.tag{font-size:.72rem;color:var(--warm);border:1px solid var(--warm);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+.losses{font-size:.8rem;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Hearthguard curve lab</h1>
+<p>A model of the tuning constants in the game repo at commit b509a56. It is not the game, and it assumes one hero who kills everything.</p>
+<nav><a href="curves-hearthguard.html">Read the study</a><a href="index.html">All artifacts</a></nav>
+</header>
+
+<div class="layout">
+<section class="panel" id="sum" aria-label="Summary">
+<div class="cards" id="cards"></div>
+<div class="losses" id="losses"></div>
+</section>
+
+<section class="panel" id="lab-main">
+<h2>Power ratio per wave</h2>
+<div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i class="d" style="border-color:var(--muted)"></i>1.0, even</span></div>
+<div class="chart" id="c-ratio"></div>
+<p class="cap">Hero damage multiplier at wave start divided by mob HP multiplier. Above 1.0 the hero gains on the mobs. A sawtooth rises inside each chapter and drops at the next chapter start. Six waves per chapter, wave 6 is the boss.</p>
+</section>
+
+<aside id="knobs" aria-label="Tuning knobs"><div class="knobs-in" id="knobs-in"></div></aside>
+
+<section class="panel" id="hearth">
+<h2>Hearth margin</h2>
+<div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span></div>
+<div class="chart" id="c-hearth"></div>
+<p class="cap">Mob hits a full Hearth can take, per corridor. One hit is 30 x the mob attack multiplier, an illustrative size. Every corridor gets a full wave, so the Hearth is split by player count.</p>
+</section>
+
+<section class="panel" id="level">
+<h2>Hero level and gold</h2>
+<div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span></div>
+<div class="chart" id="c-level"></div>
+<p class="cap">Hero level at wave start. Per-hero XP equals solo in co-op because each corridor feeds the pool.</p>
+<div class="legend" style="margin-top:12px"><span><i style="border-color:var(--warm)"></i>Gold earned</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i style="border-color:var(--green)"></i>All 9 Town at level 1</span><span><i style="border-color:var(--red)"></i>All 9 at level 5</span></div>
+<div class="chart" id="c-gold"></div>
+<p class="cap" id="gold-cap">Cumulative gold. Co-op shows team gold, assuming even kills (killer gets all, others 30%).</p>
+</section>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+// ---------- model data, ported from notes/curves_model.py ----------
+var XP={wolf:3,goblin:4,treant_sapling:5,giant_spider:5,wicked_vine:5,boar:5,dark_gnome:5,skeleton:5,ghost:5,imp:4,orc:8,cultist:6,bat_swarm:4,kobold_miner:6,cave_crawler:8,glowcap:5,stone_elemental:10,deep_one:7,serpent_man:7,drowned_acolyte:6,night_gaunt:6,gibbering_mass:12,hellhound:6,tortured_soul:6,lilim:8,ualac:7,fallen_angel:12};
+var R=[{wolf:5,goblin:3,treant_sapling:2,giant_spider:2,wicked_vine:2,boar:1,dark_gnome:2},{skeleton:4,ghost:3,imp:3,orc:2,cultist:2},{bat_swarm:5,kobold_miner:3,cave_crawler:2,glowcap:2,stone_elemental:1},{deep_one:4,serpent_man:3,drowned_acolyte:3,night_gaunt:3,gibbering_mass:1},{hellhound:5,tortured_soul:3,lilim:3,ualac:2,fallen_angel:1}];
+var OP=[["wolf","goblin","dark_gnome"],["skeleton","imp","ghost"],["bat_swarm","kobold_miner"],["deep_one","night_gaunt"],["hellhound","tortured_soul"]];
+var EL=[[40,40],[40,50],[60,60],[65,65],[70,70]]; // elite xp, waves 3 and 5
+var BO=[[8000,400],[16000,700],[28000,1100],[42000,1500],[60000,2000]]; // boss HP, xp
+var BOSS_S=[150,90,75,75,75];
+var TC=[130,120,150,150,110,120,100,120,100];
+var SPAN=[22,28,28,26,28,0], GAP=12, CAMP=25, INTRO=5, HIT=30;
+function cnt(c,w){return Math.round([14+8*c,22+12*c,18+10*c,40+30*c,28+16*c][w]*1.08);}
+function gold1(x){return 1+Math.floor(x/4);}
+function avgOf(r,f){var t=0,s=0;for(var k in r){t+=r[k];s+=f(k)*r[k];}return s/t;}
+function ones(list){var o={};list.forEach(function(k){o[k]=1;});return o;}
+
+var BASE={hp:[1.0,2.3,4.6,8.0,13.0],atk:[1.0,1.6,2.4,3.3,4.4],step:0.07,growth:0.09,xpA:80,xpB:70,xpC:6,players:1,hearth:6500,hearthPer:0.5,bossPer:0.75,goldPer:0.7,townMult:1.7,respBase:6,respStep:1.5,campfire:false};
+// Proposal: WAVE_STEP 0.03 so levels outpace mob HP inside a chapter, HP_SCALE fitted for a 20% ratio drop at each chapter start.
+var PROPOSED={hp:[1.0,2.5,4.3,7.1,11.3],atk:[1.0,1.6,2.4,3.3,4.4],step:0.03,xpC:3}; // the study's §11 Curve Spec
+
+function model(S,ref){
+  var n=S.players, hpf=1+S.bossPer*(n-1), share=n*(1+0.3*(n-1));
+  var xpNext=function(L){return Math.max(1,S.xpA+S.xpB*L+S.xpC*L*L);};
+  var dmg=function(L){var lv=L-1;return 32*Math.pow(1+S.growth,lv)+2.4*lv;};
+  var hearthHP=S.hearth*(1+S.hearthPer*(n-1));
+  var xp=0,L=1,gold=0,t=INTRO,rows=[],chStart=[],lossAt=[];
+  function addxp(a){xp+=a;while(L<30&&xp>=xpNext(L)){xp-=xpNext(L);L++;}}
+  for(var c=0;c<5;c++){
+    var xm=2.4+0.65*c, gm=1+S.goldPer*c; chStart.push(t);
+    for(var w=0;w<6;w++){
+      var hm=S.hp[c]*(1+S.step*w), am=S.atk[c]*(1+S.step*w), Ls=L, wx, wg, bossS=0;
+      if(w<5){
+        var r=w===0?ones(OP[c]):R[c], k=cnt(c,w);
+        wx=k*avgOf(r,function(m){return XP[m];})*xm; wg=k*avgOf(r,function(m){return gold1(XP[m]);})*gm;
+        if(w===2||w===4){var e=EL[c][w===2?0:1];wx+=e*xm;wg+=gold1(e)*gm;}
+        t+=SPAN[w]+GAP;
+      }else{
+        bossS=BOSS_S[c]*hpf*(ref?ref.rows[c*6+5].dmgRaw/dmg(Ls):1);
+        var nadds=(3+c)*Math.max(0,Math.floor((bossS-6)/5+1));
+        wx=BO[c][1]*xm+nadds*avgOf(R[c],function(m){return XP[m];})*xm;
+        wg=gold1(BO[c][1])*gm+nadds*avgOf(R[c],function(m){return gold1(XP[m]);})*gm;
+        lossAt.push(t+bossS/2); t+=bossS;
+      }
+      addxp(wx); gold+=wg;
+      rows.push({c:c,w:w,hm:hm,am:am,Ls:Ls,Le:L,dmgRaw:dmg(Ls),ratio:dmg(Ls)/32/hm,gold:gold*share,hits:hearthHP/(n*am*HIT),bossS:bossS});
+    }
+    if(c<4)t+=CAMP;
+  }
+  var mult=0;for(var j=0;j<5;j++)mult+=Math.pow(S.townMult,j);
+  var tsum=TC.reduce(function(a,b){return a+b;},0);
+  var loss=lossAt.map(function(x,i){return (S.campfire&&i>0?x-chStart[i]:x)/60;});
+  var lossNo=lossAt.map(function(x){return x/60;});
+  return {rows:rows,runS:t,town1:tsum,town5:tsum*mult,loss:loss,lossNo:lossNo,hearthHP:hearthHP};
+}
+var REF=model(BASE,null);
+
+// ---------- knobs ----------
+var KN=[
+ {g:"Mob scaling",src:"",preset:true,items:[
+  {k:"hp",arr:1,lab:"Ch",min:0.5,max:20,st:0.01,name:"HP_SCALE",at:"scripts/data/chapter_defs.gd:21"},
+  {k:"atk",arr:1,lab:"Ch",min:0.5,max:8,st:0.01,name:"ATK_SCALE",at:"scripts/data/chapter_defs.gd:22"},
+  {k:"step",lab:"Per wave",min:0,max:0.15,st:0.005,name:"WAVE_STEP",at:"scripts/data/chapter_defs.gd:24",f:3}]},
+ {g:"Hero growth",items:[
+  {k:"growth",lab:"Dmg / lvl",min:0,max:0.2,st:0.005,name:"Fighter damage 32 x 1.09^(L-1)",at:"scripts/game/hero_stats.gd:31, scripts/data/class_defs.gd:27",pct:1},
+  {k:"xpA",lab:"Base",min:10,max:300,st:5,name:"xp_to_next = 80 + 70L + 6L²",at:"scripts/data/class_defs.gd:18-19"},
+  {k:"xpB",lab:"x L",min:0,max:200,st:5},
+  {k:"xpC",lab:"x L²",min:0,max:20,st:0.5,f:1}]},
+ {g:"Co-op",items:[
+  {k:"players",lab:"Players",min:1,max:3,st:1,name:"Players 1 to 3, one corridor each",at:"bot flag --players"},
+  {k:"hearth",lab:"Hearth HP",min:2000,max:20000,st:100,name:"HEARTH_HP",at:"scripts/game/sim.gd:23"},
+  {k:"hearthPer",lab:"Per player",min:0,max:1.5,st:0.05,name:"Hearth per extra player",at:"scripts/game/sim.gd:91",pct:1,plus:1},
+  {k:"bossPer",lab:"Boss HP",min:0,max:1.5,st:0.05,name:"Boss HP per extra player",at:"scripts/game/sim.gd:189",pct:1,plus:1}]},
+ {g:"Economy",items:[
+  {k:"goldPer",lab:"Gold / ch",min:0,max:1.5,st:0.05,name:"Gold per chapter",at:"scripts/game/sim.gd:277",pct:1,plus:1},
+  {k:"townMult",lab:"Town cost",min:1,max:2.5,st:0.05,name:"Town cost x 1.7^level",at:"scripts/data/town_defs.gd:14-16",f:2,x:1}]},
+ {g:"Death and loss",items:[
+  {k:"respBase",lab:"Respawn",min:0,max:20,st:0.5,name:"heroRespawnS",at:"Dota_2.json:112",f:1,s:1},
+  {k:"respStep",lab:"Per ch",min:0,max:5,st:0.25,name:"Respawn + 1.5 s x chapter",at:"scripts/game/sim.gd:378",f:2,s:1},
+  {k:"campfire",chk:1,lab:"Campfire checkpoint: a loss restarts at the chapter's start",name:"Proposal, no such rule today. Campfire is CAMP_TIME",at:"scripts/game/director.gd:13"}]}
+];
+var KEY="hg-curve-lab-v1";
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var S=clone(BASE);
+try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){for(var k in BASE){if(saved[k]!==undefined&&typeof saved[k]===typeof BASE[k]&&(!Array.isArray(BASE[k])||(Array.isArray(saved[k])&&saved[k].length===5)))S[k]=saved[k];}}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+function fmtVal(it,v){
+  if(it.pct)return (it.plus?"+":"")+Math.round(v*100)+"%";
+  var s=it.f!=null?v.toFixed(it.f):(it.st<1?v.toFixed(2):String(Math.round(v)));
+  if(it.x)s="x"+s; if(it.s)s+=" s";
+  if(it.k==="hearth")s=Math.round(v).toLocaleString("en-US");
+  return s;
+}
+var inputs=[];
+function buildKnobs(){
+  var box=document.getElementById("knobs-in"),h="";
+  KN.forEach(function(g,gi){
+    h+='<fieldset><legend>'+g.g+'</legend>';
+    if(g.preset)h+='<div class="seg" role="group" aria-label="Preset"><button type="button" data-preset="cur">Current (b509a56)</button><button type="button" data-preset="pro">Proposed sawtooth<span class="tag">proposal</span></button></div>';
+    g.items.forEach(function(it){
+      if(it.name)h+='<div class="src"><code>'+it.name+'</code> · '+it.at+'</div>';
+      if(it.chk){h+='<label class="chk"><input type="checkbox" data-k="'+it.k+'"> '+it.lab+'</label>';return;}
+      var n=it.arr?5:1;
+      for(var i=0;i<n;i++){
+        var id="k-"+it.k+(it.arr?i:"");
+        h+='<div class="row"><label for="'+id+'">'+(it.arr?(it.k==="hp"?"HP ":"ATK ")+it.lab+(i+1):it.lab)+'</label><input type="range" id="'+id+'" data-k="'+it.k+'"'+(it.arr?' data-i="'+i+'"':'')+' min="'+it.min+'" max="'+it.max+'" step="'+it.st+'"><output for="'+id+'"></output></div>';
+      }
+    });
+    h+='</fieldset>';
+  });
+  h+='<div class="actions"><button type="button" id="copy">Copy settings</button><button type="button" id="reset">Reset</button></div><div id="status" role="status"></div><textarea id="fallback" readonly aria-label="Settings to copy"></textarea>';
+  h+='<p class="note">Settings save in this browser when it allows it.</p>';
+  box.innerHTML=h;
+  var meta={};KN.forEach(function(g){g.items.forEach(function(it){meta[it.k]=it;});});
+  box.querySelectorAll("input").forEach(function(el){
+    var it=meta[el.dataset.k];inputs.push({el:el,it:it});
+    el.addEventListener("input",function(){
+      if(it.chk)S[it.k]=el.checked;
+      else{var v=parseFloat(el.value);if(it.arr)S[it.k][+el.dataset.i]=v;else S[it.k]=v;}
+      save();sync(false);render();
+    });
+  });
+  box.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){
+    var p=b.dataset.preset==="pro"?PROPOSED:BASE;S.hp=p.hp.slice();S.atk=p.atk.slice();S.step=p.step;S.xpC=p.xpC;save();sync(true);render();});});
+  document.getElementById("reset").addEventListener("click",function(){S=clone(BASE);save();sync(true);render();setStatus("Reset to b509a56 values.");});
+  document.getElementById("copy").addEventListener("click",copy);
+}
+function same(a,b){return Math.abs(a-b)<1e-9;}
+function sync(setInputs){
+  inputs.forEach(function(o){
+    var it=o.it,el=o.el,v;
+    if(it.chk){if(setInputs)el.checked=!!S[it.k];return;}
+    v=it.arr?S[it.k][+el.dataset.i]:S[it.k];
+    if(setInputs)el.value=v;
+    var b=it.arr?BASE[it.k][+el.dataset.i]:BASE[it.k];
+    el.nextElementSibling.textContent=fmtVal(it,v);
+    el.parentNode.classList.toggle("mod",!same(v,b));
+    el.parentNode.title=same(v,b)?"Current build value":"Changed. Current build: "+fmtVal(it,b);
+  });
+  var isP=function(p){return p.hp.every(function(v,i){return same(v,S.hp[i]);})&&p.atk.every(function(v,i){return same(v,S.atk[i]);})&&same(p.step,S.step)&&same(p.xpC,S.xpC);};
+  document.querySelector('[data-preset="cur"]').classList.toggle("on",isP(BASE));
+  document.querySelector('[data-preset="pro"]').classList.toggle("on",isP(PROPOSED));
+}
+
+// ---------- copy ----------
+function gf(x){x=+(+x).toFixed(4);return Number.isInteger(x)?x.toFixed(1):String(x);}
+function settingsText(){
+  return ["# Hearthguard curve lab settings (model of b509a56)",
+  "const HP_SCALE := ["+S.hp.map(gf).join(", ")+"]  # chapter_defs.gd:21",
+  "const ATK_SCALE := ["+S.atk.map(gf).join(", ")+"]  # chapter_defs.gd:22",
+  "const WAVE_STEP := "+gf(S.step)+"  # chapter_defs.gd:24",
+  "const DMG_GROWTH := "+gf(1+S.growth)+"  # hero_stats.gd:31, damage x DMG_GROWTH^(L-1)",
+  "const XP_BASE := "+Math.round(S.xpA)+"  # class_defs.gd:18-19",
+  "const XP_PER_LEVEL := "+Math.round(S.xpB),
+  "const XP_PER_LEVEL_SQ := "+gf(S.xpC),
+  "const HEARTH_HP := "+Math.round(S.hearth)+"  # sim.gd:23",
+  "const HEARTH_PER_PLAYER := "+gf(S.hearthPer)+"  # sim.gd:91",
+  "const BOSS_HP_PER_PLAYER := "+gf(S.bossPer)+"  # sim.gd:189",
+  "const GOLD_PER_CHAPTER := "+gf(S.goldPer)+"  # sim.gd:277",
+  "const TOWN_COST_MULT := "+gf(S.townMult)+"  # town_defs.gd:14-16",
+  "const RESPAWN_BASE := "+gf(S.respBase)+"  # Dota_2.json:112 heroRespawnS",
+  "const RESPAWN_PER_CHAPTER := "+gf(S.respStep)+"  # sim.gd:378",
+  "const CAMPFIRE_CHECKPOINT := "+(S.campfire?"true":"false")+"  # proposal",
+  "# modeled with "+S.players+" player"+(S.players>1?"s":"")].join("\n");
+}
+function setStatus(t){document.getElementById("status").textContent=t;}
+function showFallback(txt){var ta=document.getElementById("fallback");ta.style.display="block";ta.value=txt;ta.focus();ta.select();setStatus("Copy blocked here. Select the text below and copy it.");}
+function copy(){
+  var txt=settingsText();
+  try{
+    if(!navigator.clipboard||!navigator.clipboard.writeText)throw new Error("no clipboard");
+    navigator.clipboard.writeText(txt).then(function(){setStatus("Copied as GDScript constants.");document.getElementById("fallback").style.display="none";},function(){showFallback(txt);});
+  }catch(e){showFallback(txt);}
+}
+
+// ---------- charts ----------
+var NS="http://www.w3.org/2000/svg";
+function niceTicks(lo,hi,n){var span=hi-lo||1,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,st=(m<1.5?1:m<3?2:m<7?5:10)*p,out=[];for(var v=Math.ceil(lo/st)*st;v<=hi+1e-9;v+=st)out.push(+v.toFixed(10));return out;}
+function fmtNum(v){var a=Math.abs(v);return a>=10000?(v/1000).toFixed(0)+"k":a>=1000?(v/1000).toFixed(1).replace(/\.0$/,"")+"k":a>=10?String(Math.round(v)):String(+v.toFixed(2));}
+function chart(id,o){
+  var el=document.getElementById(id),W=Math.max(280,Math.round(el.clientWidth||600)),H=o.h||(W<520?210:250);
+  var pl=W<520?34:42,pr=8,pt=20,pb=18,pw=W-pl-pr,ph=H-pt-pb,fs=W<520?10.5:12;
+  var all=[];o.series.forEach(function(s){all=all.concat(s.v);});(o.hl||[]).forEach(function(h){all.push(h.y);});if(o.ref!=null)all.push(o.ref);
+  var lo=o.y0!=null?o.y0:Math.min.apply(null,all),hi=Math.max.apply(null,all);
+  if(o.y0==null){var pad=(hi-lo)*0.08||0.1;lo-=pad;}hi+=(hi-lo)*0.06||0.1;
+  var tk=niceTicks(lo,hi,W<520?4:5);
+  var X=function(i){return pl+(i+0.5)*pw/30;},Y=function(v){return pt+ph-(v-lo)/(hi-lo)*ph;};
+  var s='<svg xmlns="'+NS+'" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="'+o.label+'">';
+  for(var c=0;c<5;c++){var x0=pl+c*6*pw/30;s+='<rect x="'+x0+'" y="'+pt+'" width="'+(6*pw/30)+'" height="'+ph+'" fill="'+(c%2?"#141118":"#1d1924")+'"/><text x="'+(x0+3*pw/30)+'" y="'+(pt-6)+'" fill="#a59db3" font-size="'+fs+'" text-anchor="middle">Ch'+(c+1)+'</text>';
+    s+='<text x="'+X(c*6+5)+'" y="'+(H-5)+'" fill="#6f6780" font-size="'+(fs-1)+'" text-anchor="middle">B</text><text x="'+X(c*6)+'" y="'+(H-5)+'" fill="#6f6780" font-size="'+(fs-1)+'" text-anchor="middle">1</text>';}
+  tk.forEach(function(v){if(v<lo||v>hi)return;s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#2a2433" stroke-width="1"/><text x="'+(pl-5)+'" y="'+(Y(v)+4)+'" fill="#a59db3" font-size="'+fs+'" text-anchor="end">'+(o.fmt||fmtNum)(v)+'</text>';});
+  if(o.ref!=null)s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(o.ref)+'" y2="'+Y(o.ref)+'" stroke="#a59db3" stroke-dasharray="5 4" stroke-width="1.2"/>';
+  (o.hl||[]).forEach(function(h){s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(h.y)+'" y2="'+Y(h.y)+'" stroke="'+h.c+'" stroke-width="1.5"/><text x="'+(W-pr-3)+'" y="'+(Y(h.y)-4)+'" fill="'+h.c+'" font-size="'+fs+'" text-anchor="end">'+h.t+'</text>';});
+  o.series.forEach(function(se){
+    // break the line at chapter edges when asked, so the drop shows as a step
+    var d="";se.v.forEach(function(v,i){d+=(i===0||(se.brk&&i%6===0)?"M":"L")+X(i).toFixed(1)+" "+Y(v).toFixed(1);});
+    if(se.brk){for(var c2=1;c2<5;c2++){var a=c2*6-1;d+="M"+X(a).toFixed(1)+" "+Y(se.v[a]).toFixed(1)+"L"+X(a+1).toFixed(1)+" "+Y(se.v[a+1]).toFixed(1);}}
+    s+='<path d="'+d+'" fill="none" stroke="'+se.c+'" stroke-width="'+(se.w||2)+'"'+(se.dash?' stroke-dasharray="'+se.dash+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';
+    if(se.dots)se.v.forEach(function(v,i){s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="'+(W<520?2.4:3)+'" fill="'+se.c+'"><title>Ch'+(Math.floor(i/6)+1)+' wave '+(i%6+1)+': '+(se.tip||fmtNum)(v)+'</title></circle>';});
+  });
+  s+='</svg>';el.innerHTML=s;
+}
+
+// ---------- render ----------
+function pct(x){return (x>0?"+":"")+Math.round(x*100)+"%";}
+function render(){
+  var M=model(S,REF),G=model(Object.assign(clone(BASE),{players:S.players}),REF);
+  var r=M.rows,g=G.rows,col=function(rows,k){return rows.map(function(x){return x[k];});};
+  chart("c-ratio",{label:"Power ratio per wave",series:[{v:col(g,"ratio"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"ratio"),c:"#ffc870",w:2.4,dots:1,tip:function(v){return v.toFixed(2);}}],ref:1});
+  chart("c-hearth",{label:"Hearth hits per corridor",series:[{v:col(g,"hits"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"hits"),c:"#ffc870",w:2.4,dots:1}],y0:0});
+  chart("c-level",{label:"Hero level per wave",series:[{v:col(g,"Ls"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"Ls"),c:"#ffc870",w:2.4,dots:1}],y0:0,h:document.getElementById("c-level").clientWidth<520?180:210});
+  chart("c-gold",{label:"Cumulative gold vs Town cost",series:[{v:col(g,"gold"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"gold"),c:"#ffc870",w:2.4}],y0:0,hl:[{y:M.town1,c:"#7fd6a0",t:"L1 "+Math.round(M.town1).toLocaleString("en-US")},{y:M.town5,c:"#ff8f7a",t:"L5 "+Math.round(M.town5).toLocaleString("en-US")}]});
+  document.getElementById("gold-cap").textContent="Cumulative gold"+(S.players>1?" for the team of "+S.players+", assuming even kills (killer gets all, others 30%)":" for one hero")+". The Town is shared. Costs are base x Town cost^level.";
+
+  // summary
+  var drops=[],dropsG=[];for(var c=1;c<5;c++){drops.push(r[c*6].ratio/r[c*6-1].ratio-1);dropsG.push(g[c*6].ratio/g[c*6-1].ratio-1);}
+  var lo=0;r.forEach(function(x,i){if(x.ratio<r[lo].ratio)lo=i;});
+  var rise=0;for(c=0;c<5;c++)if(r[c*6+5].ratio>r[c*6].ratio)rise++;
+  var resp5=S.respBase+S.respStep*4;
+  var gold=r[29].gold;
+  var cards=[
+   ["Run length","~"+(M.runS/60).toFixed(1)+" min","current ~"+(G.runS/60).toFixed(1)+", spans + gaps + boss + camps"],
+   ["Chapter-start drops",drops.map(pct).join(" "),"current "+dropsG.map(pct).join(" ")],
+   ["Lowest ratio",r[lo].ratio.toFixed(2),"at ch"+(r[lo].c+1)+" wave "+(r[lo].w+1)+". Rises in "+rise+" of 5 chapters"],
+   ["Chapter 5 loss costs",M.loss[4].toFixed(1)+" min",S.campfire?"with checkpoint, "+M.lossNo[4].toFixed(1)+" min without":"loss at the boss, full restart"],
+   ["Respawn in ch5",resp5.toFixed(1)+" s",Math.round(resp5/27*100)+"% of a 27 s wave, ch1 "+S.respBase.toFixed(1)+" s"],
+   ["Run gold vs Town L5",Math.round(gold).toLocaleString("en-US"),"vs "+Math.round(M.town5).toLocaleString("en-US")+" for all 9 at L5"]
+  ];
+  document.getElementById("cards").innerHTML=cards.map(function(x){return '<div class="card"><div class="k">'+x[0]+'</div><div class="v">'+x[1]+'</div><div class="s">'+x[2]+'</div></div>';}).join("");
+  document.getElementById("losses").textContent="Minutes lost on a loss at each boss"+(S.campfire?" (campfire checkpoint on)":"")+": "+M.loss.map(function(v,i){return "ch"+(i+1)+" "+v.toFixed(1);}).join(", ")+".";
+}
+
+buildKnobs();sync(true);render();
+var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(render,80);});
+window.__lab={model:model,state:function(){return S;},REF:REF,BASE:BASE,PROPOSED:PROPOSED};
+})();
+</script>
+</body>
+</html>
