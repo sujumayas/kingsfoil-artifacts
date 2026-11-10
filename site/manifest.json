@@ -208,5 +208,23 @@
   "title": "Top-down pixel fire and smoke Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-10"
+ },
+ {
+  "path": "/thumbs/vfx-water.png",
+  "title": "Thumbnail vfx-water.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-10"
+ },
+ {
+  "path": "/vfx-water-topdown-pixel.html",
+  "title": "Top-down pixel water: tiny algorithms for shorelines, rivers, lakes and sea, and water you can wade through",
+  "description": "Dual-grid shores with foam and waves that run up the beach, two-phase river flow, depth bands and palette cycling, reflections, Kelvin wakes, wading and fishing, and Tibia-style server rules.",
+  "date": "2026-11-10"
+ },
+ {
+  "path": "/vfx-water-sandbox.html",
+  "title": "Top-down pixel water Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-10"
  }
 ]

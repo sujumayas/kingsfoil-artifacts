@@ -197,6 +197,10 @@
      "label": "Fire & smoke"
     },
     {
+     "id": "water",
+     "label": "Water bodies"
+    },
+    {
      "id": "enemy-ai",
      "label": "Enemy AI"
     },
@@ -347,6 +351,31 @@
      "id": "damage-over-time",
      "label": "Damage over time",
      "desc": "Burn stacks, field ticks and status visuals"
+    },
+    {
+     "id": "autotile-dual-grid",
+     "label": "Dual-grid autotiling",
+     "desc": "Shore and terrain edges from 15-16 corner tiles instead of 47"
+    },
+    {
+     "id": "distance-field",
+     "label": "Distance-to-shore field",
+     "desc": "One BFS or chamfer byte per tile drives foam, depth and wave phase"
+    },
+    {
+     "id": "flow-map",
+     "label": "Flow maps",
+     "desc": "Two-phase scrolling along a per-tile flow vector, no stretching"
+    },
+    {
+     "id": "palette-cycling",
+     "label": "Palette cycling",
+     "desc": "Rotate reserved palette slots so pixels animate without redrawing"
+    },
+    {
+     "id": "wake-trails",
+     "label": "Wakes and ring pools",
+     "desc": "Kelvin V-wakes and ripple rings from fixed pools of sprites"
     },
     {
      "id": "fsm",
