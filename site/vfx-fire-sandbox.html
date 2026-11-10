@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire Sandbox: top-down pixel fire, spread and smoke</title>
+<style>
+:root{--bg:#100c10;--panel:#1a1418;--line:#33262c;--lamp:#feae34;--lamp2:#f77622;--cool:#8ea8ff;--txt:#efe6e2;--mute:#a8989c;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--lamp)}
+header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--lamp);letter-spacing:-.5px}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
+.hud{position:absolute;left:8px;top:8px;font:12px var(--mono);background:rgba(10,6,10,.74);padding:4px 8px;border-radius:4px;pointer-events:none;color:#f6eeea;max-width:calc(100% - 16px)}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0}
+.group h3{margin:0 0 8px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button,select{font:500 13px system-ui,sans-serif;background:#261d22;color:var(--txt);border:1px solid #42323a;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--lamp2)}button.on{background:var(--lamp);color:#1a0f06;border-color:var(--lamp)}
+button kbd{font:11px var(--mono);opacity:.65;margin-right:4px}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:6px}
+input[type=range]{flex:1;min-width:0;accent-color:#f77622}
+.windrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.wind{display:grid;grid-template-columns:repeat(3,36px);gap:4px}
+.wind button{padding:4px 0;font-family:var(--mono)}
+.windside{flex:1;min-width:140px}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h4{margin:0 0 6px;font-family:var(--mono);font-size:16px;color:var(--lamp)}
+.card p{margin:0;color:#dacfd0;font-size:14px}
+code{font:13px var(--mono);color:var(--cool)}
+.keys{color:var(--mute);font-size:13px;margin:8px 0 0}
+@media (max-width:640px){.hud{position:static;max-width:none;border-radius:0;background:#0c080b;font-size:11px;padding:6px 8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Fire Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="vfx-fire-topdown-pixel.html">top-down pixel fire and smoke study</a> · VFX series #6 · November 2026</div>
+</header>
+<main>
+  <div class="stage"><canvas id="c" width="320" height="180" aria-label="Fire simulation"></canvas><div class="hud" id="hud">loading</div></div>
+  <p class="keys">Click or drag on the scene to use a tool. Keys: <b>1-5</b> tools, <b>R</b> rain, <b>W</b> turn the wind, <b>V</b> next view, <b>Space</b> pause, <b>N</b> step one tick. The fire grid only changes on its 4 Hz tick, so a click lands on the next tick. Flames, embers and smoke run at 60 fps on top of it. The sheep walks a loop: fire sets it burning and the pond puts it out.</p>
+  <div class="controls">
+    <div class="group"><h3>Tools</h3>
+      <div class="btns" id="tools"><button data-t="ignite" class="on"><kbd>1</kbd>Ignite</button><button data-t="water"><kbd>2</kbd>Water bucket</button><button data-t="fireball"><kbd>3</kbd>Fireball</button><button data-t="oil"><kbd>4</kbd>Oil</button><button data-t="regrow"><kbd>5</kbd>Regrow</button></div>
+    </div>
+    <div class="group"><h3>Weather and wind</h3>
+      <div class="windrow"><div class="wind" id="wind"><button data-d="5">↖</button><button data-d="6">↑</button><button data-d="7">↗</button><button data-d="4">←</button><button data-d="-1">0</button><button data-d="0">→</button><button data-d="3">↙</button><button data-d="2">↓</button><button data-d="1">↘</button></div>
+        <div class="windside"><label>Wind <input id="wv" type="range" min="0" max="10" value="4"><span id="wvl">4</span></label><div class="btns" style="margin-top:8px"><button id="rain">Rain</button></div></div></div>
+    </div>
+    <div class="group"><h3>Look</h3>
+      <div class="btns" id="fstyle"><button data-f="sprite" class="on">Sprite loop</button><button data-f="doom">DOOM buffer</button></div>
+      <div class="btns" style="margin-top:6px"><button id="night">Night</button><button id="haze" class="on">Heat haze</button><button id="lock" class="on">Palette lock</button></div>
+    </div>
+    <div class="group"><h3>X-ray view</h3>
+      <div class="btns" id="views"><button data-v="normal" class="on">Normal</button><button data-v="fuel">Fuel and moisture</button><button data-v="heat">Heat</button><button data-v="smoke">Smoke field</button><button data-v="active">Active cells</button></div>
+    </div>
+    <div class="group"><h3>Simulation</h3>
+      <div class="btns"><button id="pause">Pause</button><button id="step">Step tick</button><button id="cap">Budget cap</button><button id="reset">Reset</button><button id="seed">New seed</button><button data-demo="blaze">Blaze</button></div>
+    </div>
+  </div>
+  <div class="explain">
+    <div class="card"><h4>1 · The grid is the truth</h4><p>The village is a 40 by 23 grid of 8 px cells. Each cell has a material, fuel, moisture, a state (igniting, burning, embers, ash) and heat. Only burning cells sit on the active list, and the grid ticks at 4 Hz. Every roll uses <code>hash(x, y, tick, seed)</code>, an integer hash, so every client that knows the seed computes the same fire in any order.</p></div>
+    <div class="card"><h4>2 · Spread, wind and rain</h4><p>Each tick a burning cell rolls once per neighbour: <code>p = base × (1 − moisture) × wind</code>, diagonals × 0.7. Base: grass 0.15, dry grass 0.40, tree 0.22, wood 0.30, oil 1.0. Wind is the Alexandridis term <code>e^(V(0.045 + 0.131(cos θ − 1)))</code>, so a strong wind makes fire 1.6 times likelier downwind and 9 times less likely upwind. Rain wets fuel and puts out burning cells with the Minecraft chance, 20 % plus 3 % per age step, scaled to the 4 Hz tick.</p></div>
+    <div class="card"><h4>3 · What goes over the wire</h4><p>The HUD compares two encodings each tick. Sending the full burning set costs 2 bytes per burning cell. Sending only ignitions and extinguishes costs 3 bytes per event, because clients derive burnout from the fuel table. Both add a 4 byte tick header. The sizes are illustrative, not measured on a real server.</p></div>
+    <div class="card"><h4>4 · Two flame styles</h4><p><b>Sprite loop</b>: 4 frame flames drawn from a 4 tone ramp (near-white, yellow, orange, deep red) at 10 fps, with the Stardew phase offset <code>x × 3047 + y × 88</code> so neighbours never sync. House fires loop slower. <b>DOOM buffer</b>: a 1 px heat buffer where burning cells feed the bottom row, spread with the DOOM rule (random decay, random sideways step, biased by the wind) and drawn through its 37 colour palette.</p></div>
+    <div class="card"><h4>5 · Embers, smoke and steam</h4><p>Embers come from a fixed pool of 256 particles that rise, drag and drift with the wind, colour set by age. Smoke lives in an 80 by 45 field of 4 px cells, advected by the wind plus a steady rise, with decay. It is drawn with a 4 by 4 Bayer threshold, never alpha: grey smoke, white steam, near-black oil soot. The chimney puffs use the Stardew numbers: 0.5 px per frame rise at zoom 4, constant sideways push, growth and fade over about 6 s.</p></div>
+    <div class="card"><h4>6 · Combat fire</h4><p>The fireball flies with a trail, then explodes: 2 white flash frames, an expanding ring, sparks, a shake and smoke. It leaves a 3 by 3 fire field that weakens through 3 stages, like a Tibia fire field. Touching fire gives the sheep burn stacks. Each tick it takes a small hit, flashes red and loses one stack. Water clears it.</p></div>
+    <div class="card"><h4>7 · Light, palette and haze</h4><p>Burning cells add to a coarse glow grid that is blurred and flickers at about 10 Hz, then added warm on top of the ambient light. Night makes the fires carry the scene. Palette lock maps every final pixel to the 32 colours of Endesga 32 with an ordered dither. Heat haze shifts rows above big fires by a sine offset.</p></div>
+  </div>
+  <p class="keys" style="margin-top:16px">Full research: <a href="vfx-fire-topdown-pixel.html">Top-down pixel fire and smoke study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="vfx-light-sandbox.html">Light</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
+</main>
+<script>
+(()=>{
+"use strict";
+const W=320,H=180,NP=W*H,GW=40,GH=23,NC=GW*GH;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const img=ctx.createImageData(W,H),out=new Uint32Array(img.data.buffer),tmp=new Uint32Array(NP);
+const BAY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],BY=new Uint8Array(NP),CELL=new Uint16Array(NP);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;BY[i]=BAY[(y&3)*4+(x&3)];CELL[i]=(y>>3)*GW+(x>>3);}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+// ---------- deterministic integer hash (fire sim) and cosmetic rng ----------
+const hash=(x,y,t,s)=>{let h=Math.imul(x|0,0x27d4eb2d)^Math.imul(y|0,0x165667b1)^Math.imul(t|0,0x9e3779b1)^Math.imul(s|0,0x85ebca77);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;h=Math.imul(h,0x297a2d39);h^=h>>>15;return h>>>0;};
+const hf=(x,y,s)=>hash(x,y,0x5bd1,s)/4294967296;
+const vn=(x,y,s)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);const a=hf(xi,yi,s),b=hf(xi+1,yi,s),c=hf(xi,yi+1,s),d=hf(xi+1,yi+1,s);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+const n1=(t,s)=>{const i=Math.floor(t),f=t-i,u=f*f*(3-2*f);return hf(i,s,77)*(1-u)+hf(i+1,s,77)*u;};
+let rs=0x2545f491;const rb=()=>{rs^=rs<<13;rs^=rs>>>17;rs^=rs<<5;return rs>>>0;};const rnd=()=>rb()/4294967296;
+
+// ---------- palette: Endesga 32 ----------
+const E32='be4a2f d77643 ead4aa e4a672 b86f50 733e39 3e2731 a22633 e43b44 f77622 feae34 fee761 63c74d 3e8948 265c42 193c3e 124e89 0099db 2ce8f5 ffffff c0cbdc 8b9bb4 5a6988 3a4466 262b44 181425 ff0044 68386c b55088 f6757a e8b796 c28569'.split(' ');
+const px=h=>(255<<24|parseInt(h.slice(4,6),16)<<16|parseInt(h.slice(2,4),16)<<8|parseInt(h.slice(0,2),16))>>>0;
+const PAL=E32.map(px);
+const [RUST,TAN,CREAM,SAND,WD1,WD2,WD3,DRED,RED,ORA,YEL,PYEL,G1,G2,G3,G4,B1,B2,CYAN,WHITE,S1,S2,S3,S4,S5,BLK,PINK,PURP,MAG,SALM,SKIN,SKIN2]=PAL;
+const DOOMP='070707 1f0707 2f0f07 470f07 571707 671f07 771f07 8f2707 9f2f07 af3f07 bf4707 c74707 df4f07 df5707 df5707 d75f07 d75f07 d7670f cf6f0f cf770f cf7f0f cf8717 c78717 c78f17 c7971f bf9f1f bf9f1f bfa727 bfa727 bfaf2f b7af2f b7b72f b7b737 cfcf6f dfdf9f efefc7 ffffff'.split(' ').map(px);
+let LUT=null;
+function buildLUT(){LUT=new Uint32Array(32768);const pr=PAL.map(c=>[c&255,(c>>8)&255,(c>>16)&255]);
+  for(let r=0;r<32;r++)for(let g=0;g<32;g++)for(let b=0;b<32;b++){const R=r*8+4,G=g*8+4,B=b*8+4;let best=0,bd=1e9;
+    for(let k=0;k<pr.length;k++){const dr=R-pr[k][0],dg=G-pr[k][1],db=B-pr[k][2],d=2*dr*dr+4*dg*dg+3*db*db;if(d<bd){bd=d;best=k;}}LUT[(r<<10)|(g<<5)|b]=PAL[best];}}
+
+// ---------- cells ----------
+const GRASS=0,DRY=1,TREE=2,WOOD=3,STONE=4,WATER=5,LAVA=6,OILM=7,ASH=8;
+const NONE=0,IGN=1,BURN=2,EMB=3,ASHS=4;
+const IGN16=[9830,26214,14418,19661,0,0,0,65535,0],FUELT=[8,5,28,44,0,0,0,10,0],EMBT=[5,3,14,26,1,1,1,3,1],BASEM=[40,8,60,24,0,0,0,0,0];
+const U8=()=>new Uint8Array(NC);
+const MAT=U8(),OMAT=U8(),FUEL=U8(),FUEL0=U8(),MOIST=U8(),STA=U8(),HEAT=U8(),TIM=U8(),AGE=U8(),OBJ=U8(),OOBJ=U8(),OIL=U8(),DEAD=U8(),FLD=U8(),FLT=U8(),STEAM=U8(),COOL=U8(),FLASH=U8(),PEND=U8(),PROG=U8(),EPR=U8(),HZ=U8();
+const GL=new Float32Array(NC),GT=new Float32Array(NC);
+const GP=new Uint32Array(NP),GC=new Uint32Array(NP),GA=new Uint32Array(NP),OP=new Uint32Array(NP),OC=new Uint32Array(NP),OA=new Uint32Array(NP);
+const OWN=new Int16Array(NP),PK=new Uint8Array(NP),HP=new Uint8Array(NP),OILP=new Uint8Array(NP),WINM=new Uint8Array(NP);
+const LR=new Float32Array(NP),LG=new Float32Array(NP),LB=new Float32Array(NP);
+const HOUSES=[[2,6,4,4],[9,5,5,5],[16,6,4,4],[15,15,4,3]];
+const CHIM={x:0,y:0,cell:0},LAVAC=[],CAMP={x:68,y:141,c:17*GW+8},TORCHES=[[60,86],[116,86],[172,86]],MAGE={x:210,y:127};
+const WP=[[16,118],[100,121],[106,152],[160,154],[162,175],[222,175],[252,160],[222,176],[104,174],[30,162]];
+let seed=1;
+const isRoad=(cx,cy)=>((cy===11||cy===12)&&cx<=26)||((cx===25||cx===26)&&cy>=11)||(cy===10&&(cx===4||cx===11||cx===17));
+const pondV=(x,y)=>{const dx=(x-277)/40,dy=(y-150)/21;return dx*dx+dy*dy+(vn(x/6,y/6,9)-.5)*.16;};
+const lavaCell=(cx,cy)=>cx>=22&&cx<=23&&cy>=18&&cy<=19,rimCell=(cx,cy)=>cx>=21&&cx<=24&&cy>=17&&cy<=20;
+const inLava=(x,y)=>{const dx=Math.abs(x-183.5)/7.6,dy=Math.abs(y-151.5)/7.6;return dx*dx*dx*dx+dy*dy*dy*dy<1;};
+const dryF=(x,y)=>vn(x/42,y/30,seed)*.75+vn(x/10,y/10,seed+5)*.25;
+
+function build(){
+  OWN.fill(-1);OP.fill(0);OC.fill(0);OA.fill(0);PK.fill(0);WINM.fill(0);LAVAC.length=0;
+  for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const c=cy*GW+cx;let m=dryF(cx*8+4,cy*8+4)>.56?DRY:GRASS;
+    if(isRoad(cx,cy)||rimCell(cx,cy)||c===CAMP.c)m=STONE;if(lavaCell(cx,cy)){m=LAVA;LAVAC.push(c);}if(pondV(cx*8+4,cy*8+4)<1)m=WATER;OMAT[c]=m;OOBJ[c]=0;}
+  for(const [hx,hy,hw,hh] of HOUSES)for(let y=hy;y<hy+hh;y++)for(let x=hx;x<hx+hw;x++){OMAT[y*GW+x]=WOOD;OOBJ[y*GW+x]=2;}
+  const trees=[];
+  for(let cy=1;cy<=10;cy++)for(let cx=28;cx<GW;cx++){const c=cy*GW+cx;if(OMAT[c]<=DRY&&hf(cx,cy,seed+11)<.55)trees.push([cx,cy]);}
+  for(const [cx,cy] of [[1,1],[6,2],[15,1],[21,3],[24,7],[1,20],[12,21],[20,21],[0,14],[27,19],[8,3],[27,14]])if(OMAT[cy*GW+cx]<=DRY)trees.push([cx,cy]);
+  for(const [cx,cy] of trees){OMAT[cy*GW+cx]=TREE;OOBJ[cy*GW+cx]=1;}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,c=CELL[i],cx=x>>3,cy=y>>3,h=hf(x,y,seed+3),m=OMAT[c];HP[i]=(h*256)|0;
+    const an=vn(x/3,y/3,seed+41),charV=h<.45?WD3:h<.93?BLK:S5,ashV=h>.95?BLK:h<.025?S2:an<.42?S5:an<.8?S4:S3;let gp,gc=charV,ga=ashV;const pv=pondV(x,y);
+    if(pv<1){PK[i]=1;gp=gc=ga=pv>.78?B2:B1;}
+    else if(m===WATER||pv<1.14){gp=h<.6?SAND:CREAM;gc=WD3;ga=S3;}
+    else if(lavaCell(cx,cy)&&inLava(x,y)){PK[i]=2;gp=gc=ga=ORA;}
+    else if(rimCell(cx,cy)){const o=((y/3|0)&1)*2,e=(y%3===0)||((x+o)%4===0);gp=e?S4:(hf((x+o)>>2,y/3|0,1)<.5?S2:S3);gc=e?BLK:S4;ga=gp;}
+    else if(isRoad(cx,cy)){const row=y>>2,o=(row&1)*3,b=hf((x+o)/6|0,row,2),e=(y&3)===3||((x+o)%6===5);gp=e?S4:b<.35?S2:b<.85?S3:S1;gc=e?BLK:S4;ga=e?S5:(b<.5?S3:S4);}
+    else if(OOBJ[c]===2){gp=h<.5?WD2:WD3;}
+    else{const d=dryF(x,y)+(h-.5)*.06>.56,n=vn(x/5,y/5,seed+2)*.55+h*.45;
+      if(d){gp=n<.34?SKIN2:n<.74?SAND:n<.92?CREAM:TAN;if(h>.985)gp=G2;}else{gp=n<.32?G3:n<.7?G2:G1;if(h>.994)gp=h>.997?PYEL:WHITE;}}
+    GP[i]=gp;GC[i]=gc;GA[i]=ga;
+    const lx=(x&7)-3.5,ly=(y&7)-3.5;OILP[i]=Math.sqrt(lx*lx+ly*ly*1.4)+(vn(x/2,y/2,4)-.5)*2.2<3.4?(h<.12?2:1):0;}
+  // campfire ring and logs
+  for(let k=0;k<10;k++){const a=k/10*6.283,x=Math.round(CAMP.x+Math.cos(a)*6),y=Math.round(CAMP.y+Math.sin(a)*3.5);for(let e=0;e<2;e++){const i=y*W+x+e;GP[i]=GC[i]=GA[i]=k%2?S2:S3;}}
+  for(let x=CAMP.x-3;x<=CAMP.x+3;x++){const i=(CAMP.y+1)*W+x;GP[i]=GC[i]=GA[i]=WD2;const j=CAMP.y*W+x;GP[j]=GC[j]=GA[j]=BLK;}
+  const objs=[...trees.map(t=>({k:0,cx:t[0],cy:t[1],by:t[1]})),...HOUSES.map((h,j)=>({k:1,h,j,by:h[1]+h[3]-1}))].sort((a,b)=>a.by-b.by||a.k-b.k);
+  for(const o of objs)o.k?drawHouse(o.h,o.j):drawTree(o.cx,o.cy);
+  reset();
+}
+function drawHouse([hx,hy,hw,hh],j){
+  const x0=hx*8,y0=hy*8,w=hw*8,h=hh*8,wallTop=y0+h-11,roofTop=y0-8;
+  const own=(x,y)=>clamp(Math.max(y,y0)>>3,hy,hy+hh-1)*GW+clamp(x>>3,hx,hx+hw-1);
+  for(let y=roofTop;y<y0+h;y++)for(let x=x0-1;x<=x0+w;x++){if(x<0||x>=W||y<0)continue;const i=y*W+x,q=hf(x,y,seed+21);let p,c;
+    if(y<wallTop){const r=y-roofTop,band=r%3,sh=((x+((r/3|0)&1)*2)%4===0);
+      p=(y===roofTop||x===x0-1||x===x0+w||y===wallTop-1)?WD3:r<=2?TAN:band===2?DRED:sh?WD1:RUST;
+      c=q<.16?DRED:q<.6?BLK:band===2?S5:WD3;}
+    else{if(x<x0||x>=x0+w)continue;const wy=y-wallTop,wx=x-x0;p=(wx===0||wx===w-1||wx%12===0)?WD2:(wy%3===0?WD1:SKIN2);if(wy===10)p=WD3;
+      const dc=x0+(w>>1)-3;if(x>=dc&&x<dc+6&&wy>=2)p=(x===dc||x===dc+5||wy===2)?WD2:WD3;
+      for(const wxp of [x0+3,x0+w-8])if(x>=wxp&&x<wxp+5&&wy>=3&&wy<=6){const fr=x===wxp||x===wxp+4||wy===3||wy===6;p=fr?WD2:S5;if(!fr)WINM[i]=1;}
+      c=q<.1?DRED:(wy%3===0?BLK:WD3);}
+    OP[i]=p;OC[i]=c;OA[i]=0;OWN[i]=own(x,y);}
+  for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){const i=y*W+x,q=hf(x,y,seed+23),lx=x-x0,ly=y-y0;let a=0;
+    const pv=vn(x/5,y/4,seed+j*7);if(pv>.5)a=q<.14?BLK:pv>.66?(q<.25?S1:q<.7?S2:S3):(q<.4?S3:S4);
+    if(((lx+2*ly)%11===0||(lx+2*ly)%11===1)&&hf(lx>>2,ly>>2,j)<.6)a=BLK;if((lx-ly+40)%13===0&&hf(lx>>2,ly>>2,j+9)<.5)a=WD3;
+    if((lx===0||lx===w-1||ly===0||ly===h-1)&&hf(x>>1,y>>1,j+3)<.85)a=(x+y)&1?S2:S3;else if((lx===1||lx===w-2||ly===h-2)&&q<.5)a=S4;OA[i]=a;}
+  for(const p0 of [x0,x0+w-1,x0+(w>>1)-4,x0+(w>>1)+3]){const ph=4+(hash(p0,j,0,seed)%5);for(let k=0;k<ph;k++)OA[(y0+h-1-k)*W+p0]=k%3?BLK:WD3;}
+  for(const p0 of [x0,x0+w-1])for(let k=0;k<5;k++)OA[(y0+2-k)*W+p0]=BLK;
+  if(j===1){const cx0=x0+w-13,top=roofTop-6;CHIM.x=cx0+2;CHIM.y=top-1;CHIM.cell=own(cx0+2,y0);
+    for(let y=top;y<=y0+6;y++)for(let x=cx0;x<cx0+5;x++){const i=y*W+x,o=((y/3|0)&1)*2,b=(y%3===0)||((x+o)%4===0);const p=y===top?BLK:y===top+1?S1:b?S4:(x<cx0+2?S2:S3);
+      if(y<=roofTop+3){OP[i]=p;OC[i]=b?BLK:S4;}OA[i]=p;OWN[i]=own(x,y);}}
+}
+function drawTree(tx,ty){const c=ty*GW+tx,bx=tx*8+3+(hash(tx,ty,1,seed)%2),by=ty*8+7,cxr=bx+.5,cyr=by-10;
+  const put=(x,y,p,cc,a)=>{if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;OP[i]=p;OC[i]=cc;OA[i]=a;OWN[i]=c;};
+  for(let y=by-4;y<=by;y++)for(let x=bx;x<=bx+1;x++)put(x,y,x===bx?WD2:WD3,BLK,BLK);
+  for(let y=by-17;y<=by-4;y++)for(let x=bx-7;x<=bx+8;x++){const dx=(x-cxr)/6.6,dy=(y-cyr)/6.2,r=dx*dx+dy*dy;if(r>1+(vn(x*.45,y*.45,seed+31)-.5)*.6)continue;
+    const q=hf(x,y,seed+33),s=dx*.55+dy*.8+(q-.5)*.35;put(x,y,(s<-.55||(q>.94&&s<0))?G1:s<.05?G2:s<.55?G3:G4,q<.1?DRED:q<.55?BLK:(s<-.2?S5:WD3),0);}
+  const line=(x0,y0,x1,y1)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));for(let k=0;k<=n;k++){const x=Math.round(x0+(x1-x0)*k/n),y=Math.round(y0+(y1-y0)*k/n);if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;if(OWN[i]===c)OA[i]=BLK;}}};
+  line(bx,by-4,bx,by-12);line(bx+1,by-4,bx+1,by-9);line(bx,by-8,bx-4,by-13);line(bx+1,by-9,bx+5,by-14);line(bx-2,by-10,bx-3,by-15);
+}
+
+// ---------- simulation state ----------
+let tick=0,active=[],fieldList=[],queue=[],nIgn=0,nExt=0,netFull=4,netEv=4,simMs=0,windDir=0,windV=4,rain=false,capOn=false,paused=false;
+const DX=[1,1,0,-1,-1,-1,0,1],DY=[0,1,1,1,0,-1,-1,-1],WF=new Int32Array(8);let windX=1,windY=0;
+function updateWind(){const a=windDir*Math.PI/4;windX=Math.cos(a);windY=Math.sin(a);if(Math.abs(windX)<1e-9)windX=0;if(Math.abs(windY)<1e-9)windY=0;
+  for(let d=0;d<8;d++){const ct=Math.cos((d-windDir)*Math.PI/4);WF[d]=Math.round(1024*Math.exp(windV*(0.045+0.131*(ct-1)))*(d&1?.7:1));}}
+const ign16=c=>OIL[c]?65535:IGN16[MAT[c]];
+const canBurn=c=>STA[c]===NONE&&FUEL[c]>0&&ign16(c)>0;
+const sheep={x:16,y:118,wp:1,hp:40,max:40,stacks:0,tint:0,dir:1,anim:0,dead:0,rt:0};
+const floaters=[];
+function reset(){
+  for(let c=0;c<NC;c++){const m=OMAT[c];MAT[c]=m;OBJ[c]=OOBJ[c];STA[c]=NONE;FUEL[c]=FUEL0[c]=FUELT[m];MOIST[c]=BASEM[m];TIM[c]=AGE[c]=OIL[c]=DEAD[c]=FLD[c]=FLT[c]=STEAM[c]=COOL[c]=FLASH[c]=HEAT[c]=0;}
+  active=[];fieldList=[];queue=[];tick=0;nIgn=nExt=0;netFull=netEv=4;
+  SM.fill(0);SO.fill(0);SS.fill(0);DB.fill(0);PLF.fill(0);puffs.length=0;floaters.length=0;expl.length=0;proj=null;
+  Object.assign(sheep,{x:16,y:118,wp:1,hp:40,stacks:0,tint:0,dead:0});
+}
+function ignite(c){if(!canBurn(c)||PEND[c])return false;STA[c]=IGN;AGE[c]=0;FLASH[c]=12;nIgn++;return true;}
+function extinguish(c){STA[c]=NONE;MOIST[c]=255;STEAM[c]=4;nExt++;}
+function applyAction(a){const c=a.c;
+  if(a.k==='ign'){if(MOIST[c]<220)ignite(c);}
+  else if(a.k==='water'){if(MAT[c]===LAVA){COOL[c]=60;STEAM[c]=6;}if(STA[c]===IGN||STA[c]===BURN)extinguish(c);else if(STA[c]===EMB){STA[c]=ASHS;MAT[c]=ASH;DEAD[c]=1;OIL[c]=0;STEAM[c]=3;nExt++;}
+    if(FLD[c]){FLD[c]=0;STEAM[c]=4;}if(MAT[c]!==WATER&&MAT[c]!==LAVA)MOIST[c]=255;}
+  else if(a.k==='oil'){const m=MAT[c];if(m===WATER||m===LAVA)return;if(STA[c]===IGN||STA[c]===BURN){FUEL[c]=Math.min(255,FUEL[c]+10);FUEL0[c]=Math.max(FUEL0[c],FUEL[c]);OIL[c]=1;}
+    else if(OBJ[c]&&!DEAD[c]&&STA[c]===NONE){OIL[c]=1;FUEL[c]=Math.min(255,FUEL[c]+10);FUEL0[c]=Math.max(FUEL0[c],FUEL[c]);MOIST[c]=0;}
+    else if(STA[c]!==EMB){MAT[c]=OILM;STA[c]=NONE;FUEL[c]=FUEL0[c]=10;MOIST[c]=0;OIL[c]=1;}}
+  else if(a.k==='grow'){if(STA[c]===IGN||STA[c]===BURN)return;const m=OMAT[c];MAT[c]=m;OBJ[c]=OOBJ[c];STA[c]=NONE;FUEL[c]=FUEL0[c]=FUELT[m];MOIST[c]=BASEM[m];OIL[c]=DEAD[c]=TIM[c]=AGE[c]=0;}
+  else if(a.k==='fb'){const cx=c%GW,cy=(c/GW)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=GW||y>=GH)continue;const n=y*GW+x;if(MAT[n]===WATER){STEAM[n]=5;continue;}
+    if(!FLD[n])fieldList.push(n);FLD[n]=3;FLT[n]=10;ignite(n);}}
+}
+function spread(c,mult,cand){const cx=c%GW,cy=(c/GW)|0;
+  for(let d=0;d<8;d++){const nx=cx+DX[d],ny=cy+DY[d];if(nx<0||ny<0||nx>=GW||ny>=GH)continue;const n=ny*GW+nx;
+    if(MAT[n]===WATER){if(STEAM[c]<2)STEAM[c]=2;continue;}if(!canBurn(n))continue;
+    let thr=(ign16(n)*(255-MOIST[n]))>>8;thr=(thr*WF[d])>>10;if(mult!==1024)thr=(thr*mult)>>10;
+    HEAT[n]=Math.min(255,HEAT[n]+(thr>>8)+1);
+    if((hash(nx,ny,tick,seed+d*7919+c*31)&0xffff)<thr&&!PEND[n]){PEND[n]=1;cand.push(n);}}}
+function simTick(){const t0=performance.now();tick++;nIgn=0;nExt=0;
+  for(const a of queue)applyAction(a);queue.length=0;
+  for(let c=0;c<NC;c++){const m=MAT[c];if(STEAM[c])STEAM[c]--;if(COOL[c])COOL[c]--;if(m===WATER||m===LAVA)continue;const b=BASEM[OMAT[c]];
+    if(rain){if(MOIST[c]<250)MOIST[c]+=5;}else if(MOIST[c]>b)MOIST[c]--;else if(MOIST[c]<b&&(tick&3)===0)MOIST[c]++;
+    if(STA[c]!==BURN&&STA[c]!==IGN)HEAT[c]=0;}
+  const cand=[];
+  for(const c of active)if(STA[c]===BURN)spread(c,1024,cand);
+  for(const c of LAVAC)if(!COOL[c])spread(c,512,cand);
+  for(const c of fieldList)if(FLD[c]&&canBurn(c)&&!PEND[c]){PEND[c]=1;cand.push(c);}
+  sheepTick(cand);
+  for(const c of active){const s=STA[c];
+    if(s===IGN)STA[c]=BURN;
+    else if(s===BURN){
+      if(rain&&(hash(c,tick,7,seed)%1000)<(200+30*Math.min(AGE[c],15))/4){extinguish(c);continue;}
+      FUEL[c]--;AGE[c]++;HEAT[c]=255;if(!FUEL[c]){STA[c]=EMB;TIM[c]=EMBT[MAT[c]];}}
+    else if(s===EMB){TIM[c]-=TIM[c]>1&&rain?2:1;if(TIM[c]<=0){STA[c]=ASHS;MAT[c]=ASH;DEAD[c]=1;OIL[c]=0;HEAT[c]=0;}}}
+  cand.sort((a,b)=>a-b);let budget=capOn?3:1e9;
+  for(const c of cand){PEND[c]=0;if(budget>0&&ignite(c))budget--;}
+  const na=[];let nb=0;for(let c=0;c<NC;c++){const s=STA[c];if(s>=IGN&&s<=EMB){na.push(c);if(s!==EMB)nb++;}}active=na;
+  const nf=[];for(const c of fieldList){if(!FLD[c])continue;if(--FLT[c]<=0){FLD[c]--;FLT[c]=10;}if(FLD[c])nf.push(c);}fieldList=nf;
+  netFull=4+2*nb;netEv=4+3*(nIgn+nExt);
+  simMs=simMs*.8+(performance.now()-t0)*.2;}
+function sheepTick(cand){const s=sheep;if(s.dead)return;const c=CELL[clamp(s.y|0,0,H-1)*W+clamp(s.x|0,0,W-1)];
+  if(MAT[c]===WATER){if(s.stacks){s.stacks=0;STEAM[c]=4;}}
+  else{let add=0;if(STA[c]===BURN||STA[c]===IGN)add=5;if(FLD[c])add=8;if(MAT[c]===LAVA&&!COOL[c])add=10;if(add>s.stacks)s.stacks=add;}
+  if(s.stacks>0){const d=Math.ceil(s.stacks/2);s.hp-=d;s.tint=8;floaters.push({x:s.x,y:s.y-11,v:d,a:0});s.stacks--;
+    if(canBurn(c)&&!PEND[c]&&(hash(c,tick,3,seed)&255)<80){PEND[c]=1;cand.push(c);}
+    if(s.hp<=0){s.dead=1;s.rt=120;s.stacks=0;for(let k=0;k<14;k++)spawn(s.x,s.y-4,(rnd()-.5)*60,-rnd()*50,.6+rnd()*.5,1);addSmoke(s.x,s.y-6,3,0);}}
+  else if(s.hp<s.max&&(tick&1))s.hp++;}
+
+// ---------- cosmetic layers ----------
+const PN=256,PXa=new Float32Array(PN),PYa=new Float32Array(PN),PVX=new Float32Array(PN),PVY=new Float32Array(PN),PLF=new Float32Array(PN),PML=new Float32Array(PN),PTY=new Uint8Array(PN);let pHead=0,pCount=0;
+function spawn(x,y,vx,vy,life,type){for(let k=0;k<PN;k++){const j=(pHead+k)&255;if(PLF[j]<=0){PXa[j]=x;PYa[j]=y;PVX[j]=vx;PVY[j]=vy;PLF[j]=PML[j]=life;PTY[j]=type;pHead=(j+1)&255;return;}}}
+const FW=80,FH=45,FN=FW*FH;let SM=new Float32Array(FN),SO=new Float32Array(FN),SS=new Float32Array(FN),SM2=new Float32Array(FN),SO2=new Float32Array(FN),SS2=new Float32Array(FN);
+function addSmoke(x,y,a,kind){const fx=clamp((x/4)|0,0,FW-1),fy=clamp((y/4)|0,0,FH-1),k=fy*FW+fx;const A=kind===0?SM:kind===1?SO:SS;A[k]=Math.min(5,A[k]+a);}
+const puffs=[];let puffT=0,proj=null;const expl=[];let shake=0,frameN=0,tSec=0,castT=0;
+const DB=new Uint8Array(NP),DEC=[0,1,1,2,2,1,3,2];
+// flame sprites: 4 sizes x 4 frames, tones 1..4 = deep red, orange, yellow, near-white
+const FS=[[3,5],[5,8],[7,11],[9,15],[11,19]],SPR=[],TONE=[0,DRED,ORA,YEL,PYEL,WHITE];
+for(let s=0;s<5;s++){SPR[s]=[];const [w,h]=FS[s];for(let f=0;f<4;f++){const a=new Uint8Array(w*h),cx=(w-1)/2,tip=h*(.84+.16*Math.sin(f*Math.PI/2+.6));
+  for(let y=0;y<h;y++){const v=(h-1-y)/tip;if(v>1)continue;const hw=(w/2+.3)*Math.sqrt(1-v)*Math.min(1,.62+v*1.7),sx=Math.sin(v*3.4+f*Math.PI/2)*v*v*w*.2;
+    for(let x=0;x<w;x++){const d=Math.abs(x-cx-sx)/hw;if(d>=1)continue;const q=1-d-v*.55+(v<.3?.14:0);a[y*w+x]=q>.8&&s>=3?5:q>.56?4:q>.3?3:q>.07?2:1;}}
+  if(f&1){const ty=Math.round(h-1-tip-1-(f>>1)),tx=Math.round(cx+Math.sin(3.4+f*Math.PI/2)*w*.2);if(ty>=0&&tx>=0&&tx<w){a[ty*w+tx]=s>1?2:1;if(s>2&&ty>0)a[(ty-1)*w+tx]=1;}}
+  SPR[s].push(a);}}
+function flames(cb){
+  for(const c of active){const s=STA[c];if(s===EMB)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,h=hash(c,0,0,seed)&255,j=(h&3)-1;
+    const f=FUEL0[c]?FUEL[c]/FUEL0[c]:0,big=s===BURN&&f>.12;
+    if(OBJ[c]===2&&!DEAD[c]){cb(bx+j,by-6-((h>>2)&3),big?(f>.45&&(h&16)?4:3):2,c);if(big&&(h&32))cb(bx-3+((h>>4)&1)*6,by-2,1,c+700);}
+    else if(OBJ[c]===1&&!DEAD[c]){cb(bx+j,by-8,big?2:1,c);if(big)cb(bx-3,by-3,1,c+999);}
+    else if(s===IGN)cb(bx+j,by-1,1,c);
+    else{cb(bx-2+j,by-1,big&&MAT[c]!==GRASS?2:1,c);if(big)cb(bx+2,by-3-(h&1),1,c+500);}}
+  for(const c of fieldList){const st=FLD[c];if(!st)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7;cb(bx,by,st,c+2000);if(st>1)cb(bx-3+(c&1)*6,by-2,1,c+3000);}
+  for(const [x,y] of TORCHES)cb(x,y-7,0,x);
+  cb(CAMP.x,CAMP.y+1,2,7);cb(CAMP.x-2,CAMP.y+1,1,8);
+  if(sheep.stacks>0&&!sheep.dead)cb(Math.round(sheep.x)-sheep.dir,Math.round(sheep.y)-5,sheep.stacks>4?2:1,9);
+}
+function doomStep(){const wsh=windX*windV/10,wpi=(Math.abs(wsh)*.6*256)|0,ws=wsh>0?1:-1;
+  for(let x=0;x<W;x++)for(let y=1;y<H;y++){const src=y*W+x,p=DB[src];if(p===0){DB[src-W]=0;continue;}
+    const r=rb();let off=(r&3)===0?-1:(r&3)===3?1:0;if(((r>>>2)&255)<wpi)off+=ws;if(x+off<0||x+off>=W)off=0;const nv=p-DEC[(r>>>10)&7];DB[src-W+off]=nv>0?nv:0;}
+  flames((fx,fy,sz,key)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1||fy>=H)return;
+    for(let k=0;k<w;k++){const x=fx-(w>>1)+k;if(x<0||x>=W)continue;const e=(k===0||k===w-1)?7:0,v=base-e-(rb()&7);const i=fy*W+x;if(v>DB[i])DB[i]=v;}});
+}
+function smokeStep(dt){
+  for(const c of active){const s=STA[c],cx=c%GW,cy=(c/GW)|0,ob=OBJ[c]&&!DEAD[c];const fx=cx*2+1,fy=Math.max(0,cy*2-(OBJ[c]===2&&ob?5:ob?3:1)),k=fy*FW+fx;
+    const a=s===IGN?.05:s===BURN?(OBJ[c]===2&&ob?.26:ob?.14:MAT[c]===DRY?.06:.07):.025*TIM[c]/EMBT[MAT[c]];
+    if(OIL[c]&&s===BURN){SO[k]+=.3;SO[Math.max(0,k-1)]+=.15;}else{SM[k]+=a*.6;SM[Math.max(0,k-FW)]+=a*.4;}}
+  for(let c=0;c<NC;c++)if(STEAM[c]){const k=((c/GW)|0)*2*FW+(c%GW)*2+1;SS[k]+=.35;}
+  for(const c of fieldList)SM[((c/GW)|0)*2*FW+(c%GW)*2+1]+=.08*FLD[c];
+  SM[((CAMP.y-6)>>2)*FW+(CAMP.x>>2)]+=.07;
+  const ux=windX*windV*.28,uy=windY*windV*.12-3.4,tt=tSec;
+  for(let y=0;y<FH;y++){const tu=ux+Math.sin(y*.55+tt*1.7)*.5;for(let x=0;x<FW;x++){const tv=uy+Math.sin(x*.45+tt*1.3)*.4;
+    const sx=x-tu*dt,sy=y-tv*dt,x0=Math.floor(sx),y0=Math.floor(sy),fx=sx-x0,fy=sy-y0;let a=0,b=0,c=0;
+    for(let q=0;q<4;q++){const xx=x0+(q&1),yy=y0+(q>>1);if(xx<0||yy<0||xx>=FW||yy>=FH)continue;const w=((q&1)?fx:1-fx)*((q>>1)?fy:1-fy),k=yy*FW+xx;a+=SM[k]*w;b+=SO[k]*w;c+=SS[k]*w;}
+    const k=y*FW+x;SM2[k]=Math.min(2,a*.984);SO2[k]=Math.min(2,b*.988);SS2[k]=Math.min(2,c*.93);}}
+  let t=SM;SM=SM2;SM2=t;t=SO;SO=SO2;SO2=t;t=SS;SS=SS2;SS2=t;
+}
+function castFireball(x,y){if(proj)return;const x0=MAGE.x+3,y0=MAGE.y-10,d=Math.hypot(x-x0,y-y0);proj={x0,y0,x1:x,y1:y,t:0,dur:Math.max(.25,d/170),x:x0,y:y0,z:0};castT=20;}
+function step60(){const dt=1/60;frameN++;tSec+=dt;
+  // embers from fires
+  for(const c of active){if(STA[c]!==BURN)continue;const ob=OBJ[c]&&!DEAD[c],r=OBJ[c]===2&&ob?.04:ob?.04:OIL[c]?.06:.025;if(rnd()<r){const cx=c%GW,cy=(c/GW)|0;spawn(cx*8+2+rnd()*5,cy*8+(ob?-6:2)-rnd()*4,(rnd()-.5)*16,-18-rnd()*24,.7+rnd()*.9,0);}}
+  if(rnd()<.09)spawn(CAMP.x-2+rnd()*4,CAMP.y-6,(rnd()-.5)*10,-20-rnd()*20,.6+rnd()*.7,0);
+  for(const [x,y] of TORCHES)if(rnd()<.02)spawn(x,y-10,(rnd()-.5)*6,-15-rnd()*10,.5+rnd()*.4,0);
+  if(sheep.stacks>0&&rnd()<.3)spawn(sheep.x,sheep.y-6,(rnd()-.5)*12,-15-rnd()*15,.5+rnd()*.4,0);
+  // particles
+  pCount=0;const wpx=windX*windV*3,wpy=windY*windV*2;
+  for(let j=0;j<PN;j++){if(PLF[j]<=0)continue;pCount++;const ty=PTY[j];
+    if(ty===0){PVY[j]-=16*dt;PVX[j]+=(wpx-PVX[j])*.8*dt;PVY[j]+=wpy*.4*dt;PVX[j]*=.99;PVY[j]*=.985;}else if(ty===1){PVY[j]+=110*dt;PVX[j]*=.97;}else{PVY[j]+=150*dt;}
+    PXa[j]+=PVX[j]*dt;PYa[j]+=PVY[j]*dt;PLF[j]-=dt;}
+  // chimney puffs (Stardew: motion -0.5 screen px/frame, accel 0.002, at zoom 4 => /4 in art px)
+  if(!DEAD[CHIM.cell]){puffT+=dt;if(puffT>=.6){puffT-=.6;puffs.push({x:CHIM.x,y:CHIM.y,vx:0,vy:-.125,a:0});}}
+  const ax=.0005*(.5+windX*windV*.35),ay=.0005*windY*windV*.2;
+  for(let k=puffs.length-1;k>=0;k--){const p=puffs[k];p.a++;p.vx+=ax;p.vy+=ay;p.x+=p.vx;p.y+=p.vy;if(p.a>=375)puffs.splice(k,1);}
+  // sheep walk
+  const s=sheep;if(s.dead){if(--s.rt<=0)Object.assign(s,{dead:0,hp:s.max,x:WP[0][0],y:WP[0][1],wp:1});}
+  else{const [tx,ty]=WP[s.wp],dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy),sp=(s.stacks?36:15)*dt;if(l<1.5)s.wp=(s.wp+1)%WP.length;else{s.x+=dx/l*sp;s.y+=dy/l*sp;if(Math.abs(dx)>.3)s.dir=dx>0?1:-1;s.anim+=dt*(s.stacks?14:7);}}
+  if(s.tint>0)s.tint--;
+  // fireball
+  if(castT>0)castT--;
+  if(proj){proj.t+=dt/proj.dur;const k=Math.min(1,proj.t);proj.x=proj.x0+(proj.x1-proj.x0)*k;proj.y=proj.y0+(proj.y1-proj.y0)*k;proj.z=Math.sin(k*Math.PI)*14;
+    for(let q=0;q<2;q++)spawn(proj.x+(rnd()-.5)*2,proj.y-proj.z+(rnd()-.5)*2,(rnd()-.5)*10,(rnd()-.5)*10-6,.25+rnd()*.3,0);
+    if(proj.t>=1){const x=proj.x1,y=proj.y1;expl.push({x,y,a:0});shake=8;
+      for(let q=0;q<22;q++){const an=rnd()*6.283,v=30+rnd()*70;spawn(x,y-2,Math.cos(an)*v,Math.sin(an)*v*.6-30,.4+rnd()*.5,1);}
+      for(let q=0;q<6;q++)spawn(x,y-2,(rnd()-.5)*60,-40-rnd()*40,.6+rnd()*.4,3);
+      queue.push({k:'fb',c:CELL[clamp(y|0,0,H-1)*W+clamp(x|0,0,W-1)]});
+      if(!sheep.dead&&Math.hypot(sheep.x-x,sheep.y-y)<16){sheep.stacks=Math.max(sheep.stacks,8);sheep.hp-=6;sheep.tint=8;floaters.push({x:sheep.x,y:sheep.y-11,v:6,a:0});}
+      proj=null;}}
+  for(let k=expl.length-1;k>=0;k--){const e=expl[k];e.a++;if(e.a===4)for(let q=0;q<5;q++)addSmoke(e.x+(q-2)*3,e.y-4-(q&1)*4,1.2,0);if(e.a>26)expl.splice(k,1);}
+  for(let k=floaters.length-1;k>=0;k--){const f=floaters[k];f.a++;f.y-=.25;if(f.a>48)floaters.splice(k,1);}
+  if(shake>0)shake--;
+  if(frameN&1){doomStep();smokeStep(1/30);}
+}
+
+// ---------- render ----------
+let tool='ignite',view='normal',style='sprite',night=false,haze=true,lock=true;
+const FONT='111101101101111 010110010010111 111001111100111 111001111001111 101101111001001 111100111001111 111100111101111 111001001001001 111101111101111 111101111001111'.split(' ');
+const SHEEPA=['.wwww....','wwwwwwff.','wwwwwwfef','wwwwwwfff','.wwwwv...'],LEGS=['.l..l.l..','..l.l..l.'];
+const MAGEP=['...p...','..pp...','.ppp..t','ppppp.w','.sss..w','.beb..w','bbbbbbw','bbbbb.w','bBbbB.w','.k..k.w'];
+function putE(x,y,col){x|=0;y|=0;if(x<0||y<0||x>=W||y>=H)return;out[y*W+x]=col;}
+function putL(x,y,col){x|=0;y|=0;if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;out[i]=lit(col,LR[i],LG[i],LB[i]);}
+function lit(c,a,b,d){const r=(c&255)*a,g=((c>>8)&255)*b,bb=((c>>16)&255)*d;return (255<<24|(bb>255?255:bb)<<16|(g>255?255:g)<<8|(r>255?255:r))>>>0;}
+function render(){
+  const ms=(tSec*1000)|0,t=tSec;
+  for(let c=0;c<NC;c++){const s=STA[c];PROG[c]=(s===ASHS||s===EMB)?16:(FUEL0[c]?((FUEL0[c]-FUEL[c])*16/FUEL0[c])|0:0);EPR[c]=s===EMB?(16-(TIM[c]*16/EMBT[MAT[c]]))|0:0;}
+  // glow grid: every burning cluster adds warm light, flickering near 10 Hz
+  GL.fill(0);
+  for(const c of active){const s=STA[c],ob=OBJ[c]&&!DEAD[c];GL[c]+=s===BURN?(ob?1.5:1)*(.75+.5*n1(t*10,c)):s===IGN?.5:.3*TIM[c]/EMBT[MAT[c]];}
+  for(const c of LAVAC)if(!COOL[c])GL[c]+=.55+.1*Math.sin(t*2+c);
+  for(const c of fieldList)GL[c]+=.45*FLD[c]*(.8+.4*n1(t*10,c+7));
+  for(const [x,y] of TORCHES)GL[CELL[(y-6)*W+x]]+=.6*(.8+.4*n1(t*9,x));
+  GL[CAMP.c]+=1.1*(.75+.5*n1(t*8,3));
+  if(proj)GL[CELL[clamp(proj.y|0,0,H-1)*W+clamp(proj.x|0,0,W-1)]]+=1.4;
+  for(const e of expl)GL[CELL[clamp(e.y|0,0,H-1)*W+clamp(e.x|0,0,W-1)]]+=5*Math.max(0,1-e.a/18);
+  if(sheep.stacks>0&&!sheep.dead)GL[CELL[clamp(sheep.y|0,0,H-1)*W+clamp(sheep.x|0,0,W-1)]]+=.6;
+  for(let it=0;it<3;it++){for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const i=y*GW+x;GT[i]=(GL[x>0?i-1:i]+2*GL[i]+GL[x<GW-1?i+1:i])*.25;}
+    for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const i=y*GW+x;GL[i]=(GT[y>0?i-GW:i]+2*GT[i]+GT[y<GH-1?i+GW:i])*.25;}}
+  let ar=1,ag=1,ab=1,wr=.5,wg=.26,wb=.08,gain=4,gmax=.6;
+  if(night){ar=.3;ag=.34;ab=.54;wr=1;wg=.58;wb=.24;gain=5;gmax=1.25;}
+  if(rain){ar*=.78;ag*=.8;ab*=.88;}
+  let flash=0;for(const e of expl)if(e.a<=2)flash=Math.max(flash,night?.5:.25);
+  ar+=flash;ag+=flash;ab+=flash;
+  const fr=frameN>>3;
+  // ground + object layers, lit by ambient + glow
+  for(let y=0;y<H;y++){const gy=(y+.5)/8-.5,y0=gy<0?0:Math.floor(gy),fy=gy<0?0:gy-y0,r0=Math.min(GH-1,y0)*GW,r1=Math.min(GH-1,y0+1)*GW;
+    for(let x=0;x<W;x++){const gx=(x+.5)/8-.5,x0=gx<0?0:Math.floor(gx),fx=gx<0?0:gx-x0,x1=Math.min(GW-1,x0+1);
+      const g=gmax*(1-Math.exp(-((GL[r0+x0]*(1-fx)+GL[r0+x1]*fx)*(1-fy)+(GL[r1+x0]*(1-fx)+GL[r1+x1]*fx)*fy)*gain));
+      const i=y*W+x,lr=ar+g*wr,lg=ag+g*wg,lb=ab+g*wb;LR[i]=lr;LG[i]=lg;LB[i]=lb;
+      let col=0,em=0;const oc=OWN[i];
+      if(oc>=0&&OBJ[oc]){const s=STA[oc];
+        if(DEAD[oc]||s===ASHS)col=OA[i];
+        else if(s===EMB){col=BY[i]<EPR[oc]?OA[i]:OC[i];if(col&&col!==OA[i]&&HP[i]<46&&((HP[i]+fr)&3)){col=TIM[oc]*2>EMBT[MAT[oc]]?ORA:RED;em=1;}}
+        else{col=BY[i]<PROG[oc]?OC[i]:OP[i];if(s===BURN&&col===OC[i]&&HP[i]<40){col=(HP[i]+fr)&1?ORA:YEL;em=1;}
+          else if(night&&WINM[i]&&s===NONE){col=(HP[i]&7)?YEL:PYEL;em=1;}}}
+      if(!col){const c=CELL[i],s=STA[c];
+        if(PK[i]===1){const w=Math.sin(x*.7+t*2.1+y*1.3)+Math.sin(y*.9-t*1.4+x*.2);col=w>1.7?(w>1.9?CYAN:B2):GP[i];}
+        else if(PK[i]===2){if(COOL[c]){col=HP[i]<30&&COOL[c]<25?RED:(HP[i]&1?WD3:BLK);em=col===RED;}
+          else{const v=Math.sin(x*.55+t*1.3)+Math.sin(y*.7-t*.9)+Math.sin((x+y)*.3+t*2.2)+HP[i]/320;col=v>1.7?PYEL:v>.7?YEL:v>-.4?ORA:v>-1.4?RED:DRED;em=1;}}
+        else{
+          if(s===ASHS)col=GA[i];
+          else if(s===EMB){col=BY[i]<EPR[c]?GA[i]:GC[i];if(col===GC[i]&&HP[i]<36&&((HP[i]+fr)&3)){col=TIM[c]*2>EMBT[MAT[c]]?ORA:RED;em=1;}}
+          else{col=BY[i]<PROG[c]?GC[i]:(DEAD[c]?GA[i]:GP[i]);if(FLD[c]&&BY[i]<FLD[c]*3)col=GC[i];
+            if(s===BURN&&col===GC[i]&&HP[i]<28){col=(HP[i]+fr)&1?ORA:YEL;em=1;}
+            if(OIL[c]&&OILP[i]&&!OBJ[c]){col=OILP[i]===2?(((x+y+fr)&7)===0?S3:PURP):BLK;}
+            else if(!em&&MOIST[c]>150){const k=1-(MOIST[c]-150)/105*.3;col=lit(col,k*.85,k*.92,k*1.02);}}}}
+      out[i]=em?col:lit(col,lr,lg,lb);}}
+  // props and characters
+  for(const [x,y] of TORCHES){for(let k=0;k<7;k++)putL(x,y-k,k===6?WD3:WD2);putL(x-1,y-6,WD3);putL(x+1,y-6,WD3);}
+  {const M=MAGE,cast=castT>0;for(let r=0;r<MAGEP.length;r++)for(let k=0;k<7;k++){const ch=MAGEP[r][k];if(ch==='.')continue;const col={p:PURP,s:SKIN,b:B1,B:B2,e:BLK,w:WD2,k:WD3,t:cast?PYEL:CYAN}[ch];const x=M.x-3+k,y=M.y-9+r;if(ch==='t')putE(x,y,col);else putL(x,y,col);}}
+  if(!sheep.dead){const s=sheep,sx=Math.round(s.x),sy=Math.round(s.y),c=CELL[clamp(sy,0,H-1)*W+clamp(sx,0,W-1)],wet=MAT[c]===WATER,rows=SHEEPA.concat([LEGS[(s.anim|0)&1]]),red=s.tint>0&&(s.tint&2);
+    for(let r=0;r<rows.length;r++){if(wet&&r>=4)break;for(let k=0;k<9;k++){const ch=rows[r][s.dir>0?k:8-k];if(ch==='.')continue;let col=ch==='w'?(r===4?S1:WHITE):ch==='v'?S1:ch==='f'?S4:ch==='e'?WHITE:BLK;if(red)col=ch==='w'||ch==='v'?SALM:RED;putL(sx-4+k,sy-5+r,col);}}
+    if(wet)for(let k=-5;k<=5;k++)if(((k+frameN>>3)&3)!==0)putL(sx+k,sy,CYAN);
+    if(s.hp<s.max){for(let k=0;k<10;k++)putE(sx-5+k,sy-9,BLK);const w=Math.max(0,Math.round(s.hp/s.max*10));for(let k=0;k<w;k++)putE(sx-5+k,sy-9,s.hp<s.max*.35?RED:G1);}}
+  // smoke field, Bayer threshold, no alpha
+  for(let y=0;y<H;y++){const gy=(y+.5)/4-.5,y0=Math.floor(gy),fy=gy-y0,ya=y0<0?0:y0,yb=y0+1>=FH?FH-1:y0+1;
+    for(let x=0;x<W;x++){const gx=(x+.5)/4-.5,x0=Math.floor(gx),fx=gx-x0,xa=x0<0?0:x0,xb=x0+1>=FW?FW-1:x0+1,k00=ya*FW+xa,k10=ya*FW+xb,k01=yb*FW+xa,k11=yb*FW+xb;
+      const s=(SM[k00]*(1-fx)+SM[k10]*fx)*(1-fy)+(SM[k01]*(1-fx)+SM[k11]*fx)*fy,o=(SO[k00]*(1-fx)+SO[k10]*fx)*(1-fy)+(SO[k01]*(1-fx)+SO[k11]*fx)*fy,st=(SS[k00]*(1-fx)+SS[k10]*fx)*(1-fy)+(SS[k01]*(1-fx)+SS[k11]*fx)*fy;
+      const d=s+o+st;if(d<.05)continue;const i=y*W+x,a=Math.min(.9,d*.7),b=(BY[i]+.5)/16;if(a<b)continue;const v=a+(((BY[i]*7)&15)/16-.5)*.3;
+      let col;if(st>s+o)col=v>.55?WHITE:S1;else if(o>s)col=v>.5?BLK:S5;else col=v>.8?S3:v>.45?S2:S1;
+      out[i]=lit(col,LR[i]*.9+.1,LG[i]*.9+.1,LB[i]*.9+.1);}}
+  for(const p of puffs){const f=p.a/375,R=1.2+4.6*f,al=.8*(1-f),cx=p.x,cy=p.y,ir=Math.ceil(R);
+    for(let dy=-ir;dy<=ir;dy++)for(let dx=-ir;dx<=ir;dx++){const d2=(dx*dx+dy*dy)/(R*R);if(d2>1)continue;const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;
+      if(al*(1.2-d2*.7)*16<=BY[i])continue;out[i]=lit(dy<-R*.3?S1:d2>.55&&dy>0?S3:S2,LR[i]*.9+.1,LG[i]*.9+.1,LB[i]*.9+.1);}}
+  // flames
+  if(style==='sprite'){const L=[];flames((x,y,sz,key)=>L.push(x,y,sz,key));const idx=[];for(let k=0;k<L.length;k+=4)idx.push(k);idx.sort((a,b)=>L[a+1]-L[b+1]);
+    for(const k of idx){const x=L[k],y=L[k+1],sz=L[k+2],key=L[k+3],per=sz>=3?640:sz===2?500:400,f=(((ms+x*3047+y*88+key*131)%per)/per*4)|0,[w,h]=FS[sz],a=SPR[sz][f];
+      for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const tn=a[yy*w+xx];if(tn)putE(x-(w>>1)+xx,y-h+1+yy,TONE[tn]);}}}
+  else{for(let i=W;i<NP;i++){const v=DB[i];if(v<4)continue;if(v<8&&BY[i]>=(v-3)*3)continue;out[i]=DOOMP[v];}}
+  // particles
+  for(let j=0;j<PN;j++){if(PLF[j]<=0)continue;const f=1-PLF[j]/PML[j],ty=PTY[j],x=PXa[j],y=PYa[j];
+    if(ty===0){if(f>.85&&(j&1))continue;putE(x,y,[WHITE,PYEL,YEL,YEL,ORA,ORA,RED][Math.min(6,f*7|0)]);}
+    else if(ty===1){const col=[WHITE,PYEL,YEL,ORA,RED][Math.min(4,f*5|0)];putE(x,y,col);putE(x-PVX[j]/60,y-PVY[j]/60,col);}
+    else if(ty===2)putL(x,y,f<.5?CYAN:B2);else putL(x,y,f<.5?WD3:BLK);}
+  // fireball and explosions
+  if(proj){const x=proj.x|0,y=proj.y|0,z=proj.z|0;for(let k=-1;k<=1;k++)putL(x+k,y,S5);
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const r=dx*dx+dy*dy;if(r>5)continue;putE(x+dx,y-z+dy,r===0?WHITE:r<=2?PYEL:r<=4?YEL:ORA);}}
+  for(const e of expl){const a=e.a;
+    if(a<=2){for(let dy=-11;dy<=11;dy++)for(let dx=-11;dx<=11;dx++)if(dx*dx+dy*dy<=121)putE(e.x+dx,e.y-2+dy,WHITE);continue;}
+    if(a<9){const R=9-a*.5;for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const r=(dx*dx+dy*dy)/(R*R);if(r>1)continue;putE(e.x+dx,e.y-2+dy,r<.25?PYEL:r<.6?YEL:ORA);}}
+    const R=4+a*.75,col=a<6?WHITE:a<11?PYEL:a<16?ORA:a<21?RED:DRED;
+    for(let k=0;k<64;k++){const an=k/64*6.283,x=e.x+Math.cos(an)*R,y=e.y-2+Math.sin(an)*R*.6;if(a>18&&(BY[((y|0)&3)*4+((x|0)&3)]>=(26-a)*2))continue;putE(x,y,col);}}
+  // rain
+  if(rain){const sl=windX*windV*.05;for(let k=0;k<150;k++){const sp=200+hf(k,3,99)*90,y=(hf(k,2,99)*(H+10)+t*sp)%(H+10)-5,x=((hf(k,1,99)*W+t*sp*sl)%W+W)%W;for(let q=0;q<3;q++)putL(x+sl*q,y+q,q===2?WHITE:S1);}}
+  // damage numbers
+  for(const f of floaters){const str=String(f.v),x0=Math.round(f.x-str.length*2),y0=Math.round(f.y);if(f.a>36&&(f.a&2))continue;
+    for(let n=0;n<str.length;n++){const g=FONT[+str[n]];for(let p=0;p<15;p++)if(g[p]==='1'){const x=x0+n*4+p%3,y=y0+(p/3|0);putE(x-1,y,BLK);putE(x+1,y,BLK);putE(x,y-1,BLK);putE(x,y+1,BLK);}
+      for(let p=0;p<15;p++)if(g[p]==='1')putE(x0+n*4+p%3,y0+(p/3|0),f.a<6?WHITE:ORA);}}
+  // heat haze: sine row offsets above big fires
+  if(haze){HZ.fill(0);let any=0;for(const c of active)if(STA[c]===BURN&&OBJ[c]&&!DEAD[c]){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<5;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
+    for(const c of fieldList)if(FLD[c]===3){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<3;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
+    if(any){tmp.set(out);for(let y=0;y<H;y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;for(let x=1;x<W-1;x++){const i=y*W+x;if(HZ[CELL[i]])out[i]=tmp[i+dx];}}}}
+  // palette lock: everything to Endesga 32 with ordered dither
+  if(lock){if(!LUT)buildLUT();for(let i=0;i<NP;i++){const c=out[i],o=(BY[i]-7.5)*.9;const r=clamp(((c&255)+o)|0,0,255),g=clamp((((c>>8)&255)+o)|0,0,255),b=clamp((((c>>16)&255)+o)|0,0,255);out[i]=LUT[(r>>3)<<10|(g>>3)<<5|(b>>3)];}}
+  if(view!=='normal')xray();
+  ctx.putImageData(img,0,0);
+  if(shake>0){const s=cv.getBoundingClientRect().width/W,m=shake>4?2:1;cv.style.transform=`translate(${((frameN&1)?m:-m)*s}px,${((frameN&2)?m:-m)*s*.5}px)`;}else if(cv.style.transform)cv.style.transform='';
+}
+function xray(){
+  if(view==='active'){for(let i=0;i<NP;i++){const c=out[i];out[i]=(255<<24|((((c>>16)&255)*.3)|0)<<16|((((c>>8)&255)*.3)|0)<<8|(((c&255)*.3)|0))>>>0;}
+    const box=(c,col,fill)=>{const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=0;y<8;y++)for(let x=0;x<8;x++){if(!fill&&x&&y&&x<7&&y<7)continue;if(fill&&BY[(y0+y)*W+x0+x]>fill)continue;putE(x0+x,y0+y,col);}};
+    for(const c of LAVAC)box(c,MAG,0);for(const c of fieldList)box(c,PINK,0);
+    for(let c=0;c<NC;c++){if(FLASH[c]){box(c,WHITE,FLASH[c]);FLASH[c]--;}else if(STEAM[c]>2)box(c,CYAN,6);}
+    for(const c of active){const s=STA[c];box(c,s===IGN?YEL:s===BURN?ORA:RED,0);if(s===IGN)box(c,YEL,5);}
+    return;}
+  for(let i=0;i<NP;i++){const c=CELL[i],x=i%W,y=(i/W)|0,edge=(x&7)===0||(y&7)===0;let col;
+    if(view==='fuel'){const m=MAT[c];if(m===WATER)col=px('10204a');else if(STA[c]===ASHS)col=px('202020');else if(!ign16(c))col=px('383838');
+      else{const f=FUEL0[c]?FUEL[c]/Math.max(FUEL0[c],1):0,mo=MOIST[c]/255,big=Math.min(1,FUEL0[c]/44);col=(255<<24|((30+mo*220)|0)<<16|((f*(90+big*140)*(1-mo*.6))|0)<<8|((f*220*(1-mo*.8)+20)|0))>>>0;}
+      if(STA[c]===BURN||STA[c]===IGN)col=(i+frameN>>1)&1?ORA:col;}
+    else if(view==='heat'){const h=(STA[c]===BURN||STA[c]===IGN)?255*Math.max(.3,FUEL[c]/Math.max(1,FUEL0[c])):STA[c]===EMB?60:HEAT[c];col=DOOMP[Math.min(36,(h*36/255)|0)];}
+    else{const k=(y>>2)*FW+(x>>2),s=Math.min(1,SM[k]*.8),o=Math.min(1,SO[k]*.8),st=Math.min(1,SS[k]*.8);col=(255<<24|((20+st*235+s*150)|0)<<16|((16+st*235+s*150+o*30)|0)<<8|((18+s*150+o*90+st*60)|0))>>>0;}
+    if(edge)col=lit(col,.75,.75,.75);out[i]=col;}
+  if(view==='smoke'){const cx=300,cy=14;for(let k=-8;k<=8;k++)putE(cx+windX*k,cy+windY*k,YEL);for(let k=1;k<=3;k++){putE(cx+windX*(8-k)-windY*k,cy+windY*(8-k)+windX*k,YEL);putE(cx+windX*(8-k)+windY*k,cy+windY*(8-k)-windX*k,YEL);}}
+}
+
+// ---------- loop and UI ----------
+let last=performance.now(),acc=0,fxAcc=0,hudN=0;
+function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;
+  if(paused){if(queue.length){for(const a of queue)applyAction(a);queue.length=0;const na=[];for(let c=0;c<NC;c++)if(STA[c]>=IGN&&STA[c]<=EMB)na.push(c);active=na;}}
+  else{acc+=dt;while(acc>=.25){acc-=.25;simTick();}}
+  fxAcc+=dt;let n=0;while(fxAcc>=1/60&&n<6){fxAcc-=1/60;step60();n++;}if(n>=6)fxAcc=0;
+  render();
+  if(++hudN%6===0){let nb=0;for(const c of active)if(STA[c]!==EMB)nb++;
+    document.getElementById('hud').textContent=`tick ${tick}${paused?' (paused)':''} · burning ${nb} · active ${active.length} · sim ${simMs.toFixed(3)} ms/tick · net per tick: full set ${netFull} B, events ${netEv} B (illustrative) · particles ${pCount}/256${capOn?' · cap 3 ignitions/tick':''} · seed ${seed}`;}
+  requestAnimationFrame(loop);}
+const $=id=>document.getElementById(id);
+const group=(sel,attr,fn)=>{const bs=document.querySelectorAll(sel);bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset[attr]);});};
+const setTool=t=>{tool=t;document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));};
+group('#tools button','t',setTool);
+group('#fstyle button','f',v=>{style=v;});
+const VIEWS=['normal','fuel','heat','smoke','active'];const setView=v=>{view=v;document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));};
+group('#views button','v',setView);
+const syncWind=()=>{document.querySelectorAll('#wind button').forEach(b=>b.classList.toggle('on',+b.dataset.d===(windV?windDir:-1)));$('wv').value=windV;$('wvl').textContent=windV;updateWind();};
+document.querySelectorAll('#wind button').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(d<0)windV=0;else{windDir=d;if(!windV)windV=4;}syncWind();});
+$('wv').oninput=e=>{windV=+e.target.value;syncWind();};
+const tog=(id,get,set)=>{const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle('on',get());};return ()=>b.classList.toggle('on',get());};
+const syncRain=tog('rain',()=>rain,v=>rain=v),syncNight=tog('night',()=>night,v=>night=v);tog('haze',()=>haze,v=>haze=v);tog('lock',()=>lock,v=>lock=v);tog('cap',()=>capOn,v=>capOn=v);
+const syncPause=tog('pause',()=>paused,v=>paused=v);
+$('step').onclick=()=>{simTick();};
+$('reset').onclick=()=>reset();
+$('seed').onclick=()=>{seed=1+(rb()%9999);build();};
+document.querySelector('button[data-demo="blaze"]').onclick=()=>blaze();
+function blaze(){reset();night=false;rain=false;paused=false;windDir=0;windV=5;syncWind();syncRain();syncNight();syncPause();setView('normal');
+  for(const [x,y] of [[3,8],[11,7],[12,9]]){const c=y*GW+x;STA[c]=NONE;ignite(c);}
+  active=[];for(let c=0;c<NC;c++)if(STA[c]>=IGN&&STA[c]<=EMB)active.push(c);
+  for(let k=0;k<12;k++){simTick();for(let f=0;f<15;f++)step60();}acc=0;render();}
+let down=false,lastCell=-1;
+function useTool(e,first){const r=cv.getBoundingClientRect();const x=clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),y=clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1),c=CELL[y*W+x];
+  if(tool==='fireball'){if(first)castFireball(x,y);return;}
+  if(c===lastCell)return;lastCell=c;const cx=c%GW,cy=(c/GW)|0;
+  const area=k=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=cx+dx,Y=cy+dy;if(X>=0&&Y>=0&&X<GW&&Y<GH)queue.push({k,c:Y*GW+X});}};
+  if(tool==='ignite'){queue.push({k:'ign',c});for(let q=0;q<5;q++)spawn(x,y,(rnd()-.5)*30,-10-rnd()*30,.3+rnd()*.3,1);}
+  else if(tool==='water'){area('water');for(let q=0;q<16;q++)spawn(x+(rnd()-.5)*10,y-4,(rnd()-.5)*50,-30-rnd()*40,.4+rnd()*.3,2);
+    if(!sheep.dead&&Math.hypot(sheep.x-x,sheep.y-y)<14&&sheep.stacks){sheep.stacks=0;addSmoke(sheep.x,sheep.y-6,1.5,2);}}
+  else if(tool==='oil')queue.push({k:'oil',c});
+  else area('grow');}
+cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}useTool(e,true);e.preventDefault();});
+cv.addEventListener('pointermove',e=>{if(down)useTool(e,false);});
+addEventListener('pointerup',()=>{down=false;lastCell=-1;});addEventListener('pointercancel',()=>{down=false;lastCell=-1;});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
+  const T=['ignite','water','fireball','oil','regrow'];
+  if(k>='1'&&k<='5'){setTool(T[+k-1]);}
+  else if(k==='r'){rain=!rain;syncRain();}
+  else if(k==='w'){windDir=(windDir+1)&7;if(!windV)windV=4;syncWind();}
+  else if(k==='v'){setView(VIEWS[(VIEWS.indexOf(view)+1)%VIEWS.length]);}
+  else if(k===' '){paused=!paused;syncPause();e.preventDefault();}
+  else if(k==='n'){simTick();}
+  else return;});
+build();syncWind();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

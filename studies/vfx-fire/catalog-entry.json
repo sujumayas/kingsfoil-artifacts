@@ -1,0 +1,69 @@
+{
+ "id": "vfx-fire",
+ "type": "study",
+ "path": "/vfx-fire-topdown-pixel.html",
+ "title": "Top-down pixel fire and smoke: tiny algorithms for campfires, spreading fire, smoke and combat fire",
+ "short": "Fire & smoke",
+ "nav": "Fire",
+ "summary": "The DOOM fire and its ancestors, drawn flame loops, tile fire spread with wind and rain, dithered smoke and steam, Tibia fire fields, burning status and explosions.",
+ "series": {
+  "id": "vfx",
+  "number": 6
+ },
+ "date": "2026-11-10",
+ "updated": "2026-11-10",
+ "thumb": "/thumbs/vfx-fire.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "rendering"
+  ],
+  "concept": [
+   "fire"
+  ],
+  "technique": [
+   "cellular-automata",
+   "fire-spread",
+   "advection-field",
+   "damage-over-time",
+   "palette-lut",
+   "dither-threshold",
+   "z-particles",
+   "gas-diffusion",
+   "reaction-table"
+  ]
+ },
+ "stats": {
+  "words": 20012,
+  "techniques": 39,
+  "figures": 26,
+  "games": 37,
+  "sources": 145
+ },
+ "pair": "vfx-fire-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel fire and smoke Sandbox (playable)",
+  "path": "/vfx-fire-sandbox.html"
+ }
+}

@@ -3,7 +3,7 @@
   "path": "/index.html",
   "title": "Kingsfoil Artifacts",
   "description": "Library homepage generated from catalog.json: series shelves, search, facet filters, technique atlas.",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/manifest.json",
@@ -105,61 +105,61 @@
   "path": "/catalog.json",
   "title": "Catalog (v2)",
   "description": "Rich data model: items, series, tags, stats, pairs. Source of truth for the homepage.",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/taxonomy.json",
   "title": "Taxonomy",
   "description": "Controlled vocabulary of facets and tag values.",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/ai-rts-enemy.webp",
   "title": "Thumbnail ai-rts-enemy.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/procgen-characters.webp",
   "title": "Thumbnail procgen-characters.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/vfx-acid.png",
   "title": "Thumbnail vfx-acid.png",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/vfx-forest.png",
   "title": "Thumbnail vfx-forest.png",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/vfx-light.png",
   "title": "Thumbnail vfx-light.png",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/vfx-rain.png",
   "title": "Thumbnail vfx-rain.png",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/vfx-snow.png",
   "title": "Thumbnail vfx-snow.png",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/thumbs/curves-hearthguard.webp",
   "title": "Thumbnail curves-hearthguard.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/curves-hearthguard.html",
@@ -177,7 +177,7 @@
   "path": "/thumbs/curves-matchrpg.png",
   "title": "Thumbnail curves-matchrpg.png",
   "description": "Card thumbnail",
-  "date": "2026-11-09"
+  "date": "2026-11-10"
  },
  {
   "path": "/curves-matchrpg.html",
@@ -190,5 +190,23 @@
   "title": "MatchRPG difficulty and learning curves Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-09"
+ },
+ {
+  "path": "/thumbs/vfx-fire.png",
+  "title": "Thumbnail vfx-fire.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-10"
+ },
+ {
+  "path": "/vfx-fire-topdown-pixel.html",
+  "title": "Top-down pixel fire and smoke: tiny algorithms for campfires, spreading fire, smoke and combat fire",
+  "description": "The DOOM fire and its ancestors, drawn flame loops, tile fire spread with wind and rain, dithered smoke and steam, Tibia fire fields, burning status and explosions.",
+  "date": "2026-11-10"
+ },
+ {
+  "path": "/vfx-fire-sandbox.html",
+  "title": "Top-down pixel fire and smoke Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-10"
  }
 ]
