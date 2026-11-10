@@ -1,0 +1,146 @@
+<!-- Hearthguard curve figures, part 1. Demos in demos1.js (model figures) and demos2.js (twins and proposals). The hero figure lives in hero.html. -->
+<!--FIG flow-->
+<figure class="fig" data-demo="flow" id="fig-flow">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hearthguard's 30 waves on the flow plane</h4><span class="illu">Illustrative model</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 270" role="img" aria-label="Challenge against hero power on log axes, with a flow channel band and Hearthguard's 30 waves as a path"></svg>
+  <div class="ctl"><label><input type="checkbox" data-k="tgt"> Show a target sawtooth path</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one wave, coloured by chapter, with chapter starts drawn larger. Hero power is the Fighter's damage multiplier at the wave's start and challenge is the mob HP multiplier, both from the game's constants run through our curve model [K]. The channel edges at ratios 0.8 and 1.25 are our choice, not a measured band [I]. Chapter 1 climbs toward the boredom side, then from chapter 3 the path drifts above the channel toward anxiety. The target path keeps every chapter inside the channel: it starts each chapter at 0.90 and rises to 1.20 by the boss [I]. Hover or tap a dot for the wave.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ratio-->
+<figure class="fig" data-demo="ratio" id="fig-ratio">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Power ratio per wave, and what moves it</h4><span class="illu">Proposed preset illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 210" role="img" aria-label="Bar chart of the hero-versus-mob power ratio for each of the 30 waves"></svg>
+  <div class="ctl">
+    <label class="rng">Hero damage per level <input type="range" min="5" max="14" step="1" value="9" data-k="g"><output data-o="g">9%</output></label>
+    <div class="seg" data-seg="p" role="group" aria-label="HP_SCALE preset"><button type="button" class="on" data-v="cur">Current HP_SCALE</button><button type="button" data-v="prop">Proposed sawtooth</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The ratio is hero damage multiplier over mob HP multiplier, so 1.0 is the chapter 1 wave 1 balance. Current values use <code>HP_SCALE</code> [1.0, 2.3, 4.6, 8.0, 13.0], <code>WAVE_STEP</code> 0.07, <code>DMG_GROWTH</code> 1.09 and the levels the model predicts for a solo Fighter [K]. Levels come from XP, so the growth slider changes damage only. The proposed preset is the §11 Curve Spec: <code>HP_SCALE</code> [1.0, 2.5, 4.3, 7.1, 11.3], <code>WAVE_STEP</code> 0.03 and <code>xp_to_next</code> = 80 + 70L + 3L², so every chapter starts near 0.92 and climbs [I]. Watch the readout. Today the chapter-start drop shrinks from 28% to 3%, and chapters 3 and 5 fall inside the chapter.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG waves-->
+<figure class="fig" data-demo="waves" id="fig-waves">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Mobs per wave, Horde and boss</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 226" role="img" aria-label="Bar chart of mobs per wave for 5 chapters of 6 waves, with the Horde highlighted and boss HP shown above each boss wave"></svg>
+  <div class="ctl"><span class="mute" style="font-size:13px">Players</span><div class="seg" data-seg="n" role="group" aria-label="Player count"><button type="button" class="on" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mobs per corridor are <code>round(base × 1.08)</code> with base 14+8c, 22+12c, 18+10c, 40+30c and 28+16c for waves 1 to 5 [K]. Each player brings a corridor, so the total grows by count. The red bar is the Horde in wave 4, which arrives as three surges 9 s apart. Wave 6 has no wave mobs. The diamond shows the boss's HP instead, which grows +75% per extra player even though the boss stands in one corridor [K]. Elites and boss adds are left out.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hearth-->
+<figure class="fig" data-demo="hearth" id="fig-hearth">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">How many hits the Hearth can take</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 210" role="img" aria-label="Line chart of the Hearth's margin per wave, falling as mob attack grows"></svg>
+  <div class="ctl">
+    <span class="mute" style="font-size:13px">Players</span><div class="seg" data-seg="n" role="group" aria-label="Player count"><button type="button" class="on" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button></div>
+    <label class="rng">Quarry level <input type="range" min="0" max="5" step="1" value="0" data-k="q"><output data-o="q">none</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The Hearth has 6,500 × (1 + 0.5 per extra player) HP and the Quarry adds 12% per level [K]. A mob that reaches it deals its full attack, which grows with <code>ATK_SCALE</code> × (1 + 0.07 per wave) [K]. The line divides the two and sets chapter 1 wave 1 solo to 100, so it reads as "how many early-game hits this Hearth absorbs, compared with the start". In chapter 5 a leak costs 4.4x to 5.9x what it did in wave 1. With 2 or 3 players, the dashed line splits the Hearth by the corridors that drain it: a trio has two thirds of the solo Hearth per corridor.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG gold-->
+<figure class="fig" data-demo="gold" id="fig-gold">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Gold earned against the Town's price</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 230" role="img" aria-label="Cumulative gold per wave on a log scale against the cost of building all nine Town buildings to each level"></svg>
+  <div class="ctl"><label><input type="checkbox" data-k="trio"> Add the trio's team gold</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The solo line is the curve model's gold for a Fighter that kills everything. It ends near 15,800, and the solo Fighter bot finished with 15,027 [K]. Town buildings cost base × 1.7 per level, so all nine cost 1,100 at level 1 and 20,741 to reach level 5 [K]. The trio line multiplies solo by about 4.8, which assumes even kills and the 30% gold share [K; I]. The red mark is what the bots that never built held at the end, 13k to 25k gold each [K]. The bots lost holding most of a full Town's price.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG learning-->
+<figure class="fig" data-demo="learning" id="fig-learning">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What a new player meets in the first six minutes</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 230" role="img" aria-label="Timeline of new mechanics in the first six and a half minutes, with a bar chart of new things per 30 seconds"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Times come from the one logged player's run D, which matches the model's levels [K]. Grey dots are the intro panel's lines and blue dots are things the game teaches by encounter. The bars count new things per 30 s. The opening burst is a 15-line panel that hides after 9 s. The real cluster is 1:47 to 2:30: the Horde (red band), the first talent menu (yellow dot) opening over a live fight, then the second elite. The Town first appears at 6:10 on a 25 s campfire timer. Hover or tap a dot.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG punish-->
+<figure class="fig" data-demo="punish" id="fig-punish">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Juul's four punishments, priced in minutes</h4><span class="illu">Some values illustrative</span></div>
+  <div class="ctl"><div class="seg" data-seg="m" role="group" aria-label="Measure"><button type="button" class="on" data-v="min">Minutes lost</button><button type="button" data-v="share">Share of the run</button></div></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" role="img" aria-label="Range bars of play lost per failure for each of Juul's four punishment types, Hearthguard against twins"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Rows follow Jesper Juul's punishment types: energy, life, game termination and setback [V, E2]. Yellow bars are Hearthguard: respawn 6 to 12 s by chapter and runs of 24 to 27 min from the bots [K]. A Hearth loss can come as early as 4:47, as it did for our one logged player [K]. Super Meat Boy's near-instant respawn comes from McMillen's design statement [V, E2]. The Hades run length of 30 to 45 min is a working figure, and the Celeste screen length and level lengths behind the share view are our estimates [I]. Faded bars mark those estimates. The campfire row is a proposal [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG experiments-->
+<figure class="fig" data-demo="experiments" id="fig-experiments">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">21 curve changes and how players took them</h4><span class="illu">Reaction scores are author judgement</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Dot chart of 21 natural experiments grouped by type of change, placed by player reaction"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one documented change from the study's natural-experiments table, from Diablo 3's Inferno patches to Helldivers 2's 60-day plan [V]. The vertical position is our reading of the reaction on a five-step scale, from review bombing to a player-count surge [I]. Cuts to player power sit at the bottom every time. Raising power, adding income or a retry budget, and opt-in tiers sit above the line. Click or tap a dot for the change, the reaction and the lesson.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ci-->
+<figure class="fig" data-demo="ci" id="fig-ci">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What five players can and cannot tell you</h4></div>
+  <div class="ctl">
+    <label class="rng">Attempts <input type="range" min="1" max="40" step="1" value="10" data-k="n"><output data-o="n">10</output></label>
+    <label class="rng">Wins <input type="range" min="0" max="10" step="1" value="3" data-k="k"><output data-o="k">3</output></label>
+  </div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 92" role="img" aria-label="The observed win rate and its 95 percent Wilson interval on a 0 to 100 percent bar"></svg>
+  <div class="readout" data-ro="w" aria-live="polite"></div>
+  <div class="ctl" style="margin-top:14px">
+    <label class="rng">Problem frequency <input type="range" min="1" max="50" step="1" value="10" data-k="p"><output data-o="p">10%</output></label>
+    <label class="rng">Players <input type="range" min="1" max="15" step="1" value="5" data-k="m"><output data-o="m">5</output></label>
+  </div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 170" role="img" aria-label="Chance that a problem is seen at least once, against the number of players"></svg>
+  <div class="readout" data-ro="n" aria-live="polite"></div>
+  <figcaption>Top, the 95% Wilson interval for a win rate. Three wins in ten attempts gives 11% to 60%, so ten attempts cannot separate a 30% chapter from a 50% one [I, E1]. The dashed lines are the wide 20% and 80% decision bands the playtest protocol uses. Bottom, Nielsen and Landauer's 1 − (1 − p)<sup>n</sup>. Their 85% for five users assumes each problem hits 31% of them [V, E3]. A spike that hits one player in ten reaches five players only 41% of the time, so run two sessions before calling a chapter clean [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG director-->
+<figure class="fig" data-demo="director" id="fig-director">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Left 4 Dead style director, running</h4><span class="illu">Illustrative simulation</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 214" role="img" aria-label="Scrolling line of player intensity over time with a coloured band showing the director's phase"></svg>
+  <div class="ctl">
+    <label class="rng">Relax length <input type="range" min="10" max="60" step="1" value="38" data-k="rl"><output data-o="rl">38 s</output></label>
+    <label class="rng">Peak threshold <input type="range" min="30" max="95" step="1" value="70" data-k="pk"><output data-o="pk">70</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The white line is intensity, which rises with damage taken and decays over time. The grey line at the bottom is the threat the director sends. The states follow Michael Booth's 2009 description: build up at full threat until intensity crosses the peak threshold, sustain the peak 3 to 5 s, fade to minimal threat until intensity drops, then relax for 30 to 45 s [V, E2]. Damage rates and decay are made up [I]. Hearthguard already runs this shape on a fixed script: waves build, the Horde peaks, the 12 s gap fades and the campfire relaxes [K; I]. Raise the threshold and peaks get rarer. Shorten the relax and the band turns mostly yellow.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG coop-->
+<figure class="fig" data-demo="coop" id="fig-coop">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scaling per extra player</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 200" role="img" aria-label="Lines of enemy multiplier against player count for five scaling rules"></svg>
+  <div class="ctl"><label class="rng">Players <input type="range" min="1" max="4" step="1" value="3" data-k="n"><output data-o="n">3</output></label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Diablo II from patch 1.10 scales monster HP by (n+1)/2 [V, E3]. Dungeon Defenders II cut its per-player HP bonus from +50% to +25%, calling the old value higher than intended [U, E2]. Deep Rock Galactic changes enemy count, not HP, using the Hazard 5 table [V, E3]. Hearthguard's boss gets +75% per extra player and the Hearth +50% [K]. The yellow line divides the Hearth by the corridors that drain it. The twins scale shared HP below one solo per player and what each player faces by count. Hearthguard does the reverse: its lone-lane boss climbs fastest and its shared Hearth thins per corridor.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ladder-->
+<figure class="fig" data-demo="ladder" id="fig-ladder">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">An opt-in ladder, one rung per clear</h4><span class="illu">Hearthguard rungs illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Three difficulty ladders side by side: a proposed Hearthguard Embers ladder, Kingdom Rush bands and Slay the Spire's Ascension levels"></svg>
+  <div class="ctl"><button type="button" class="btn" data-b="win">Clear a run</button><button type="button" class="btn" data-b="reset">Reset</button></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a rung to read it. Press "Clear a run" to unlock the next Embers rung, the way Slay the Spire unlocks Ascension levels one win at a time on top of a base game Mega Crit balanced first [V, E2]. Kingdom Rush 1 instead offers HP bands of 80%, 100% and 120% that any player can pick [V, E3]. The Embers ladder is our proposal [I]. Each rung turns on one rule the game already has, such as the dark, the Horde, the Hearth's size, the campfire refill and boss enrage, so it costs tuning time, not new content.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG retry-->
+<figure class="fig" data-demo="retry" id="fig-retry">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Play lost per failure, with and without a campfire checkpoint</h4><span class="illu">Checkpoint illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" role="img" aria-label="Range bars on a log scale of seconds of play lost per failure for five failure types"></svg>
+  <div class="ctl"><label><input type="checkbox" data-k="cp"> Campfire checkpoint</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Bars show the play a player must redo after a failure, on a log scale from one second to an hour. Hearthguard's respawn is 6 to 12 s and a full run takes 24 to 27 min [K]. The earliest logged Hearth loss came at 4:47 [K]. Super Meat Boy's ~1 s comes from McMillen's design goal [V, E2]. The Celeste and Hades ranges are our estimates [I]. The checkpoint restarts the chapter where the Hearth fell, using the bots' chapter times of 5 to 6.5 min [K; I]. That turns a run reset into a setback.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG leak-->
+<figure class="fig" data-demo="leak" id="fig-leak">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A leak you can win back</h4><span class="illu">Illustrative simulation</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 130" role="img" aria-label="A lane from a portal to the Hearth; mobs walk in and leaked mobs carry part of the Hearth back"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Leak rule"><button type="button" data-v="instant">Instant Hearth damage (today)</button><button type="button" class="on" data-v="carry">Carry-back (Defense Grid)</button></div>
+    <button type="button" class="btn" data-b="reset">Reset</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Red mobs walk from the portal to the Hearth, and the hero kills some of them in the blue stretch. Today a leak is instant and permanent until the campfire returns half the Hearth [K]. In carry-back mode the leaker takes 5% of the Hearth and walks it home, drawn yellow, and the Hearth gets it back if the hero catches the carrier. Defense Grid's designer described core carriers as "a second chance" that gave "a wide range of challenge within a single map" [V, E2]. Chunk size, speeds and kill odds here are made up [I]. Compare the "lost for good" figure between the two modes.</figcaption>
+</figure>
+<!--/FIG-->

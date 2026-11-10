@@ -69,6 +69,34 @@
     }
    ],
    "nav_label": "Procgen series"
+  },
+  {
+   "id": "curves",
+   "title": "Difficulty and learning curves",
+   "subtitle": "What made curves fun in games built like ours",
+   "blurb": "One Kingsfoil game per study. Patterns from structural twins, traced through patch notes and postmortems, turned into a Curve Spec we can tune and playtest.",
+   "order": [
+    "curves-hearthguard"
+   ],
+   "upcoming": [
+    {
+     "title": "MatchRPG",
+     "blurb": "Match-3 RPG: board randomness, enemy scaling and the talent curve."
+    },
+    {
+     "title": "SpeedRunner",
+     "blurb": "Precision platformer: instant restart, level ramps and assists."
+    },
+    {
+     "title": "Merge Arena",
+     "blurb": "Auto-battler: shop odds, rounds and comeback rules."
+    },
+    {
+     "title": "Asterion",
+     "blurb": "Tibia-like MMORPG: skill by use, death penalty and the long curve."
+    }
+   ],
+   "nav_label": "Curves series"
   }
  ],
  "items": [
@@ -804,6 +832,125 @@
    "stats": {},
    "maturity": "prototype",
    "updated": "2026-11-09"
+  },
+  {
+   "id": "curves-hearthguard",
+   "type": "study",
+   "path": "/curves-hearthguard.html",
+   "title": "Hearthguard difficulty and learning curves: what made hero defense fun, and the minimum rules that recreate it",
+   "short": "Hearthguard curves",
+   "nav": "Hearthguard",
+   "summary": "Difficulty, learning and power curves for Hearthguard's co-op hero defense: structural twins from WC3 maps to Deep Rock Galactic, 21 natural experiments, 15 pattern cards, a Curve Spec, a 5-player playtest protocol and a curve lab.",
+   "series": {
+    "id": "curves",
+    "number": 1
+   },
+   "date": "2026-11-09",
+   "updated": "2026-11-09",
+   "thumb": "/thumbs/curves-hearthguard.webp",
+   "tags": {
+    "genre": [
+     "hero-defense",
+     "rts"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "painted-2d"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat"
+    ],
+    "platform": [
+     "web",
+     "mobile",
+     "desktop"
+    ],
+    "project": [
+     "hero-defense"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "difficulty-curves"
+    ],
+    "technique": [
+     "sawtooth-curve",
+     "ai-director",
+     "checkpoint-retry",
+     "recoverable-leak",
+     "coop-scaling",
+     "difficulty-ladder",
+     "playtest-metrics"
+    ]
+   },
+   "stats": {
+    "words": 20174,
+    "techniques": 15,
+    "figures": 20,
+    "games": 38,
+    "sources": 112
+   },
+   "pair": "curves-hearthguard-sandbox"
+  },
+  {
+   "id": "curves-hearthguard-sandbox",
+   "type": "sandbox",
+   "path": "/curves-hearthguard-lab.html",
+   "title": "Hearthguard curve lab (interactive)",
+   "series": {
+    "id": "curves",
+    "number": 1
+   },
+   "short": "Hearthguard curves sandbox",
+   "summary": "Playable companion to the study.",
+   "pair": "curves-hearthguard",
+   "date": "2026-11-09",
+   "updated": "2026-11-09",
+   "thumb": "/thumbs/curves-hearthguard.webp",
+   "tags": {
+    "genre": [
+     "hero-defense",
+     "rts"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "painted-2d"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat"
+    ],
+    "platform": [
+     "web",
+     "mobile",
+     "desktop"
+    ],
+    "project": [
+     "hero-defense"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "difficulty-curves"
+    ],
+    "technique": [
+     "sawtooth-curve",
+     "ai-director",
+     "checkpoint-retry",
+     "recoverable-leak",
+     "coop-scaling",
+     "difficulty-ladder",
+     "playtest-metrics"
+    ]
+   },
+   "maturity": "prototype"
   }
  ]
 }

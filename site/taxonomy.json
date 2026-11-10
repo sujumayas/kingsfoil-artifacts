@@ -199,6 +199,11 @@
     {
      "id": "characters",
      "label": "Characters"
+    },
+    {
+     "id": "difficulty-curves",
+     "label": "Difficulty curves",
+     "desc": "Difficulty, learning and power curves for one game"
     }
    ]
   },
@@ -380,6 +385,36 @@
     {
      "id": "genai",
      "label": "Generative AI (viability)"
+    },
+    {
+     "id": "sawtooth-curve",
+     "label": "Sawtooth curve",
+     "desc": "Challenge rises inside a set and drops at the next"
+    },
+    {
+     "id": "checkpoint-retry",
+     "label": "Checkpoint and retry",
+     "desc": "Cut the minutes a failure costs"
+    },
+    {
+     "id": "recoverable-leak",
+     "label": "Recoverable leak",
+     "desc": "A loss the player can still win back"
+    },
+    {
+     "id": "coop-scaling",
+     "label": "Co-op scaling",
+     "desc": "Enemy and resource multipliers per player"
+    },
+    {
+     "id": "difficulty-ladder",
+     "label": "Difficulty ladder",
+     "desc": "Opt-in numbered tiers unlocked by a clear"
+    },
+    {
+     "id": "playtest-metrics",
+     "label": "Playtest metrics",
+     "desc": "Funnels, win rate by stage, small-sample rules"
     }
    ]
   },

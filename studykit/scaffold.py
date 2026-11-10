@@ -58,7 +58,7 @@ def new_study(sid, series, title, fmt=None, page=None, no_sandbox=False):
               f"CTA and sandbox copy, the title and <meta> description, and the footer links.\n"
               f'Series nav comes from the catalog via S_.series_nav().\n"""\n') + recipe.split('"""', 2)[2].lstrip("\n")
     (d / "build.py").write_text(recipe)
-    for fn in ("style.css", "hero.html", "core.js"):
+    for fn in ("style.css", "hero.html", "core.js", "demos0.js", "figs0.html"):  # demos0/figs0 = shared figures of a format
         if (t.dir / fn).exists(): shutil.copyfile(t.dir / fn, d / fn)
     (d / "study.css").write_text(f"/* {title}: study-specific styles (theme overrides go in style.css :root) */\n")
     (d / "figs1.html").write_text("<!-- Figures: <!--FIG name-->…<!--/FIG--> blocks, mapped to sections in build.py -->\n")
