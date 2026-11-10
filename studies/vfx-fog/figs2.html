@@ -1,0 +1,206 @@
+<!--FIG cloudshapes-->
+<figure class="fig" data-demo="cloudshapes" id="fig-cloudshapes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Cloud shapes from one scrolling noise table and one threshold</h4><span class="illu">Table seed, cloud size and colours illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="Clouds drift over a small highland map with a path, trees and houses; their shadows land down and to the right, one palette step darker"></canvas><div class="hud" data-hud></div></div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-top:10px">
+    <div style="flex:0 0 132px"><div class="stage"><canvas width="64" height="64" aria-label="The 256 px noise table in grey bands; the parts above the threshold are white with a gold outline, and a teal box marks the visible window"></canvas></div><p style="margin:6px 0 0;font-size:12px;color:var(--mute);line-height:1.4">The noise table. White is above the threshold, the box is the view.</p></div>
+    <div class="ctl" style="flex:1 1 220px;margin-top:0">
+      <label class="rng">Cloud cover <input type="range" data-k="cov" min="0" max="100" value="45"><output data-o="cov"></output></label>
+      <label class="rng">Edge band <input type="range" data-k="band" min="0" max="4" value="2"><output data-o="band"></output></label>
+      <label class="rng">Wind <input type="range" data-k="wind" min="4" max="30" value="10"><output data-o="wind"></output></label>
+      <label><input type="checkbox" data-k="pan" checked> Pan the camera</label>
+      <label><input type="checkbox" data-k="lock" checked> Lock the dither to world pixels</label>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A cloud is wherever the noise is above <code>thr = 1 − cover</code>, plus one dithered edge band 2 to 4 px wide [I, note 04]. Push cover past 90% and the ground switches to an overcast palette (H1). The table here is 256 px with 4 baked octaves, because after a threshold anything under 4 px is edge noise [I, note 04; V, S62]. Wind runs 4 to 20 px/s, and Emerald's 30 px/s is the ceiling [V, S11]. Untick the world lock while the camera pans and the edge dither crawls across the clouds. One fetch costs 0.0008 ms at 320x180 on the M4 [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cloudshadow-->
+<figure class="fig" data-demo="cloudshadow" id="fig-cloudshadow">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Cloud shadows by palette step, not by multiply</h4><span class="illu">Palette and shadow strength are our picks</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="112" aria-label="Cloud shadows made by multiplying the ground colours with a soft edge"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Multiply</b> with a soft edge, the way a gradient shader does it.</p></div>
+    <div><div class="stage"><canvas width="160" height="112" aria-label="The same cloud shadows made by moving each ground pixel one step down its own colour ramp"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Palette step</b>, one ramp step down, one dither band at the edge.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Sun direction <input type="range" data-k="sun" min="0" max="355" step="5" value="225"><output data-o="sun"></output></label>
+    <label class="rng">Wind <input type="range" data-k="wind" min="4" max="20" value="8"><output data-o="wind"></output></label>
+    <label><input type="checkbox" data-k="d50"> 50% dither inside the shadow</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The palette step is <code>color = SHADE[index]</code>, one step down the ramp the artist already drew [I, note 04]. Study #5 found that a multiply over a palette world looks like dirt [V, S6]. The gold dot marks the sun. The shadow lands away from it, because the cloud is sampled at <code>p − shadow_offset</code> [I]. Watch the colour counts. The multiply side fills the soft edge with colours the palette never had. The 50% dither is for ramps with few steps, where a full step reads too dark [I]. In the shader both cost one table read inside the 0.016 ms palette pass at 720p [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG overhead-->
+<figure class="fig" data-demo="overhead" id="fig-overhead">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Overhead clouds drift faster than their shadows and thin out over the player</h4><span class="illu">Cloud sprites and path illustrative</span></div>
+  <div class="stage"><canvas width="192" height="112" aria-label="The camera follows a walker across a highland map; cloud shadows slide over the ground while three white pixel clouds pass overhead faster and dissolve in a dithered circle around the walker"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Cloud parallax <input type="range" data-k="par" min="100" max="150" step="5" value="130"><output data-o="par"></output></label>
+    <label class="rng">Fade radius <input type="range" data-k="rad" min="0" max="40" step="2" value="32"><output data-o="rad"></output></label>
+    <label class="rng">Shadow speed <input type="range" data-k="wind" min="6" max="12" value="8"><output data-o="wind"></output></label>
+    <label><input type="checkbox" data-k="fade" checked> Fade over the walker</label>
+    <label><input type="checkbox" data-k="rm"> Reduce motion</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Clouds near the camera take parallax 1.2 to 1.5 [V, S17; I, note 04]. The Sandbox moves them at 1.9x the shadow speed, so they feel closer than the ground [S9]. Inside a 24 to 40 px circle around the player the dither threshold rises and the cloud thins out [I, note 04]. Turn the fade off and a cloud can swallow the walker, which feels unfair [I, notes 04, 06]. Keep 1 to 3 clouds on screen with long gaps. Emerald's 3 clouds on Route 120 are placed decorations [V, S11]. Reduce motion freezes the drift, since fast parallax can bother some players [V, S129].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fowcounts-->
+<figure class="fig" data-demo="fowcounts" id="fig-fowcounts">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fog of war as visibility counts: full recompute, naive re-stamp or delta edges</h4><span class="illu">Map and unit paths illustrative; 128x128 grid here</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="128" aria-label="A 128 by 128 minimap; cells some unit sees show terrain in full colour, explored cells are dark and cool, unknown cells are black; units are white dots and gold marks the cells the delta method touched this update"></canvas><div class="hud" data-hud></div></div></div>
+    <div><div class="ctl" style="margin-top:0">
+        <label class="rng">Units <input type="range" data-k="n" min="0" max="100" value="50"><output data-o="n"></output></label>
+        <div class="seg" data-seg="r" role="group" aria-label="Vision radius"><button type="button" data-v="4">Radius 4</button><button type="button" class="on" data-v="8">Radius 8</button></div>
+        <div class="seg" data-seg="mv" role="group" aria-label="Share of units moving"><button type="button" class="on" data-v="100">All move</button><button type="button" data-v="10">10% move</button></div>
+        <label><input type="checkbox" data-k="tch"> Show cells the delta touched</label>
+      </div>
+      <svg class="chart" viewBox="0 0 400 136" role="img" aria-label="Log-scale bars of milliseconds per update for the three methods, measured in this page, with white ticks at the study's measured values" style="margin-top:8px"></svg></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each cell keeps a count of the units that see it and one explored bit that never resets [V, S26, S31]. All three methods run every update on the same units and must agree. A full recompute clears the grid and stamps every circle. A naive re-stamp removes and re-adds every circle. The delta precomputes the thin crescents that enter and leave for each of the 8 step directions and touches only those, for units that changed cell [V, S27, S31]. On a 256x256 grid with 1000 units at radius 8 the study measured 0.184, 0.308 and 0.048 ms, and 0.010 ms with 10% moving [V, S10]. A count crossing 0↔1 is also the visible or hidden event that interest management needs [I, note 08].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fowedges-->
+<figure class="fig" data-demo="fowedges" id="fig-fowedges">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four ways to draw a fog-of-war edge from the same cell grid</h4><span class="illu">8 px cells; scene and colours illustrative</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="z" role="group" aria-label="Zoom"><button type="button" class="on" data-v="1">1x</button><button type="button" data-v="2">2x</button><button type="button" data-v="4">4x</button></div>
+    <span style="font-size:13px;color:var(--mute)">Drag on any panel to move the white unit.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px">
+    <div><div class="stage click"><canvas width="96" height="64" aria-label="Hard cells: visible, explored and unknown as square blocks"></canvas><div class="hud" data-hud="a"></div></div><p class="pl" style="margin:6px 0 0;font-size:13px;color:var(--mute)">Hard cells</p></div>
+    <div><div class="stage click"><canvas width="96" height="64" aria-label="16-case edge tiles: rounded edges with a drawn rim"></canvas><div class="hud" data-hud="b"></div></div><p class="pl" style="margin:6px 0 0;font-size:13px;color:var(--mute)">16-case edge tiles, C&amp;C style</p></div>
+    <div><div class="stage click"><canvas width="96" height="64" aria-label="Bilinear upscale plus blur: a smooth airbrushed edge"></canvas><div class="hud" data-hud="c"></div></div><p class="pl" style="margin:6px 0 0;font-size:13px;color:var(--mute)">Bilinear upscale plus blur</p></div>
+    <div><div class="stage click"><canvas width="96" height="64" aria-label="Bilinear upscale cut by a world-locked Bayer threshold: a dithered edge in three colours"></canvas><div class="hud" data-hud="d"></div></div><p class="pl" style="margin:6px 0 0;font-size:13px;color:var(--mute)">Bilinear plus Bayer threshold</p></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Edge tiles pick one of 16 drawn pieces from the four corner bits, which is marching squares; OpenRA maps them to 12 or 47 sprites and Stratagus uses a 16-entry table [V, S28, S29]. Upscale and blur is the League and 0 A.D. road, and League stopped at 16 patterns because more blur "made it too blurry" [V, S29, S32, S34]. Plain bilinear is an airbrush over crisp pixels, cheap but ugly [I, note 03]. Bilinear cut by a world-locked Bayer threshold keeps three colours per ground pixel and costs almost nothing in a shader [I, notes 03, 05]. Zoom to 4x and compare the colour counts.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG remember-->
+<figure class="fig" data-demo="remember" id="fig-remember">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">New ground dissolves in; ground you saw stays, darker and empty</h4><span class="illu">Map, sight radius and memory colours illustrative</span></div>
+  <div class="stage"><canvas width="160" height="96" aria-label="A walker explores a small grove with stone paths; tiles in sight are full colour, newly seen tiles dissolve in with a dither, remembered tiles are darker and show no creatures, unknown tiles are black"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mem" role="group" aria-label="Memory look"><button type="button" class="on" data-v="ramp">Dark cool ramp</button><button type="button" data-v="mesh">Stipple mesh</button><button type="button" data-v="brogue">Blue tint</button></div>
+    <label class="rng">Reveal fade <input type="range" data-k="fade" min="0" max="0.6" step="0.05" value="0.3"><output data-o="fade"></output></label>
+    <button type="button" class="btn" data-b="reset">Forget the map</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The Sandbox fades cells in over 0.3 s [S9]; 0 A.D. crossfades over 0.5 s and Stratagus eases over 8 steps [V, S32, S29]. Here the fade is a dither dissolve, so it adds no colours. The memory looks follow the roguelikes. Angband drops 1 or 2 colour steps, DCSS lays a stipple mesh over the tile, and Brogue multiplies by (25, 25, 50)% then averages 25% toward dark blue [V, S46, S47, S48, S49, S50]. The mesh dims by covering pixels, the most pixel-native of the three [I, note 01]. Creatures are never remembered, which keeps the anti-cheat rule [I]. Set the fade to 0 to see the pop it replaces.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG servervision-->
+<figure class="fig" data-demo="servervision" id="fig-servervision">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">An MMO server sends each client only what that client can see</h4><span class="illu">Byte sizes and view sizes illustrative</span></div>
+  <div class="stage"><canvas width="192" height="112" aria-label="Three players and several slimes wander a field; outside the chosen player's view the map is dark, and leaked entities blink with a red frame when the maphack shows them"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="who" role="group" aria-label="Viewing client"><button type="button" class="on" data-v="0">Client A</button><button type="button" data-v="1">Client B</button><button type="button" data-v="2">Client C</button></div>
+    <div class="seg" data-seg="model" role="group" aria-label="Network model"><button type="button" class="on" data-v="srv">Server-authoritative</button><button type="button" data-v="lock">Lockstep</button></div>
+    <div class="seg" data-seg="shape" role="group" aria-label="View shape"><button type="button" class="on" data-v="circle">Circle</button><button type="button" data-v="tibia">Tibia-style window</button></div>
+    <label><input type="checkbox" data-k="hack"> Maphack</label>
+  </div>
+  <div class="readout" data-pk aria-live="polite"></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>In lockstep every client holds the whole state, so fog is paint. Kartograph lifted fog in every RTS tested, undetectably [V, S39]. A server-authoritative MMO never sends what you cannot see, so fog of war and interest management are one system. Tibia keeps a fixed 18x14 window per player, two compares per creature [V, S21]. VALORANT cut fog of war from about 50% to under 2% of server frame time with a precomputed visibility table [V, self-reported, S35]. Switch to lockstep and tick the maphack. The red frames are entities the client was sent but should not see.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG haze-->
+<figure class="fig" data-demo="haze" id="fig-haze">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Haze by distance: turning the hue is a filter, pulling toward the sky with less contrast is depth</h4><span class="illu">Ridges and sky colours are our picks</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="100" aria-label="Four ridges and a near meadow where far ridges only change hue toward the sky"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Hue only</b>. Far ridges turn blue but stay as dark as the meadow.</p></div>
+    <div><div class="stage"><canvas width="160" height="100" aria-label="The same ridges pulled toward the pale sky colour with their contrast squeezed, so each plane reads farther away"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Tint plus contrast drop</b>. Each plane moves toward the sky and flattens.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Strength <input type="range" data-k="str" min="0" max="100" value="70"><output data-o="str"></output></label>
+    <label><input type="checkbox" data-k="band" checked> Haze band at the foot of each ridge</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Distance lowers contrast, detail and chroma, and moves lightness toward the background [V, S72]. Lower contrast alone read as farther in tests [V, S70, S71]. The formula is <code>col = mix(col, sky, h·a)</code>, then <code>col = mean + (col − mean)·(1 − h·c)</code> [I]. In top-down view "far" means high on the screen or the map. Hue-only tints look like filters [I, note 05]. Slynyrd blends mountains into grass with "a band of haze along the bottom" and reuses sky colours for distant shapes [V, S112; note 06]. In a game this is one extra index in the palette pass [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG halos-->
+<figure class="fig" data-demo="halos" id="fig-halos">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Lamps in fog: one halo sprite each, or a per-pixel light loop</h4><span class="illu">Lamp layout and fog colour illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="100" aria-label="A foggy night village where each lamp has a small bright core and a stepped, dithered halo that grows where the fog is thick"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Halo sprites</b> sized by fog density, in palette steps.</p></div>
+    <div><div class="stage"><canvas width="160" height="100" aria-label="The same village lit by smooth per-pixel point lights"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Per-pixel lights</b>, PointLight2D style, smooth falloff.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Lamps <input type="range" data-k="n" min="1" max="40" value="12"><output data-o="n"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Godot's cheap fake light is an additive Sprite2D with no shadows [V, S76]. Size it from the fog at the lamp, <code>radius = r0·(1 + 2·density)</code> and <code>alpha = a0·density</code>, and draw a 3 to 5 px core and a soft ring in palette steps with Bayer, after the fog [I, note 09; V, S152]. Halos swell as a thick fog bank drifts over a lamp. Raise the lamp count and watch the right-hand cost climb with lamps times pixels while the halo cost barely moves. Keep glow sprites small. Large ones hurt one mobile game [V, S151].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG shafts-->
+<figure class="fig" data-demo="shafts" id="fig-shafts">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Light shafts at dawn: six drawn bands or a radial blur</h4><span class="illu">Canopy, sun position and mote counts illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="100" aria-label="Forest at dawn under a canopy with gaps; six slanted shafts, one or two palette steps brighter, breathe slowly over the warm fog"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Drawn shafts</b> from a cached pixel list.</p></div>
+    <div><div class="stage"><canvas width="160" height="100" aria-label="The same forest with radial-blur god rays streaming from the canopy gaps in smooth gradients"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Radial-blur god rays</b> toward an off-screen sun.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">God ray samples <input type="range" data-k="n" min="8" max="64" step="8" value="32"><output data-o="n"></output></label>
+    <label><input type="checkbox" data-k="dust" checked> Dust motes</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Drawn shafts are tapered bands, one palette step brighter, alpha on a slow sine and masked by the canopy; the Sandbox draws 6 at dawn from a cached pixel list [I, note 02; S9]. They cost overdraw only. God rays march samples toward the sun per pixel. On the M4 at 720p, 8 to 64 samples cost 0.021 to 0.141 ms, and 64 samples cost 18.0 ms on SwiftShader [V, S10]. On pixel art they paint smooth gradients off the palette [I, note 05]. Top-down suns sit off screen, so real rays would be near-parallel bands anyway [I, note 05]. Motes are 1 px in 2 colours at 2 to 6 px/s with a ±1 px wobble, our estimate [I, note 09].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG smoke-->
+<figure class="fig" data-demo="smoke" id="fig-smoke">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Smoke bombs as server state: dense tiles block sight until they decay</h4><span class="illu">Map and event size illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="112" aria-label="A walker on a grass field with stone walls; smoke clouds with a clear rim block its line of sight, tiles it cannot see are darkened, and slimes inside the smoke are hidden"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sz" role="group" aria-label="Cloud size"><button type="button" class="on" data-v="3">3x3 tiles</button><button type="button" data-v="5">5x5 tiles</button></div>
+    <button type="button" class="btn ghost" data-b="clear">Clear smoke</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The server records <code>{tiles, expires_at_tick, owner, rule}</code>. Tiles are opaque to viewers outside, and a viewer inside sees radius 1 [I, note 09]. The Sandbox decays spell density 4.5% per 10 Hz update, about 6 s [S9]. Shipped versions vary. BG3's Fog Cloud lasts 10 turns, Graves' Smoke Screen gives 4 s of nearsight, DOS2 smoke blocks sight [V, S143, S144, S145, S146, S147, S148]. Every one is drawn as a dense blob with a clear rim, because players must read where the rule ends [I, note 09]. A client-only cloud is a map-hack target [V, S38].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG weather-->
+<figure class="fig" data-demo="weather" id="fig-weather">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Weather in a few bytes per region, and radiation fog over a compressed day</h4><span class="illu">Transition odds and day length illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="108" aria-label="A highland map split into eight regions; over a compressed day fog pools in low ground at night, is deepest at sunrise and shrinks from its edges inward; small cloud icons mark cloudy regions"></canvas><div class="hud" data-hud></div></div>
+  <svg class="chart" viewBox="0 0 600 82" role="img" aria-label="Average fog ceiling over the day, with the current hour marked" style="margin-top:8px;max-width:680px"></svg>
+  <div class="ctl">
+    <label class="rng">Clock speed <input type="range" data-k="spd" min="0.5" max="4" step="0.5" value="1"><output data-o="spd"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each region holds a few bytes, and the server sends a 7-byte packet only when one changes [I, note 04; S9]. Clients turn bytes, clock and seed into fog. The rule here follows radiation fog [V, S108, S109, S110]. It forms 2 to 4 game hours after dusk on clear nights with calm or light wind, is deepest at sunrise, and clears 1 to 3 hours later as the fog line drops [I, note 04]. A falling line keeps fog only in the deepest ground, so it clears from the edges inward, as the NWS describes. Strong wind or cloud stops it. The study estimates 0.5 bytes per second for 64 regions changing every 15 minutes [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fogcolour-->
+<figure class="fig" data-demo="fogcolour" id="fig-fogcolour">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fog takes the colour of the light around it</h4><span class="illu">Key colours are our picks</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A valley with houses and a lake where pooled fog changes colour with the hour: blue-grey at night, pink at dawn, near white at noon, amber at dusk"></canvas><div class="hud" data-hud></div></div>
+  <svg class="chart" viewBox="0 0 600 64" role="img" aria-label="A 24-hour strip of sky colour above fog colour with the current hour marked" style="margin-top:8px;max-width:680px"></svg>
+  <div class="ctl">
+    <label class="rng">Clock <input type="range" data-k="h" min="0" max="23.9" step="0.1" value="6.2"><output data-o="h"></output></label>
+    <label><input type="checkbox" data-k="play"> Run the clock</label>
+    <label><input type="checkbox" data-k="grey"> Grey fog at all hours</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Fog is cold blue-grey at night, cream or pink at sunrise, near white at noon and amber at dusk [I, note 06]. Haze follows the light, and warm dawn reads as contemplative [V, S112, S113]. Graveyard Keeper keeps about 10 time-of-day LUTs [V, S117]. The Sandbox blends 5 palettes into an 8,192-entry table [S9]. This page interpolates a few keys and rebuilds a smaller table whenever the clock moves 0.1 h. Tick the grey box. Grey fog at every hour reads as a filter [I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG readable-->
+<figure class="fig" data-demo="readable" id="fig-readable">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Keep characters readable: fog over them, under them, or behind them</h4><span class="illu">Fog colour and drift illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A walker, a slime and a chest in a meadow with drifting low fog and a thin high fog layer"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Draw order"><button type="button" class="on" data-v="over">Fog over everything</button><button type="button" data-v="above">Characters above, outlined</button><button type="button" data-v="behind">Low fog behind, thin fog over</button></div>
+    <label class="rng">Fog strength <input type="range" data-k="str" min="0" max="100" value="80"><output data-o="str"></output></label>
+    <label><input type="checkbox" data-k="rm"> Reduce motion</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The contrast loss that makes fog look deep also hides players, enemies and loot. Ori puts fog behind the gameplay layer [V, S136]. The order to ship is ground, low fog, sprites, thin high fog, UI, with telegraphs above everything [I, note 06; S9]. Characters above all fog float over high banks, so keep a thin covering layer [I]. Modders keep adding fog opacity sliders, so ship one, plus a switch that freezes the drift [V, S123]. Contrast targets are 4.5:1 for text and 7:1 in high-contrast modes [V, S131, S132].</figcaption>
+</figure>
+<!--/FIG-->

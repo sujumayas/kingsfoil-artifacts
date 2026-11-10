@@ -1,0 +1,70 @@
+{
+ "id": "vfx-fog",
+ "type": "study",
+ "path": "/vfx-fog-topdown-pixel.html",
+ "title": "Top-down pixel fog: tiny algorithms for ground mist, cloud shadows, fog of war and atmospheric haze",
+ "short": "Fog, mist & clouds",
+ "nav": "Fog",
+ "summary": "Valley fog that pools in low ground, world-locked dither and palette fog, cloud shadows, fog of war with delta updates and soft edges, halos and god rays, with measured costs for every layer.",
+ "series": {
+  "id": "vfx",
+  "number": 8
+ },
+ "date": "2026-11-10",
+ "updated": "2026-11-10",
+ "thumb": "/thumbs/vfx-fog.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "rendering"
+  ],
+  "concept": [
+   "fog"
+  ],
+  "technique": [
+   "noise-layers",
+   "fog-of-war",
+   "cloud-shadow",
+   "dither-threshold",
+   "palette-lut",
+   "advection-field",
+   "shadowcasting",
+   "heightmap",
+   "spatial-grid",
+   "light-map"
+  ]
+ },
+ "stats": {
+  "words": 19924,
+  "techniques": 38,
+  "figures": 29,
+  "games": 30,
+  "sources": 156
+ },
+ "pair": "vfx-fog-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel fog Sandbox (playable)",
+  "path": "/vfx-fog-sandbox.html"
+ }
+}

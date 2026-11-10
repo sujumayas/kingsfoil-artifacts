@@ -1,0 +1,41 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. Sort by Speed and the column barely moves: 34 of 38 rows score a 5, because at 320×180 almost every technique costs microseconds [V, S10]. Taste, mood and interaction decide. The sum is a crude total: plain alpha (C3) is in the table as a warning, and server-side vision (E5) sums 18 but an MMO cannot do without it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What fog costs: every row of §6a on one log scale, against the 16.7 ms frame</h4><span class="illu">Desktop numbers, no phone measured</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="v" role="group" aria-label="Table"><button type="button" class="on" data-v="gpu">GPU passes</button><button type="button" data-v="cpu">CPU work in JS</button><button type="button" data-v="fow">Fog-of-war updates</button></div>
+  </div>
+  <div class="ctl" data-for="gpu">
+    <div class="seg" data-seg="res" role="group" aria-label="Resolution"><button type="button" class="on" data-v="1">320×180</button><button type="button" data-v="2">720p</button><button type="button" data-v="3">1080p</button><button type="button" data-v="4">720p, SwiftShader</button></div>
+  </div>
+  <div class="ctl" data-for="cpu" hidden>
+    <label><input type="checkbox" data-k="thr"> 6x CPU throttle</label>
+    <button type="button" class="btn ghost" data-b="run">Run the CPU rows on this device</button>
+  </div>
+  <div class="ctl" data-for="fow" hidden>
+    <div class="seg" data-seg="rad" role="group" aria-label="Vision radius"><button type="button" data-v="4">Radius 4</button><button type="button" class="on" data-v="8">Radius 8</button></div>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 300" role="img" aria-label="Log-scale bars of the measured costs in section 6a with the 2 ms fog budget and the 16.7 ms frame marked"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a measured row of §6a: Apple M4 Pro, Chromium 153, WebGL2, one full-screen alpha-blended pass per GPU row, single-threaded JavaScript per CPU row [V, S10]. SwiftShader is software GL, a bound for a device with no GPU, and it ranks texture against maths the other way round. The dashed lines are the study's fog budget, about 2 ms of a 16.7 ms frame (§6e), and the frame itself. At 320×180 every GPU pass stays under 0.013 ms, 64-sample god rays included. Switch to the CPU and per-pixel fbm at 720p crosses the frame line. <b>Run the CPU rows</b> times the same JavaScript tasks on your device, so you can see how far a phone sits from the M4.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pretty against cheap: all 38 profiles by Speed and by Pixel taste plus Mood</h4></div>
+  <svg class="chart mx-chart" viewBox="0 0 600 300" role="img" aria-label="Scatter of the 38 technique profiles: speed on the vertical axis, pixel taste plus mood on the horizontal axis"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one profile at its §4 ratings, the same placement as the §6b table; dots that share a cell are packed side by side. Hover or tap a dot to read it, and follow the link to its card. The top right corner is the build-first list: height pooling (B3), palette fog (C2), memory with a reveal (E4), haze with a contrast drop (F1), pre-drawn shafts (F3) and time-of-day colour (H1), all 10 of 10 on taste plus mood and 5 on speed. Only four profiles drop below Speed 5. Radial-blur god rays (F4) are the one pretty shader a weak device would feel. The hollow marks on the bottom row are the costs §6b names that no profile recommends.</figcaption>
+</figure>
+<!--/FIG-->

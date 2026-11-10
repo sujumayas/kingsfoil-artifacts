@@ -201,6 +201,10 @@
      "label": "Water bodies"
     },
     {
+     "id": "fog",
+     "label": "Fog, mist & clouds"
+    },
+    {
      "id": "enemy-ai",
      "label": "Enemy AI"
     },
@@ -376,6 +380,21 @@
      "id": "wake-trails",
      "label": "Wakes and ring pools",
      "desc": "Kelvin V-wakes and ripple rings from fixed pools of sprites"
+    },
+    {
+     "id": "noise-layers",
+     "label": "Scrolling noise layers",
+     "desc": "Two or three precomputed tileable noise tables drifting at different speeds"
+    },
+    {
+     "id": "fog-of-war",
+     "label": "Fog of war",
+     "desc": "Visibility counts plus an explored bit, delta updates, soft dithered edges"
+    },
+    {
+     "id": "cloud-shadow",
+     "label": "Cloud shadows",
+     "desc": "Thresholded world-locked noise that darkens the ground by one palette step"
     },
     {
      "id": "fsm",
