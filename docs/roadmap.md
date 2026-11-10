@@ -54,7 +54,7 @@ And a small set of **series**, each covering one topic area:
 
 | Series code | Name | Existing | Next candidates |
 |---|---|---|---|
-| `vfx` | Tiny VFX algorithms (top-down pixel) | Snow, Acid, Rain, Forest, Light, Fire & smoke, Water bodies | Fog, Grass & wind |
+| `vfx` | Tiny VFX algorithms (top-down pixel) | Snow, Acid, Rain, Forest, Light, Fire & smoke, Water bodies, Fog | Grass & wind |
 | `ai` | Game AI | Enemy AI for Hero Defense | MMO creature behaviour, NPC schedules |
 | `procgen` | Procedural generation | Character composition | Towns, dungeons, tilesets/autotiling |
 | `mmo` (new) | MMO systems (Tibia-like) | — | Netcode & area of interest, death & loot, economy |

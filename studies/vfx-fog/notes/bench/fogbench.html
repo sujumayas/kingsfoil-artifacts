@@ -1,0 +1,347 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Fog bench</title></head>
+<body>
+<pre id="out">Fog benchmark. Call runCPU() / runGPU() from the console or Playwright.</pre>
+<script>
+"use strict";
+// ---------------- harness ----------------
+// Each sample runs fn repeatedly until >= minSampleMs elapsed, so timer
+// resolution (100us in some contexts) does not dominate. Median of samples.
+function bench(name, fn, opts = {}) {
+  const warmMs = opts.warmMs ?? 150, samples = opts.samples ?? 25, minSampleMs = opts.minSampleMs ?? 8;
+  let t0 = performance.now();
+  while (performance.now() - t0 < warmMs) fn();
+  const per = [];
+  for (let s = 0; s < samples; s++) {
+    let n = 0; const a = performance.now(); let b;
+    do { fn(); n++; b = performance.now(); } while (b - a < minSampleMs);
+    per.push((b - a) / n);
+  }
+  per.sort((x, y) => x - y);
+  return { name, median_ms: +per[samples >> 1].toFixed(4), p10_ms: +per[Math.floor(samples * 0.1)].toFixed(4), p90_ms: +per[Math.floor(samples * 0.9)].toFixed(4) };
+}
+let SINK = 0; // prevents dead-code elimination
+
+// ---------------- CPU: noise ----------------
+function hash2(ix, iy) {
+  let h = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function vnoise(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+  const a = hash2(ix, iy), b = hash2(ix + 1, iy), c = hash2(ix, iy + 1), d = hash2(ix + 1, iy + 1);
+  return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+}
+function makeImage(W, H) { const buf = new ArrayBuffer(W * H * 4); return { W, H, u8: new Uint8ClampedArray(buf), u32: new Uint32Array(buf) }; }
+const FOGRGB = 0xd0c8c0; // grey fog, ABGR packing below
+function fbmProcedural(img, oct, t) {
+  const { W, H, u32 } = img; let i = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let sx = x * 0.02 + t, sy = y * 0.02, amp = 0.5, sum = 0;
+    for (let o = 0; o < oct; o++) { sum += amp * vnoise(sx, sy); sx *= 2; sy *= 2; amp *= 0.5; }
+    u32[i++] = ((sum * 255) << 24) | FOGRGB;
+  }
+}
+function makeTable(S) {
+  // tileable value-noise table: lattice of S/8 cells wrapped
+  const T = new Float32Array(S * S), L = 8;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const gx = x / (S / L), gy = y / (S / L);
+    const ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+    const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+    const h = (a, b) => hash2(a % L, b % L);
+    const a = h(ix, iy), b = h(ix + 1, iy), c = h(ix, iy + 1), d = h(ix + 1, iy + 1);
+    T[y * S + x] = a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+  }
+  return T;
+}
+function fbmTableBilinear(img, oct, t, T, S) {
+  const { W, H, u32 } = img, M = S - 1; let i = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let sx = x * 0.5 + t * 20, sy = y * 0.5, amp = 0.5, sum = 0;
+    for (let o = 0; o < oct; o++) {
+      const ix = Math.floor(sx), iy = Math.floor(sy), fx = sx - ix, fy = sy - iy;
+      const x0 = ix & M, y0 = (iy & M) * S, x1 = (ix + 1) & M, y1 = ((iy + 1) & M) * S;
+      const a = T[y0 + x0], b = T[y0 + x1], c = T[y1 + x0], d = T[y1 + x1];
+      const top = a + (b - a) * fx, bot = c + (d - c) * fx;
+      sum += amp * (top + (bot - top) * fy);
+      sx = sx * 2 + 17.3; sy = sy * 2 + 9.1; amp *= 0.5;
+    }
+    u32[i++] = ((sum * 255) << 24) | FOGRGB;
+  }
+}
+function fbmTableNearest(img, oct, t, T, S) {
+  // pixel-art style: integer scroll per layer, one fetch per layer
+  const { W, H, u32 } = img, M = S - 1; let i = 0; const off = (t * 20) | 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let sum = 0, amp = 0.5;
+    for (let o = 0; o < oct; o++) {
+      const sx = ((x >> (3 - o < 0 ? 0 : 3 - o)) + off * (o + 1) + o * 37) & M;
+      const sy = ((y >> (3 - o < 0 ? 0 : 3 - o)) + o * 53) & M;
+      sum += amp * T[sy * S + sx]; amp *= 0.5;
+    }
+    u32[i++] = ((sum * 255) << 24) | FOGRGB;
+  }
+}
+// ---------------- CPU: dither ----------------
+const BAYER4 = new Float32Array([0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + 0.5) / 16));
+const PAL = new Uint32Array([0x00000000, 0x60c0b8b0, 0xa0d0c8c0, 0xe0e0dcd8]);
+function bayerDither(img, dens) {
+  const { W, H, u32 } = img, levels = PAL.length - 1; let i = 0;
+  for (let y = 0; y < H; y++) { const row = (y & 3) << 2;
+    for (let x = 0; x < W; x++, i++) {
+      let l = (dens[i] * levels + BAYER4[row | (x & 3)]) | 0; if (l > levels) l = levels;
+      u32[i] = PAL[l];
+    } }
+}
+// ---------------- CPU: coarse density grid ----------------
+function makeGrid(GW, GH) {
+  const N = GW * GH, g = { GW, GH, d: new Float32Array(N), d2: new Float32Array(N), vx: new Float32Array(N), vy: new Float32Array(N) };
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) { const i = y * GW + x; g.d[i] = vnoise(x * 0.2, y * 0.2); g.vx[i] = 0.6 + 0.3 * Math.sin(y * 0.3); g.vy[i] = 0.2 * Math.cos(x * 0.25); }
+  return g;
+}
+function gridStep(g, dt) {
+  const { GW, GH } = g; let d = g.d, o = g.d2;
+  // advect (semi-Lagrangian, bilinear, wrap)
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+    const i = y * GW + x; let sx = x - g.vx[i] * dt, sy = y - g.vy[i] * dt;
+    sx = (sx % GW + GW) % GW; sy = (sy % GH + GH) % GH;
+    const x0 = sx | 0, y0 = sy | 0, fx = sx - x0, fy = sy - y0, x1 = (x0 + 1) % GW, y1 = (y0 + 1) % GH;
+    const a = d[y0 * GW + x0], b = d[y0 * GW + x1], c = d[y1 * GW + x0], e = d[y1 * GW + x1];
+    o[i] = (a + (b - a) * fx) * (1 - fy) + (c + (e - c) * fx) * fy;
+  }
+  // diffuse (one 5-point Jacobi-style blend) + decay + tiny source
+  for (let y = 0; y < GH; y++) { const yu = ((y + GH - 1) % GH) * GW, yd = ((y + 1) % GH) * GW, yc = y * GW;
+    for (let x = 0; x < GW; x++) { const xl = (x + GW - 1) % GW, xr = (x + 1) % GW;
+      const v = o[yc + x] * 0.6 + 0.1 * (o[yu + x] + o[yd + x] + o[yc + xl] + o[yc + xr]);
+      d[yc + x] = v * 0.995 + 0.002; } }
+}
+function bilinearUpscale(src, GW, GH, dst, W, H) {
+  const sx = (GW - 1) / (W - 1), sy = (GH - 1) / (H - 1); let i = 0;
+  for (let y = 0; y < H; y++) { const fy0 = y * sy, y0 = fy0 | 0, fy = fy0 - y0, y1 = y0 + 1 < GH ? y0 + 1 : y0, r0 = y0 * GW, r1 = y1 * GW;
+    for (let x = 0; x < W; x++) { const fx0 = x * sx, x0 = fx0 | 0, fx = fx0 - x0, x1 = x0 + 1 < GW ? x0 + 1 : x0;
+      const a = src[r0 + x0], b = src[r0 + x1], c = src[r1 + x0], d = src[r1 + x1];
+      const t = a + (b - a) * fx; dst[i++] = t + ((c + (d - c) * fx) - t) * fy; } }
+}
+// ---------------- CPU: fog of war ----------------
+const FW = 256;
+function circleOffsets(r) { const o = []; for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx * dx + dy * dy <= r * r + r) o.push(dy * FW + dx); return Int32Array.from(o); }
+function circleSet(r) { const s = new Set(); for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx * dx + dy * dy <= r * r + r) s.add(dy * 1000 + dx); return s; }
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]];
+function deltaLists(r) {
+  // for each move direction: cells to add (in new circle not old) and remove, relative to OLD center
+  const s = circleSet(r);
+  return DIRS.map(([mx, my]) => { const add = [], rem = [];
+    for (let dy = -r - 1; dy <= r + 1; dy++) for (let dx = -r - 1; dx <= r + 1; dx++) {
+      const inOld = s.has(dy * 1000 + dx), inNew = s.has((dy - my) * 1000 + (dx - mx));
+      if (inNew && !inOld) add.push(dy * FW + dx); if (inOld && !inNew) rem.push(dy * FW + dx); }
+    return { add: Int32Array.from(add), rem: Int32Array.from(rem) }; });
+}
+function makeFow(N, r) {
+  const f = { N, r, vis: new Uint16Array(FW * FW), exp: new Uint8Array(FW * FW), pos: new Int32Array(N), off: circleOffsets(r), dl: deltaLists(r), rng: 12345 };
+  const lo = r + 2, span = FW - 2 * lo;
+  for (let k = 0; k < N; k++) f.pos[k] = (lo + (hash2(k, 1) * span | 0)) * FW + lo + (hash2(k, 2) * span | 0);
+  fowFull(f); return f;
+}
+function stamp(f, c, list, inc) { const v = f.vis, e = f.exp; for (let j = 0; j < list.length; j++) { const i = c + list[j]; v[i] += inc; e[i] = 1; } }
+function unstamp(f, c, list) { const v = f.vis; for (let j = 0; j < list.length; j++) v[c + list[j]]--; }
+function fowFull(f) { f.vis.fill(0); for (let k = 0; k < f.N; k++) stamp(f, f.pos[k], f.off, 1); }
+function moveUnits(f, frac) { // returns list of [unit, dir]; moves frac of units by one cell, bouncing inside margins
+  const lo = f.r + 2, hi = FW - f.r - 3, moves = [];
+  for (let k = 0; k < f.N; k++) { f.rng = (Math.imul(f.rng, 1103515245) + 12345) >>> 0;
+    if ((f.rng & 1023) / 1024 >= frac) continue;
+    let d = (f.rng >>> 12) & 7; const p = f.pos[k], x = p % FW, y = (p / FW) | 0; let [mx, my] = DIRS[d];
+    if (x + mx < lo || x + mx > hi || y + my < lo || y + my > hi) { mx = -mx; my = -my; d = DIRS.findIndex(q => q[0] === mx && q[1] === my); }
+    moves.push(k, d); }
+  return moves;
+}
+function applyMoves(f, moves) { for (let j = 0; j < moves.length; j += 2) { const k = moves[j], d = moves[j + 1]; f.pos[k] += DIRS[d][1] * FW + DIRS[d][0]; } }
+function fowIncrementalCircle(f, moves) { for (let j = 0; j < moves.length; j += 2) { const k = moves[j], d = moves[j + 1], old = f.pos[k];
+  unstamp(f, old, f.off); const nw = old + DIRS[d][1] * FW + DIRS[d][0]; stamp(f, nw, f.off, 1); f.pos[k] = nw; } }
+function fowIncrementalDelta(f, moves) { for (let j = 0; j < moves.length; j += 2) { const k = moves[j], d = moves[j + 1], old = f.pos[k], L = f.dl[d];
+  unstamp(f, old, L.rem); stamp(f, old, L.add, 1); f.pos[k] = old + DIRS[d][1] * FW + DIRS[d][0]; } }
+// box blur, separable, radius r, on Uint8 mask
+function boxBlurU8(src, tmp, dst, W, H, r) {
+  const n = 2 * r + 1;
+  for (let y = 0; y < H; y++) { const row = y * W; let acc = 0;
+    for (let x = -r; x <= r; x++) acc += src[row + Math.min(W - 1, Math.max(0, x))];
+    for (let x = 0; x < W; x++) { tmp[row + x] = (acc / n) | 0; acc += src[row + Math.min(W - 1, x + r + 1)] - src[row + Math.max(0, x - r)]; } }
+  for (let x = 0; x < W; x++) { let acc = 0;
+    for (let y = -r; y <= r; y++) acc += tmp[Math.min(H - 1, Math.max(0, y)) * W + x];
+    for (let y = 0; y < H; y++) { dst[y * W + x] = (acc / n) | 0; acc += tmp[Math.min(H - 1, y + r + 1) * W + x] - tmp[Math.max(0, y - r) * W + x]; } }
+}
+
+const RES = [[320, 180], [1280, 720]];
+function runCPU() {
+  const R = []; let t = 0;
+  for (const [W, H] of RES) {
+    const img = makeImage(W, H), tag = `${W}x${H}`;
+    for (let o = 1; o <= 4; o++) R.push(bench(`cpu fbm procedural value noise ${o} oct ${tag}`, () => { fbmProcedural(img, o, t += 0.01); SINK += img.u32[7]; }));
+    for (const S of [64, 128]) { const T = makeTable(S);
+      for (let o = 1; o <= 4; o++) R.push(bench(`cpu fbm table${S} bilinear ${o} oct ${tag}`, () => { fbmTableBilinear(img, o, t += 0.01, T, S); SINK += img.u32[7]; }));
+      for (const o of [1, 2, 3]) R.push(bench(`cpu table${S} nearest int-scroll ${o} layer ${tag}`, () => { fbmTableNearest(img, o, t += 0.05, T, S); SINK += img.u32[7]; }));
+    }
+    const dens = new Float32Array(W * H); for (let i = 0; i < W * H; i++) dens[i] = vnoise((i % W) * 0.03, ((i / W) | 0) * 0.03);
+    R.push(bench(`cpu bayer4x4 dither to 4-color palette ${tag}`, () => { bayerDither(img, dens); SINK += img.u32[9]; }));
+    const up = new Float32Array(W * H), g = makeGrid(80, 45);
+    R.push(bench(`cpu bilinear upscale 80x45 -> ${tag}`, () => { bilinearUpscale(g.d, 80, 45, up, W, H); SINK += up[5]; }));
+    // put to a 2D canvas (the CPU->display cost)
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cx = cv.getContext('2d'); const id = new ImageData(img.u8, W, H);
+    R.push(bench(`cpu putImageData ${tag}`, () => { cx.putImageData(id, 0, 0); SINK += 1; }));
+    const m8 = new Uint8Array(W * H), tmp8 = new Uint8Array(W * H), out8 = new Uint8Array(W * H); for (let i = 0; i < m8.length; i++) m8[i] = dens[i] > 0.5 ? 255 : 0;
+    R.push(bench(`cpu box blur r1 (3x3) separable mask ${tag}`, () => { boxBlurU8(m8, tmp8, out8, W, H, 1); SINK += out8[100]; }));
+  }
+  for (const [GW, GH] of [[80, 45], [160, 90], [320, 180]]) { const g = makeGrid(GW, GH);
+    R.push(bench(`cpu density grid advect+diffuse+decay ${GW}x${GH}`, () => { gridStep(g, 0.5); SINK += g.d[3]; })); }
+  // fog of war
+  for (const r of [4, 8]) for (const N of [10, 100, 1000]) {
+    const f = makeFow(N, r);
+    R.push(bench(`fow full recompute N=${N} r=${r} (256x256)`, () => { fowFull(f); SINK += f.vis[1000]; }));
+    for (const frac of [1.0, 0.1]) {
+      const fi = makeFow(N, r), fd = makeFow(N, r);
+      // pre-generate a move list per frame outside the timed section is awkward; include move generation in all variants equally
+      R.push(bench(`fow incremental circle unstamp/stamp N=${N} r=${r} moving=${frac * 100}%`, () => { const m = moveUnits(fi, frac); fowIncrementalCircle(fi, m); SINK += fi.vis[1000]; }));
+      R.push(bench(`fow incremental delta-edge N=${N} r=${r} moving=${frac * 100}%`, () => { const m = moveUnits(fd, frac); fowIncrementalDelta(fd, m); SINK += fd.vis[1000]; }));
+    }
+    R.push(bench(`fow move generation only N=${N} (overhead to subtract)`, () => { const m = moveUnits(f, 1.0); applyMoves(f, m); SINK += m.length; }));
+  }
+  // correctness check: incremental delta == full recompute
+  { const a = makeFow(100, 8); for (let s = 0; s < 50; s++) fowIncrementalDelta(a, moveUnits(a, 1)); const ref = Uint16Array.from(a.vis); fowFull(a); let ok = true; for (let i = 0; i < ref.length; i++) if (ref[i] !== a.vis[i]) { ok = false; break; } R.push({ name: 'fow delta-edge correctness vs full', ok }); }
+  const fm = new Uint8Array(FW * FW), ft = new Uint8Array(FW * FW), fo = new Uint8Array(FW * FW); { const f = makeFow(100, 8); for (let i = 0; i < fm.length; i++) fm[i] = f.vis[i] ? 255 : 0; }
+  R.push(bench(`fow soft edge box blur r1 256x256`, () => { boxBlurU8(fm, ft, fo, FW, FW, 1); SINK += fo[500]; }));
+  R.push(bench(`fow soft edge box blur r2 256x256`, () => { boxBlurU8(fm, ft, fo, FW, FW, 2); SINK += fo[500]; }));
+  R.push(bench(`fow visible window 15x11 tiles upscaled to 320x180 bilinear`, () => { bilinearUpscale(fo, 15, 11, new Float32Array(320 * 180), 320, 180); SINK += 1; }));
+  return { sink: SINK, results: R };
+}
+
+// ---------------- GPU ----------------
+const VS = `#version 300 es
+in vec2 p; out vec2 uv; void main(){ uv = p*0.5+0.5; gl_Position = vec4(p,0.,1.); }`;
+const HDR = `#version 300 es
+precision highp float; in vec2 uv; out vec4 o; uniform float t; uniform vec2 res;
+uniform sampler2D noiseTex; uniform sampler2D sceneTex; uniform sampler2D heightTex;
+float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
+float vn(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.-2.*f);
+  float a=h21(i), b=h21(i+vec2(1,0)), c=h21(i+vec2(0,1)), d=h21(i+vec2(1,1));
+  return mix(mix(a,b,u.x),mix(c,d,u.x),u.y); }
+vec3 m289(vec3 x){return x-floor(x*(1./289.))*289.;} vec2 m289(vec2 x){return x-floor(x*(1./289.))*289.;}
+vec3 perm(vec3 x){return m289(((x*34.)+1.)*x);}
+float snoise(vec2 v){ const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);
+  vec2 i=floor(v+dot(v,C.yy)); vec2 x0=v-i+dot(i,C.xx); vec2 i1=(x0.x>x0.y)?vec2(1,0):vec2(0,1);
+  vec4 x12=x0.xyxy+C.xxzz; x12.xy-=i1; i=m289(i);
+  vec3 p=perm(perm(i.y+vec3(0,i1.y,1))+i.x+vec3(0,i1.x,1));
+  vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.); m=m*m; m=m*m;
+  vec3 x=2.*fract(p*C.www)-1.; vec3 h=abs(x)-.5; vec3 ox=floor(x+.5); vec3 a0=x-ox;
+  m*=1.79284291400159-.85373472095314*(a0*a0+h*h);
+  vec3 g; g.x=a0.x*x0.x+h.x*x0.y; g.yz=a0.yz*x12.xz+h.yz*x12.yw; return 130.*dot(m,g)*.5+.5; }
+`;
+const FS = {
+  flat: `void main(){ o = vec4(0.8,0.78,0.75,0.5+0.0*t); }`,
+  tex1: `void main(){ o = texture(noiseTex, uv*res/128. + vec2(t,0.)); }`,
+};
+for (let k = 1; k <= 4; k++) FS[`fbm_value_${k}oct`] = `void main(){ vec2 p = uv*res*0.02 + vec2(t,0.); float s=0., a=.5;
+  for(int i=0;i<${k};i++){ s+=a*vn(p); p=p*2.+17.; a*=.5; } o = vec4(.8,.78,.75,s); }`;
+for (const k of [1, 2, 4]) FS[`fbm_simplex_${k}oct`] = `void main(){ vec2 p = uv*res*0.02 + vec2(t,0.); float s=0., a=.5;
+  for(int i=0;i<${k};i++){ s+=a*snoise(p); p=p*2.+17.; a*=.5; } o = vec4(.8,.78,.75,s); }`;
+for (let k = 1; k <= 3; k++) FS[`texnoise_${k}layer`] = `void main(){ vec2 p = uv*res/128.; float s=0., a=.5;
+  for(int i=0;i<${k};i++){ s+=a*texture(noiseTex, p + vec2(t*float(i+1)*.13, float(i)*.37)).r; p*=1.9; a*=.5; } o = vec4(.8,.78,.75,s); }`;
+FS.domainwarp_tex = `void main(){ vec2 p = uv*res/128.; vec2 w = vec2(texture(noiseTex,p*.5+t*.05).r, texture(noiseTex,p*.5+vec2(.5,.3)).r);
+  float s = texture(noiseTex, p + w*.3 + vec2(t*.1,0.)).r; o = vec4(.8,.78,.75,s); }`;
+FS.bayer_palette = `const float B[16]=float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.);
+  const vec4 P[4]=vec4[4](vec4(0),vec4(.69,.72,.75,.38),vec4(.75,.78,.82,.63),vec4(.85,.86,.88,.88));
+  void main(){ vec2 p = uv*res/128.; float d = .5*texture(noiseTex,p+vec2(t,0.)).r + .25*texture(noiseTex,p*1.9+vec2(0.,t)).r;
+  ivec2 q = ivec2(gl_FragCoord.xy) & 3; float th = (B[q.y*4+q.x]+.5)/16.;
+  int l = min(3, int(d*3.*1.33 + th)); o = P[l]; }`;
+for (const n of [8, 16, 32, 64]) FS[`godrays_${n}samp`] = `void main(){ vec2 L = vec2(.7,.9); vec2 d = (uv - L) / float(${n}) * .8; vec2 c = uv; float acc=0., w=1.;
+  for(int i=0;i<${n};i++){ c -= d; acc += w*texture(sceneTex, c).r; w *= .97; } o = vec4(1.,.95,.8, acc/float(${n}) + 0.*t); }`;
+FS.heightfog = `uniform float fogH; void main(){ vec4 col = texture(sceneTex, uv); float h = texture(heightTex, uv).r;
+  float n = texture(noiseTex, uv*res/128. + vec2(t*.1,0.)).r; float f = 1. - exp(-4.*max(0., .6 + .2*n - h));
+  o = vec4(mix(col.rgb, vec3(.78,.8,.84), f), .99); }`;
+
+async function runGPU(opts = {}) {
+  const BLEND = opts.blend ?? true;
+  const out = { info: {}, results: [] };
+  const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4;
+  const gl = cv.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) { out.info.error = 'no webgl2'; return out; }
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  out.info.vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+  out.info.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  out.info.version = gl.getParameter(gl.VERSION);
+  out.info.timer_query = !!gl.getExtension('EXT_disjoint_timer_query_webgl2'); out.info.blend = BLEND;
+  out.info.userAgent = navigator.userAgent;
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  function mkTex(w, h, data, fmt, ifmt, type, filt) { const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+    gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, w, h, 0, fmt, type, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filt); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filt);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); return tx; }
+  const T = makeTable(128), n8 = new Uint8Array(128 * 128); for (let i = 0; i < n8.length; i++) n8[i] = T[i] * 255;
+  const noiseTex = mkTex(128, 128, n8, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.LINEAR);
+  const sc = new Uint8Array(320 * 180 * 4); for (let i = 0; i < 320 * 180; i++) { const v = hash2(i % 320 >> 3, (i / 320 | 0) >> 3) > 0.6 ? 0 : 255; sc[i * 4] = v; sc[i * 4 + 1] = v; sc[i * 4 + 2] = v; sc[i * 4 + 3] = 255; }
+  const sceneTex = mkTex(320, 180, sc, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, gl.NEAREST);
+  const hm = new Uint8Array(320 * 180); for (let i = 0; i < hm.length; i++) hm[i] = vnoise((i % 320) * 0.02, (i / 320 | 0) * 0.02) * 255;
+  const heightTex = mkTex(320, 180, hm, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.NEAREST);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, noiseTex);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, sceneTex);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, heightTex);
+  function prog(fsBody) { const vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, VS); gl.compileShader(vs);
+    const fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, HDR + fsBody); gl.compileShader(fs);
+    if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(fs));
+    const p = gl.createProgram(); gl.attachShader(p, vs); gl.attachShader(p, fs); gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+    gl.useProgram(p); gl.uniform1i(gl.getUniformLocation(p, 'noiseTex'), 0); gl.uniform1i(gl.getUniformLocation(p, 'sceneTex'), 1); gl.uniform1i(gl.getUniformLocation(p, 'heightTex'), 2);
+    return { p, ut: gl.getUniformLocation(p, 't'), ur: gl.getUniformLocation(p, 'res') }; }
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const px = new Uint8Array(4);
+  function sync() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+  function timeK(drawOnce, K) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); sync(); return performance.now() - a; }
+  function med(a) { a = a.slice().sort((x, y) => x - y); return a[a.length >> 1]; }
+  // per-draw cost = slope between K=1 and K=Kbig batches (removes the readPixels sync cost)
+  const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  async function timerQuery(drawOnce, K) {
+    const q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); for (let k = 0; k < K; k++) drawOnce(k); gl.endQuery(tq.TIME_ELAPSED_EXT);
+    for (let i = 0; i < 2000; i++) { await new Promise(r => setTimeout(r, 0)); if (gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) break; }
+    const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT); const ns = gl.getQueryParameter(q, gl.QUERY_RESULT); gl.deleteQuery(q);
+    return disjoint ? NaN : ns / 1e6; }
+  async function gpuBench(name, drawOnce) {
+    for (let i = 0; i < 5; i++) timeK(drawOnce, 3);
+    const probe = Math.max(0.001, (timeK(drawOnce, 20) - timeK(drawOnce, 1)) / 19);
+    const K = Math.max(8, Math.min(2000, Math.round(80 / probe)));
+    const s1 = [], sK = [];
+    for (let s = 0; s < 9; s++) { s1.push(timeK(drawOnce, 1)); sK.push(timeK(drawOnce, K)); }
+    const per = (med(sK) - med(s1)) / (K - 1);
+    const r = { name, median_ms: +per.toFixed(4), K, sync_ms: +med(s1).toFixed(3) };
+    if (tq) { const tqs = []; const KT = Math.max(K, 200); for (let s = 0; s < 7; s++) tqs.push((await timerQuery(drawOnce, KT)) / KT); r.timer_query_ms = +med(tqs.filter(x => !isNaN(x))).toFixed(5); r.KT = KT; }
+    return r;
+  }
+  const sizes = [[320, 180], [1280, 720], [1920, 1080]];
+  const big = new Set(['flat', 'tex1', 'fbm_value_4oct', 'texnoise_2layer', 'godrays_32samp', 'bayer_palette']);
+  for (const [W, H] of sizes) {
+    const fb = gl.createFramebuffer(), ct = gl.createTexture(); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, ct);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, W, H); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ct, 0);
+    gl.viewport(0, 0, W, H);
+    for (const [key, body] of Object.entries(FS)) {
+      if (W === 1920 && !big.has(key)) continue;
+      const P = prog(body); gl.useProgram(P.p); gl.uniform2f(P.ur, W, H);
+      if (BLEND) { gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); } else gl.disable(gl.BLEND);
+      out.results.push(await gpuBench(`gpu ${key} ${W}x${H}`, k => { gl.uniform1f(P.ut, k * 0.001); gl.drawArrays(gl.TRIANGLES, 0, 3); }));
+    }
+    // alpha-blended overdraw: N stacked fog layers (tex noise 1 layer each) with blending on
+    { const P = prog(FS.texnoise_1layer); gl.useProgram(P.p); gl.uniform2f(P.ur, W, H); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      for (const L of [1, 4]) out.results.push(await gpuBench(`gpu blended fog layers x${L} (texnoise_1layer each) ${W}x${H}`, k => { gl.uniform1f(P.ut, k * 0.001); for (let l = 0; l < L; l++) gl.drawArrays(gl.TRIANGLES, 0, 3); }));
+      gl.disable(gl.BLEND); }
+    // upload of a CPU-generated fog image (RGBA8 W x H)
+    if (W <= 1280) { const up = mkTex(W, H, null, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, gl.NEAREST); const data = new Uint8Array(W * H * 4).fill(128);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb); const P = prog(FS.flat); gl.useProgram(P.p);
+      out.results.push(await gpuBench(`gpu texSubImage2D upload RGBA8 ${W}x${H} (+1 tiny draw)`, k => { gl.bindTexture(gl.TEXTURE_2D, up); data[0] = k; gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, data); gl.drawArrays(gl.TRIANGLES, 0, 3); })); }
+    gl.deleteFramebuffer(fb); gl.deleteTexture(ct);
+  }
+  { const up = mkTex(256, 256, null, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.NEAREST); const data = new Uint8Array(256 * 256);
+    out.results.push(await gpuBench(`gpu texSubImage2D upload R8 256x256 (fog-of-war mask)`, k => { gl.bindTexture(gl.TEXTURE_2D, up); data[0] = k; gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 256, gl.RED, gl.UNSIGNED_BYTE, data); gl.drawArrays(gl.TRIANGLES, 0, 3); })); }
+  return out;
+}
+window.runCPU = runCPU; window.runGPU = runGPU;
+</script>
+</body></html>

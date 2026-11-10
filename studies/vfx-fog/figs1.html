@@ -1,0 +1,159 @@
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of fog techniques, 1852 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1985 so Beer's 1852 law fits, and zoomed for 2021 to 2026 so Gen 3 stays readable. Gen 0 is the science the game techniques borrow from.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG emerald-->
+<figure class="fig" data-demo="emerald" id="fig-emerald">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Emerald fog: 20 copies of one 64×64 picture, locked to the map, mixed by one blend register</h4><span class="illu">Scene and fog picture drawn for this page</span></div>
+  <div class="stage"><canvas width="240" height="160" aria-label="A 240 by 160 screen of highland seen through drifting fog; the fog is one soft 64 pixel picture repeated over the map and mixed with the GBA blend formula"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Fog type"><button type="button" class="on" data-v="h">Horizontal fog</button><button type="button" data-v="d">Diagonal fog</button></div>
+    <button type="button" class="btn ghost" data-b="fade">Fade out</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="pan" checked> Pan the camera</label>
+    <label><input type="checkbox" data-k="lock" checked> Lock the fog to the map</label>
+    <label><input type="checkbox" data-k="grid"> Show the 20 sprites</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Emerald places 20 hardware sprites, 64×64 at 4 bits per pixel, on a 5 by 4 grid that covers 320×256 over the 240×160 screen [V, S11, S13]. Their position subtracts the camera offset, so the fog lies on the ground: pan the camera and it stays put, untick <b>Lock</b> and it slides with the screen. Horizontal fog steps 1 px every 4 frames, about 15 px/s; diagonal fog moves about 20 px/s across and 12 down [V, S11]. The GBA mixes each channel as <code>min(31, (A·EVA + B·EVB) / 16)</code> with EVA 12 and EVB 8, so 75% fog plus 50% scene, a sum of 125% that washes the scene toward the fog colour [V, S12, S16]. This canvas computes that formula in 5-bit colour. The fade moves one coefficient by 1 per step, in about 1.5 s and out about 0.7 s for horizontal fog, in about 3.5 s for diagonal [V, S11, S12]. In Godot the whole effect is one blended texture layer [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG alttp-->
+<figure class="fig" data-demo="alttp" id="fig-alttp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">ALttP overlays: one layer averaged 50/50, drifting on its own or following the camera at half or quarter speed</h4><span class="illu">Forest and overlay drawn for this page</span></div>
+  <div class="stage click"><canvas width="192" height="112" aria-label="A forest scrolling under a soft overlay that is averaged half and half with the scene; drag to pan the camera"></canvas><span class="tagl">Drag to pan</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Overlay scroll"><button type="button" class="on" data-v="fog">Lost Woods fog, 7.5 px/s</button><button type="button" data-v="half">Canopy, camera × 1/2</button><button type="button" data-v="quarter">Clouds, camera × 1/4</button><button type="button" data-v="world">Locked to the map</button></div>
+    <label><input type="checkbox" data-k="auto" checked> Auto-pan</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>From the zelda3 reimplementation: fog, forest and rain overlays use <code>CGADSUB = 0x72</code>, add plus half, a 50/50 average [V, S17, S18]. Overlays 0x97 and 0x9D add <code>0x2000</code> per frame in 16.16 fixed point to both scroll registers, 1/8 px per frame or about 7.5 px/s, with no camera term at all. Other overlays add the camera delta shifted right by 1 or 2 [V, S17]. Pan with the fog selected and the fog hangs in front of your eyes; pick the canopy and it trails behind the ground. Screen-locked fog suits mood haze, world-locked fog suits fog on the ground [I, note 04]. Add-half can only brighten, so it cannot make a scene gloomier. Our overlay is drawn sparse, with transparent gaps, because the 50% average works on sparse art [I, note 01].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rtsfog-->
+<figure class="fig" data-demo="rtsfog" id="fig-rtsfog">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Shroud, fog and visible: StarCraft's rebuild every 100 frames against instant updates</h4><span class="illu">Map, units and speeds illustrative</span></div>
+  <div class="stage"><canvas width="192" height="128" aria-label="Scouts walking over a map in three fog states: black shroud where nobody has been, dim fog over explored ground, clear where a scout sees now"></canvas><span class="tagl">1 cell = one 32 px vision tile</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Vision update"><button type="button" class="on" data-v="sc">StarCraft: rebuild every 100 frames</button><button type="button" data-v="inst">Recompute on every tile change</button></div>
+    <label class="rng">Scouts <input type="range" data-k="n" min="1" max="8" value="3"><output data-o="n"></output></label>
+    <button type="button" class="btn ghost" data-b="reset">Reset the map</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Warcraft II gave strategy games three states: black shroud where you have never been, grey fog over explored ground that hides enemy movement, and clear vision [V, S25]. OpenBW's StarCraft hides every tile once per 100 frames and lets units re-reveal, and a unit also refreshes when its 32 px tile changes [V, S30]. At 42 ms per frame that is about 4.2 s, so ground a scout has left stays visible until the next rebuild [I, note 01]. Switch to recompute and vision follows the scouts exactly. Explored cells are drawn at half brightness, the 255 and 127 of 0 A.D.'s texture [V, S32]. The cost is small either way: a full recompute for 1000 units at radius 8 on 256×256 measured 0.18 ms, 1.1 ms throttled [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG noiselayers-->
+<figure class="fig" data-demo="noiselayers" id="fig-noiselayers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Noise-table layers against per-pixel fbm: the same fog, two very different bills</h4><span class="illu">Scene illustrative; ms timed live</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="160" height="90" aria-label="Fog from one to three layers of a baked 128 pixel noise table"></canvas><span class="tagl">Baked table</span></div><div class="ms" data-ms="a"></div></div>
+    <div><div class="stage"><canvas width="160" height="90" aria-label="Fog from value-noise fbm computed per pixel"></canvas><span class="tagl">Per-pixel fbm</span></div><div class="ms" data-ms="b"></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Table layers <input type="range" data-k="lay" min="1" max="3" value="2"><output data-o="lay"></output></label>
+    <label class="rng">fbm octaves <input type="range" data-k="oct" min="1" max="4" value="4"><output data-o="oct"></output></label>
+  </div>
+  <div class="ctl col">
+    <label class="rng">Drift speed <input type="range" data-k="spd" min="0" max="40" value="15"><output data-o="spd"></output></label>
+    <div class="legend-mini"><span><i style="background:#5d6380"></i>0 to 6 px/s horror fog</span><span><i style="background:#8f9ac4"></i>4 to 20 px/s ground fog</span><span><i style="background:#b0605a"></i>faster: read as smoke, oil or water</span></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left: one 128×128 tileable table, baked once, read 1 to 3 times at scales 1.0, 1.7 and 2.9 in different directions, whole-pixel offsets, nearest sampling [V, S97; I, note 02]. Right: value noise summed over octaves for every pixel, every frame. The ms lines time both in JavaScript on your device and quote §6a for a GPU: at 720p on the M4, 1, 2 and 3 table layers cost 0.010, 0.012 and 0.014 ms, value fbm 0.019 ms for 1 octave and 0.065 ms for 4 [V, S10]. An extra layer costs about 0.002 ms, an extra octave 0.016 ms. Speeds of 4 to 20 px/s suit ground fog at 320 px, 0 to 6 px/s horror fog [I, note 06]. Players call faster one-way drift smoke, oil or water [V, S118].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG warp-->
+<figure class="fig" data-demo="warp" id="fig-warp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Domain warp: bend where you read the noise, with one offset read or with nested fbm</h4><span class="illu">Patterns illustrative; ms timed live</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="128" height="72" aria-label="Fog read from a table at a position bent by a second table"></canvas><span class="tagl">Offset table + fog table</span></div><div class="ms" data-ms="a"></div></div>
+    <div><div class="stage"><canvas width="128" height="72" aria-label="Fog from nested procedural fbm, fbm of p plus fbm of p plus fbm of p"></canvas><span class="tagl">Nested fbm</span></div><div class="ms" data-ms="b"></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Warp strength <input type="range" data-k="k" min="0" max="24" value="10"><output data-o="k"></output></label>
+    <div class="seg" data-seg="lv" role="group" aria-label="Procedural levels"><button type="button" data-v="1">1 level, 3 fbm calls</button><button type="button" class="on" data-v="2">2 levels, 5 fbm calls</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Quilez's warp is <code>fbm(p + fbm(p + fbm(p)))</code>: one level costs 3 fbm calls and two levels 5, with offsets such as (5.2, 1.3) that only decorrelate the calls [V, S51]. The cheap version stores two noises in the R and G of one table and reads the fog at <code>uv + k·q</code> [I, note 02]. Both canvases redraw every frame and both are timed live in JavaScript. On the M4 GPU a 3-fetch texture warp measured 0.014 ms at 720p, and the procedural two-level warp is about 0.33 ms by arithmetic from the 4-octave figure [V, S10; I, from S10]. At 320×180 the fine curls of a second level fall under one pixel, so the texture warp keeps most of the beauty [I, note 05]. Push the strength past about 16 px and the pattern tears.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pooling-->
+<figure class="fig" data-demo="pooling" id="fig-pooling">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fog that pools in low ground: a fog line, a thickness and Beer's law</h4><span class="illu">Height map and colours illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="108" aria-label="Top view of the highland: fog fills the valley and leaves the ridge, the tower, roofs and treetops clear"></canvas><span class="tagl">Click to pick a row</span></div>
+  <div class="stage" style="margin-top:6px"><canvas width="192" height="40" data-x aria-label="Cross-section of the picked row: the ground profile, the fog line, and fog filling the space below the line"></canvas><span class="tagl">Cross-section</span></div>
+  <div class="ctl">
+    <label class="rng">Fog line <input type="range" data-k="line" min="0" max="100" value="52"><output data-o="line"></output></label>
+    <label class="rng">k (density) <input type="range" data-k="k" min="1" max="16" value="6"><output data-o="k"></output></label>
+    <label><input type="checkbox" data-k="burn"> Morning burn-off</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Beer's law gives transmittance <code>T = exp(−σt·d)</code>; a pixel keeps T of its colour and takes 1 − T of the fog colour [V, S56]. Top-down has no view ray, so the study uses thickness below a fog line: <code>fog = 1 − exp(−k · max(0, fogLine − tileHeight))</code> [I, notes 05, 10]. Low tiles get thick fog; tree crowns, roofs and the tower carry extra height and rise out of it. Tick <b>burn-off</b> and the line drops: the rim clears first and the valley floor last, the way real radiation fog clears "from the edges toward the center" [V, S110]. The measured height-fog shader, 3 fetches plus <code>exp</code>, costs 0.0011 ms at 320×180 and 0.013 ms at 720p on the M4 [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG density-->
+<figure class="fig" data-demo="density" id="fig-density">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A coarse density grid: 80×45 cells pushed by the wind at 10 Hz, interpolated in between</h4><span class="illu">Wind and rates illustrative; ms timed live</span></div>
+  <div class="stage click"><canvas width="160" height="90" aria-label="An 80 by 45 fog field over the highland, drifting with the wind; click or drag to add fog"></canvas><span class="tagl">Click or drag to add fog</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="rate" role="group" aria-label="Update rate"><button type="button" class="on" data-v="lerp">10 Hz, interpolated</button><button type="button" data-v="raw">10 Hz, no interpolation</button><button type="button" data-v="frame">Every frame</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Wind speed <input type="range" data-k="ws" min="0" max="30" value="10"><output data-o="ws"></output></label>
+    <label class="rng">Wind direction <input type="range" data-k="wd" min="0" max="359" value="20"><output data-o="wd"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The smoke field of study #6 with slower decay, no upward push and rule-based sources [S7; I, note 04]. Each step reads upwind, <code>sample(fog, cell − wind·dt)</code>, blurs with <code>mix(up, avg4, 0.2)</code>, then relaxes toward a target from moisture and height. No pressure solver: Stam's took 32.1 ms at 320×180 in study #6 [V, S7, S73]. Stepping at 10 Hz and drawing a lerp between the last two states looks smooth; switch off the interpolation and the steps stutter [I]. The readout times each step on your device. §6a measured 0.060 ms for this 80×45 step in JS on the M4, 0.34 ms throttled, and 0.93 ms at 320×180, about 15 ns per cell [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG clearing-->
+<figure class="fig" data-demo="clearing" id="fig-clearing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Clearing masks: fog that parts around the traveller and the lamps</h4><span class="illu">Radii and scene illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="108" aria-label="A traveller walking through valley fog; a soft hole opens around them and around each lamp"></canvas><span class="tagl">Point to lead the traveller</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Mask use"><button type="button" class="on" data-v="erase">Erase: fog × (1 − mask)</button><button type="button" data-v="push">Push: offset by the mask</button><button type="button" data-v="grid">Into the field: refills</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Traveller radius <input type="range" data-k="rp" min="0" max="40" value="20"><output data-o="rp"></output></label>
+    <label class="rng">Lamp radius <input type="range" data-k="rl" min="0" max="24" value="9"><output data-o="rl"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Draw soft radial sprites for the player and the lamps into a small mask, here 96×54, and use it on the fog [I, note 02]. <b>Erase</b> multiplies the fog by <code>1 − mask</code>. <b>Push</b> offsets the fog read by the mask gradient, so fog is pushed aside instead of erased. <b>Into the field</b> subtracts the holes from a density field, the way the Sandbox does, so they refill by advection and leave a wake [S9]. About 2 to 3 tiles around the player and less around torches reads well [I, note 06]; too big a radius kills the fog. It is client-only, so it costs zero bytes. On a GPU it is one extra fetch, about 0.002 ms at 720p [V, S10]. Do the mask in a SubViewport and you take a web risk: one user saw under 1 FPS with several [V, S75].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dither-->
+<figure class="fig" data-demo="dither" id="fig-dither">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Dither that stays put: world-locked Bayer against screen-locked, blue noise and temporal dither</h4><span class="illu">Scene illustrative; flip counts live</span></div>
+  <div class="stage"><canvas width="160" height="90" aria-label="Fog dithered over the highland while the camera pans; the pattern either stays on the ground or swims with the screen"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Dither"><button type="button" class="on" data-v="world">World-locked Bayer 4×4</button><button type="button" data-v="screen">Screen-locked Bayer</button><button type="button" data-v="blue">Blue noise</button><button type="button" data-v="temporal">Animated blue noise</button></div>
+    <label><input type="checkbox" data-k="pan" checked> Pan the camera</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Fog shows where its density beats the Bayer value [V, S93]. With a pixel-snapped camera, <code>b = BAYER[(px.y + cam.y) &amp; 3][(px.x + cam.x) &amp; 3]</code> pins the pattern to the world, so it never swims [I, note 05]. The density moves under a fixed pattern and pixels flip only at the fog's edge. The counter adds up the ground pixels that changed colour this frame, after the camera move is taken out. Screen-locked Bayer under a panning camera flips a large share of the fogged pixels every step. Blue noise has no grid but reads as grain at this size, and animating it shimmers [I, note 05]. Measured cost of Bayer plus palette snap: 0.0018 ms at 320×180 and 0.016 ms at 720p on the M4, 0.057 ms on the CPU at 320×180 [V, S10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG paletteLUT-->
+<figure class="fig" data-demo="paletteLUT" id="fig-paletteLUT">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Palette fog against plain alpha: count the colours your palette never had</h4><span class="illu">Palette and scene drawn for this page</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="160" height="90" aria-label="Fog drawn through a lookup table: every pixel is still a palette colour"></canvas><span class="tagl">Palette steps (lookup table)</span></div><div class="ms" data-ms="a"></div></div>
+    <div><div class="stage"><canvas width="160" height="90" aria-label="Fog drawn with a plain alpha mix: many new colours appear"></canvas><span class="tagl">Plain alpha</span></div><div class="ms" data-ms="b"></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Fog strength <input type="range" data-k="str" min="0" max="150" value="85"><output data-o="str"></output></label>
+    <label class="rng">Levels <input type="range" data-k="lv" min="3" max="6" value="5"><output data-o="lv"></output></label>
+    <div class="seg" data-seg="fc" role="group" aria-label="Fog colour"><button type="button" class="on" data-v="sky">Sky hue</button><button type="button" data-v="grey">Neutral grey</button></div>
+  </div>
+  <div class="lut-box"><canvas width="276" height="42" data-lut aria-label="The fog lookup table: one column per palette colour, one row per fog level"></canvas></div>
+  <p class="mini" style="margin:4px 0 0">The table: 46 columns (32 scene colours plus 14 fog swatches an artist would add), one row per fog level, clear at the top.</p>
+  <figcaption>A table says, for each palette colour and fog level, which palette colour to draw: <code>FOGMAP[level][index] → index</code>, 4 to 6 levels, rebuilt when the hour changes [I; S9]. DOOM did the same for light with its COLORMAP [S6]. Each level moves value and saturation toward the fog colour, and contrast loss is what sells depth [V, S70; I, note 05]. Plain alpha, <code>mix(scene, fog, a)</code>, makes a new colour wherever 0 &lt; a &lt; 1, and a neutral grey reads as a filter instead of air [I, note 06; V, S112]. The lines under each canvas count the distinct colours on screen and how many are off the 46-colour palette. Cost is no reason to pick alpha: the table read is part of the measured 0.016 ms palette shader at 720p, and an alpha layer is 0.010 ms, with four layers costing 3.9x one [V, S10].</figcaption>
+</figure>
+<!--/FIG-->

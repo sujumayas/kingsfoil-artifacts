@@ -226,5 +226,23 @@
   "title": "Top-down pixel water Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-10"
+ },
+ {
+  "path": "/thumbs/vfx-fog.png",
+  "title": "Thumbnail vfx-fog.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-10"
+ },
+ {
+  "path": "/vfx-fog-topdown-pixel.html",
+  "title": "Top-down pixel fog: tiny algorithms for ground mist, cloud shadows, fog of war and atmospheric haze",
+  "description": "Valley fog that pools in low ground, world-locked dither and palette fog, cloud shadows, fog of war with delta updates and soft edges, halos and god rays, with measured costs for every layer.",
+  "date": "2026-11-10"
+ },
+ {
+  "path": "/vfx-fog-sandbox.html",
+  "title": "Top-down pixel fog Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-10"
  }
 ]

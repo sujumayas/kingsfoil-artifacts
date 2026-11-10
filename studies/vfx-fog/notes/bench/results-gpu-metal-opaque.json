@@ -1,0 +1,331 @@
+{
+ "info": {
+  "vendor": "Google Inc. (Apple)",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+  "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "timer_query": true,
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36"
+ },
+ "results": [
+  {
+   "name": "gpu flat 320x180",
+   "median_ms": 0.02,
+   "K": 11,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu tex1 320x180",
+   "median_ms": 0.0014,
+   "K": 2000,
+   "sync_ms": 0.6
+  },
+  {
+   "name": "gpu fbm_value_1oct 320x180",
+   "median_ms": 0.0003,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_value_2oct 320x180",
+   "median_ms": 0.0003,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_value_3oct 320x180",
+   "median_ms": 0.0003,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_value_4oct 320x180",
+   "median_ms": 0.0004,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_simplex_1oct 320x180",
+   "median_ms": 0.0004,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_simplex_2oct 320x180",
+   "median_ms": 0.0004,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_simplex_4oct 320x180",
+   "median_ms": 0.0005,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu texnoise_1layer 320x180",
+   "median_ms": 0.001,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu texnoise_2layer 320x180",
+   "median_ms": 0.0008,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu texnoise_3layer 320x180",
+   "median_ms": 0.0025,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu domainwarp_tex 320x180",
+   "median_ms": 0.0011,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu bayer_palette 320x180",
+   "median_ms": 0.0011,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu godrays_8samp 320x180",
+   "median_ms": 0.0011,
+   "K": 2000,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu godrays_16samp 320x180",
+   "median_ms": 0.001,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu godrays_32samp 320x180",
+   "median_ms": 0.0017,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu godrays_64samp 320x180",
+   "median_ms": 0.002,
+   "K": 2000,
+   "sync_ms": 0.5
+  },
+  {
+   "name": "gpu heightfog 320x180",
+   "median_ms": 0.0009,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu blended fog layers x1 (texnoise_1layer each) 320x180",
+   "median_ms": 0.0011,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu blended fog layers x4 (texnoise_1layer each) 320x180",
+   "median_ms": 0.0037,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu texSubImage2D upload RGBA8 320x180 (+1 tiny draw)",
+   "median_ms": 0.0377,
+   "K": 1520,
+   "sync_ms": 0.7
+  },
+  {
+   "name": "gpu flat 1280x720",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu tex1 1280x720",
+   "median_ms": 0.0085,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_value_1oct 1280x720",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_value_2oct 1280x720",
+   "median_ms": 0.0013,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu fbm_value_3oct 1280x720",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_value_4oct 1280x720",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_simplex_1oct 1280x720",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_simplex_2oct 1280x720",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_simplex_4oct 1280x720",
+   "median_ms": 0.0013,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu texnoise_1layer 1280x720",
+   "median_ms": 0.0087,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu texnoise_2layer 1280x720",
+   "median_ms": 0.0059,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu texnoise_3layer 1280x720",
+   "median_ms": 0.0062,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu domainwarp_tex 1280x720",
+   "median_ms": 0.006,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu bayer_palette 1280x720",
+   "median_ms": 0.0067,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "gpu godrays_8samp 1280x720",
+   "median_ms": 0.0045,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu godrays_16samp 1280x720",
+   "median_ms": 0.0048,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu godrays_32samp 1280x720",
+   "median_ms": 0.0052,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu godrays_64samp 1280x720",
+   "median_ms": 0.0067,
+   "K": 2000,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu heightfog 1280x720",
+   "median_ms": 0.0063,
+   "K": 2000,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu blended fog layers x1 (texnoise_1layer each) 1280x720",
+   "median_ms": 0.0102,
+   "K": 2000,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu blended fog layers x4 (texnoise_1layer each) 1280x720",
+   "median_ms": 0.0407,
+   "K": 1900,
+   "sync_ms": 0.5
+  },
+  {
+   "name": "gpu texSubImage2D upload RGBA8 1280x720 (+1 tiny draw)",
+   "median_ms": 0.2921,
+   "K": 152,
+   "sync_ms": 1.1
+  },
+  {
+   "name": "gpu flat 1920x1080",
+   "median_ms": 0.0011,
+   "K": 2000,
+   "sync_ms": 0.6
+  },
+  {
+   "name": "gpu tex1 1920x1080",
+   "median_ms": 0.0188,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu fbm_value_4oct 1920x1080",
+   "median_ms": 0.0025,
+   "K": 2000,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu texnoise_2layer 1920x1080",
+   "median_ms": 0.0127,
+   "K": 2000,
+   "sync_ms": 0.5
+  },
+  {
+   "name": "gpu bayer_palette 1920x1080",
+   "median_ms": 0.0142,
+   "K": 2000,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu godrays_32samp 1920x1080",
+   "median_ms": 0.0115,
+   "K": 2000,
+   "sync_ms": 0.5
+  },
+  {
+   "name": "gpu blended fog layers x1 (texnoise_1layer each) 1920x1080",
+   "median_ms": 0.0223,
+   "K": 2000,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "gpu blended fog layers x4 (texnoise_1layer each) 1920x1080",
+   "median_ms": 0.0831,
+   "K": 894,
+   "sync_ms": 0.4
+  },
+  {
+   "name": "gpu texSubImage2D upload R8 256x256 (fog-of-war mask)",
+   "median_ms": 0.0163,
+   "K": 2000,
+   "sync_ms": 0.8
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "metal"
+}

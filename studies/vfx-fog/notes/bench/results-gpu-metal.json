@@ -1,0 +1,438 @@
+{
+ "info": {
+  "vendor": "Google Inc. (Apple)",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+  "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "timer_query": true,
+  "blend": true,
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36"
+ },
+ "results": [
+  {
+   "name": "gpu flat 320x180",
+   "median_ms": 0.002,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.00187,
+   "KT": 2000
+  },
+  {
+   "name": "gpu tex1 320x180",
+   "median_ms": 0.0018,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.00152,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_1oct 320x180",
+   "median_ms": 0.0034,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.00291,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_2oct 320x180",
+   "median_ms": 0.0062,
+   "K": 2000,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.00899,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_3oct 320x180",
+   "median_ms": 0.0069,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.00527,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_4oct 320x180",
+   "median_ms": 0.0068,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00535,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_simplex_1oct 320x180",
+   "median_ms": 0.0032,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.00301,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_simplex_2oct 320x180",
+   "median_ms": 0.0067,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.00702,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_simplex_4oct 320x180",
+   "median_ms": 0.0138,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.01249,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texnoise_1layer 320x180",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00083,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texnoise_2layer 320x180",
+   "median_ms": 0.0015,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00099,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texnoise_3layer 320x180",
+   "median_ms": 0.0016,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.00115,
+   "KT": 2000
+  },
+  {
+   "name": "gpu domainwarp_tex 320x180",
+   "median_ms": 0.0016,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00126,
+   "KT": 2000
+  },
+  {
+   "name": "gpu bayer_palette 320x180",
+   "median_ms": 0.0021,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.0018,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_8samp 320x180",
+   "median_ms": 0.0047,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.00311,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_16samp 320x180",
+   "median_ms": 0.0059,
+   "K": 2000,
+   "sync_ms": 0.9,
+   "timer_query_ms": 0.0064,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_32samp 320x180",
+   "median_ms": 0.0103,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.00681,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_64samp 320x180",
+   "median_ms": 0.0123,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01118,
+   "KT": 2000
+  },
+  {
+   "name": "gpu heightfog 320x180",
+   "median_ms": 0.0014,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.0011,
+   "KT": 2000
+  },
+  {
+   "name": "gpu blended fog layers x1 (texnoise_1layer each) 320x180",
+   "median_ms": 0.0012,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00084,
+   "KT": 2000
+  },
+  {
+   "name": "gpu blended fog layers x4 (texnoise_1layer each) 320x180",
+   "median_ms": 0.0042,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.0032,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texSubImage2D upload RGBA8 320x180 (+1 tiny draw)",
+   "median_ms": 0.0351,
+   "K": 608,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01108,
+   "KT": 608
+  },
+  {
+   "name": "gpu flat 1280x720",
+   "median_ms": 0.0037,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00354,
+   "KT": 2000
+  },
+  {
+   "name": "gpu tex1 1280x720",
+   "median_ms": 0.0112,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.01078,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_1oct 1280x720",
+   "median_ms": 0.0201,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01928,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_2oct 1280x720",
+   "median_ms": 0.0358,
+   "K": 1900,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.03585,
+   "KT": 1900
+  },
+  {
+   "name": "gpu fbm_value_3oct 1280x720",
+   "median_ms": 0.0513,
+   "K": 1689,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.05178,
+   "KT": 1689
+  },
+  {
+   "name": "gpu fbm_value_4oct 1280x720",
+   "median_ms": 0.0679,
+   "K": 1520,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.06537,
+   "KT": 1520
+  },
+  {
+   "name": "gpu fbm_simplex_1oct 1280x720",
+   "median_ms": 0.0359,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.03572,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_simplex_2oct 1280x720",
+   "median_ms": 0.0666,
+   "K": 1267,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.06557,
+   "KT": 1267
+  },
+  {
+   "name": "gpu fbm_simplex_4oct 1280x720",
+   "median_ms": 0.1365,
+   "K": 691,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.1329,
+   "KT": 691
+  },
+  {
+   "name": "gpu texnoise_1layer 1280x720",
+   "median_ms": 0.0108,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.00994,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texnoise_2layer 1280x720",
+   "median_ms": 0.0123,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.0118,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texnoise_3layer 1280x720",
+   "median_ms": 0.0145,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.01375,
+   "KT": 2000
+  },
+  {
+   "name": "gpu domainwarp_tex 1280x720",
+   "median_ms": 0.015,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01404,
+   "KT": 2000
+  },
+  {
+   "name": "gpu bayer_palette 1280x720",
+   "median_ms": 0.0176,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.01613,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_8samp 1280x720",
+   "median_ms": 0.0228,
+   "K": 2000,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.02144,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_16samp 1280x720",
+   "median_ms": 0.037,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.03616,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_32samp 1280x720",
+   "median_ms": 0.0742,
+   "K": 1267,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.07023,
+   "KT": 1267
+  },
+  {
+   "name": "gpu godrays_64samp 1280x720",
+   "median_ms": 0.1457,
+   "K": 691,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.14137,
+   "KT": 691
+  },
+  {
+   "name": "gpu heightfog 1280x720",
+   "median_ms": 0.0138,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.013,
+   "KT": 2000
+  },
+  {
+   "name": "gpu blended fog layers x1 (texnoise_1layer each) 1280x720",
+   "median_ms": 0.0104,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.01002,
+   "KT": 2000
+  },
+  {
+   "name": "gpu blended fog layers x4 (texnoise_1layer each) 1280x720",
+   "median_ms": 0.0408,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.0395,
+   "KT": 2000
+  },
+  {
+   "name": "gpu texSubImage2D upload RGBA8 1280x720 (+1 tiny draw)",
+   "median_ms": 0.3007,
+   "K": 146,
+   "sync_ms": 1,
+   "timer_query_ms": 0.05491,
+   "KT": 200
+  },
+  {
+   "name": "gpu flat 1920x1080",
+   "median_ms": 0.0079,
+   "K": 1689,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.0078,
+   "KT": 1689
+  },
+  {
+   "name": "gpu tex1 1920x1080",
+   "median_ms": 0.024,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.02335,
+   "KT": 2000
+  },
+  {
+   "name": "gpu fbm_value_4oct 1920x1080",
+   "median_ms": 0.1409,
+   "K": 563,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.14038,
+   "KT": 563
+  },
+  {
+   "name": "gpu texnoise_2layer 1920x1080",
+   "median_ms": 0.027,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.0266,
+   "KT": 2000
+  },
+  {
+   "name": "gpu bayer_palette 1920x1080",
+   "median_ms": 0.037,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.03662,
+   "KT": 2000
+  },
+  {
+   "name": "gpu godrays_32samp 1920x1080",
+   "median_ms": 0.155,
+   "K": 563,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.15125,
+   "KT": 563
+  },
+  {
+   "name": "gpu blended fog layers x1 (texnoise_1layer each) 1920x1080",
+   "median_ms": 0.023,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.02179,
+   "KT": 2000
+  },
+  {
+   "name": "gpu blended fog layers x4 (texnoise_1layer each) 1920x1080",
+   "median_ms": 0.0845,
+   "K": 894,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.08239,
+   "KT": 894
+  },
+  {
+   "name": "gpu texSubImage2D upload R8 256x256 (fog-of-war mask)",
+   "median_ms": 0.0162,
+   "K": 2000,
+   "sync_ms": 1.1,
+   "timer_query_ms": 0.00337,
+   "KT": 2000
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "metal"
+}

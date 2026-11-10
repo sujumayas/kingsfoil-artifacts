@@ -1,0 +1,527 @@
+{
+ "sink": 28531236292511.18,
+ "results": [
+  {
+   "name": "cpu fbm procedural value noise 1 oct 320x180",
+   "median_ms": 0.2382,
+   "p10_ms": 0.2353,
+   "p90_ms": 0.2424
+  },
+  {
+   "name": "cpu fbm procedural value noise 2 oct 320x180",
+   "median_ms": 0.4211,
+   "p10_ms": 0.4211,
+   "p90_ms": 0.4263
+  },
+  {
+   "name": "cpu fbm procedural value noise 3 oct 320x180",
+   "median_ms": 0.6154,
+   "p10_ms": 0.6154,
+   "p90_ms": 0.6231
+  },
+  {
+   "name": "cpu fbm procedural value noise 4 oct 320x180",
+   "median_ms": 0.81,
+   "p10_ms": 0.8,
+   "p90_ms": 0.82
+  },
+  {
+   "name": "cpu fbm table64 bilinear 1 oct 320x180",
+   "median_ms": 0.2353,
+   "p10_ms": 0.2314,
+   "p90_ms": 0.2485
+  },
+  {
+   "name": "cpu fbm table64 bilinear 2 oct 320x180",
+   "median_ms": 0.3727,
+   "p10_ms": 0.3682,
+   "p90_ms": 0.3773
+  },
+  {
+   "name": "cpu fbm table64 bilinear 3 oct 320x180",
+   "median_ms": 0.5125,
+   "p10_ms": 0.5062,
+   "p90_ms": 0.5533
+  },
+  {
+   "name": "cpu fbm table64 bilinear 4 oct 320x180",
+   "median_ms": 0.6538,
+   "p10_ms": 0.6462,
+   "p90_ms": 0.6538
+  },
+  {
+   "name": "cpu table64 nearest int-scroll 1 layer 320x180",
+   "median_ms": 0.1081,
+   "p10_ms": 0.1066,
+   "p90_ms": 0.1081
+  },
+  {
+   "name": "cpu table64 nearest int-scroll 2 layer 320x180",
+   "median_ms": 0.1688,
+   "p10_ms": 0.1667,
+   "p90_ms": 0.1761
+  },
+  {
+   "name": "cpu table64 nearest int-scroll 3 layer 320x180",
+   "median_ms": 0.2424,
+   "p10_ms": 0.2382,
+   "p90_ms": 0.25
+  },
+  {
+   "name": "cpu fbm table128 bilinear 1 oct 320x180",
+   "median_ms": 0.2455,
+   "p10_ms": 0.2424,
+   "p90_ms": 0.25
+  },
+  {
+   "name": "cpu fbm table128 bilinear 2 oct 320x180",
+   "median_ms": 0.381,
+   "p10_ms": 0.3773,
+   "p90_ms": 0.381
+  },
+  {
+   "name": "cpu fbm table128 bilinear 3 oct 320x180",
+   "median_ms": 0.5125,
+   "p10_ms": 0.5062,
+   "p90_ms": 0.5187
+  },
+  {
+   "name": "cpu fbm table128 bilinear 4 oct 320x180",
+   "median_ms": 0.6538,
+   "p10_ms": 0.6462,
+   "p90_ms": 0.6667
+  },
+  {
+   "name": "cpu table128 nearest int-scroll 1 layer 320x180",
+   "median_ms": 0.1096,
+   "p10_ms": 0.1081,
+   "p90_ms": 0.1096
+  },
+  {
+   "name": "cpu table128 nearest int-scroll 2 layer 320x180",
+   "median_ms": 0.1702,
+   "p10_ms": 0.1702,
+   "p90_ms": 0.1723
+  },
+  {
+   "name": "cpu table128 nearest int-scroll 3 layer 320x180",
+   "median_ms": 0.2412,
+   "p10_ms": 0.2353,
+   "p90_ms": 0.2645
+  },
+  {
+   "name": "cpu bayer4x4 dither to 4-color palette 320x180",
+   "median_ms": 0.0571,
+   "p10_ms": 0.0567,
+   "p90_ms": 0.0579
+  },
+  {
+   "name": "cpu bilinear upscale 80x45 -> 320x180",
+   "median_ms": 0.1096,
+   "p10_ms": 0.1081,
+   "p90_ms": 0.1127
+  },
+  {
+   "name": "cpu putImageData 320x180",
+   "median_ms": 0.0081,
+   "p10_ms": 0.008,
+   "p90_ms": 0.0082
+  },
+  {
+   "name": "cpu box blur r1 (3x3) separable mask 320x180",
+   "median_ms": 0.2286,
+   "p10_ms": 0.1884,
+   "p90_ms": 0.2314
+  },
+  {
+   "name": "cpu fbm procedural value noise 1 oct 1280x720",
+   "median_ms": 3.8,
+   "p10_ms": 3.7667,
+   "p90_ms": 3.8333
+  },
+  {
+   "name": "cpu fbm procedural value noise 2 oct 1280x720",
+   "median_ms": 6.75,
+   "p10_ms": 6.75,
+   "p90_ms": 6.8
+  },
+  {
+   "name": "cpu fbm procedural value noise 3 oct 1280x720",
+   "median_ms": 9.9,
+   "p10_ms": 9.8,
+   "p90_ms": 10
+  },
+  {
+   "name": "cpu fbm procedural value noise 4 oct 1280x720",
+   "median_ms": 12.9,
+   "p10_ms": 12.9,
+   "p90_ms": 13.1
+  },
+  {
+   "name": "cpu fbm table64 bilinear 1 oct 1280x720",
+   "median_ms": 3.8333,
+   "p10_ms": 3.8,
+   "p90_ms": 3.8333
+  },
+  {
+   "name": "cpu fbm table64 bilinear 2 oct 1280x720",
+   "median_ms": 5.95,
+   "p10_ms": 5.9,
+   "p90_ms": 6.05
+  },
+  {
+   "name": "cpu fbm table64 bilinear 3 oct 1280x720",
+   "median_ms": 8.2,
+   "p10_ms": 8.1,
+   "p90_ms": 8.3
+  },
+  {
+   "name": "cpu fbm table64 bilinear 4 oct 1280x720",
+   "median_ms": 10.5,
+   "p10_ms": 10.4,
+   "p90_ms": 10.8
+  },
+  {
+   "name": "cpu table64 nearest int-scroll 1 layer 1280x720",
+   "median_ms": 1.82,
+   "p10_ms": 1.8,
+   "p90_ms": 1.86
+  },
+  {
+   "name": "cpu table64 nearest int-scroll 2 layer 1280x720",
+   "median_ms": 2.7667,
+   "p10_ms": 2.7333,
+   "p90_ms": 2.8333
+  },
+  {
+   "name": "cpu table64 nearest int-scroll 3 layer 1280x720",
+   "median_ms": 3.8667,
+   "p10_ms": 3.8,
+   "p90_ms": 3.9
+  },
+  {
+   "name": "cpu fbm table128 bilinear 1 oct 1280x720",
+   "median_ms": 3.8333,
+   "p10_ms": 3.8,
+   "p90_ms": 3.8667
+  },
+  {
+   "name": "cpu fbm table128 bilinear 2 oct 1280x720",
+   "median_ms": 5.95,
+   "p10_ms": 5.9,
+   "p90_ms": 5.95
+  },
+  {
+   "name": "cpu fbm table128 bilinear 3 oct 1280x720",
+   "median_ms": 8.1,
+   "p10_ms": 8.1,
+   "p90_ms": 8.2
+  },
+  {
+   "name": "cpu fbm table128 bilinear 4 oct 1280x720",
+   "median_ms": 10.5,
+   "p10_ms": 10.4,
+   "p90_ms": 10.6
+  },
+  {
+   "name": "cpu table128 nearest int-scroll 1 layer 1280x720",
+   "median_ms": 1.82,
+   "p10_ms": 1.78,
+   "p90_ms": 1.84
+  },
+  {
+   "name": "cpu table128 nearest int-scroll 2 layer 1280x720",
+   "median_ms": 3,
+   "p10_ms": 2.7333,
+   "p90_ms": 3.0667
+  },
+  {
+   "name": "cpu table128 nearest int-scroll 3 layer 1280x720",
+   "median_ms": 3.8,
+   "p10_ms": 3.7667,
+   "p90_ms": 4.1
+  },
+  {
+   "name": "cpu bayer4x4 dither to 4-color palette 1280x720",
+   "median_ms": 0.9222,
+   "p10_ms": 0.9111,
+   "p90_ms": 0.9333
+  },
+  {
+   "name": "cpu bilinear upscale 80x45 -> 1280x720",
+   "median_ms": 2,
+   "p10_ms": 1.76,
+   "p90_ms": 2.05
+  },
+  {
+   "name": "cpu putImageData 1280x720",
+   "median_ms": 0.1231,
+   "p10_ms": 0.1212,
+   "p90_ms": 0.1246
+  },
+  {
+   "name": "cpu box blur r1 (3x3) separable mask 1280x720",
+   "median_ms": 2.9667,
+   "p10_ms": 2.8,
+   "p90_ms": 3.3667
+  },
+  {
+   "name": "cpu density grid advect+diffuse+decay 80x45",
+   "median_ms": 0.0596,
+   "p10_ms": 0.0588,
+   "p90_ms": 0.0606
+  },
+  {
+   "name": "cpu density grid advect+diffuse+decay 160x90",
+   "median_ms": 0.2382,
+   "p10_ms": 0.2353,
+   "p90_ms": 0.2412
+  },
+  {
+   "name": "cpu density grid advect+diffuse+decay 320x180",
+   "median_ms": 0.9333,
+   "p10_ms": 0.9222,
+   "p90_ms": 0.9444
+  },
+  {
+   "name": "fow full recompute N=10 r=4 (256x256)",
+   "median_ms": 0.0013,
+   "p10_ms": 0.0013,
+   "p90_ms": 0.0014
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=10 r=4 moving=100%",
+   "median_ms": 0.0006,
+   "p10_ms": 0.0006,
+   "p90_ms": 0.0007
+  },
+  {
+   "name": "fow incremental delta-edge N=10 r=4 moving=100%",
+   "median_ms": 0.0003,
+   "p10_ms": 0.0003,
+   "p90_ms": 0.0003
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=10 r=4 moving=10%",
+   "median_ms": 0.0002,
+   "p10_ms": 0.0002,
+   "p90_ms": 0.0002
+  },
+  {
+   "name": "fow incremental delta-edge N=10 r=4 moving=10%",
+   "median_ms": 0.0002,
+   "p10_ms": 0.0002,
+   "p90_ms": 0.0002
+  },
+  {
+   "name": "fow move generation only N=10 (overhead to subtract)",
+   "median_ms": 0.0002,
+   "p10_ms": 0.0002,
+   "p90_ms": 0.0002
+  },
+  {
+   "name": "fow full recompute N=100 r=4 (256x256)",
+   "median_ms": 0.0084,
+   "p10_ms": 0.0082,
+   "p90_ms": 0.0091
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=100 r=4 moving=100%",
+   "median_ms": 0.0103,
+   "p10_ms": 0.0102,
+   "p90_ms": 0.0104
+  },
+  {
+   "name": "fow incremental delta-edge N=100 r=4 moving=100%",
+   "median_ms": 0.0033,
+   "p10_ms": 0.0033,
+   "p90_ms": 0.0033
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=100 r=4 moving=10%",
+   "median_ms": 0.0019,
+   "p10_ms": 0.0018,
+   "p90_ms": 0.0019
+  },
+  {
+   "name": "fow incremental delta-edge N=100 r=4 moving=10%",
+   "median_ms": 0.0009,
+   "p10_ms": 0.0009,
+   "p90_ms": 0.0009
+  },
+  {
+   "name": "fow move generation only N=100 (overhead to subtract)",
+   "median_ms": 0.0011,
+   "p10_ms": 0.0011,
+   "p90_ms": 0.0011
+  },
+  {
+   "name": "fow full recompute N=1000 r=4 (256x256)",
+   "median_ms": 0.0702,
+   "p10_ms": 0.069,
+   "p90_ms": 0.0708
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=1000 r=4 moving=100%",
+   "median_ms": 0.1096,
+   "p10_ms": 0.1025,
+   "p90_ms": 0.1111
+  },
+  {
+   "name": "fow incremental delta-edge N=1000 r=4 moving=100%",
+   "median_ms": 0.0332,
+   "p10_ms": 0.0329,
+   "p90_ms": 0.0342
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=1000 r=4 moving=10%",
+   "median_ms": 0.0155,
+   "p10_ms": 0.0152,
+   "p90_ms": 0.0158
+  },
+  {
+   "name": "fow incremental delta-edge N=1000 r=4 moving=10%",
+   "median_ms": 0.0084,
+   "p10_ms": 0.0082,
+   "p90_ms": 0.0084
+  },
+  {
+   "name": "fow move generation only N=1000 (overhead to subtract)",
+   "median_ms": 0.0105,
+   "p10_ms": 0.0104,
+   "p90_ms": 0.0106
+  },
+  {
+   "name": "fow full recompute N=10 r=8 (256x256)",
+   "median_ms": 0.0035,
+   "p10_ms": 0.0031,
+   "p90_ms": 0.0036
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=10 r=8 moving=100%",
+   "median_ms": 0.0032,
+   "p10_ms": 0.0031,
+   "p90_ms": 0.0032
+  },
+  {
+   "name": "fow incremental delta-edge N=10 r=8 moving=100%",
+   "median_ms": 0.0005,
+   "p10_ms": 0.0005,
+   "p90_ms": 0.0005
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=10 r=8 moving=10%",
+   "median_ms": 0.0004,
+   "p10_ms": 0.0004,
+   "p90_ms": 0.0004
+  },
+  {
+   "name": "fow incremental delta-edge N=10 r=8 moving=10%",
+   "median_ms": 0.0002,
+   "p10_ms": 0.0002,
+   "p90_ms": 0.0002
+  },
+  {
+   "name": "fow move generation only N=10 (overhead to subtract)",
+   "median_ms": 0.0002,
+   "p10_ms": 0.0002,
+   "p90_ms": 0.0002
+  },
+  {
+   "name": "fow full recompute N=100 r=8 (256x256)",
+   "median_ms": 0.0198,
+   "p10_ms": 0.0196,
+   "p90_ms": 0.0203
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=100 r=8 moving=100%",
+   "median_ms": 0.0311,
+   "p10_ms": 0.0308,
+   "p90_ms": 0.0317
+  },
+  {
+   "name": "fow incremental delta-edge N=100 r=8 moving=100%",
+   "median_ms": 0.0047,
+   "p10_ms": 0.0047,
+   "p90_ms": 0.0049
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=100 r=8 moving=10%",
+   "median_ms": 0.0038,
+   "p10_ms": 0.0037,
+   "p90_ms": 0.004
+  },
+  {
+   "name": "fow incremental delta-edge N=100 r=8 moving=10%",
+   "median_ms": 0.0011,
+   "p10_ms": 0.001,
+   "p90_ms": 0.0011
+  },
+  {
+   "name": "fow move generation only N=100 (overhead to subtract)",
+   "median_ms": 0.0011,
+   "p10_ms": 0.0011,
+   "p90_ms": 0.0011
+  },
+  {
+   "name": "fow full recompute N=1000 r=8 (256x256)",
+   "median_ms": 0.1841,
+   "p10_ms": 0.1818,
+   "p90_ms": 0.186
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=1000 r=8 moving=100%",
+   "median_ms": 0.3077,
+   "p10_ms": 0.3074,
+   "p90_ms": 0.3115
+  },
+  {
+   "name": "fow incremental delta-edge N=1000 r=8 moving=100%",
+   "median_ms": 0.0482,
+   "p10_ms": 0.0476,
+   "p90_ms": 0.0488
+  },
+  {
+   "name": "fow incremental circle unstamp/stamp N=1000 r=8 moving=10%",
+   "median_ms": 0.0364,
+   "p10_ms": 0.036,
+   "p90_ms": 0.0367
+  },
+  {
+   "name": "fow incremental delta-edge N=1000 r=8 moving=10%",
+   "median_ms": 0.01,
+   "p10_ms": 0.0097,
+   "p90_ms": 0.0101
+  },
+  {
+   "name": "fow move generation only N=1000 (overhead to subtract)",
+   "median_ms": 0.0109,
+   "p10_ms": 0.0108,
+   "p90_ms": 0.011
+  },
+  {
+   "name": "fow delta-edge correctness vs full",
+   "ok": true
+  },
+  {
+   "name": "fow soft edge box blur r1 256x256",
+   "median_ms": 0.2189,
+   "p10_ms": 0.2132,
+   "p90_ms": 0.2424
+  },
+  {
+   "name": "fow soft edge box blur r2 256x256",
+   "median_ms": 0.1907,
+   "p10_ms": 0.1905,
+   "p90_ms": 0.1929
+  },
+  {
+   "name": "fow visible window 15x11 tiles upscaled to 320x180 bilinear",
+   "median_ms": 0.186,
+   "p10_ms": 0.1841,
+   "p90_ms": 0.1905
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "default"
+}

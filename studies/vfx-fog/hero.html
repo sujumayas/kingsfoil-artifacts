@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel fog: tiny algorithms for ground mist, cloud shadows, fog of war and atmospheric haze</h1>
+      <p class="deck">Good fog is a colour problem with a tiny cost. Pokémon Emerald draws it with 20 world-locked sprites and one blend register, and Tibia skips fog of war because the server never sends what you cannot see. This study collects the small answers: a density byte per cell, a palette table that steps colours toward the sky, a height line that fills the valleys, a count per tile for fog of war. We measured what each one costs. At 320×180 almost every fog shader costs microseconds, so the real budget goes to the CPU. Aimed at Godot 4 on the web and a server-authoritative MMO.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-fog-sandbox.html">Play the Fog Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage"><canvas width="320" height="180" aria-label="Live highland at 320 by 180 pixels: fog pools in the valley around a stream while tree crowns, roofs and a stone watchtower stay clear; lamps glow inside the fog and a traveller walks the path"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Scenes"><button type="button" data-t="0">Valley fog</button><button type="button" data-t="1">Cloud shadows</button><button type="button" data-t="2">Fog of war</button><button type="button" data-t="3">Night mist</button></div>
+      <figcaption>Live, and timed on your device. An 80×45 density field steps at 10 Hz and is interpolated between steps. Each pixel takes fog by its height below a fog line, <code>1 − exp(−k · thickness)</code>, times two layers of one baked noise table drifting at 15 and 9 px/s. The result picks one of 6 palette steps toward the sky colour, with world-locked Bayer between steps. Lamps get halos sized by the local fog, and the traveller and lamps push holes into the field. The HUD shows the JavaScript cost of the fog pass. On a GPU the same pass measured about 0.001 ms at 320×180 (§6a). Colours, speeds and the scene are illustrative.</figcaption>
+    </figure>
+  </div>
+</header>
