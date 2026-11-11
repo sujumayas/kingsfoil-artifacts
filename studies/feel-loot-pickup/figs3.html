@@ -1,0 +1,34 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement in the order Clarity · Delight · MMO fit · Fairness · Speed. Sort by Speed and little moves, because loot is mostly server logic and a few blits <span class="cite"><b class="tag tv">V</b> S5</span>. Delight and Fairness pull against each other. Six rows tie at 23, among them the bag colour (A3), the 400 ms arc (B1) and graves (H3). The ground spill (A2), party modes (F3) and the raw Tibia death drop (H1) are last at 17 <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Feel against fit for all 35 profiles, Clarity plus Delight against MMO fit plus Fairness plus Speed</h4></div>
+  <svg class="chart mx-chart" viewBox="0 0 600 320" role="img" aria-label="Scatter of the 35 technique profiles: clarity plus delight across, MMO fit plus fairness plus speed up"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one profile at its §5 ratings. Across is how good the loot moment feels, Clarity plus Delight. Up is how well it holds in a crowd, over a server and in PvP, MMO fit plus Fairness plus Speed. Dots that share a cell sit side by side. Hover or tap a dot to read it and follow the link to its card. Beams and pings (C2) feel best and sit lower, because ten strangers' beams are noise. The fairest rows, GUIDs (G4) and tick batches (G2), feel like nothing at all. The ground spill (A2) sits alone at the bottom, costly to own, cap and race for.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What loot costs to draw, with every row of the benchmark on one log scale against the 16.7 ms frame</h4><span class="illu">Desktop numbers, no phone measured</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="col" role="group" aria-label="Machine"><button type="button" class="on" data-v="1">M4 GPU</button><button type="button" data-v="2">6x CPU throttle</button><button type="button" data-v="3">SwiftShader</button></div>
+    <label><input type="checkbox" data-k="sub"> Subtract the empty frame</label>
+    <button type="button" class="btn ghost" data-b="run">Run the rows on this device</button>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 320" role="img" aria-label="Log-scale bars of the measured loot costs in section 6d with the 16.7 ms frame marked"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <p class="cost-mach">Measured: Apple M4 Pro (14 cores, 48 GB), macOS 26.5.1, Chromium 153 under Playwright; ANGLE Metal, Metal with a 6x main-thread throttle, and SwiftShader. Whole frames including a 1 px readback, median ms, Canvas 2D at 320×180 upscaled x4. Solver and magnet rows are CPU only.</p>
+  <figcaption>Every coloured bar is a measured row of §6d <span class="cite"><b class="tag tv">V</b> S5</span>; rows with two or three values are split into one bar each. Cost follows blits, not effects. One item blit costs about 1.1 µs on the GPU and 16 µs in software, so a software client affords about 550 a frame <span class="cite"><b class="tag tv">V</b> S5<i>;</i> <b class="tag ti">I</b></span>. The two traps stand out. 200 glows with <code>shadowBlur</code> fill more than a whole frame on the M4 GPU, and 1000 labels drawn glyph by glyph cost 11.45 ms against 1.50 ms from an atlas. Compare SwiftShader rows only within their own column, since software GL runs everything on the CPU. <b>Run the rows</b> repeats the Canvas 2D tests with this page's sprites, halos, beams and labels on your device. Those green bars use this page's code, not the benchmark's.</figcaption>
+</figure>
+<!--/FIG-->

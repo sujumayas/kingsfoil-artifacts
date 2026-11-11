@@ -1,0 +1,286 @@
+<!--FIG reach-->
+<figure class="fig" data-demo="reach" id="fig-reach">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One click from range: walk, retry every 300 ms, never drop a click</h4><span class="illu">Walk speed and item spots are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="124" aria-label="A hero on a grass field with rocks and five items. A dashed square marks the 3 by 3 tiles the hero can reach. Clicking a far item makes the hero walk to it and grab it on arrival. A timeline below shows clicks on top and the server below, with cooldown bars, retry dots and green grabs"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="reset">Reset counters</button>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="drop"> Drop clicks in the cooldown (the wrong way)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click an item. Out of reach, the hero walks and the server retries the grab every 300 ms until the item is 1 tile away, counting diagonals as one [I]. Canary quick loot retries after 300 ms and TFS after 400 ms [V, S8, S22]. The grab checks the action cooldown, finds the item again at its position, checks reach, then moves it [V, S22]. Now spam the clicks. A press inside the 200 ms action cooldown is queued for the next action time, not dropped [V, S20, S22]. Tick the wrong way to see dropped presses as red crosses. The gem inside the rocks has no path, so the player reads "There is no way." [V, S22, S23]. On the timeline white marks are clicks, yellow marks are queued clicks, brown bars are the cooldown, grey dots are retries and green bars are grabs.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG quickloot-->
+<figure class="fig" data-demo="quickloot" id="fig-quickloot">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One key loots every corpse you may open in the 3x3</h4><span class="illu">Corpse contents are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click" tabindex="0"><canvas width="170" height="128" aria-label="A hero stands among goblin corpses. A dashed square marks the 3 by 3 tiles around the hero; stacked corpses show a count, one corpse has a padlock and one a quest mark. Corpses outside the square are out of reach. A strip at the bottom shows the loot window or the quick loot report"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="e">Quick loot (E)</button>
+    <button type="button" class="btn ghost" data-b="respawn">New kills</button>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <label class="rng">Corpses in the 3x3 <input type="range" min="1" max="40" step="1" value="12" data-k="n"><output data-o="n">12</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Press E or click Quick loot. Canary loots every corpse in the 3x3 tiles around the player, capped at 30, and skips quest corpses [V, S8, S9]. The padlocked corpse belongs to someone else and stays, and the report says what was left [I]. Click a corpse to do it the old way, one click to open it and one per item. Push the slider past 30 to see the cap report what it skipped. Game Accessibility Guidelines list "avoid repeated inputs" as a motor guideline [V, S148]. Quick loot sends one request per press instead of one per item [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG magnet-->
+<figure class="fig" data-demo="magnet" id="fig-magnet">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A 1 tile magnet for your own gold, after a 400 ms beat</h4><span class="illu">Crowd positions and the coin rate are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="110" aria-label="A blue hero walks left and right through a crowd of four other players while coins drop around everyone. A dashed square around the hero shows the magnet radius. Coins inside it slide to the hero after a short wait; stolen coins leave a red trail"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <label class="rng">Magnet radius <input type="range" min="0" max="4" step="1" value="1" data-k="rad"><output data-o="rad">1 tile</output></label>
+    <button type="button" class="btn ghost" data-b="clear">Reset counters</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="own" checked> Owner only</label>
+    <label><input type="checkbox" data-k="pvp"> In PvP combat</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Coins land and wait 400 ms so the landing is seen. Then any of yours inside the dashed square slides to you over 150 ms with ease-in [I]. A small blue dot marks your coins once they may be pulled. Push the radius to 4 tiles and switch Owner only off. Coins now cross the crowd and you take other players' gold, the fairness problem E3 warns about [I]. Tick PvP combat and the magnet stops, as Enter the Gungeon pulls money only out of combat [V, S138]. Flare picks up only currency within 1 tile [V, S127, S128], and Terraria grows its grab box by 42 px [V, S133]. In the game the server grants each grab on its tick and the client only animates it, so nothing desyncs [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flybag-->
+<figure class="fig" data-demo="flybag" id="fig-flybag">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fly to the bag, a bag nod, and a coin streak that climbs</h4><span class="illu">The item mix is illustrative; the timings are the report's</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="100" aria-label="A hero stands among coins and items on grass. Picked items fly on a curve to a bag icon in the bottom right, which nods when each one lands. A pitch ladder in the top left fills one step per coin in a streak"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="one">Pick 1 item</button>
+    <button type="button" class="btn ghost" data-b="coins">Coin streak</button>
+    <button type="button" class="btn ghost" data-b="six">Pick 6 at once</button>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="pre" role="group" aria-label="Flight"><button type="button" class="on" data-v="ast">Asterion 250 ms</button><button type="button" data-v="spd">SPD 500 ms</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Turn the sound on and try each button. Each item flies 250 ms with ease in-out and a ±16 px side curve, and the bag scales 1.0 to 1.15 to 1.0 over 120 ms when it lands [I]. More than 3 items in one message fly 3 sprites and show "+N" [I]. Each coin within 1.2 s of the last plays 1 semitone higher, a rate of ×1.0595 per step, capped at 8 steps with ±0.3 semitone jitter [I]. That builds on a Godot snippet that raises the pitch per pickup and resets after 1,200 ms [V, S149]. Switch to the 500 ms straight flight of Shattered Pixel Dungeon, which shrinks by the square root of progress [V, S126], and spam it to feel bursts drag. 1,000 fly tweens cost 1.03 ms over the baseline on the M4 GPU [V, S5]. In the game the flight starts on the server's "added" message [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG bagfull-->
+<figure class="fig" data-demo="bagfull" id="fig-bagfull">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bag full: the item stays and the message is exact</h4><span class="illu">Bag size and items are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="126" aria-label="A hero next to a goblin corpse. Below, the corpse window holds three items and a weapons bag shows eight full slots. A failed loot makes the item hop, the bag flash red and a warning appear, big and red at the top, or a quiet grey line when the last loud one was under 15 seconds ago"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="loot">Loot</button>
+    <button type="button" class="btn ghost" data-b="free">Free a slot</button>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="spill"> Spill overflow to the ground (the wrong way)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click Loot or an item in the corpse window. The bag is full, so the item stays in the corpse with a 4 px hop, the bag flashes red and a dull thud plays [I]. Canary prints "Attention! The container for {category} is full." in the loud style only if the last warning was over 15,000 ms ago, and repeats go to a quieter line [V, S8]. Spam the click to watch the throttle. Free a slot to see the normal path. Tick Spill to see why overflow must never land on a shared tile, where it becomes public and a stranger walks off with it [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG owner-->
+<figure class="fig" data-demo="owner" id="fig-owner">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Top damage owns the corpse, and the first attacker counts 1.3 times</h4><span class="illu">Damage values are illustrative; the windows are Asterion's proposal</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="120" aria-label="Three players, A, B and C, fight a goblin while a stranger D watches. After the kill each player shows a padlock with seconds left, or OWNER, HELPER or PUBLIC. Below, damage bars with the first attacker's bonus hatched, and a 25 second timeline with the owner, helper and public windows and a playhead"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="play">Play</button>
+    <button type="button" class="btn ghost" data-b="refight">Refight</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="w13" checked> First attacker ×1.3</label>
+    <label><input type="checkbox" data-k="party"> B in A's party</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Watch the fight, then drag the timeline. Canary and TFS give the corpse to the top damage dealer, and the last hit does not matter [V, S10, S25]. rAthena adds 30% of total damage to the first attacker's ranking [V, S65]. Asterion weights the first attacker's damage by 1.3, so in the first fight A, who pulled, beats the higher-damage B [I]. Untick it and B takes the corpse. The owner and party have 15 s, players with at least 10% of the damage join until 20 s, then anyone may loot [I]. C did under 10% and waits for public. Non-owners see a padlock with the time left [I]. It costs one owner ID and one deadline per corpse [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timers-->
+<figure class="fig" data-demo="timers" id="fig-timers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Ownership timers side by side, and three ways to show a private drop</h4><span class="illu">The 10 s window in the lower panel is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="140" aria-label="Horizontal bars, one per game, show how long a drop stays with its owner, then a party or helpers, then the public. A red tick marks when the item is gone, an arrow that it runs on. A playhead sweeps across"></canvas><div class="hud" data-hud></div></div></div><div style="max-width:680px;"><div class="stage click"><canvas width="170" height="56" aria-label="Three panels show the same drop to a stranger. In the first it is hidden, in the second greyed out, in the third a corpse with a padlock and the seconds left"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="scale" role="group" aria-label="Time scale"><button type="button" class="on" data-v="180">0 to 180 s</button><button type="button" data-v="30">0 to 30 s</button></div>
+    <div class="seg" data-seg="view" role="group" aria-label="Seen by"><button type="button" class="on" data-v="stranger">A stranger</button><button type="button" data-v="owner">The owner</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each bar is one rule from §6b; click a row to read it. Tibia's owner holds only the first corpse stage, 10 s, then the corpse is public until it rots [V, S10, S11, S12]. OSRS hides drops for 60 s, shows tradeables 120 s more and keeps untradeables private for 180 s [V, S48, S49]. rAthena staggers 3 + 2 + 2 s by damage rank, 10 + 10 + 2 s for MVPs, and items are gone at 60 s [V, S65]. Cosmic MapleStory gives the killer or party 15 s and expires items at 180 s [V, S71, S72]. For player corpses, Albion's black zone gives 90 s of priority [V, S76] and Felucca lets anyone loot [V, S80, S81]. Guild Wars 2 gives every contributor personal loot [V, S120]. Corpse games use 3 to 22 s, and OSRS needs 60 s because players must walk to ground items [V, S48; I, note 04]. Below, the same drop seen by a stranger. OSRS hides it, Cosmic sends the owner ID so the client can grey it [V, S71], and Canary shows a plain corpse and blocks the open [V, S7, S21]. Asterion shows and marks it with the time left [I]. Click the panels.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG partymodes-->
+<figure class="fig" data-demo="partymodes" id="fig-partymodes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One drop, a party of four, five rules</h4><span class="illu">Reaction times, latencies and shares are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="120" aria-label="A party of four, a tank, two damage dealers and a healer, around a goblin. Each kill drops an item that flies to the winner under the chosen rule; tags above heads show click times, turns, rolls or scores. Below, a bar per player counts items won"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Loot rule"><button type="button" class="on" data-v="ffa">Free for all</button><button type="button" data-v="rr">Round robin</button><button type="button" data-v="ng">Need / greed</button><button type="button" data-v="personal">Personal</button><button type="button" data-v="chest">Boss chest</button></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="kill">Kill</button>
+    <button type="button" class="btn ghost" data-b="kill20">Kill 20</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click Kill, or Kill 20 for a tally. Free for all hands the item to the fastest click plus latency, so the healer on a phone rarely wins [I]. Round robin takes turns, and "a savvy player can manipulate the order" [V, S113]. Need before greed lets C press Need on everything, the classic ninja tactic [V, S113, S115]. Personal loot gives each player their own drop, as Guild Wars 2 does [V, S120]. The boss reward chest scores each player as the mean of their shares of damage dealt, damage taken and healing, and only the top score rolls unique items [V, S15]. Here the healer tops it. Canary's loot factor starts from 1 / n^(1/3) and scales with how far a player beats the expected 1 / n [V, S15]. Asterion keeps Tibia's shared open by default, offers round robin for rare and up, and gives bosses reward chests [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG race-->
+<figure class="fig" data-demo="race" id="fig-race">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Two players, one coin: does the better connection always win?</h4><span class="illu">Press timing, within 80 ms of each other, is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="112" aria-label="Two players on either side of a coin both click it. Their packets travel as dots to a server box at the top. The coin flies to the winner and the loser reads Sorry, not possible. A timeline below shows each click and arrival in milliseconds, with tick edges in tick mode"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Server rule"><button type="button" class="on" data-v="first">First packet wins</button><button type="button" data-v="tick">100 ms ticks, rotating rank</button></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="go">Race</button>
+    <button type="button" class="btn ghost" data-b="run">100 races</button>
+  </div>
+  <div class="ctl">
+    <label class="rng">P1 latency <input type="range" min="0" max="300" step="5" value="20" data-k="la"><output data-o="la">20 ms</output></label>
+    <label class="rng">P2 latency <input type="range" min="0" max="300" step="5" value="120" data-k="lb"><output data-o="lb">120 ms</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click Race or 100 races and move the latency sliders. TFS takes the first request that reaches its single logic thread, and the loser reads "Sorry, not possible." [V, S22, S30]. That hands nearly every race to the better connection, never a phone. OSRS collects actions per 600 ms tick and processes players by an ID that reshuffles every 60 to 90 s [V, S51, S52]. Asterion collects pickups for one 100 ms tick and settles a same-tick tie by a rank that rotates every 60 s [I]. Vertical lines on the timeline are tick edges, and each race here is 6 s of game time after the last. Set the two latencies within 100 ms of each other to watch the rank settle ties. Owner windows remove most races before they start, since only public items can race [I]. The cost is at most 100 ms on a pickup and one sort per tick [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG predict-->
+<figure class="fig" data-demo="predict" id="fig-predict">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The click answers at once, the item leaves only on the server's yes</h4><span class="illu">The tick wait, 0 to 100 ms, is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="104" aria-label="A hero next to a ring on the ground and another player further right. A bag counter sits top right. Below, a timeline shows the client row and the server row, with the request, the server's decision and the reply"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="pick">Pick up</button>
+    <label class="rng">Round trip <input type="range" min="0" max="400" step="10" value="150" data-k="rtt"><output data-o="rtt">150 ms</output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Client prediction"><button type="button" data-v="wait">Wait for server</button><button type="button" class="on" data-v="cos">Cosmetic</button><button type="button" data-v="full">Full prediction</button></div>
+    <label><input type="checkbox" data-k="rej"> Someone else gets it first</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click the ring and drag the round trip. Wait for server shows nothing until the reply, as Tibia and OSRS do [V, S36; I, note 06]. Cosmetic prediction plays a soft tick and a 4 px hop at once while the item stays. It flies the item to the bag on <code>PICK_OK</code> and settles it with a 2 px shake over 120 ms and the reason on <code>PICK_FAIL</code> [I]. Tick "Someone else gets it first" to see a rejection. The ring then flies to the other player, since others' pickups arrive as removes with the picker's ID [I]. Full prediction takes the item at once and has to pull it back out of the bag, which reads as a dupe or a bug [I]. Path of Exile's predictive mode drew desync complaints and led to Lockstep in 2.0.0 [V, S107, S108]. The flight waits one round trip plus up to one tick [V, S36; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dupe-->
+<figure class="fig" data-demo="dupe" id="fig-dupe">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Crash between two saves and the sword exists twice</h4><span class="illu">Slot numbers and the GUID are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="A house chest on the left and a hero with a backpack on the right. A sword moves from the chest to the bag. Below, the steps of the move on the left and the database rows on the right. After a crash the restart shows one sword or two"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Storage"><button type="button" class="on" data-v="two">Two saves (TFS)</button><button type="button" data-v="guid">GUID + one transaction</button></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="next">Next step</button>
+    <button type="button" class="btn ghost" data-b="crash">Crash here</button>
+    <button type="button" class="btn ghost" data-b="auto">Auto play</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Step through a move of a sword from a house chest to a backpack, or let it play. TFS runs every item move on one dispatcher thread, finds the item again, rejects it if the sprite ID changed, checks reach and moves it [V, S22, S30]. It stores player items by player, parent and slot with no item ID, and saves players and houses as separate transactions [V, S31, S22]. Crash after the player save and before the house save. The restart loads the sword in both places, the clone OTLand users report [U, S39]. Then switch to GUID mode. One items table holds every item with its container, and a move is one <code>UPDATE ... WHERE guid = ? AND container = ?</code>, so a crash leaves the sword in one place [I]. Zero rows updated means someone else won [I]. New World disabled wealth transfers in November 2021 over a gold dupe tied to lag during a trade [V, S122].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG aoi-->
+<figure class="fig" data-demo="aoi" id="fig-aoi">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Send items only to viewers in range, ten per tile, and clean up from a heap</h4><span class="illu">Map, paths, drop rate and the 30 s item life are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="134" aria-label="A zoomed-out map with four players, each with a dashed view box. Items appear as coloured dots; packets fly as dots from each new or removed item to every player whose box holds it. Items blink before they despawn. A panel shows the busiest tile, with items over the cap crossed out"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="boss">Boss spill</button>
+    <label class="rng">Drops <input type="range" min="0" max="20" step="1" value="4" data-k="rate"><output data-o="rate">4 /s</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="cap" checked> 10 per tile</label>
+    <label><input type="checkbox" data-k="merge" checked> Merge coins</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dashed box is one client's view of 18 x 14 tiles, Tibia's size [V, S29]. A drop sends the proposed 20 byte add to every client whose view holds the tile, and a despawn sends a 9 byte remove [I]. Tibia's are 10 and 7 bytes [V, S27]. Press Boss spill. A Tibia client gets at most 10 things per tile [V, S23, S34, S37], so the top 10 by tier go out and the rest wait, crossed out in the panel [I]. Merging puts a new coin into a coin already on the tile at drop time [I]; the update that sends is not counted here. Despawns pop from a timestamp heap with one wake-up, as Canary keeps a timestamp-sorted map [V, S23, S17], and items blink for their last 10 s [I]. A 15 item boss spill to 30 viewers is a 9 KB burst [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crowd-->
+<figure class="fig" data-demo="crowd" id="fig-crowd">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Thirty players around a boss: the full show for you, almost none for strangers</h4><span class="illu">Item mix and owners are illustrative; the ms readout is measured live</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="120" aria-label="Thirty players ring a dead boss while its loot spills. Your items arc, glow and carry labels; party items glow; strangers' items sit flat with no glow. A small bar at the bottom left compares the visible item count with a 200 item budget"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="kill">Kill the boss</button>
+    <label class="rng">Items <input type="range" min="50" max="600" step="10" value="200" data-k="n"><output data-o="n">200</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="lod" checked> Crowd LOD</label>
+    <label><input type="checkbox" data-k="hold"> Hold the label key</label>
+    <label><input type="checkbox" data-k="naive"> Naive render</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Push the item count and toggle crowd LOD. Your items arc, glow, beam, sting and get labels. Party items arc and glow and show labels while you hold the key. Strangers' items appear already landed, with no glow, no label and no sound, and only legendaries get a 2 s beam [I]. WoW's Spell Density and FFXIV's battle effects split own, party and others the same way [V, S3]. Naive render swaps the halo sprites for <code>shadowBlur</code> and the bitmap font for <code>fillText</code>. The report measured this scene at 200 items as 1.14 ms cheap against 4.85 ms naive on the M4 GPU, and 2.46 against 13.38 ms at 600 [V, S5]. Clarity caps the count before cost does, so design for about 200 visible ground items per screen [V, S5; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG deathroll-->
+<figure class="fig" data-demo="deathroll" id="fig-deathroll">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia death: the backpack almost surely, each other slot a tenth of that</h4><span class="illu">The ten items are illustrative; the table is Canary's</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="116" aria-label="A ten-slot inventory in the top left. On a death, lost items arc out of their slots onto your corpse on the right. Below, a histogram counts how many items 1000 deaths lost, with the mean"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="bless" role="group" aria-label="Blessings"><button type="button" class="on" data-v="0">0</button><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button></div>
+    <button type="button" class="btn warm" data-b="die">Die</button>
+    <button type="button" class="btn ghost" data-b="many">1000 deaths</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="skull"> Red skull</label>
+    <label><input type="checkbox" data-k="aol"> Amulet of loss</label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="clock"> Seed from the clock each death (Canary)</label>
+    <button type="button" class="btn ghost" data-b="twice">Two deaths in one second</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Pick blessings and click Die, or roll 1000 deaths. Canary drops the backpack with a 100, 70, 45, 25, 10 or 0% chance for 0 to 5 blessings, and every other slot with a tenth of that, into your own corpse [V, S16]. With no blessings that is a 61% chance to lose at least one of the 9 other pieces [I, note 05]. A red skull drops everything, and an amulet of loss skips the roll unless skulled [V, S16, S33]. Canary seeds its random generator from the clock inside every <code>DropLoot</code> call, so two deaths in one second share their rolls [V, S16; I, note 05]. Tick it and press Two deaths in one second. Asterion keeps the table as data and seeds one generator once [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG protect-->
+<figure class="fig" data-demo="protect" id="fig-protect">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One inventory, four safety valves</h4><span class="illu">Item prices are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="114" aria-label="Four columns, OSRS, Tibia, UO and Albion, each with the same ten items. Kept items are framed in their tier colour, dropped items are dimmed on red, destroyed items are crossed out. A bar under each column shows the share of value kept"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="die">Die again</button>
+    <label><input type="checkbox" data-k="skull"> Skulled</label>
+    <label><input type="checkbox" data-k="pi"> Protect Item</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Tibia blessings <input type="range" min="0" max="5" step="1" value="0" data-k="bless"><output data-o="bless">0</output></label>
+    <label class="rng">UO insured items <input type="range" min="0" max="10" step="1" value="3" data-k="ins"><output data-o="ins">3</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The same ten items under four rules, most valuable first. OSRS keeps the 3 most valuable unskulled, plus 1 with Protect Item, and 0 when skulled [V, S54]. Tibia rolls the blessing table and drops everything on a red skull [V, S16]. Ultima Online returns insured items, and the killer of an insured player receives the premium of 10 to 800 gp per item [V, S80]. Albion drops everything in the black zone [V, S77], and a reported 33% of dropped items are destroyed [U, S78]. Every full-loot game keeps a valve [I, note 05]. Asterion keeps 3 for unskulled players plus Canary's free blessing to level 21, and a skull means consent to full loot [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG grave-->
+<figure class="fig" data-demo="grave" id="fig-grave">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A grave clock that stops when you disconnect</h4><span class="illu">Time runs 60 or 240 times faster</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="96" aria-label="Three lanes. An OSRS grave with a 15 minute bar, a Tibia corpse with two 20 minute lootable stages and a bones stage, and an Asterion corpse with a 20 minute bar. The status line shows online or offline and the game time"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="net">Disconnect</button>
+    <button type="button" class="btn ghost" data-b="die">Die again</button>
+    <div class="seg" data-seg="spd" role="group" aria-label="Speed"><button type="button" class="on" data-v="60">60x</button><button type="button" data-v="240">240x</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click Disconnect and watch which clocks stop. An OSRS grave lasts 15 minutes after respawn, and its timer pauses while the player is offline [V, S55]. A Tibia player corpse is lootable for 1,200 + 1,200 s and then lies as bones for 1,200 s, online or not [V, S12]. Asterion's PvE corpse is the grave, lootable for 1,200 s with a pause while the owner is offline, and PvP corpses do not pause [I]. The pause answers "my internet dropped and I lost everything" [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG corpseloot-->
+<figure class="fig" data-demo="corpseloot" id="fig-corpseloot">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Who opens a player corpse first</h4><span class="illu">Positions and the stranger's path are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="108" aria-label="A dead player lies in the middle. Two red killers stand on the left, a green friend on the right, and a grey stranger walks in from the corner. Depending on the rule the stranger loots at once, waits behind a padlock and then channels, or finds nothing. Below, a death recap lists the lost items and the killers"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Rule"><button type="button" class="on" data-v="ast">Asterion</button><button type="button" data-v="tibia">Tibia</button><button type="button" data-v="osrs">OSRS loot key</button></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="kill">Kill again</button>
+    <button type="button" class="btn ghost" data-b="hit">Hit the stranger</button>
+    <button type="button" class="btn ghost" data-b="friends">Friends loot all</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Pick a rule and watch the stranger. Tibia player corpses have no owner, so anyone on screen opens them at once [V, S10, S6]. Asterion gives the killer's group and the victim's party 60 s, shown here 10x faster, then outsiders loot through a 1.5 s channel that damage interrupts and wear a yellow name for 2 min [I]. Click Hit the stranger during the channel, or Friends loot all to win the body back [I]. Albion gives the killing blow, the top damage dealer and both sides' allies 90 s [V, S76]. OSRS loot keys put the victim's loot in a key in the killer's inventory, at most 5, pickable only by the killer [V, S57]. Click the corpse to read it. TFS and Canary describe a player corpse as "You recognize X. He was killed by Y" [V, S32, S13]. The recap below lists the lost items in tier colours and the killers [I].</figcaption>
+</figure>
+<!--/FIG-->

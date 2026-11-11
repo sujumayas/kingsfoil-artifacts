@@ -1,0 +1,69 @@
+/* ===================== Combat juice study (Game feel #2): a torch-lit dungeon, steel, blood and gold ===================== */
+body{background:radial-gradient(1000px 520px at 82% -160px,rgba(236,122,92,.08),transparent 70%),radial-gradient(760px 420px at 6% 0,rgba(127,176,255,.05),transparent 70%),var(--bg)}
+.hero{background:linear-gradient(#100d15,#15121b 82%);border-bottom:1px solid var(--line)}
+.hero h1{color:var(--ice);text-shadow:2px 3px 0 #3a1c22,4px 6px 0 #0a080e}
+.hero .by{color:var(--ember)}
+.hero-fig .stage{border:3px solid #3a3348;box-shadow:0 0 0 2px #7d7390,0 0 0 5px #1a1622,0 14px 40px rgba(0,0,0,.45);border-radius:3px;background:#241f2d}
+.hero-fig .stage canvas{background:#241f2d}
+.hero-tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px}
+.hero-tiers button{background:#1b1722;border:1px solid var(--line);border-bottom:2px solid transparent;color:var(--mute);font:500 13px "IBM Plex Sans",sans-serif;padding:6px 4px;cursor:pointer;border-radius:3px 3px 0 0}
+.hero-tiers button:hover{color:var(--txt);border-color:var(--line2)}
+.hero-tiers button.on{color:var(--warm);border-bottom-color:var(--warm);background:#2b2436}
+.deck code{font-size:.82em}
+a{text-decoration-color:rgba(243,226,184,.35)}
+.btn{background:#241f2d}
+.btn.warm{background:var(--warm);border-color:var(--warm);color:#17121c}
+.btn.warm:hover{background:#f7d77e;border-color:#f7d77e}
+.fig-n{color:#17121c;background:var(--warm)}
+.illu{color:var(--ember);border-color:rgba(217,160,102,.55)}
+code{color:#f7d77e;background:rgba(242,193,78,.08)}
+pre.code{border-left-color:var(--ember)}
+.secn{color:var(--ember)}
+.exec>ol>li::before{color:var(--warm)}
+.famh span{border-color:var(--ember);color:var(--ember)}
+.tp-id{background:var(--warm);color:#17121c}
+.tp-sum{color:var(--warm)}
+.rb span{background:var(--ember)}
+.rb:nth-child(2) span{background:var(--warm)}
+.rbar span{background:var(--ember)}
+.rlist li:nth-child(2) .rbar span{background:var(--warm)}
+.tp-fig{margin:10px 0 0;font-size:14px;color:var(--mute)}
+.ctl input[type=range]{accent-color:var(--warm)}
+.ctl .btn.on,.seg button.on{background:var(--warm);color:#17121c}
+.road>ol>li::before{background:var(--ember)}
+.layer b{background:var(--ember)}
+.layer.srv b{background:var(--warm)}
+.toc a.on{border-left-color:var(--warm)}
+.cta{border-left-color:var(--warm)}
+.learn>ol>li strong:first-child{color:var(--warm)}
+.fig{background:linear-gradient(#221d2b,#1d1924);border-color:var(--line)}
+/* whole-pixel canvases (core.js crispAll): the stage shrinks to the canvas and centres */
+.stage.fit{width:max-content;max-width:100%;margin-left:auto;margin-right:auto}
+.stage{background:#241f2d}
+.hud{background:rgba(20,14,11,.86);color:#f3eef5}
+/* generic figure grids */
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.duo.wide-l{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+.legend-mini{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--mute);margin-top:6px}
+.legend-mini i{display:inline-block;width:12px;height:3px;vertical-align:3px;margin-right:5px}
+svg.chart{background:#110e16;border:1px solid var(--line);border-radius:4px}
+.chart .gl{stroke:#2a2435}
+.chart text{fill:#a39cae}
+.chart .lab{fill:#ebe5ee}
+.chart text.v{fill:var(--txt)}
+.chart .now{stroke:#f3eef5;stroke-width:1.2;stroke-dasharray:3 2}
+.ctl[hidden]{display:none}
+/* ===================== combat juice figures ===================== */
+.hs-chart,.tr-chart{width:100%;max-width:560px;display:block;margin:8px auto 0}
+.tr-chart{max-width:640px}
+.fig .stage.click canvas{cursor:pointer}
+@media (max-width:640px){.duo{grid-template-columns:minmax(0,1fr)}.hero h1{text-shadow:1px 2px 0 #3a1c22}
+  .hero-tiers{grid-template-columns:repeat(2,1fr)}.hero-tiers button{font-size:12.5px;padding:6px 2px}.ctl .btn{padding:5px 8px}}
+.crit-chart{width:100%;max-width:640px;display:block;margin:8px auto 0}
+.ctl .lbl{font-size:13px;color:var(--mute)}
+/* ===================== loot figures ===================== */
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;box-shadow:0 0 0 1px #1a1420}
+table.tstyle{font-size:12.5px}
+table.tstyle td,table.tstyle th{padding:4px 6px;white-space:nowrap}
+.ctl .btn[aria-pressed=true]{background:var(--warm);color:#17121c;border-color:var(--warm)}
+.cost-mach{font-size:12.5px;color:var(--mute);margin:8px 0 0}

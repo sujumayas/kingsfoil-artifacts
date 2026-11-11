@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Loot and pickup in a top-down pixel MMORPG: drops, reveals, pickup, sharing and death</h1>
+      <p class="deck">A Tibia monster dies into a corpse that already holds its loot, and a chat line says what dropped. Nothing pops, glows or flies, and players click corpses so fast that any animation feels like lag. The ARPGs throw items out of the body on a 400 to 650 ms arc, ring them on landing and stand a beam over the rare ones. Both break when 30 players share a screen. This study follows the item from the corpse into the bag. It covers containers and spills, the drop arc, five rarity tiers, labels on demand, quick loot, magnets, who owns a drop and for how long, races and prediction over a server, and what a player loses on death. We measured what loot costs to draw. Items are cheap; blurred glows and per-glyph labels are not. Aimed at Godot 4 on the web and a server-authoritative MMO.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="feel-loot-pickup-sandbox.html">Play the Loot and Pickup Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage" data-nofit><canvas width="192" height="108" aria-label="A live grass field at 192 by 108 pixels: a knight kills a goblin, its loot pops out on short arcs with floor shadows in tier order, a legendary beam rises, labels appear, gold slides to the knight and items fly into the bag"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Drop style"><button type="button" data-t="0">Corpse</button><button type="button" data-t="1">Spill</button><button type="button" data-t="2">Crowd</button><button type="button" data-t="3">Plain</button></div>
+      <figcaption>Live, and timed on your device. Everything is drawn in code at 192×108 on 16 px tiles, half of Asterion's 32 px, so every pixel distance here is half the Asterion value. <b>Corpse</b> is the Tibia way. The goblin dies into a container with a tier glint, a loot line names what dropped, and a click empties it. <b>Spill</b> throws the loot onto the grass on 400 ms arcs with a 10 px apex, a floor shadow and a 40 ms stagger, commons first and the legendary last under its beam. Labels show for a moment, gold slides to the knight from 1 tile and items fly 250 ms to the bag. <b>Crowd</b> adds green allies whose drops land with no arc, no glow and no label, and their beam lasts 2 s. <b>Plain</b> keeps only the items and the bag. Drop rolls are made up. The HUD shows the JavaScript cost of the frame.</figcaption>
+    </figure>
+  </div>
+</header>

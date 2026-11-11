@@ -1,0 +1,421 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Loot bench</title>
+<style>body{background:#111;color:#ddd;font:12px monospace;margin:0}canvas{image-rendering:pixelated;display:block}
+#wrap{position:relative;width:1280px;height:720px;overflow:hidden}
+#dom{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none}
+#dom span{position:absolute;left:0;top:0;font:bold 20px monospace;line-height:24px;padding:0 4px;background:rgba(0,0,0,.55);white-space:nowrap;will-change:transform}</style></head>
+<body>
+<div id="wrap"><div id="dom"></div></div>
+<p>Loot bench. Call <code>runAll({frames, sections})</code> from the console or run.py. No external assets.</p>
+<pre id="log"></pre>
+<script>
+// ======================================================================
+// Setup. Logical 320x180 Canvas2D, upscaled x4 to a 1280x720 display canvas (pixelated).
+// ======================================================================
+const W = 320, H = 180, S = 4;
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const reseed = (s) => { seed = s; };
+const q = (a, p) => a[Math.min(a.length - 1, Math.floor(p * a.length))];
+function stats(times) {
+  times.sort((a, b) => a - b);
+  return { median_ms: +q(times, .5).toFixed(4), mean_ms: +(times.reduce((a, b) => a + b, 0) / times.length).toFixed(4), p95_ms: +q(times, .95).toFixed(4), min_ms: +times[0].toFixed(4) };
+}
+let sink = 0;
+function cv(w, h, opts) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', opts); x.imageSmoothingEnabled = false; return [c, x]; }
+
+// Rarity tiers: common, uncommon, rare, epic, legendary
+const RAR = ['#c8c8c8', '#4fd04f', '#4f8fff', '#b050ff', '#ff9020'];
+const RAR_RGB = [[200,200,200],[79,208,79],[79,143,255],[176,80,255],[255,144,32]];
+const RAR_W = [0.55, 0.25, 0.12, 0.06, 0.02];
+function pickTier() { let r = rnd(), a = 0; for (let i = 0; i < 5; i++) { a += RAR_W[i]; if (r < a) return i; } return 4; }
+
+// 8 item shapes x 5 tiers, 16x16 cells, 1 px dark outline
+const SHAPES = [
+  [[5,5,6,6]], [[7,2,2,10],[5,10,6,2],[7,12,2,2]], [[6,3,4,2],[5,5,6,8]], [[4,3,8,8],[5,11,6,2],[7,13,2,1]],
+  [[6,4,4,2],[5,6,6,3],[6,9,4,2],[7,11,2,1]], [[5,5,6,1],[5,10,6,1],[5,5,1,6],[10,5,1,6]], [[3,7,10,2],[2,6,2,4],[12,6,2,4]], [[5,4,6,2],[4,6,8,7]] ];
+function buildItemAtlas() {
+  const [c, x] = cv(128, 80);
+  for (let t = 0; t < 5; t++) for (let s = 0; s < 8; s++) {
+    const ox = s * 16, oy = t * 16;
+    x.fillStyle = '#141018'; for (const r of SHAPES[s]) x.fillRect(ox + r[0] - 1, oy + r[1] - 1, r[2] + 2, r[3] + 2);
+    x.fillStyle = RAR[t]; for (const r of SHAPES[s]) x.fillRect(ox + r[0], oy + r[1], r[2], r[3]);
+    x.fillStyle = '#fff'; const r0 = SHAPES[s][0]; x.fillRect(ox + r0[0], oy + r0[1], 1, 1);
+  }
+  return c;
+}
+// Halo: 24x24 per tier, alpha quantized to 4 steps (pixel look); 4 pre-baked pulse rows
+function buildHaloAtlas() {
+  const [c, x] = cv(120, 96); const id = x.createImageData(120, 96);
+  const pulse = [0.55, 0.7, 0.85, 1.0];
+  for (let pr = 0; pr < 4; pr++) for (let t = 0; t < 5; t++) for (let py = 0; py < 24; py++) for (let px = 0; px < 24; px++) {
+    const d = Math.hypot(px - 11.5, py - 11.5) / 12; if (d >= 1) continue;
+    const a = Math.round(Math.pow(1 - d, 1.5) * 4) / 4 * 0.75 * pulse[pr]; const p = ((pr * 24 + py) * 120 + t * 24 + px) * 4;
+    id.data[p] = RAR_RGB[t][0]; id.data[p+1] = RAR_RGB[t][1]; id.data[p+2] = RAR_RGB[t][2]; id.data[p+3] = a * 255;
+  }
+  x.putImageData(id, 0, 0); return c;
+}
+// Beam: 8x80 per tier, bright 2 px core, fades upward in 6 bands
+function buildBeamAtlas() {
+  const [c, x] = cv(40, 80); const id = x.createImageData(40, 80);
+  for (let t = 0; t < 5; t++) for (let py = 0; py < 80; py++) for (let px = 0; px < 8; px++) {
+    const v = Math.floor((py / 80) * 6) / 6; const h = (px === 3 || px === 4) ? 1 : (px === 2 || px === 5) ? 0.55 : 0.25;
+    const p = (py * 40 + t * 8 + px) * 4; const core = (px === 3 || px === 4) ? 0.5 : 0;
+    id.data[p] = Math.min(255, RAR_RGB[t][0] + core * 255); id.data[p+1] = Math.min(255, RAR_RGB[t][1] + core * 255); id.data[p+2] = Math.min(255, RAR_RGB[t][2] + core * 255);
+    id.data[p+3] = v * h * 255;
+  }
+  x.putImageData(id, 0, 0); return c;
+}
+function buildShadow() { const [c, x] = cv(10, 4); x.fillStyle = 'rgba(0,0,0,0.4)'; x.fillRect(2, 0, 6, 4); x.fillRect(0, 1, 10, 2); return c; }
+function buildTile(v) { const [c, x] = cv(16, 16); x.fillStyle = v ? '#3a4a3a' : '#404a40'; x.fillRect(0, 0, 16, 16); x.fillStyle = '#2c382c'; for (let i = 0; i < 6; i++) x.fillRect((i * 13 + v * 7) % 15, (i * 7 + v * 5) % 15, 2, 1); return c; }
+function buildPlayer() { const [c, x] = cv(16, 16); x.fillStyle = '#101018'; x.fillRect(4, 1, 8, 15); x.fillStyle = '#3060a0'; x.fillRect(5, 6, 6, 9); x.fillStyle = '#e0b090'; x.fillRect(5, 2, 6, 4); return c; }
+function buildCorpse() { const [c, x] = cv(32, 32); x.fillStyle = '#201010'; x.fillRect(2, 14, 28, 14); x.fillStyle = '#6a2a1a'; x.fillRect(3, 15, 26, 12); x.fillStyle = '#a04030'; x.fillRect(6, 17, 10, 4); return c; }
+
+// 3x5 uppercase pixel font, outlined to a 5x7 cell, advance 4 px. Index 0 is space.
+const FONT = ' 010101111101101 110101110101110 011100100100011 110101101101110 111100110100111 111100110100100 011100101101011 101101111101101 111010010010111 001001001101010 101101110101101 100100100100111 101111111101101 110101101101101 010101101101010 110101110100100 010101101110011 110101110101101 011100010001110 111010010010010 101101101101111 101101101101010 101101111111101 101101010101101 101101010010010 111001010100111'.split(' ');
+FONT[0] = '000000000000000';
+function buildFontAtlas() {
+  const w = 27 * 5, h = 7 * 5; const [c, x] = cv(w, h); const id = x.createImageData(w, h);
+  const on = (g, cx, cy) => cx >= 0 && cx < 3 && cy >= 0 && cy < 5 && FONT[g][cy * 3 + cx] === '1';
+  for (let t = 0; t < 5; t++) for (let g = 0; g < 27; g++) for (let py = 0; py < 7; py++) for (let px = 0; px < 5; px++) {
+    const cx = px - 1, cy = py - 1; const p = ((t * 7 + py) * w + g * 5 + px) * 4;
+    if (on(g, cx, cy)) { id.data[p] = RAR_RGB[t][0]; id.data[p+1] = RAR_RGB[t][1]; id.data[p+2] = RAR_RGB[t][2]; id.data[p+3] = 255; }
+    else { let n = false; for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) if (on(g, cx + ox, cy + oy)) n = true; if (n) id.data[p+3] = 255; }
+  }
+  x.putImageData(id, 0, 0); return c;
+}
+const NAMES = ['GOLD COINS', 'DRAGON SCALE', 'FIRE SWORD', 'HEALTH POTION', 'PLATE ARMOR', 'SMALL RUBY', 'MAGIC RING', 'BONE', 'MEAT', 'CROWN SHIELD', 'GIANT SWORD', 'BLUE GEM', 'ROPE', 'SCROLL', 'BAG', 'DEMON HELMET'];
+const glyphIdx = (ch) => ch === ' ' ? 0 : ch.charCodeAt(0) - 64;
+const labelW = (name) => name.length * 4 + 3;
+const LH = 9;
+
+// ---- target (one, reused) ----
+const T = {};
+function setup() {
+  const [c, ctx] = cv(W, H); T.c = c; T.ctx = ctx;
+  const disp = document.createElement('canvas'); disp.width = W * S; disp.height = H * S; T.disp = disp; T.dctx = disp.getContext('2d'); T.dctx.imageSmoothingEnabled = false;
+  document.getElementById('wrap').insertBefore(disp, document.getElementById('dom'));
+  const [ov, octx] = cv(W * S, H * S); T.ov = ov; T.octx = octx;            // native-res text overlay
+  const [pr, pctx] = cv(1, 1, { willReadFrequently: true }); T.probe = pctx; // CPU-backed 1x1 probe
+  T.items = buildItemAtlas(); T.halo = buildHaloAtlas(); T.beam = buildBeamAtlas(); T.shadow = buildShadow();
+  T.tiles = [buildTile(0), buildTile(1)]; T.player = buildPlayer(); T.corpse = buildCorpse(); T.font = buildFontAtlas();
+  // pre-rendered label sprites: (a) one canvas per label, (b) one shelf-packed atlas
+  T.labelCanvases = new Map(); T.labelRects = new Map();
+  const [la, lax] = cv(512, 256); T.labelAtlas = la; let sx = 0, sy = 0;
+  for (let t = 0; t < 5; t++) for (const n of NAMES) {
+    const w = labelW(n); const [lc, lx] = cv(w, LH); drawLabelGlyphs(lx, n, t, 0, 0); T.labelCanvases.set(n + t, lc);
+    if (sx + w > 512) { sx = 0; sy += LH + 1; } drawLabelGlyphs(lax, n, t, sx, sy); T.labelRects.set(n + t, [sx, sy, w]); sx += w + 1;
+  }
+  T.textW = new Map(); ctx.font = '6px monospace'; for (const n of NAMES) T.textW.set(n, Math.ceil(ctx.measureText(n).width) + 2);
+  T.octx.font = 'bold 20px monospace'; T.textWo = new Map(); for (const n of NAMES) T.textWo.set(n, Math.ceil(T.octx.measureText(n).width) + 8);
+  // gradients cached per tier (origin at 0,0 going up 80 px)
+  T.grads = RAR_RGB.map(([r, g, b]) => { const gr = ctx.createLinearGradient(0, 0, 0, -80); gr.addColorStop(0, `rgba(${r},${g},${b},0.9)`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`); return gr; });
+}
+function drawLabelGlyphs(x, name, t, ox, oy) {
+  x.fillStyle = 'rgba(0,0,0,0.55)'; x.fillRect(ox, oy, labelW(name), LH);
+  for (let k = 0; k < name.length; k++) x.drawImage(T.font, glyphIdx(name[k]) * 5, t * 7, 5, 7, ox + 1 + k * 4, oy + 1, 5, 7);
+}
+function drawFloor(ctx) { for (let ty = 0; ty < 12; ty++) for (let tx = 0; tx < 20; tx++) ctx.drawImage(T.tiles[(tx * 7 + ty * 3) % 5 === 0 ? 1 : 0], tx * 16, ty * 16); }
+function present(useOverlay) {
+  T.dctx.drawImage(T.c, 0, 0, W * S, H * S);
+  if (useOverlay) T.dctx.drawImage(T.ov, 0, 0);
+  T.probe.drawImage(T.disp, 0, 0, 1, 1, 0, 0, 1, 1); sink += T.probe.getImageData(0, 0, 1, 1).data[0]; // forces the GPU to finish
+}
+const TGT = 'canvas2d_lowres320x180+upscale';
+function measure(name, frames, drawFn, extra, useOverlay) {
+  const times = [];
+  const run = (f) => { T.ctx.clearRect(0, 0, W, H); drawFloor(T.ctx); drawFn(T.ctx, f); present(useOverlay); };
+  let warm = 30; for (let f = 0; f < warm; f++) { const a = performance.now(); run(f); if (f === 1 && performance.now() - a > 40) { warm = 5; frames = Math.min(frames, 20); } }
+  for (let f = 0; f < frames; f++) { const a = performance.now(); run(f + 30); times.push(performance.now() - a); }
+  return Object.assign({ name, target: TGT, frames }, stats(times), extra || {});
+}
+function measureCPU(name, frames, fn, extra) {
+  const times = []; let warm = 30;
+  for (let f = 0; f < warm; f++) { const a = performance.now(); fn(f); if (f === 1 && performance.now() - a > 40) { warm = 5; frames = Math.min(frames, 20); } }
+  for (let f = 0; f < frames; f++) { const a = performance.now(); fn(f + 30); times.push(performance.now() - a); }
+  return Object.assign({ name, target: 'cpu_only', frames }, stats(times), extra || {});
+}
+
+// ---- items ----
+function makeItems(N, s) {
+  reseed(s || 7); const A = [];
+  for (let i = 0; i < N; i++) { const t = pickTier(); const x = 8 + rnd() * (W - 32), y = 24 + rnd() * (H - 44);
+    A.push({ x: Math.round(x), y: Math.round(y), x0: x, dx: (rnd() - 0.5) * 24, tier: t, shape: Math.floor(rnd() * 8), name: NAMES[Math.floor(rnd() * NAMES.length)], phase: Math.floor(rnd() * 90) }); }
+  return A;
+}
+const blitItem = (ctx, it, x, y) => ctx.drawImage(T.items, it.shape * 16, it.tier * 16, 16, 16, x, y, 16, 16);
+// pop arc: 400 ms rise+fall (24 f, 16 px peak), bounce 1 (10 f, 4 px), bounce 2 (6 f, 1.5 px), rest. Loops every 90 f.
+function arcH(k) { if (k < 24) { const t = k / 24; return 64 * t * (1 - t); } if (k < 34) { const t = (k - 24) / 10; return 16 * t * (1 - t); } if (k < 40) { const t = (k - 34) / 6; return 6 * t * (1 - t); } return 0; }
+const pulseA = (f, ph) => 0.7 + 0.3 * Math.sin((f + ph) * 0.1047);
+
+function runItems(frames) {
+  const res = [];
+  res.push(measure('baseline_floor_only', frames, () => {}, { section: 'items', n: 0 }));
+  for (const N of [50, 200, 1000, 3000]) {
+    const A = makeItems(N); const ex = { section: 'items', n: N };
+    res.push(measure('items_static_blit', frames, (ctx) => { for (const it of A) blitItem(ctx, it, it.x, it.y); }, ex));
+    res.push(measure('items_poparc_bounce_shadow', frames, (ctx, f) => {
+      for (const it of A) { const k = (f + it.phase) % 90; it.gx = Math.round(it.x0 + it.dx * Math.min(k / 40, 1)); it.h = Math.round(arcH(k)); ctx.drawImage(T.shadow, it.gx + 3, it.y + 12); }
+      for (const it of A) blitItem(ctx, it, it.gx, it.y - it.h); }, ex));
+    res.push(measure('glow_halo_sprite_alpha', frames, (ctx, f) => {
+      for (const it of A) { ctx.globalAlpha = pulseA(f, it.phase); ctx.drawImage(T.halo, it.tier * 24, 72, 24, 24, it.x - 4, it.y - 4, 24, 24); }
+      ctx.globalAlpha = 1; for (const it of A) blitItem(ctx, it, it.x, it.y); }, ex));
+    res.push(measure('glow_halo_sprite_prebaked_pulse', frames, (ctx, f) => {
+      for (const it of A) { const r = ((f + it.phase) >> 3) & 3; ctx.drawImage(T.halo, it.tier * 24, r * 24, 24, 24, it.x - 4, it.y - 4, 24, 24); }
+      for (const it of A) blitItem(ctx, it, it.x, it.y); }, ex));
+    res.push(measure('glow_halo_lighter_additive', frames, (ctx, f) => {
+      ctx.globalCompositeOperation = 'lighter';
+      for (const it of A) { const r = ((f + it.phase) >> 3) & 3; ctx.drawImage(T.halo, it.tier * 24, r * 24, 24, 24, it.x - 4, it.y - 4, 24, 24); }
+      ctx.globalCompositeOperation = 'source-over'; for (const it of A) blitItem(ctx, it, it.x, it.y); }, ex));
+    res.push(measure('glow_shadowBlur6', frames, (ctx) => {
+      ctx.shadowBlur = 6; for (const it of A) { ctx.shadowColor = RAR[it.tier]; blitItem(ctx, it, it.x, it.y); }
+      ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; }, ex));
+    res.push(measure('fly_to_bag_tween', frames, (ctx, f) => {
+      for (const it of A) { const k = (f + it.phase) % 24, t = k / 24, e = t * t * t; // ease-in cubic toward bag at (300,164)
+        const x = it.x + (300 - it.x) * e, y = it.y + (164 - it.y) * e - Math.sin(t * Math.PI) * 20, sc = 16 - 8 * t;
+        ctx.drawImage(T.items, it.shape * 16, it.tier * 16, 16, 16, Math.round(x), Math.round(y), Math.round(sc), Math.round(sc)); } }, ex));
+  }
+  return res;
+}
+
+function runBeams(frames) {
+  const res = [];
+  for (const N of [5, 20, 100, 300]) {
+    const A = makeItems(N, 9); for (const it of A) it.y = 90 + (it.y % 80); const ex = { section: 'beams', n: N };
+    res.push(measure('beam_gradient_new_per_frame', frames, (ctx, f) => { ctx.globalCompositeOperation = 'lighter';
+      for (const it of A) { const [r, g, b] = RAR_RGB[it.tier]; const a = pulseA(f, it.phase);
+        const gr = ctx.createLinearGradient(0, it.y, 0, it.y - 80); gr.addColorStop(0, `rgba(${r},${g},${b},${(0.9 * a).toFixed(2)})`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.fillStyle = gr; ctx.fillRect(it.x + 5, it.y - 80, 6, 80); }
+      ctx.globalCompositeOperation = 'source-over'; }, ex));
+    res.push(measure('beam_gradient_cached_translate', frames, (ctx, f) => { ctx.globalCompositeOperation = 'lighter';
+      for (const it of A) { ctx.globalAlpha = pulseA(f, it.phase); ctx.fillStyle = T.grads[it.tier]; ctx.setTransform(1, 0, 0, 1, it.x, it.y); ctx.fillRect(5, -80, 6, 80); }
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }, ex));
+    res.push(measure('beam_sprite_lighter', frames, (ctx, f) => { ctx.globalCompositeOperation = 'lighter';
+      for (const it of A) { ctx.globalAlpha = pulseA(f, it.phase); ctx.drawImage(T.beam, it.tier * 8, 0, 8, 80, it.x + 4, it.y - 80, 8, 80); }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }, ex));
+  }
+  return res;
+}
+
+function runLabels(frames) {
+  const res = [];
+  for (const N of [50, 200, 1000, 3000]) {
+    const A = makeItems(N, 13); const ex = { section: 'labels', n: N };
+    for (const it of A) { it.lx = Math.round(it.x + 8 - labelW(it.name) / 2); it.ly = it.y - 10; it.key = it.name + it.tier; it.rect = T.labelRects.get(it.key); it.lc = T.labelCanvases.get(it.key); }
+    res.push(measure('label_bitmap_glyphs', frames, (ctx) => { for (const it of A) drawLabelGlyphs(ctx, it.name, it.tier, it.lx, it.ly); }, ex));
+    res.push(measure('label_cached_canvas_each', frames, (ctx) => { for (const it of A) ctx.drawImage(it.lc, it.lx, it.ly); }, ex));
+    res.push(measure('label_cached_atlas', frames, (ctx) => { for (const it of A) { const r = it.rect; ctx.drawImage(T.labelAtlas, r[0], r[1], r[2], LH, it.lx, it.ly, r[2], LH); } }, ex));
+    res.push(measure('label_fillText_lowres6px', frames, (ctx) => { ctx.font = '6px monospace'; ctx.textBaseline = 'top';
+      for (const it of A) { ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(it.lx, it.ly, T.textW.get(it.name), LH); ctx.fillStyle = RAR[it.tier]; ctx.fillText(it.name, it.lx + 1, it.ly + 1); } }, ex));
+    res.push(measure('label_fillText_measure_each', frames, (ctx) => { ctx.font = '6px monospace'; ctx.textBaseline = 'top';
+      for (const it of A) { const w = ctx.measureText(it.name).width + 2; ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(it.lx, it.ly, w, LH); ctx.fillStyle = RAR[it.tier]; ctx.fillText(it.name, it.lx + 1, it.ly + 1); } }, ex));
+    res.push(measure('label_fillText_overlay1280', frames, () => { const o = T.octx; o.clearRect(0, 0, W * S, H * S); o.font = 'bold 20px monospace'; o.textBaseline = 'top';
+      for (const it of A) { o.fillStyle = 'rgba(0,0,0,0.55)'; o.fillRect(it.lx * S, it.ly * S, T.textWo.get(it.name), LH * S); o.fillStyle = RAR[it.tier]; o.fillText(it.name, it.lx * S + 4, it.ly * S + 6); } }, ex, true));
+  }
+  return res;
+}
+
+// ---- label overlap solver ----
+// Greedy: sort by tier desc then y. Each label tries its spot, then steps up by LH+1 px, up to 8 tries; else hidden.
+function makeSolver(N) {
+  const A = makeItems(N, 21);
+  const L = { n: N, x: new Float32Array(N), y: new Float32Array(N), w: new Float32Array(N), tier: new Int8Array(N), order: Array.from({ length: N }, (_, i) => i),
+    px: new Float32Array(N), py: new Float32Array(N), pw: new Float32Array(N), placed: 0, outY: new Float32Array(N) };
+  A.forEach((it, i) => { L.w[i] = labelW(it.name); L.x[i] = Math.round(it.x + 8 - L.w[i] / 2); L.y[i] = it.y - 10; L.tier[i] = it.tier; });
+  const GC = 32, GR = 16; L.cols = Math.ceil(W / GC) + 1; L.rows = Math.ceil(H / GR) + 1; L.cells = Array.from({ length: L.cols * L.rows }, () => []); L.GC = GC; L.GR = GR;
+  return L;
+}
+function sortLabels(L) { const { tier, y } = L; L.order.sort((a, b) => (tier[b] - tier[a]) || (y[a] - y[b])); }
+function hit(L, j, x, y, w) { return x < L.px[j] + L.pw[j] && x + w > L.px[j] && y < L.py[j] + LH && y + LH > L.py[j]; }
+function solveNaive(L, jitter) {
+  sortLabels(L); L.placed = 0; let checks = 0;
+  for (const i of L.order) { const x = L.x[i] + jitter, w = L.w[i]; let ok = false, y = L.y[i];
+    for (let k = 0; k < 8 && y >= 0; k++, y -= LH + 1) { let free = true; for (let j = 0; j < L.placed; j++) { checks++; if (hit(L, j, x, y, w)) { free = false; break; } } if (free) { ok = true; break; } }
+    if (ok) { const p = L.placed++; L.px[p] = x; L.py[p] = y; L.pw[p] = w; L.outY[i] = y; } else L.outY[i] = -999; }
+  return checks;
+}
+function solveGrid(L, jitter) {
+  sortLabels(L); L.placed = 0; const { cells, cols, rows, GC, GR } = L; for (const c of cells) c.length = 0; let checks = 0;
+  for (const i of L.order) { const x = L.x[i] + jitter, w = L.w[i]; let ok = false, y = L.y[i];
+    const c0 = Math.max(0, Math.floor(x / GC)), c1 = Math.min(cols - 1, Math.floor((x + w) / GC));
+    for (let k = 0; k < 8 && y >= 0; k++, y -= LH + 1) { let free = true; const r0 = Math.max(0, Math.floor(y / GR)), r1 = Math.min(rows - 1, Math.floor((y + LH) / GR));
+      outer: for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) { const cell = cells[r * cols + c]; for (let m = 0; m < cell.length; m++) { checks++; if (hit(L, cell[m], x, y, w)) { free = false; break outer; } } }
+      if (free) { ok = true; break; } }
+    if (ok) { const p = L.placed++; L.px[p] = x; L.py[p] = y; L.pw[p] = w; L.outY[i] = y;
+      const r0 = Math.max(0, Math.floor(y / GR)), r1 = Math.min(rows - 1, Math.floor((y + LH) / GR));
+      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) cells[r * cols + c].push(p); } else L.outY[i] = -999; }
+  return checks;
+}
+function runSolver(frames) {
+  const res = [];
+  for (const N of [50, 200, 1000, 3000]) {
+    for (const [nm, fn] of [['solver_naive_On2', solveNaive], ['solver_spatial_grid', solveGrid]]) {
+      const L = makeSolver(N); let checks = 0;
+      const r = measureCPU(nm, frames, (f) => { checks = fn(L, f & 1); }, { section: 'solver', n: N });
+      r.labels_placed = L.placed; r.overlap_checks = checks; res.push(r);
+    }
+  }
+  return res;
+}
+
+// ---- magnet pull: 30 players, items in a 640x360 world (20x11 tiles of 32 px), radius 2 tiles = 64 px ----
+function makeMagnet(N) {
+  reseed(31); const WW = 640, WH = 360, M = { N, WW, WH, R: 64, x: new Float32Array(N), y: new Float32Array(N), best: new Float32Array(N), owner: new Int16Array(N),
+    P: 30, ppx: new Float32Array(30), ppy: new Float32Array(30), collected: 0 };
+  for (let i = 0; i < N; i++) { M.x[i] = rnd() * WW; M.y[i] = rnd() * WH; }
+  for (let p = 0; p < 30; p++) { M.ppx[p] = rnd() * WW; M.ppy[p] = rnd() * WH; }
+  M.GC = 64; M.cols = Math.ceil(WW / 64); M.rows = Math.ceil(WH / 64); M.cnt = new Int32Array(M.cols * M.rows + 1); M.start = new Int32Array(M.cols * M.rows + 1); M.cellOf = new Int32Array(N); M.idx = new Int32Array(N);
+  return M;
+}
+function movePlayers(M, f) { for (let p = 0; p < M.P; p++) { M.ppx[p] = (M.ppx[p] + Math.cos(p + f * 0.02) * 1.5 + M.WW) % M.WW; M.ppy[p] = (M.ppy[p] + Math.sin(p * 1.7 + f * 0.02) * 1.5 + M.WH) % M.WH; } }
+function pullItems(M) {
+  for (let i = 0; i < M.N; i++) { const p = M.owner[i]; if (p < 0) continue; const dx = M.ppx[p] - M.x[i], dy = M.ppy[p] - M.y[i], d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 6) { M.collected++; M.x[i] = (M.x[i] * 7.31 + 97) % M.WW; M.y[i] = (M.y[i] * 3.17 + 53) % M.WH; } else { M.x[i] += dx / d * 3; M.y[i] += dy / d * 3; } }
+}
+function magnetBrute(M, f) {
+  movePlayers(M, f); const R2 = M.R * M.R;
+  for (let i = 0; i < M.N; i++) { let b = R2, o = -1; const x = M.x[i], y = M.y[i];
+    for (let p = 0; p < M.P; p++) { const dx = M.ppx[p] - x, dy = M.ppy[p] - y, d2 = dx * dx + dy * dy; if (d2 < b) { b = d2; o = p; } } M.owner[i] = o; }
+  pullItems(M);
+}
+function magnetGrid(M, f) {
+  movePlayers(M, f); const R2 = M.R * M.R, { cols, rows, GC, cnt, start, cellOf, idx } = M; cnt.fill(0);
+  for (let i = 0; i < M.N; i++) { const c = Math.min(cols - 1, (M.x[i] / GC) | 0) + Math.min(rows - 1, (M.y[i] / GC) | 0) * cols; cellOf[i] = c; cnt[c]++; }
+  let s = 0; for (let c = 0; c < cols * rows; c++) { start[c] = s; s += cnt[c]; cnt[c] = start[c]; }
+  for (let i = 0; i < M.N; i++) idx[cnt[cellOf[i]]++] = i;   // counting sort; cnt[c] now = end of cell c
+  M.best.fill(R2); M.owner.fill(-1);
+  for (let p = 0; p < M.P; p++) { const px = M.ppx[p], py = M.ppy[p], cx = (px / GC) | 0, cy = (py / GC) | 0;
+    for (let yy = Math.max(0, cy - 1); yy <= Math.min(rows - 1, cy + 1); yy++) for (let xx = Math.max(0, cx - 1); xx <= Math.min(cols - 1, cx + 1); xx++) {
+      const c = yy * cols + xx; for (let k = start[c]; k < cnt[c]; k++) { const i = idx[k], dx = px - M.x[i], dy = py - M.y[i], d2 = dx * dx + dy * dy; if (d2 < M.best[i]) { M.best[i] = d2; M.owner[i] = p; } } } }
+  pullItems(M);
+}
+function runMagnet(frames) {
+  const res = [];
+  for (const N of [50, 200, 1000, 3000]) for (const [nm, fn] of [['magnet_bruteforce_30p', magnetBrute], ['magnet_grid_30p', magnetGrid]]) {
+    const M = makeMagnet(N); const r = measureCPU(nm, frames, (f) => fn(M, f), { section: 'magnet', n: N }); r.collected = M.collected; res.push(r);
+  }
+  return res;
+}
+
+// ---- boss drop with 30 players: continuous drops around a corpse ----
+function makeBoss(Nitems) {
+  reseed(41); const B = { players: [], items: [], cx: 152, cy: 82 };
+  for (let p = 0; p < 30; p++) { const a = p / 30 * 6.283, r = 40 + (p % 3) * 14; B.players.push({ bx: B.cx + 8 + Math.cos(a) * r * 1.6, by: B.cy + 8 + Math.sin(a) * r * 0.9, x: 0, y: 0, ph: rnd() * 6 }); }
+  for (let i = 0; i < Nitems; i++) { const it = { tier: pickTier(), shape: Math.floor(rnd() * 8), name: NAMES[Math.floor(rnd() * NAMES.length)], phase: Math.floor(rnd() * 90) }; respawnBoss(B, it, -Math.floor(rnd() * 200)); it.rk = Math.floor(rnd() * 400); B.items.push(it); }
+  const M = makeMagnet(Nitems); M.WW = W; M.WH = H; M.R = 20; M.P = 30; M.GC = 32; M.cols = Math.ceil(W / 32); M.rows = Math.ceil(H / 32); M.cnt = new Int32Array(M.cols * M.rows + 1); M.start = new Int32Array(M.cols * M.rows + 1); B.M = M;
+  B.L = makeSolver(Nitems); return B;
+}
+function respawnBoss(B, it, k) { const a = rnd() * 6.283, r = 6 + rnd() * 70; it.state = 'pop'; it.rk = 0; it.k = k || 0; it.x0 = B.cx + 8; it.y0 = B.cy + 8; it.tx = it.x0 + Math.cos(a) * r * 1.6 - 8; it.ty = it.y0 + Math.sin(a) * r * 0.9 - 8; it.x = it.tx; it.y = it.ty; }
+function stepBoss(B, f, grid) {
+  for (const p of B.players) { p.x = p.bx + Math.cos(f * 0.03 + p.ph) * 10; p.y = p.by + Math.sin(f * 0.03 + p.ph) * 6; }
+  const M = B.M; for (let p = 0; p < 30; p++) { M.ppx[p] = B.players[p].x; M.ppy[p] = B.players[p].y; }
+  // magnet only on resting items; others parked far away
+  B.items.forEach((it, i) => { if (it.state === 'rest' && it.rk > 240) { M.x[i] = it.x + 8; M.y[i] = it.y + 8; } else { M.x[i] = -9999; M.y[i] = -9999; } });
+  // query only (no movePlayers): reuse grid/brute owner assignment
+  if (grid) magnetGridOwners(M); else magnetBruteOwners(M);
+  B.items.forEach((it, i) => {
+    if (it.state === 'pop') { it.k++; if (it.k >= 40) { it.state = 'rest'; it.x = it.tx; it.y = it.ty; } }
+    else if (it.state === 'rest') { it.rk++; const o = it.rk > 240 ? M.owner[i] : -1; if (o >= 0) { const P = B.players[o]; const dx = P.x - it.x - 8, dy = P.y - it.y - 8, d = Math.hypot(dx, dy); if (d < 6) { it.state = 'fly'; it.fk = 0; it.fx = it.x; it.fy = it.y; it.to = o; } else { it.x += dx / d * 2; it.y += dy / d * 2; } } }
+    else { it.fk++; if (it.fk >= 12) respawnBoss(B, it, 0); }
+  });
+}
+function magnetBruteOwners(M) { const R2 = M.R * M.R; for (let i = 0; i < M.N; i++) { let b = R2, o = -1; const x = M.x[i], y = M.y[i]; for (let p = 0; p < M.P; p++) { const dx = M.ppx[p] - x, dy = M.ppy[p] - y, d2 = dx * dx + dy * dy; if (d2 < b) { b = d2; o = p; } } M.owner[i] = o; } }
+function magnetGridOwners(M) {
+  const R2 = M.R * M.R, { cols, rows, GC, cnt, start, cellOf, idx } = M; cnt.fill(0); let n = 0;
+  for (let i = 0; i < M.N; i++) { if (M.x[i] < 0) { cellOf[i] = -1; continue; } const c = Math.min(cols - 1, (M.x[i] / GC) | 0) + Math.min(rows - 1, Math.max(0, (M.y[i] / GC) | 0)) * cols; cellOf[i] = c; cnt[c]++; }
+  let s = 0; for (let c = 0; c < cols * rows; c++) { start[c] = s; s += cnt[c]; cnt[c] = start[c]; }
+  for (let i = 0; i < M.N; i++) if (cellOf[i] >= 0) idx[cnt[cellOf[i]]++] = i;
+  M.best.fill(R2); M.owner.fill(-1);
+  for (let p = 0; p < M.P; p++) { const px = M.ppx[p], py = M.ppy[p], cx = (px / GC) | 0, cy = (py / GC) | 0;
+    for (let yy = Math.max(0, cy - 1); yy <= Math.min(rows - 1, cy + 1); yy++) for (let xx = Math.max(0, cx - 1); xx <= Math.min(cols - 1, cx + 1); xx++) {
+      const c = yy * cols + xx; for (let k = start[c]; k < cnt[c]; k++) { const i = idx[k], dx = px - M.x[i], dy = py - M.y[i], d2 = dx * dx + dy * dy; if (d2 < M.best[i]) { M.best[i] = d2; M.owner[i] = p; } } } }
+}
+function drawBoss(B, ctx, f, cheap) {
+  ctx.drawImage(T.corpse, B.cx, B.cy);
+  for (const p of B.players) ctx.drawImage(T.player, Math.round(p.x), Math.round(p.y));
+  const vis = [];
+  for (const it of B.items) {
+    if (it.k < 0 && it.state === 'pop') continue;
+    if (it.state === 'pop') { const t = Math.min(it.k / 40, 1); it.dx_ = Math.round(it.x0 - 8 + (it.tx - it.x0 + 8) * Math.min(it.k / 24, 1)); it.dy_ = Math.round(it.y0 - 8 + (it.ty - it.y0 + 8) * Math.min(it.k / 24, 1) - arcH(it.k)); it.gy_ = Math.round(it.y0 - 8 + (it.ty - it.y0 + 8) * Math.min(it.k / 24, 1)); }
+    else if (it.state === 'rest') { it.dx_ = Math.round(it.x); it.dy_ = Math.round(it.y); it.gy_ = it.dy_; }
+    else { const t = it.fk / 12, P = B.players[it.to]; it.dx_ = Math.round(it.fx + (P.x - it.fx) * t * t); it.dy_ = Math.round(it.fy + (P.y - it.fy) * t * t - Math.sin(t * Math.PI) * 10); }
+    vis.push(it);
+  }
+  for (const it of vis) if (it.state !== 'fly') ctx.drawImage(T.shadow, it.dx_ + 3, it.gy_ + 12);
+  // glow on tier >= 2 (rare, epic, legendary)
+  if (cheap) { ctx.globalCompositeOperation = 'lighter'; for (const it of vis) if (it.tier >= 2 && it.state !== 'fly') { const r = ((f + it.phase) >> 3) & 3; ctx.drawImage(T.halo, it.tier * 24, r * 24, 24, 24, it.dx_ - 4, it.dy_ - 4, 24, 24); } ctx.globalCompositeOperation = 'source-over';
+    for (const it of vis) if (it.state === 'fly') { const sc = Math.round(16 - 8 * it.fk / 12); ctx.drawImage(T.items, it.shape * 16, it.tier * 16, 16, 16, it.dx_, it.dy_, sc, sc); } else blitItem(ctx, it, it.dx_, it.dy_); }
+  else { ctx.shadowBlur = 6; for (const it of vis) { if (it.tier >= 2 && it.state !== 'fly') ctx.shadowColor = RAR[it.tier]; else ctx.shadowColor = 'transparent';
+      if (it.state === 'fly') { const sc = Math.round(16 - 8 * it.fk / 12); ctx.drawImage(T.items, it.shape * 16, it.tier * 16, 16, 16, it.dx_, it.dy_, sc, sc); } else blitItem(ctx, it, it.dx_, it.dy_); }
+    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; }
+  // beams on tier 4 resting/popping items
+  ctx.globalCompositeOperation = 'lighter';
+  for (const it of vis) if (it.tier === 4 && it.state !== 'fly') { const a = pulseA(f, it.phase);
+    if (cheap) { ctx.globalAlpha = a; ctx.drawImage(T.beam, 32, 0, 8, 80, it.dx_ + 4, it.gy_ - 72, 8, 80); ctx.globalAlpha = 1; }
+    else { const gr = ctx.createLinearGradient(0, it.gy_ + 8, 0, it.gy_ - 72); gr.addColorStop(0, `rgba(255,144,32,${(0.9 * a).toFixed(2)})`); gr.addColorStop(1, 'rgba(255,144,32,0)'); ctx.fillStyle = gr; ctx.fillRect(it.dx_ + 5, it.gy_ - 72, 6, 80); } }
+  ctx.globalCompositeOperation = 'source-over';
+  // labels on resting items, solved each frame. Items rest 240 f (4 s, think owner protection) before the magnet can take them
+  const L = B.L; let n = 0;
+  for (const it of B.items) if (it.state === 'rest') { L.w[n] = labelW(it.name); L.x[n] = Math.round(it.x + 8 - L.w[n] / 2); L.y[n] = Math.round(it.y) - 10; L.tier[n] = it.tier; L.ref = L.ref || []; L.ref[n] = it; n++; }
+  L.n = n; L.order.length = 0; for (let i = 0; i < n; i++) L.order.push(i);
+  if (cheap) solveGrid(L, 0); else solveNaive(L, 0);
+  if (cheap) { for (let i = 0; i < n; i++) { if (L.outY[i] < 0) continue; const it = L.ref[i], r = T.labelRects.get(it.name + it.tier); ctx.drawImage(T.labelAtlas, r[0], r[1], r[2], LH, L.x[i], L.outY[i], r[2], LH); } }
+  else { ctx.font = '6px monospace'; ctx.textBaseline = 'top'; for (let i = 0; i < n; i++) { if (L.outY[i] < 0) continue; const it = L.ref[i]; const w = ctx.measureText(it.name).width + 2;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(L.x[i], L.outY[i], w, LH); ctx.fillStyle = RAR[it.tier]; ctx.fillText(it.name, L.x[i] + 1, L.outY[i] + 1); } }
+  B.lastLabels = n; B.lastPlaced = L.placed;
+}
+function runBoss(frames) {
+  const res = [];
+  for (const N of [60, 200, 600]) for (const cheap of [true, false]) {
+    const B = makeBoss(N); for (let f = -400; f < 0; f++) stepBoss(B, f, true); // preroll 400 f so drops reach steady state
+    const r = measure(cheap ? 'boss_drop_30p_cheap' : 'boss_drop_30p_naive', frames, (ctx, f) => { stepBoss(B, f, cheap); drawBoss(B, ctx, f, cheap); }, { section: 'boss', n: N });
+    r.labels_candidates = B.lastLabels; r.labels_placed = B.lastPlaced; r.states = B.items.reduce((a, it) => (a[it.state] = (a[it.state] || 0) + 1, a), {}); res.push(r);
+  }
+  return res;
+}
+
+// ---- rAF tests: DOM labels vs canvas atlas labels. Labels bob with the pop arc so they move every frame. ----
+function rafTest(name, N, useDom, n) {
+  return new Promise((resolve) => {
+    const A = makeItems(N, 13); for (const it of A) { it.lx = Math.round(it.x + 8 - labelW(it.name) / 2); it.ly = it.y - 10; it.rect = T.labelRects.get(it.name + it.tier); }
+    const dom = document.getElementById('dom'); dom.innerHTML = '';
+    if (useDom) for (const it of A) { const s = document.createElement('span'); s.textContent = it.name; s.style.color = RAR[it.tier]; dom.appendChild(s); it.el = s; }
+    const iv = [], work = []; let last = 0, f = 0;
+    const step = (ts) => {
+      const a = performance.now(); const ctx = T.ctx; ctx.clearRect(0, 0, W, H); drawFloor(ctx);
+      for (const it of A) { const h = Math.round(arcH((f + it.phase) % 90)); blitItem(ctx, it, it.x, it.y - h); it.h = h; }
+      if (useDom) for (const it of A) it.el.style.transform = `translate(${it.lx * S}px,${(it.ly - it.h) * S}px)`;
+      else for (const it of A) { const r = it.rect; ctx.drawImage(T.labelAtlas, r[0], r[1], r[2], LH, it.lx, it.ly - it.h, r[2], LH); }
+      T.dctx.drawImage(T.c, 0, 0, W * S, H * S);
+      work.push(performance.now() - a);
+      if (last) iv.push(ts - last); last = ts; f++;
+      if (f < n) requestAnimationFrame(step); else { dom.innerHTML = ''; const si = stats(iv.slice());
+        resolve({ name, target: useDom ? 'dom_spans_over_canvas' : TGT, section: 'raf', n: N, frames: n, raf_interval_median_ms: si.median_ms, raf_interval_p95_ms: si.p95_ms,
+          raf_interval_max_ms: +Math.max(...iv).toFixed(3), frames_over_20ms: iv.filter(x => x > 20).length, ...stats(work) }); }
+    };
+    requestAnimationFrame(() => requestAnimationFrame(step));
+  });
+}
+
+async function runAll(opts) {
+  opts = opts || {}; const frames = opts.frames || 200;
+  const sections = opts.sections || ['items', 'beams', 'labels', 'solver', 'magnet', 'boss', 'raf'];
+  const t0 = performance.now(); setup(); const results = [];
+  const run = (nm, fn) => { if (sections.includes(nm)) { try { results.push(...fn(frames)); } catch (e) { results.push({ name: nm + '_ERROR', error: String(e) }); } } };
+  run('items', runItems); run('beams', runBeams); run('labels', runLabels); run('solver', runSolver); run('magnet', runMagnet); run('boss', runBoss);
+  if (sections.includes('raf')) for (const N of [50, 200, 1000, 3000]) { results.push(await rafTest('raf_labels_canvas_atlas', N, false, 120)); results.push(await rafTest('raf_labels_dom_spans', N, true, 120)); }
+  const out = { info: { userAgent: navigator.userAgent, hardwareConcurrency: navigator.hardwareConcurrency, dpr: devicePixelRatio, crossOriginIsolated: self.crossOriginIsolated }, results, total_s: +((performance.now() - t0) / 1000).toFixed(1), sink };
+  document.getElementById('log').textContent = JSON.stringify(out, null, 1).slice(0, 20000);
+  return out;
+}
+async function rafOne(name, N, useDom, n) { if (!T.c) setup(); return await rafTest(name, N, useDom, n); }
+// Preview mode for screenshots: draw one boss frame. ?preview=boss&n=200&f=120
+function preview() {
+  const u = new URLSearchParams(location.search); if (!u.get('preview')) return; setup();
+  const B = makeBoss(+(u.get('n') || 200)); const F = +(u.get('f') || 150); const cheap = u.get('mode') !== 'naive';
+  for (let f = -400; f < 0; f++) stepBoss(B, f, true);
+  for (let f = 0; f < F; f++) { T.ctx.clearRect(0, 0, W, H); drawFloor(T.ctx); stepBoss(B, f, cheap); drawBoss(B, T.ctx, f, cheap); }
+  T.dctx.drawImage(T.c, 0, 0, W * S, H * S);
+}
+preview();
+</script>
+</body></html>

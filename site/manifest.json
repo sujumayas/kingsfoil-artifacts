@@ -280,5 +280,23 @@
   "title": "Top-down pixel combat juice Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-11"
+ },
+ {
+  "path": "/thumbs/feel-loot-pickup.png",
+  "title": "Thumbnail feel-loot-pickup.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/feel-loot-pickup-topdown-pixel.html",
+  "title": "Loot and pickup in a top-down pixel MMORPG: drops, reveals, pickup, sharing and death",
+  "description": "What happens between a kill and a full bag in a Tibia-like world: corpses and spills, drop arcs, rarity tells, labels, quick loot, ownership windows, races and death drops, with the server rules and the measured cost behind each.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/feel-loot-pickup-sandbox.html",
+  "title": "Loot and pickup in a top-down pixel MMORPG Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-11"
  }
 ]
