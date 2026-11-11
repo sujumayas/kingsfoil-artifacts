@@ -1,0 +1,157 @@
+console: Failed to load resource: the server responded with a status of 404 (File not found)
+console: Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+console: Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+console: Failed to load resource: the server responded with a status of 404 (File not found)
+{
+ "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+ "hardwareConcurrency": 14,
+ "dpr": 1,
+ "crossOriginIsolated": true,
+ "webgl2": true,
+ "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)"
+} {"state": "running", "sampleRate": 48000, "baseLatency_ms": 5.333333333333333, "outputLatency_ms": 0, "has_playbackStats": true, "has_playoutStats": false, "render_quantum_ms": 2.6666666666666665, "state_end": "running"} total_s 162.8
+    3.365     4.695  canvas2d_lowres320x180+upscale   baseline_empty_frame n= agg=
+    3.695     5.195  canvas2d_lowres320x180+upscale   dmg_glyph_blits n=50 agg=False
+     3.53     4.905  canvas2d_lowres320x180+upscale   dmg_fillText n=50 agg=False
+    3.515     4.825  canvas2d_lowres320x180+upscale   dmg_fillText_strokeText_outline n=50 agg=False
+     3.98      9.43  canvas2d_lowres320x180+upscale   dmg_cached_number_sprites n=50 agg=False
+     3.36     4.095  canvas2d_lowres320x180+upscale   dmg_glyph_blits n=50 agg=True
+    3.295      4.26  canvas2d_lowres320x180+upscale   dmg_fillText n=50 agg=True
+    3.295     3.985  canvas2d_lowres320x180+upscale   dmg_fillText_strokeText_outline n=50 agg=True
+    6.165     9.965  canvas2d_lowres320x180+upscale   dmg_cached_number_sprites n=50 agg=True
+     4.79     6.075  canvas2d_lowres320x180+upscale   dmg_glyph_blits n=200 agg=False
+    3.985      5.23  canvas2d_lowres320x180+upscale   dmg_fillText n=200 agg=False
+     4.78     5.775  canvas2d_lowres320x180+upscale   dmg_fillText_strokeText_outline n=200 agg=False
+    4.785       9.2  canvas2d_lowres320x180+upscale   dmg_cached_number_sprites n=200 agg=False
+    3.545     4.845  canvas2d_lowres320x180+upscale   dmg_glyph_blits n=200 agg=True
+    3.415      4.59  canvas2d_lowres320x180+upscale   dmg_fillText n=200 agg=True
+    3.565     4.575  canvas2d_lowres320x180+upscale   dmg_fillText_strokeText_outline n=200 agg=True
+   11.275     15.97  canvas2d_lowres320x180+upscale   dmg_cached_number_sprites n=200 agg=True
+   13.175    14.905  canvas2d_lowres320x180+upscale   dmg_glyph_blits n=1000 agg=False
+    6.935      7.96  canvas2d_lowres320x180+upscale   dmg_fillText n=1000 agg=False
+    10.62     11.83  canvas2d_lowres320x180+upscale   dmg_fillText_strokeText_outline n=1000 agg=False
+     9.46    14.125  canvas2d_lowres320x180+upscale   dmg_cached_number_sprites n=1000 agg=False
+    4.185     5.335  canvas2d_lowres320x180+upscale   dmg_glyph_blits n=1000 agg=True
+    3.715     5.085  canvas2d_lowres320x180+upscale   dmg_fillText n=1000 agg=True
+    4.215     5.725  canvas2d_lowres320x180+upscale   dmg_fillText_strokeText_outline n=1000 agg=True
+    43.22     64.29  canvas2d_lowres320x180+upscale   dmg_cached_number_sprites n=1000 agg=True
+      3.3     4.215  canvas2d_lowres320x180+upscale   part_sim_only_no_draw n=500 agg=
+     3.48      4.47  canvas2d_lowres320x180+upscale   part_fillRect_2x2_4colour_buckets n=500 agg=
+     4.88     5.555  canvas2d_lowres320x180+upscale   part_drawImage_3x3_sprite n=500 agg=
+    3.425      4.22  canvas2d_lowres320x180+upscale   part_sim_only_no_draw n=2000 agg=
+    4.185     5.375  canvas2d_lowres320x180+upscale   part_fillRect_2x2_4colour_buckets n=2000 agg=
+   10.455    12.075  canvas2d_lowres320x180+upscale   part_drawImage_3x3_sprite n=2000 agg=
+      3.6      4.74  canvas2d_lowres320x180+upscale   part_sim_only_no_draw n=10000 agg=
+     8.22     9.365  canvas2d_lowres320x180+upscale   part_fillRect_2x2_4colour_buckets n=10000 agg=
+   44.895    49.485  canvas2d_lowres320x180+upscale   part_drawImage_3x3_sprite n=10000 agg=
+    3.685      5.07  canvas2d_lowres320x180+upscale   flash_none_normal_sprites n=100 agg=
+     3.63       4.6  canvas2d_lowres320x180+upscale   flash_prebaked_white_sprite n=100 agg=
+   79.615     86.91  canvas2d_lowres320x180+upscale   flash_source_atop_per_frame n=100 agg=
+    8.605     10.23  canvas2d_lowres320x180+upscale   flash_ctx_filter_brightness0_invert1 n=100 agg=
+    3.995       5.2  canvas2d_lowres320x180+upscale   shake_none n= agg=
+    3.945     5.425  canvas2d_lowres320x180+upscale   shake_setTransform n= agg=
+        4      5.42  canvas2d_lowres320x180+upscale   shake_redraw_with_offset_args n= agg=
+    4.275      5.29  canvas2d_lowres320x180+upscale   shake_offset_at_upscale_blit n= agg=
+    3.885     5.355  canvas2d_lowres320x180+upscale   shake_css_transform_on_element n= agg=
+    3.415      4.23  canvas2d_lowres320x180+upscale   tele_real_alpha n=20 agg=
+    3.595      4.81  canvas2d_lowres320x180+upscale   tele_dithered_bayer_pattern n=20 agg=
+    1.695      2.66  canvas2d_native1280x720          baseline_empty_frame n= agg=
+    2.485     3.325  canvas2d_native1280x720          dmg_glyph_blits n=50 agg=False
+    1.875      2.99  canvas2d_native1280x720          dmg_fillText n=50 agg=False
+     2.01     3.145  canvas2d_native1280x720          dmg_fillText_strokeText_outline n=50 agg=False
+    2.065      3.48  canvas2d_native1280x720          dmg_cached_number_sprites n=50 agg=False
+    1.575      2.61  canvas2d_native1280x720          dmg_glyph_blits n=50 agg=True
+     1.58      2.63  canvas2d_native1280x720          dmg_fillText n=50 agg=True
+     1.62      2.37  canvas2d_native1280x720          dmg_fillText_strokeText_outline n=50 agg=True
+    2.065      3.32  canvas2d_native1280x720          dmg_cached_number_sprites n=50 agg=True
+    5.025       6.1  canvas2d_native1280x720          dmg_glyph_blits n=200 agg=False
+     2.54     3.285  canvas2d_native1280x720          dmg_fillText n=200 agg=False
+    3.345      4.23  canvas2d_native1280x720          dmg_fillText_strokeText_outline n=200 agg=False
+     2.97     3.895  canvas2d_native1280x720          dmg_cached_number_sprites n=200 agg=False
+     1.93      2.89  canvas2d_native1280x720          dmg_glyph_blits n=200 agg=True
+     1.69      2.57  canvas2d_native1280x720          dmg_fillText n=200 agg=True
+    1.685     2.755  canvas2d_native1280x720          dmg_fillText_strokeText_outline n=200 agg=True
+    3.135     4.275  canvas2d_native1280x720          dmg_cached_number_sprites n=200 agg=True
+    18.83     21.58  canvas2d_native1280x720          dmg_glyph_blits n=1000 agg=False
+    6.195       7.2  canvas2d_native1280x720          dmg_fillText n=1000 agg=False
+    10.23     11.22  canvas2d_native1280x720          dmg_fillText_strokeText_outline n=1000 agg=False
+    7.735    10.665  canvas2d_native1280x720          dmg_cached_number_sprites n=1000 agg=False
+    3.665     4.395  canvas2d_native1280x720          dmg_glyph_blits n=1000 agg=True
+    2.145     3.035  canvas2d_native1280x720          dmg_fillText n=1000 agg=True
+    2.645      3.29  canvas2d_native1280x720          dmg_fillText_strokeText_outline n=1000 agg=True
+    5.675     8.955  canvas2d_native1280x720          dmg_cached_number_sprites n=1000 agg=True
+     1.54     2.325  canvas2d_native1280x720          part_sim_only_no_draw n=500 agg=
+    2.125     2.995  canvas2d_native1280x720          part_fillRect_2x2_4colour_buckets n=500 agg=
+    4.355      5.19  canvas2d_native1280x720          part_drawImage_3x3_sprite n=500 agg=
+      1.6     2.575  canvas2d_native1280x720          part_sim_only_no_draw n=2000 agg=
+    3.665     4.495  canvas2d_native1280x720          part_fillRect_2x2_4colour_buckets n=2000 agg=
+    12.02    13.405  canvas2d_native1280x720          part_drawImage_3x3_sprite n=2000 agg=
+     1.77     2.745  canvas2d_native1280x720          part_sim_only_no_draw n=10000 agg=
+   11.915     13.41  canvas2d_native1280x720          part_fillRect_2x2_4colour_buckets n=10000 agg=
+    53.22    59.935  canvas2d_native1280x720          part_drawImage_3x3_sprite n=10000 agg=
+    4.125     4.905  canvas2d_native1280x720          flash_none_normal_sprites n=100 agg=
+      4.2      4.88  canvas2d_native1280x720          flash_prebaked_white_sprite n=100 agg=
+   14.235     15.21  canvas2d_native1280x720          flash_source_atop_per_frame n=100 agg=
+ 2739.725   2803.48  canvas2d_native1280x720          flash_ctx_filter_brightness0_invert1 n=100 agg=
+    5.965     6.655  canvas2d_native1280x720          shake_none n= agg=
+    6.035      6.92  canvas2d_native1280x720          shake_setTransform n= agg=
+     5.88     6.875  canvas2d_native1280x720          shake_redraw_with_offset_args n= agg=
+    6.185     7.175  canvas2d_native1280x720          shake_offset_at_upscale_blit n= agg=
+     5.94      6.82  canvas2d_native1280x720          shake_css_transform_on_element n= agg=
+     4.45     5.395  canvas2d_native1280x720          tele_real_alpha n=20 agg=
+     6.67      8.24  canvas2d_native1280x720          tele_dithered_bayer_pattern n=20 agg=
+    0.875      1.58  webgl2_320x180                   gl_baseline_clear_readback n= agg=
+    0.945     1.585  webgl2_320x180                   gl_dmg_instanced_digit_quads_rebuild_each_frame n=50 agg=False
+    0.805     1.535  webgl2_320x180                   gl_dmg_instanced_digit_quads_rebuild_each_frame n=50 agg=True
+     0.69     1.565  webgl2_320x180                   gl_dmg_instanced_digit_quads_rebuild_each_frame n=200 agg=False
+    0.675      1.49  webgl2_320x180                   gl_dmg_instanced_digit_quads_rebuild_each_frame n=200 agg=True
+    1.075     1.825  webgl2_320x180                   gl_dmg_instanced_digit_quads_rebuild_each_frame n=1000 agg=False
+    0.845     1.575  webgl2_320x180                   gl_dmg_instanced_digit_quads_rebuild_each_frame n=1000 agg=True
+    0.825     1.565  webgl2_320x180                   gl_flash_none_instanced n=100 agg=
+    0.725      1.49  webgl2_320x180                   gl_flash_instance_attribute_1_drawcall n=100 agg=
+    0.875      1.77  webgl2_320x180                   gl_flash_uniform_per_sprite_100_drawcalls n=100 agg=
+     0.79      1.54  webgl2_320x180                   gl_part_points_cpu_sim_buffer_upload n=500 agg=
+     0.74      1.55  webgl2_320x180                   gl_part_points_gpu_sim_static_buffer n=500 agg=
+     0.93     2.045  webgl2_320x180                   gl_part_points_cpu_sim_buffer_upload n=2000 agg=
+     0.78      1.53  webgl2_320x180                   gl_part_points_gpu_sim_static_buffer n=2000 agg=
+     1.23      1.82  webgl2_320x180                   gl_part_points_cpu_sim_buffer_upload n=10000 agg=
+    1.165      1.83  webgl2_320x180                   gl_part_points_gpu_sim_static_buffer n=10000 agg=
+     0.81     1.545  webgl2_320x180                   gl_tele_real_alpha_blend n=20 agg=
+     0.86       1.6  webgl2_320x180                   gl_tele_dither_discard n=20 agg=
+    0.915      1.69  webgl2_native1280x720            gl_baseline_clear_readback n= agg=
+     0.84     1.735  webgl2_native1280x720            gl_dmg_instanced_digit_quads_rebuild_each_frame n=50 agg=False
+    0.945      1.67  webgl2_native1280x720            gl_dmg_instanced_digit_quads_rebuild_each_frame n=50 agg=True
+    0.855      1.72  webgl2_native1280x720            gl_dmg_instanced_digit_quads_rebuild_each_frame n=200 agg=False
+    0.805      1.68  webgl2_native1280x720            gl_dmg_instanced_digit_quads_rebuild_each_frame n=200 agg=True
+      1.3     1.825  webgl2_native1280x720            gl_dmg_instanced_digit_quads_rebuild_each_frame n=1000 agg=False
+     0.93     1.775  webgl2_native1280x720            gl_dmg_instanced_digit_quads_rebuild_each_frame n=1000 agg=True
+    1.075     1.815  webgl2_native1280x720            gl_flash_none_instanced n=100 agg=
+    1.075      1.78  webgl2_native1280x720            gl_flash_instance_attribute_1_drawcall n=100 agg=
+    1.175     1.785  webgl2_native1280x720            gl_flash_uniform_per_sprite_100_drawcalls n=100 agg=
+    0.945     1.695  webgl2_native1280x720            gl_part_points_cpu_sim_buffer_upload n=500 agg=
+     0.88      1.74  webgl2_native1280x720            gl_part_points_gpu_sim_static_buffer n=500 agg=
+    1.015      1.77  webgl2_native1280x720            gl_part_points_cpu_sim_buffer_upload n=2000 agg=
+    1.025       1.8  webgl2_native1280x720            gl_part_points_gpu_sim_static_buffer n=2000 agg=
+     1.24      1.76  webgl2_native1280x720            gl_part_points_cpu_sim_buffer_upload n=10000 agg=
+    1.075     1.835  webgl2_native1280x720            gl_part_points_gpu_sim_static_buffer n=10000 agg=
+    1.065     1.745  webgl2_native1280x720            gl_tele_real_alpha_blend n=20 agg=
+    1.075     1.815  webgl2_native1280x720            gl_tele_dither_discard n=20 agg=
+    0.645     1.735  canvas2d_lowres320x180+upscale   shake_raf_none n= agg=
+    0.645     1.515  canvas2d_lowres320x180+upscale   shake_raf_setTransform n= agg=
+    0.795     1.535  canvas2d_lowres320x180+upscale   shake_raf_css n= agg=
+{'name': 'audio_offline_osc_gain', 'section': 'audio', 'hits_per_s': 8, 'concurrent_voices_est': 2.4, 'audio_s': 4, 'schedule_ms_per_trigger': 0.1469, 'render_ms_per_audio_s': 2.81, 'audio_thread_load_pct': 0.28, 'realtime_factor': 356.2}
+{'name': 'audio_offline_osc_gain', 'section': 'audio', 'hits_per_s': 32, 'concurrent_voices_est': 9.6, 'audio_s': 4, 'schedule_ms_per_trigger': 0.065, 'render_ms_per_audio_s': 9.06, 'audio_thread_load_pct': 0.91, 'realtime_factor': 110.3}
+{'name': 'audio_offline_osc_gain', 'section': 'audio', 'hits_per_s': 128, 'concurrent_voices_est': 38.4, 'audio_s': 4, 'schedule_ms_per_trigger': 0.0442, 'render_ms_per_audio_s': 36.45, 'audio_thread_load_pct': 3.64, 'realtime_factor': 27.4}
+{'name': 'audio_offline_osc_gain', 'section': 'audio', 'hits_per_s': 512, 'concurrent_voices_est': 153.6, 'audio_s': 4, 'schedule_ms_per_trigger': 0.0383, 'render_ms_per_audio_s': 150.9, 'audio_thread_load_pct': 15.09, 'realtime_factor': 6.6}
+{'name': 'audio_offline_buffer_gain', 'section': 'audio', 'hits_per_s': 8, 'concurrent_voices_est': 2.4, 'audio_s': 4, 'schedule_ms_per_trigger': 0.0636, 'render_ms_per_audio_s': 2.23, 'audio_thread_load_pct': 0.22, 'realtime_factor': 448.7}
+{'name': 'audio_offline_buffer_gain', 'section': 'audio', 'hits_per_s': 32, 'concurrent_voices_est': 9.6, 'audio_s': 4, 'schedule_ms_per_trigger': 0.0377, 'render_ms_per_audio_s': 8.99, 'audio_thread_load_pct': 0.9, 'realtime_factor': 111.3}
+{'name': 'audio_offline_buffer_gain', 'section': 'audio', 'hits_per_s': 128, 'concurrent_voices_est': 38.4, 'audio_s': 4, 'schedule_ms_per_trigger': 0.0361, 'render_ms_per_audio_s': 36.74, 'audio_thread_load_pct': 3.67, 'realtime_factor': 27.2}
+{'name': 'audio_offline_buffer_gain', 'section': 'audio', 'hits_per_s': 512, 'concurrent_voices_est': 153.6, 'audio_s': 4, 'schedule_ms_per_trigger': 0.0341, 'render_ms_per_audio_s': 151.57, 'audio_thread_load_pct': 15.16, 'realtime_factor': 6.6}
+{'name': 'audio_realtime_osc_gain', 'section': 'audio', 'hits_per_s': 8, 'triggers': 16, 'trigger_js_median_ms': 0.025, 'trigger_js_p95_ms': 3.34, 'timer_lateness_p95_ms': 4.72, 'audio_clock_vs_wall': 0.9866, 'output_timestamp_lag_ms': 0.8, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 0, 'averageLatency': 0, 'minimumLatency': 0, 'maximumLatency': 0}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 0.978422, 'averageLatency': 0.027153, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_osc_gain', 'section': 'audio', 'hits_per_s': 32, 'triggers': 64, 'trigger_js_median_ms': 0.015, 'trigger_js_p95_ms': 0.05, 'timer_lateness_p95_ms': 4.05, 'audio_clock_vs_wall': 1.0008, 'output_timestamp_lag_ms': 0.42, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 1.980838, 'averageLatency': 0.027228, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 3.98567, 'averageLatency': 0.027265, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_osc_gain', 'section': 'audio', 'hits_per_s': 128, 'triggers': 256, 'trigger_js_median_ms': 0.01, 'trigger_js_p95_ms': 0.035, 'timer_lateness_p95_ms': 4.63, 'audio_clock_vs_wall': 0.9991, 'output_timestamp_lag_ms': 3.44, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 3.98567, 'averageLatency': 0.027265, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 5.990502, 'averageLatency': 0.027277, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_osc_gain', 'section': 'audio', 'hits_per_s': 512, 'triggers': 1024, 'trigger_js_median_ms': 0.005, 'trigger_js_p95_ms': 0.015, 'timer_lateness_p95_ms': 4.6075, 'audio_clock_vs_wall': 1.0007, 'output_timestamp_lag_ms': 4.92, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 6.992918, 'averageLatency': 0.02728, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 8.99775, 'averageLatency': 0.027285, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_buffer_gain', 'section': 'audio', 'hits_per_s': 8, 'triggers': 16, 'trigger_js_median_ms': 0.02, 'trigger_js_p95_ms': 0.225, 'timer_lateness_p95_ms': 4.12, 'audio_clock_vs_wall': 0.9996, 'output_timestamp_lag_ms': 1.17, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 8.99775, 'averageLatency': 0.027285, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 11.002582, 'averageLatency': 0.027288, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_buffer_gain', 'section': 'audio', 'hits_per_s': 32, 'triggers': 64, 'trigger_js_median_ms': 0.01, 'trigger_js_p95_ms': 0.045, 'timer_lateness_p95_ms': 4.665, 'audio_clock_vs_wall': 1.0006, 'output_timestamp_lag_ms': 1.23, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 11.002582, 'averageLatency': 0.027288, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 13.007414, 'averageLatency': 0.02729, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_buffer_gain', 'section': 'audio', 'hits_per_s': 128, 'triggers': 256, 'trigger_js_median_ms': 0.01, 'trigger_js_p95_ms': 0.025, 'timer_lateness_p95_ms': 4.5725, 'audio_clock_vs_wall': 0.9993, 'output_timestamp_lag_ms': 3.7, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 14.00983, 'averageLatency': 0.027291, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 16.014662, 'averageLatency': 0.027292, 'minimumLatency': 0, 'maximumLatency': 0.027309}}
+{'name': 'audio_realtime_buffer_gain', 'section': 'audio', 'hits_per_s': 512, 'triggers': 1022, 'trigger_js_median_ms': 0.005, 'trigger_js_p95_ms': 0.015, 'timer_lateness_p95_ms': 4.4406, 'audio_clock_vs_wall': 0.9999, 'output_timestamp_lag_ms': 1.19, 'stats_before': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 16.014662, 'averageLatency': 0.027292, 'minimumLatency': 0, 'maximumLatency': 0.027309}, 'stats_after': {'underrunDuration': 0, 'underrunEvents': 0, 'totalDuration': 18.019494, 'averageLatency': 0.027293, 'minimumLatency': 0, 'maximumLatency': 0.027309}}

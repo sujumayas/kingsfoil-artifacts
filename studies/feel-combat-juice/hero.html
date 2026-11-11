@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel combat juice: hit feedback, targeting and aimed skills for a 2D MMORPG</h1>
+      <p class="deck">A Tibia hit is a coloured number that rises 48 px in one second, a one-tile effect at 75 ms per frame and a server that decides everything. Action games add freezes, flashes and shake, and much of that breaks when 30 players share a screen. A global freeze stops everyone's world, and a stranger's spell shakes your camera. This study collects what still works in an MMO. That means a swing with a held end pose, hitstop only on fights you are in, a 100 ms flash, shake for your own camera, numbers that merge and cap, targeted skills that cannot miss and aimed ones that can. Each comes with its server and latency rules. We measured what juice costs, and it is cheap if it batches. Aimed at Godot 4 on the web and a server-authoritative MMO.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="feel-combat-juice-sandbox.html">Play the Combat Juice Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage" data-nofit><canvas width="192" height="108" aria-label="A live dungeon arena at 192 by 108 pixels: a blue knight fights green goblins; each hit flashes the goblin white, freezes both for a few frames, throws a spark and a rising red number, and crits shake the camera"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Fight style"><button type="button" data-t="0">Targeted</button><button type="button" data-t="1">Aimed</button><button type="button" data-t="2">Crowd</button><button type="button" data-t="3">No juice</button></div>
+      <figcaption>Live, and timed on your device. Everything is drawn in code at 192×108 on 16 px tiles, half of Asterion's 32 px, so every pixel distance here is half the Asterion value. <b>Targeted</b> marks a goblin and swings at it. The hit cannot miss, and it freezes the knight and the goblin for 3 frames, 6 on a crit and 8 on a kill. <b>Aimed</b> fires bolts at 12 tiles per second toward where a goblin stands, so a strafing goblin can dodge, and a miss ends in a grey puff. <b>Crowd</b> adds green allies. Their hits get no freeze and no shake, and their numbers are dimmed to half. <b>No juice</b> keeps only the swing, the number and the health bar. Attacks come every 0.65 s, faster than Tibia's 2 s, so you see more hits. The HUD shows the JavaScript cost of the frame.</figcaption>
+    </figure>
+  </div>
+</header>

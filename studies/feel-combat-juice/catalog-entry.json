@@ -1,0 +1,69 @@
+{
+ "id": "feel-combat-juice",
+ "type": "study",
+ "path": "/feel-combat-juice-topdown-pixel.html",
+ "title": "Top-down pixel combat juice: hit feedback, targeting and aimed skills for a 2D MMORPG",
+ "short": "Combat juice",
+ "nav": "Combat juice",
+ "summary": "Making fights feel good in a Tibia-like world with targeted and aimed skills: swings, hitstop, flashes, shake, damage numbers, targeting, telegraphs and PvP rules, with the server and latency rules and the measured cost behind each.",
+ "series": {
+  "id": "feel",
+  "number": 2
+ },
+ "date": "2026-11-11",
+ "updated": "2026-11-11",
+ "thumb": "/thumbs/feel-combat-juice.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "animation"
+  ],
+  "concept": [
+   "combat-feel"
+  ],
+  "technique": [
+   "hitstop",
+   "screen-shake",
+   "hit-flash",
+   "damage-numbers",
+   "telegraphs",
+   "tab-targeting",
+   "client-prediction",
+   "spell-queue",
+   "bitmap-font"
+  ]
+ },
+ "stats": {
+  "words": 19960,
+  "techniques": 40,
+  "figures": 37,
+  "games": 32,
+  "sources": 182
+ },
+ "pair": "feel-combat-juice-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel combat juice Sandbox (playable)",
+  "path": "/feel-combat-juice-sandbox.html"
+ }
+}

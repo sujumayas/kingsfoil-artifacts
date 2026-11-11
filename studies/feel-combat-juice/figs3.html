@@ -1,0 +1,34 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement in the order Impact · Clarity · MMO fit · Fairness · Speed. Sort by Speed and the column barely moves, because 36 of 40 rows score a 5 once numbers batch and flashes live in a shader <span class="cite"><b class="tag tv">V</b> S4</span>. Impact and Clarity decide. The hit flash (B2) and the kill sequence (H5) lead at 24. Soft target lock (D3) is last at 17, because in PvP it gives up the rule that aimed skills can miss <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Feel against fit for all 40 profiles, Impact plus Clarity against MMO fit plus Fairness plus Speed</h4></div>
+  <svg class="chart mx-chart" viewBox="0 0 600 320" role="img" aria-label="Scatter of the 40 technique profiles: impact plus clarity across, MMO fit plus fairness plus speed up"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one profile at its §5 ratings. Across is how much a hit gains, Impact plus Clarity. Up is how well it survives a crowd, a server and PvP, MMO fit plus Fairness plus Speed. Dots that share a cell sit side by side. Hover or tap a dot to read it and follow the link to its card. Only the hit flash (B2) and the kill sequence (H5) reach the top right. Most profiles crowd the upper rows, because good feedback is local and decides nothing. Knockback (B3) and soft target lock (D3) sit lowest, because both change outcomes in PvP.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What juice costs, with every row of the benchmark on one log scale against the 16.7 ms frame</h4><span class="illu">Desktop numbers, no phone measured</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="col" role="group" aria-label="Machine"><button type="button" class="on" data-v="1">M4 GPU</button><button type="button" data-v="2">M4, 6x CPU throttle</button><button type="button" data-v="3">SwiftShader (software)</button></div>
+    <label><input type="checkbox" data-k="sub"> Subtract the empty frame</label>
+    <button type="button" class="btn ghost" data-b="run">Run the Canvas 2D rows on this device</button>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 320" role="img" aria-label="Log-scale bars of the measured juice costs in section 6d with the 16.7 ms frame marked"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <p class="cost-mach">Measured: Apple M4 Pro (14 cores, 48 GB), macOS 26.5.1, Chromium 153.0.8010.12 under Playwright; ANGLE Metal, a 6x CPU throttle, SwiftShader. Whole frames including a 1 px readback, median ms. Canvas 2D at 320×180 unless the row says native.</p>
+  <figcaption>Every coloured bar is a measured row of §6d <span class="cite"><b class="tag tv">V</b> S4</span>; rows with two values are split into two bars. Cost tracks draw calls, not pixels. One instanced WebGL2 draw handles 1000 numbers in 0.25 ms on the M4 GPU, while 100 flashing sprites filled with <code>source-atop</code> every frame cost 16.0 ms, nearly a whole frame. Switch to SwiftShader to see a machine with no GPU, where 1000 unaggregated digits take 37.7 ms. Tick <b>Subtract the empty frame</b> to see each effect alone. <b>Run the Canvas 2D rows</b> repeats the number, particle, flash and shake tests with this page's sprites and font on your device. Those green bars use this page's code, not the benchmark's, and the WebGL rows are not run.</figcaption>
+</figure>
+<!--/FIG-->
