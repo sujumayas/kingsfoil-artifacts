@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel NPCs and dialog: bubbles, boxes, portraits, quest givers and the feel of talking to a world</h1>
+      <p class="deck">Talking to a townsperson looks simple and hides most of an MMO's hard problems. A Tibia NPC is a chat parser with a 3-tile radius that waits 1 s before every reply on purpose, and many players can talk to it at once, each with private replies. This study collects how games make that feel good: typewriter speed and pauses, a guard against mashing, a 9-slice box with a bobbing arrow, bubbles that stay readable in a crowd, markers, shops and barks. It also covers the server side, sessions and line ids. We measured what text costs. Once bubbles are cached it is cheap, so feel, clarity and authoring decide. Aimed at Godot 4 on the web and a server-authoritative MMO.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="feel-npc-dialog-sandbox.html">Play the NPC Dialog Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage" data-nofit><canvas width="320" height="180" aria-label="A live town square at 320 by 180 pixels: an elder by the notice board talks in a parchment box with a portrait, villagers walk past, a gold question mark bobs over a quest giver and a guard answers in cyan text"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Dialog style"><button type="button" data-t="0">Box + portrait</button><button type="button" data-t="1">Bubbles</button><button type="button" data-t="2">Keyword chat</button><button type="button" data-t="3">Crowd</button></div>
+      <figcaption>Live, and timed on your device. Everything here is drawn in code at 320×180, text included, from one hand-made bitmap font blitted from a glyph atlas. <b>Box + portrait</b> types at 20 glyphs per second with pauses after commas and full stops, and the arrow bobs 0, 1, 2, 1 px. <b>Bubbles</b> puts the same line over the speaker. <b>Keyword chat</b> is the Tibia way, with a 1 s reply delay and cyan replies. <b>Crowd</b> adds 24 chatting players and keeps 3 bubbles per speaker and 12 on screen, so your own talk stays readable. The HUD shows the JavaScript cost of the frame. Names, lines and the town are made up for this page.</figcaption>
+    </figure>
+  </div>
+</header>

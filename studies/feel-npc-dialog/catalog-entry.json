@@ -1,0 +1,69 @@
+{
+ "id": "feel-npc-dialog",
+ "type": "study",
+ "path": "/feel-npc-dialog-topdown-pixel.html",
+ "title": "Top-down pixel NPCs and dialog: bubbles, boxes, portraits, quest givers and the feel of talking to a world",
+ "short": "NPCs & dialog",
+ "nav": "NPC dialog",
+ "summary": "Talking to NPCs in a Tibia-like world: keyword chat, speech bubbles in crowds, dialog boxes with portraits, quest markers, shop handoffs and ambient barks, with the server rules, authoring tools and runtime cost behind each.",
+ "series": {
+  "id": "feel",
+  "number": 1
+ },
+ "date": "2026-11-11",
+ "updated": "2026-11-11",
+ "thumb": "/thumbs/feel-npc-dialog.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "ui"
+  ],
+  "concept": [
+   "npc-dialog"
+  ],
+  "technique": [
+   "typewriter-text",
+   "bitmap-font",
+   "speech-bubbles",
+   "dialog-graph",
+   "npc-focus",
+   "quest-markers",
+   "barks",
+   "voice-blips",
+   "fsm"
+  ]
+ },
+ "stats": {
+  "words": 19759,
+  "techniques": 40,
+  "figures": 34,
+  "games": 34,
+  "sources": 209
+ },
+ "pair": "feel-npc-dialog-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel NPCs and dialog Sandbox (playable)",
+  "path": "/feel-npc-dialog-sandbox.html"
+ }
+}

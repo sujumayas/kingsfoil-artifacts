@@ -39,3 +39,15 @@ formats:
     page: "{id}.html"
     sandbox_page: "{id}-lab.html"
     doc: docs/formats/design-curves.md
+
+  feel-pixel:
+    status: active
+    title: Game-feel study of one player interaction, with a playable sandbox
+    use_for: One player interaction in a top-down pixel MMORPG (talking to NPCs, combat hits, looting),
+      researched as families of techniques for feel, art, systems and cost, with a 320x180 canvas sandbox
+      the reader plays to compare the options.
+    template: feel-npc-dialog
+    sandbox: required
+    page: "{id}-topdown-pixel.html"
+    sandbox_page: "{id}-sandbox.html"
+    doc: docs/formats/feel-pixel.md

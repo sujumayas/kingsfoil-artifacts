@@ -3,7 +3,7 @@
   "path": "/index.html",
   "title": "Kingsfoil Artifacts",
   "description": "Library homepage generated from catalog.json: series shelves, search, facet filters, technique atlas.",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/manifest.json",
@@ -105,61 +105,61 @@
   "path": "/catalog.json",
   "title": "Catalog (v2)",
   "description": "Rich data model: items, series, tags, stats, pairs. Source of truth for the homepage.",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/taxonomy.json",
   "title": "Taxonomy",
   "description": "Controlled vocabulary of facets and tag values.",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/ai-rts-enemy.webp",
   "title": "Thumbnail ai-rts-enemy.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/procgen-characters.webp",
   "title": "Thumbnail procgen-characters.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/vfx-acid.png",
   "title": "Thumbnail vfx-acid.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/vfx-forest.png",
   "title": "Thumbnail vfx-forest.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/vfx-light.png",
   "title": "Thumbnail vfx-light.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/vfx-rain.png",
   "title": "Thumbnail vfx-rain.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/vfx-snow.png",
   "title": "Thumbnail vfx-snow.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/thumbs/curves-hearthguard.webp",
   "title": "Thumbnail curves-hearthguard.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/curves-hearthguard.html",
@@ -177,7 +177,7 @@
   "path": "/thumbs/curves-matchrpg.png",
   "title": "Thumbnail curves-matchrpg.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/curves-matchrpg.html",
@@ -195,7 +195,7 @@
   "path": "/thumbs/vfx-fire.png",
   "title": "Thumbnail vfx-fire.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/vfx-fire-topdown-pixel.html",
@@ -213,7 +213,7 @@
   "path": "/thumbs/vfx-water.png",
   "title": "Thumbnail vfx-water.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/vfx-water-topdown-pixel.html",
@@ -231,7 +231,7 @@
   "path": "/thumbs/vfx-fog.png",
   "title": "Thumbnail vfx-fog.png",
   "description": "Card thumbnail",
-  "date": "2026-11-10"
+  "date": "2026-11-11"
  },
  {
   "path": "/vfx-fog-topdown-pixel.html",
@@ -244,5 +244,23 @@
   "title": "Top-down pixel fog Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-10"
+ },
+ {
+  "path": "/thumbs/feel-npc-dialog.png",
+  "title": "Thumbnail feel-npc-dialog.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/feel-npc-dialog-topdown-pixel.html",
+  "title": "Top-down pixel NPCs and dialog: bubbles, boxes, portraits, quest givers and the feel of talking to a world",
+  "description": "Talking to NPCs in a Tibia-like world: keyword chat, speech bubbles in crowds, dialog boxes with portraits, quest markers, shop handoffs and ambient barks, with the server rules, authoring tools and runtime cost behind each.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/feel-npc-dialog-sandbox.html",
+  "title": "Top-down pixel NPCs and dialog Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-11"
  }
 ]

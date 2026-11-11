@@ -1,0 +1,34 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement in the order Clarity · Charm · MMO fit · Authoring · Speed. Sort by Speed and the column barely moves, because 33 of 40 rows score a 5 once bubbles are cached [V, S3]. Charm, clarity and authoring decide. Emote balloons (D3) top the table at 24. Re-validation (F3) and line ids (H2) sum only 18 because players never see them, yet the architecture in §7 rests on both [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Feel against cost: all 40 profiles by Clarity plus Charm and by Authoring plus Speed</h4></div>
+  <svg class="chart mx-chart" viewBox="0 0 600 320" role="img" aria-label="Scatter of the 40 technique profiles: clarity plus charm across, authoring plus speed up"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one profile at its §5 ratings. Across is how it feels, Clarity plus Charm. Up is how cheap it is to build and run, Authoring plus Speed. Dots that share a cell sit side by side. Hover or tap a dot to read it and follow the link to its card. The top right holds the typewriter (C1), the press guard (C3), the box (C5), turn-to-face (D4), markers (E1) and emote balloons (D3): high feel, low cost, so build them first. LLM NPCs (H6) sit alone at the bottom left. MMO fit is not on either axis, so read it in the readout before you skip a dot.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What text costs: every row of the benchmark on one log scale, against the 16.7 ms frame</h4><span class="illu">Desktop numbers, no phone measured</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="col" role="group" aria-label="Machine"><button type="button" class="on" data-v="1">M4 GPU</button><button type="button" data-v="2">M4, 6x CPU throttle</button><button type="button" data-v="3">SwiftShader (software)</button></div>
+    <label><input type="checkbox" data-k="sub"> Subtract the empty frame</label>
+    <button type="button" class="btn ghost" data-b="run">Run the Canvas 2D rows on this device</button>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 320" role="img" aria-label="Log-scale bars of the measured text costs in section 6d with the 16.7 ms frame marked"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <p class="cost-mach">Measured: Apple M4 Pro (14 cores, 48 GB), macOS 26.5.1, Chromium 153.0.8010.12 under Playwright; ANGLE Metal, a DevTools 6x CPU throttle, SwiftShader. 320×180 canvas upscaled once to 720p, mean ms per frame including a 1 px readback.</p>
+  <figcaption>Every coloured bar is a measured row of §6d [V, S3]. Cost tracks draw commands, not pixels. One <code>fillText</code> per line beat per-glyph blits 6x at 2,000 glyphs, and 200 redrawn bubbles cost 44.98 ms on the throttled CPU, nearly three frames, against 1.78 ms cached. Switch to SwiftShader to see the floor of a machine with no GPU, where each glyph quad costs about 14.5 µs however it is batched, so the instanced WebGL row jumps to 145.51 ms [I, note 07]. <b>Run the Canvas 2D rows</b> repeats the blit, fillText, box and bubble tests with this page's font on your device. Those green bars are labelled as measured here; they use this page's code, not the benchmark's.</figcaption>
+</figure>
+<!--/FIG-->

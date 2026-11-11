@@ -99,7 +99,9 @@ The recipe and the validator enforce the mechanics. These are the content rules:
   `notes/SANDBOX-SPEC.md` (including the §7 layer list, so §7, §8 and the sandbox agree). Once the report exists, put
   the fixed figure names and their file owners in `notes/FIGURES-PLAN.md`. Then the report writer, the sandbox
   builder and two figure builders can run at the same time. Give one of the figure builders sole ownership of
-  `build.py` and `core.js`. `vfx-fire` was built this way.
+  `build.py` and `core.js`. `vfx-fire` was built this way. Give each agent its own scratch folder: in
+  `feel-npc-dialog` two figure agents shared one and overwrote each other's font files. If the report writer
+  changes numbers in `SANDBOX-SPEC.md` while the sandbox builder runs, message the builder.
 
 After `studykit qa <id> --shots`, look at the screenshots yourself: the top of the page and two or three figures.
 
