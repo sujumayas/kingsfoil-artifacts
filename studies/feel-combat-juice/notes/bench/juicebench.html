@@ -1,0 +1,484 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Juice bench</title>
+<style>body{background:#111;color:#ddd;font:12px monospace}canvas{image-rendering:pixelated;display:block}</style></head>
+<body>
+<p>Combat juice bench. Call <code>runAll({frames, sections})</code> from the console or run.py. No external assets.</p>
+<pre id="log"></pre>
+<script>
+// ======================================================================
+// Setup
+// ======================================================================
+const W = 320, H = 180, S = 4;   // logical res, upscale to 1280x720
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const reseed = (s) => { seed = s; };
+const q = (a, p) => a[Math.min(a.length - 1, Math.floor(p * a.length))];
+function stats(times) {
+  times.sort((a, b) => a - b);
+  return { median_ms: +q(times, .5).toFixed(4), mean_ms: +(times.reduce((a, b) => a + b, 0) / times.length).toFixed(4), p95_ms: +q(times, .95).toFixed(4), min_ms: +times[0].toFixed(4) };
+}
+let sink = 0;
+
+// 3x5 digits, outlined to a 5x7 cell, advance 4 px
+const DIG = ["111101101101111","010110010010111","111001111100111","111001111001111","101101111001001","111100111001111","111100111101111","111001001010010","111101111101111","111101111001111"];
+function buildDigitAtlas(scale) {
+  const w = 50, h = 7;
+  const t = document.createElement('canvas'); t.width = w; t.height = h;
+  const x = t.getContext('2d'); const id = x.createImageData(w, h);
+  const on = (d, cx, cy) => cx >= 0 && cx < 3 && cy >= 0 && cy < 5 && DIG[d][cy * 3 + cx] === '1';
+  for (let d = 0; d < 10; d++) for (let py = 0; py < 7; py++) for (let px = 0; px < 5; px++) {
+    const cx = px - 1, cy = py - 1; const p = (py * w + d * 5 + px) * 4;
+    if (on(d, cx, cy)) { id.data[p] = id.data[p+1] = id.data[p+2] = 255; id.data[p+3] = 255; }
+    else { let n = false; for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) if (on(d, cx + ox, cy + oy)) n = true; if (n) { id.data[p+3] = 255; } }
+  }
+  x.putImageData(id, 0, 0);
+  return scaleUp(t, scale);
+}
+function scaleUp(src, s) {
+  const c = document.createElement('canvas'); c.width = src.width * s; c.height = src.height * s;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(src, 0, 0, c.width, c.height); return c;
+}
+// 32x32 creature sprite, white silhouette, 32x32 tile, 16x16 deco, 3x3 spark sprites (4 colours)
+function buildSprite(white) {
+  const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d');
+  const col = (a) => white ? '#fff' : a;
+  x.fillStyle = col('#1a1020'); x.beginPath(); x.ellipse(16, 18, 10, 13, 0, 0, 7); x.fill();
+  x.fillStyle = col('#7a4a2a'); x.beginPath(); x.ellipse(16, 18, 9, 12, 0, 0, 7); x.fill();
+  x.fillStyle = col('#c08050'); x.fillRect(11, 8, 10, 8);
+  x.fillStyle = col('#202020'); x.fillRect(13, 11, 2, 2); x.fillRect(18, 11, 2, 2);
+  x.fillStyle = col('#a0a0b0'); x.fillRect(24, 10, 3, 16);
+  // threshold alpha to 1 bit (pixel art)
+  const id = x.getImageData(0, 0, 32, 32); for (let p = 3; p < id.data.length; p += 4) id.data[p] = id.data[p] > 100 ? 255 : 0; x.putImageData(id, 0, 0);
+  return c;
+}
+function buildTile(v) {
+  const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d');
+  x.fillStyle = v ? '#3a4a3a' : '#404a40'; x.fillRect(0, 0, 32, 32);
+  x.fillStyle = '#2c382c'; for (let i = 0; i < 12; i++) x.fillRect((i * 13 + v * 7) % 31, (i * 7 + v * 5) % 31, 2, 1);
+  return c;
+}
+function buildDeco() { const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d'); x.fillStyle = '#6a6a5a'; x.fillRect(3, 6, 10, 8); x.fillStyle = '#8a8a7a'; x.fillRect(4, 6, 8, 3); return c; }
+const SPARK_COLS = ['#fff8d0', '#ffd040', '#ff8020', '#ff3010'];
+function buildSparks() {
+  const c = document.createElement('canvas'); c.width = 12; c.height = 3; const x = c.getContext('2d');
+  SPARK_COLS.forEach((col, i) => { x.fillStyle = col; x.fillRect(i * 3 + 1, 0, 1, 3); x.fillRect(i * 3, 1, 3, 1); });
+  return c;
+}
+function bayerPattern(ctx, s, level) { // level: fraction of 16 pixels on
+  const M = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const c = document.createElement('canvas'); c.width = c.height = 4 * s; const x = c.getContext('2d');
+  x.fillStyle = 'rgb(220,40,30)';
+  for (let i = 0; i < 16; i++) if (M[i] < level * 16) x.fillRect((i % 4) * s, Math.floor(i / 4) * s, s, s);
+  return ctx.createPattern(c, 'repeat');
+}
+
+function makeTarget(native) {
+  const s = native ? S : 1;
+  const c = document.createElement('canvas'); c.width = W * s; c.height = H * s;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  const disp = document.createElement('canvas'); disp.width = W * S; disp.height = H * S;
+  const dctx = disp.getContext('2d'); dctx.imageSmoothingEnabled = false;
+  document.body.appendChild(disp);
+  const T = { native, s, c, ctx, disp, dctx, digits: buildDigitAtlas(s), sprite: scaleUp(buildSprite(false), s), white: scaleUp(buildSprite(true), s),
+    tiles: [scaleUp(buildTile(0), s), scaleUp(buildTile(1), s)], deco: scaleUp(buildDeco(), s), sparks: scaleUp(buildSparks(), s) };
+  T.scratch = document.createElement('canvas'); T.scratch.width = T.scratch.height = 32 * s; T.sctx = T.scratch.getContext('2d'); T.sctx.imageSmoothingEnabled = false;
+  T.patLight = bayerPattern(ctx, s, 0.25); T.patDense = bayerPattern(ctx, s, 0.5);
+  return T;
+}
+const tname = (T) => T.native ? 'canvas2d_native1280x720' : 'canvas2d_lowres320x180+upscale';
+function present(T) {
+  if (!T.native) T.dctx.drawImage(T.c, 0, 0, W * S, H * S); else T.dctx.drawImage(T.c, 0, 0);
+  sink += T.dctx.getImageData(0, 0, 1, 1).data[0]; // forces the GPU canvas to finish
+}
+function measure(name, T, frames, drawFn, extra, presentFn) {
+  const times = []; const pr = presentFn || present;
+  const run = (f) => { T.ctx.clearRect(0, 0, T.c.width, T.c.height); drawFn(T, T.ctx, f); pr(T, f); };
+  // adaptive: if a warm-up frame is very slow (> 40 ms), cut to 5 warm-up + 20 timed frames so one pathological case can't stall the run
+  let warm = 30; for (let f = 0; f < warm; f++) { const a = performance.now(); run(f); if (f === 1 && performance.now() - a > 40) { warm = 5; frames = Math.min(frames, 20); } }
+  for (let f = 0; f < frames; f++) { const a = performance.now(); run(f + 30); times.push(performance.now() - a); }
+  return Object.assign({ name, target: tname(T), frames }, stats(times), extra || {});
+}
+
+// ======================================================================
+// 1. Damage numbers
+// ======================================================================
+function hitVal() { const v = 40 + Math.floor(rnd() * 140); return rnd() < 0.1 ? v * 2 : v; }
+function resetNum(n, agg) { n.x = 4 + Math.floor(rnd() * (W - 30)); n.y = 20 + rnd() * (H - 30); n.age = 0; n.v = hitVal(); n.s = String(n.v); n.agg = agg; return n; }
+function makeNums(N, agg) { reseed(11); const a = []; for (let i = 0; i < N; i++) { const n = resetNum({}, agg); n.age = Math.floor(rnd() * 60); if (agg) { for (let k = 0; k < n.age / 6; k++) n.v += hitVal(); n.s = String(n.v); } a.push(n); } return a; }
+function stepNums(A) {
+  for (let i = 0; i < A.length; i++) { const n = A[i]; n.age++; n.y -= 0.4;
+    if (n.age >= 60) resetNum(n, n.agg);
+    else if (n.agg && n.age % 6 === 0) { n.v += hitVal(); n.s = String(n.v); } }
+}
+function drawNumGlyphs(T, ctx, n) {
+  const s = T.s, x = n.x, y = Math.round(n.y), str = n.s;
+  for (let k = 0; k < str.length; k++) { const d = str.charCodeAt(k) - 48; ctx.drawImage(T.digits, d * 5 * s, 0, 5 * s, 7 * s, (x + k * 4) * s, y * s, 5 * s, 7 * s); }
+}
+function makeCache(T, cap) { return { T, cap, map: new Map(), builds: 0, gets: 0, buildMs: 0 }; }
+function cacheGet(C, str) {
+  C.gets++; let c = C.map.get(str); if (c) return c;
+  const a = performance.now(); const T = C.T, s = T.s;
+  c = document.createElement('canvas'); c.width = (str.length * 4 + 1) * s; c.height = 7 * s;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  for (let k = 0; k < str.length; k++) { const d = str.charCodeAt(k) - 48; x.drawImage(T.digits, d * 5 * s, 0, 5 * s, 7 * s, k * 4 * s, 0, 5 * s, 7 * s); }
+  if (C.map.size >= C.cap) C.map.delete(C.map.keys().next().value); // FIFO eviction
+  C.map.set(str, c); C.builds++; C.buildMs += performance.now() - a; return c;
+}
+function runDamageNumbers(T, frames) {
+  const res = [];
+  for (const N of [50, 200, 1000]) {
+    for (const agg of [false, true]) {
+      const alive = agg ? N / 10 : N;  // aggregation folds ~10 hits per target per 60-frame life into one number
+      const ex = { section: 'dmg', hits_alive: N, numbers_drawn: alive, aggregated: agg };
+      let A = makeNums(alive, agg);
+      res.push(measure(`dmg_glyph_blits`, T, frames, (T, ctx) => { stepNums(A); for (const n of A) drawNumGlyphs(T, ctx, n); }, ex));
+      A = makeNums(alive, agg);
+      res.push(measure(`dmg_fillText`, T, frames, (T, ctx) => { stepNums(A); ctx.font = `bold ${7 * T.s}px monospace`; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff';
+        for (const n of A) ctx.fillText(n.s, n.x * T.s, Math.round(n.y) * T.s); }, ex));
+      A = makeNums(alive, agg);
+      res.push(measure(`dmg_fillText_strokeText_outline`, T, frames, (T, ctx) => { stepNums(A); ctx.font = `bold ${7 * T.s}px monospace`; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = T.s;
+        for (const n of A) { const y = Math.round(n.y) * T.s; ctx.strokeText(n.s, n.x * T.s, y); ctx.fillText(n.s, n.x * T.s, y); } }, ex));
+      A = makeNums(alive, agg); const C = makeCache(T, 1024);
+      const r = measure(`dmg_cached_number_sprites`, T, frames, (T, ctx) => { stepNums(A); for (const n of A) ctx.drawImage(cacheGet(C, n.s), n.x * T.s, Math.round(n.y) * T.s); }, ex);
+      let bytes = 0; C.map.forEach(c => bytes += c.width * c.height * 4);
+      Object.assign(r, { cache_builds: C.builds, cache_gets: C.gets, cache_hit_rate: +(1 - C.builds / C.gets).toFixed(3), cache_build_ms_total: +C.buildMs.toFixed(2), cache_entries: C.map.size, cache_bytes_est: bytes });
+      res.push(r);
+    }
+  }
+  return res;
+}
+
+// ======================================================================
+// 2. Particles
+// ======================================================================
+function makeParts(N) {
+  reseed(5); const P = { N, x: new Float32Array(N), y: new Float32Array(N), vx: new Float32Array(N), vy: new Float32Array(N), life: new Float32Array(N) };
+  P.hx = []; P.hy = []; for (let k = 0; k < 20; k++) { P.hx.push(20 + rnd() * 280); P.hy.push(20 + rnd() * 140); }
+  for (let i = 0; i < N; i++) { spawnPart(P, i); P.life[i] = Math.floor(rnd() * 40); }
+  return P;
+}
+function spawnPart(P, i) { const k = i % 20, a = rnd() * 6.283, sp = 0.5 + rnd() * 1.5; P.x[i] = P.hx[k]; P.y[i] = P.hy[k]; P.vx[i] = Math.cos(a) * sp; P.vy[i] = Math.sin(a) * sp - 0.5; P.life[i] = 15 + Math.floor(rnd() * 25); }
+function simParts(P) { const { x, y, vx, vy, life } = P; for (let i = 0; i < P.N; i++) { x[i] += vx[i]; y[i] += vy[i]; vy[i] += 0.08; vx[i] *= 0.96; if (--life[i] <= 0) spawnPart(P, i); } }
+function runParticles(T, frames) {
+  const res = [];
+  for (const N of [500, 2000, 10000]) {
+    const ex = { section: 'particles', particles: N };
+    let P = makeParts(N);
+    res.push(measure('part_sim_only_no_draw', T, frames, () => simParts(P), ex));
+    P = makeParts(N);
+    res.push(measure('part_fillRect_2x2_4colour_buckets', T, frames, (T, ctx) => { simParts(P); const s = T.s, X = P.x, Y = P.y;
+      for (let c = 0; c < 4; c++) { ctx.fillStyle = SPARK_COLS[c]; for (let i = c; i < N; i += 4) ctx.fillRect((X[i] | 0) * s, (Y[i] | 0) * s, 2 * s, 2 * s); } }, ex));
+    P = makeParts(N);
+    res.push(measure('part_drawImage_3x3_sprite', T, frames, (T, ctx) => { simParts(P); const s = T.s, X = P.x, Y = P.y, sp = T.sparks;
+      for (let i = 0; i < N; i++) ctx.drawImage(sp, (i & 3) * 3 * s, 0, 3 * s, 3 * s, ((X[i] | 0) - 1) * s, ((Y[i] | 0) - 1) * s, 3 * s, 3 * s); }, ex));
+  }
+  return res;
+}
+
+// ======================================================================
+// 3. Hit flash (100 sprites, all flashing = worst case)
+// ======================================================================
+const spritePos = (i) => [(i % 20) * 15 + 2, Math.floor(i / 20) * 30 + 10];
+function runFlash(T, frames) {
+  const res = []; const ex = { section: 'flash', sprites: 100 };
+  res.push(measure('flash_none_normal_sprites', T, frames, (T, ctx) => { for (let i = 0; i < 100; i++) { const [x, y] = spritePos(i); ctx.drawImage(T.sprite, x * T.s, y * T.s); } }, ex));
+  res.push(measure('flash_prebaked_white_sprite', T, frames, (T, ctx) => { for (let i = 0; i < 100; i++) { const [x, y] = spritePos(i); ctx.drawImage(T.white, x * T.s, y * T.s); } }, ex));
+  res.push(measure('flash_source_atop_per_frame', T, frames, (T, ctx) => { const sc = T.sctx, sz = 32 * T.s;
+    for (let i = 0; i < 100; i++) { const [x, y] = spritePos(i);
+      sc.globalCompositeOperation = 'source-over'; sc.clearRect(0, 0, sz, sz); sc.drawImage(T.sprite, 0, 0);
+      sc.globalCompositeOperation = 'source-atop'; sc.fillStyle = '#fff'; sc.fillRect(0, 0, sz, sz);
+      ctx.drawImage(T.scratch, x * T.s, y * T.s); } T.sctx.globalCompositeOperation = 'source-over'; }, ex));
+  res.push(measure('flash_ctx_filter_brightness0_invert1', T, frames, (T, ctx) => { ctx.filter = 'brightness(0) invert(1)';
+    for (let i = 0; i < 100; i++) { const [x, y] = spritePos(i); ctx.drawImage(T.sprite, x * T.s, y * T.s); } ctx.filter = 'none'; }, ex));
+  return res;
+}
+
+// ======================================================================
+// 4. Screen shake
+// ======================================================================
+function drawScene(T, ctx, ox, oy) {
+  const s = T.s;
+  for (let ty = -1; ty < 7; ty++) for (let tx = -1; tx < 11; tx++) ctx.drawImage(T.tiles[(tx + ty) & 1], (tx * 32 + ox) * s, (ty * 32 + oy) * s);
+  for (let i = 0; i < 40; i++) ctx.drawImage(T.deco, (((i * 37) % 300) + ox) * s, (((i * 53) % 160) + oy) * s);
+  for (let i = 0; i < 100; i++) { const [x, y] = spritePos(i); ctx.drawImage(T.sprite, (x + ox) * s, (y + oy) * s); }
+}
+const shakeOff = (f) => [Math.round(Math.sin(f * 1.7) * 3), Math.round(Math.cos(f * 2.3) * 3)];
+function runShake(T, frames) {
+  const res = []; const ex = { section: 'shake', scene_drawImage_calls: 96 + 40 + 100, amplitude_px: 3 };
+  res.push(measure('shake_none', T, frames, (T, ctx) => drawScene(T, ctx, 0, 0), ex));
+  res.push(measure('shake_setTransform', T, frames, (T, ctx, f) => { const [dx, dy] = shakeOff(f); ctx.setTransform(1, 0, 0, 1, dx * T.s, dy * T.s); drawScene(T, ctx, 0, 0); ctx.setTransform(1, 0, 0, 1, 0, 0); }, ex));
+  res.push(measure('shake_redraw_with_offset_args', T, frames, (T, ctx, f) => { const [dx, dy] = shakeOff(f); drawScene(T, ctx, dx, dy); }, ex));
+  res.push(measure('shake_offset_at_upscale_blit', T, frames, (T, ctx) => drawScene(T, ctx, 0, 0), ex, (T, f) => {
+    const [dx, dy] = shakeOff(f); T.dctx.clearRect(0, 0, W * S, H * S);
+    if (!T.native) T.dctx.drawImage(T.c, dx * S, dy * S, W * S, H * S); else T.dctx.drawImage(T.c, dx * S, dy * S);
+    sink += T.dctx.getImageData(0, 0, 1, 1).data[0]; }));
+  res.push(measure('shake_css_transform_on_element', T, frames, (T, ctx, f) => { const [dx, dy] = shakeOff(f); T.disp.style.transform = `translate(${dx * S}px,${dy * S}px)`; drawScene(T, ctx, 0, 0); }, ex));
+  T.disp.style.transform = '';
+  return res;
+}
+// rAF interval test: does CSS shake (compositor) or setTransform add frame time or jank?
+function rafTest(T, mode, n) {
+  return new Promise((resolve) => {
+    const iv = [], work = []; let last = 0, f = 0;
+    const step = (ts) => {
+      const a = performance.now();
+      const [dx, dy] = shakeOff(f);
+      T.ctx.setTransform(1, 0, 0, 1, 0, 0); T.ctx.clearRect(0, 0, T.c.width, T.c.height);
+      if (mode === 'setTransform') T.ctx.setTransform(1, 0, 0, 1, dx * T.s, dy * T.s);
+      drawScene(T, T.ctx, 0, 0); T.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (mode === 'css') T.disp.style.transform = `translate(${dx * S}px,${dy * S}px)`;
+      T.dctx.drawImage(T.c, 0, 0, W * S, H * S);
+      work.push(performance.now() - a);
+      if (last) iv.push(ts - last); last = ts; f++;
+      if (f < n) requestAnimationFrame(step); else { T.disp.style.transform = ''; const si = stats(iv.slice()); resolve({ name: 'shake_raf_' + mode, target: tname(T), section: 'shake_raf', frames: n,
+        raf_interval_median_ms: si.median_ms, raf_interval_p95_ms: si.p95_ms, raf_interval_max_ms: +Math.max(...iv).toFixed(3), frames_over_20ms: iv.filter(x => x > 20).length, ...stats(work) }); }
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+// ======================================================================
+// 5. Telegraph decals (20: 10 circles, 10 cones, filling)
+// ======================================================================
+function makeDecals() { reseed(3); const D = []; for (let i = 0; i < 20; i++) D.push(i < 10 ? { cone: false, x: 30 + rnd() * 260, y: 30 + rnd() * 120, r: 16 + rnd() * 24 } : { cone: true, x: 30 + rnd() * 260, y: 30 + rnd() * 120, r: 48, a: rnd() * 6.283, h: Math.PI / 6 }); return D; }
+function decalPath(ctx, d, r, s) { ctx.beginPath(); if (d.cone) { ctx.moveTo(d.x * s, d.y * s); ctx.arc(d.x * s, d.y * s, r * s, d.a - d.h, d.a + d.h); ctx.closePath(); } else ctx.arc(d.x * s, d.y * s, r * s, 0, 6.2832); }
+function runTelegraphs(T, frames) {
+  const res = []; const D = makeDecals(); const ex = { section: 'telegraph', decals: 20 };
+  const drawAll = (mode) => (T, ctx, f) => { const s = T.s; ctx.lineWidth = s; ctx.strokeStyle = 'rgb(255,80,60)';
+    for (let i = 0; i < 20; i++) { const d = D[i], p = ((f + i * 5) % 60) / 60;
+      if (mode === 'alpha') { ctx.fillStyle = 'rgb(220,40,30)'; ctx.globalAlpha = 0.25; decalPath(ctx, d, d.r, s); ctx.fill(); ctx.globalAlpha = 0.45; decalPath(ctx, d, Math.max(0.5, d.r * p), s); ctx.fill(); ctx.globalAlpha = 1; decalPath(ctx, d, d.r, s); ctx.stroke(); }
+      else { ctx.fillStyle = T.patLight; decalPath(ctx, d, d.r, s); ctx.fill(); ctx.fillStyle = T.patDense; decalPath(ctx, d, Math.max(0.5, d.r * p), s); ctx.fill(); decalPath(ctx, d, d.r, s); ctx.stroke(); } } };
+  res.push(measure('tele_real_alpha', T, frames, drawAll('alpha'), ex));
+  res.push(measure('tele_dithered_bayer_pattern', T, frames, drawAll('dither'), ex));
+  return res;
+}
+
+function runCanvas2D(frames, sections) {
+  const res = [];
+  for (const native of [false, true]) {
+    const T = makeTarget(native);
+    measure('warmup_discarded', T, frames, () => {});
+    res.push(measure('baseline_empty_frame', T, frames, () => {}, { section: 'baseline' }));
+    const go = (k, fn) => { if (sections.includes(k)) { try { res.push(...fn(T, frames)); } catch (e) { res.push({ name: k + '_ERROR', target: tname(T), error: String(e) }); } } };
+    go('dmg', runDamageNumbers); go('particles', runParticles); go('flash', runFlash); go('shake', runShake); go('telegraph', runTelegraphs);
+    T.disp.remove();
+  }
+  return res;
+}
+
+// ======================================================================
+// WebGL2
+// ======================================================================
+function glProg(gl, vs, fs) {
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; };
+  const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw gl.getProgramInfoLog(p); return p;
+}
+function glTex(gl, canvas) { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; }
+const QUAD_VS = `#version 300 es
+in vec2 corner; in vec4 r; in vec4 uv; in float fl;
+uniform vec2 res; uniform float uFlash;
+out vec2 vuv; out float vfl;
+void main(){ vec2 p = r.xy + corner * r.zw; vuv = mix(uv.xy, uv.zw, corner); vfl = max(fl, uFlash);
+  vec2 n = p / res * 2.0 - 1.0; gl_Position = vec4(n.x, -n.y, 0.0, 1.0); }`;
+const QUAD_FS = `#version 300 es
+precision mediump float; in vec2 vuv; in float vfl; uniform sampler2D tex; out vec4 o;
+void main(){ vec4 c = texture(tex, vuv); if (c.a < 0.5) discard; o = vec4(mix(c.rgb, vec3(1.0), vfl), 1.0); }`;
+const PT_VS = `#version 300 es
+in vec3 p; uniform vec2 res; uniform float ps; uniform float sc; uniform vec3 cols[4]; out vec3 vc;
+void main(){ vc = cols[int(p.z)]; gl_PointSize = ps; vec2 n = (floor(p.xy) + 1.0) * sc / res * 2.0 - 1.0; gl_Position = vec4(n.x, -n.y, 0.0, 1.0); }`;
+const PTGPU_VS = `#version 300 es
+in vec4 a; in vec2 b; uniform vec2 res; uniform float ps; uniform float sc; uniform float t; uniform vec3 cols[4]; out vec3 vc;
+void main(){ float tt = mod(t + b.x, b.y); vec2 v = vec2(cos(a.z), sin(a.z) - 0.5) * a.w; vec2 pos = a.xy + v * tt + vec2(0.0, 0.04 * tt * tt);
+  vc = cols[gl_VertexID & 3]; gl_PointSize = ps; vec2 n = (floor(pos) + 1.0) * sc / res * 2.0 - 1.0; gl_Position = vec4(n.x, -n.y, 0.0, 1.0); }`;
+const PT_FS = `#version 300 es
+precision mediump float; in vec3 vc; out vec4 o; void main(){ o = vec4(vc, 1.0); }`;
+const TELE_VS = `#version 300 es
+in vec2 corner; in vec4 A; in vec4 B; uniform vec2 res; out vec2 lp; flat out vec4 vA; flat out vec4 vB;
+void main(){ vec2 c = corner * 2.0 - 1.0; lp = c * A.z; vA = A; vB = B; vec2 p = A.xy + lp; vec2 n = p / res * 2.0 - 1.0; gl_Position = vec4(n.x, -n.y, 0.0, 1.0); }`;
+const TELE_FS = `#version 300 es
+precision mediump float; in vec2 lp; flat in vec4 vA; flat in vec4 vB; uniform float dither; uniform float px; out vec4 o;
+float bayer4(vec2 f){ ivec2 i = ivec2(mod(floor(f / px), 4.0)); int idx = i.x + i.y * 4;
+  float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.); return (m[idx] + 0.5) / 16.0; }
+void main(){ float d = length(lp); float R = vA.z; if (d >= R) discard;
+  if (vA.w > 0.5) { float a = atan(lp.y, lp.x); float da = abs(mod(a - vB.x + 3.14159265, 6.2831853) - 3.14159265); if (da >= vB.y) discard; }
+  float cov = (R - d < px) ? 1.0 : (d < R * vB.z ? 0.45 : 0.25);
+  vec3 col = vec3(0.86, 0.16, 0.12);
+  if (dither > 0.5) { if (cov < bayer4(gl_FragCoord.xy)) discard; o = vec4(col, 1.0); } else o = vec4(col * cov, cov); }`;
+
+function runWebGL(frames, sections, native) {
+  const s = native ? S : 1, RW = W * s, RH = H * s;
+  const c = document.createElement('canvas'); c.width = RW; c.height = RH;
+  const gl = c.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false });
+  if (!gl) return { info: { webgl2: false }, results: [] };
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const info = { webgl2: true, renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) };
+  const target = native ? 'webgl2_native1280x720' : 'webgl2_320x180';
+  gl.viewport(0, 0, RW, RH);
+  const px = new Uint8Array(4);
+  const measureGL = (name, frames, drawFn, extra) => {
+    const run = (f) => { gl.clearColor(0.1, 0.12, 0.1, 1); gl.clear(gl.COLOR_BUFFER_BIT); drawFn(f); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); sink += px[0]; };
+    for (let f = 0; f < 30; f++) run(f);
+    const times = []; for (let f = 0; f < frames; f++) { const a = performance.now(); run(f + 30); times.push(performance.now() - a); }
+    return Object.assign({ name, target, frames }, stats(times), extra || {});
+  };
+  const results = [];
+  results.push(measureGL('gl_baseline_clear_readback', frames, () => {}, { section: 'baseline' }));
+  const cornerBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+
+  // ---- textured instanced quads (digits, flash) ----
+  const qp = glProg(gl, QUAD_VS, QUAD_FS);
+  const qvao = gl.createVertexArray(); gl.bindVertexArray(qvao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); const lc = gl.getAttribLocation(qp, 'corner'); gl.enableVertexAttribArray(lc); gl.vertexAttribPointer(lc, 2, gl.FLOAT, false, 0, 0);
+  const qib = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, qib);
+  const L = { r: gl.getAttribLocation(qp, 'r'), uv: gl.getAttribLocation(qp, 'uv'), fl: gl.getAttribLocation(qp, 'fl') };
+  const STR = 36;
+  const bindInst = (off) => { gl.vertexAttribPointer(L.r, 4, gl.FLOAT, false, STR, off); gl.vertexAttribPointer(L.uv, 4, gl.FLOAT, false, STR, off + 16); gl.vertexAttribPointer(L.fl, 1, gl.FLOAT, false, STR, off + 32); };
+  for (const k of ['r', 'uv', 'fl']) { gl.enableVertexAttribArray(L[k]); gl.vertexAttribDivisor(L[k], 1); }
+  bindInst(0);
+  const uRes = gl.getUniformLocation(qp, 'res'), uFlash = gl.getUniformLocation(qp, 'uFlash');
+  const digTex = glTex(gl, buildDigitAtlas(1)), sprTex = glTex(gl, buildSprite(false));
+  const useQuad = () => { gl.useProgram(qp); gl.bindVertexArray(qvao); gl.bindBuffer(gl.ARRAY_BUFFER, qib); gl.uniform2f(uRes, RW, RH); gl.uniform1f(uFlash, 0); gl.disable(gl.BLEND); };
+
+  if (sections.includes('dmg')) {
+    for (const N of [50, 200, 1000]) for (const agg of [false, true]) {
+      const alive = agg ? N / 10 : N; const A = makeNums(alive, agg); const data = new Float32Array(alive * 6 * 9);
+      results.push(measureGL('gl_dmg_instanced_digit_quads_rebuild_each_frame', frames, () => {
+        useQuad(); gl.bindTexture(gl.TEXTURE_2D, digTex); stepNums(A); let k = 0;
+        for (const n of A) { const y = Math.round(n.y) * s; for (let j = 0; j < n.s.length; j++) { const d = n.s.charCodeAt(j) - 48; const o = k * 9;
+          data[o] = (n.x + j * 4) * s; data[o+1] = y; data[o+2] = 5 * s; data[o+3] = 7 * s; data[o+4] = d / 10; data[o+5] = 0; data[o+6] = (d + 1) / 10; data[o+7] = 1; data[o+8] = 0; k++; } }
+        gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, k * 9), gl.STREAM_DRAW); bindInst(0); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, k);
+      }, { section: 'dmg', hits_alive: N, numbers_drawn: alive, aggregated: agg, draw_calls: 1 }));
+    }
+  }
+  if (sections.includes('flash')) {
+    const data = new Float32Array(100 * 9);
+    const fill = (fl) => { for (let i = 0; i < 100; i++) { const [x, y] = spritePos(i); data.set([x * s, y * s, 32 * s, 32 * s, 0, 0, 1, 1, fl], i * 9); } };
+    for (const [nm, fl, perDraw] of [['gl_flash_none_instanced', 0, false], ['gl_flash_instance_attribute_1_drawcall', 1, false], ['gl_flash_uniform_per_sprite_100_drawcalls', 0, true]]) {
+      fill(fl); useQuad(); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      results.push(measureGL(nm, frames, () => { useQuad(); gl.bindTexture(gl.TEXTURE_2D, sprTex);
+        if (!perDraw) { bindInst(0); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 100); }
+        else { for (let i = 0; i < 100; i++) { gl.uniform1f(uFlash, 1); bindInst(i * STR); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 1); } bindInst(0); }
+      }, { section: 'flash', sprites: 100, draw_calls: perDraw ? 100 : 1 }));
+    }
+  }
+  if (sections.includes('particles')) {
+    const pp = glProg(gl, PT_VS, PT_FS); const pvao = gl.createVertexArray(); gl.bindVertexArray(pvao);
+    const pb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, pb); const lp = gl.getAttribLocation(pp, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 3, gl.FLOAT, false, 0, 0);
+    const cols = new Float32Array([1, .97, .82, 1, .82, .25, 1, .5, .12, 1, .19, .06]);
+    const gp = glProg(gl, PTGPU_VS, PT_FS); const gvao = gl.createVertexArray(); gl.bindVertexArray(gvao);
+    const gb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, gb);
+    const la = gl.getAttribLocation(gp, 'a'), lb = gl.getAttribLocation(gp, 'b');
+    gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 4, gl.FLOAT, false, 24, 0); gl.enableVertexAttribArray(lb); gl.vertexAttribPointer(lb, 2, gl.FLOAT, false, 24, 16);
+    for (const N of [500, 2000, 10000]) {
+      const P = makeParts(N); const data = new Float32Array(N * 3);
+      gl.useProgram(pp); gl.bindVertexArray(pvao); gl.bindBuffer(gl.ARRAY_BUFFER, pb); gl.bufferData(gl.ARRAY_BUFFER, data.byteLength, gl.DYNAMIC_DRAW);
+      results.push(measureGL('gl_part_points_cpu_sim_buffer_upload', frames, () => {
+        gl.useProgram(pp); gl.bindVertexArray(pvao); gl.bindBuffer(gl.ARRAY_BUFFER, pb); gl.disable(gl.BLEND);
+        gl.uniform2f(gl.getUniformLocation(pp, 'res'), RW, RH); gl.uniform1f(gl.getUniformLocation(pp, 'ps'), 2 * s); gl.uniform1f(gl.getUniformLocation(pp, 'sc'), s); gl.uniform3fv(gl.getUniformLocation(pp, 'cols'), cols);
+        simParts(P); for (let i = 0; i < N; i++) { data[i*3] = P.x[i]; data[i*3+1] = P.y[i]; data[i*3+2] = i & 3; }
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, data); gl.drawArrays(gl.POINTS, 0, N);
+      }, { section: 'particles', particles: N, draw_calls: 1 }));
+      reseed(5); const g = new Float32Array(N * 6); for (let i = 0; i < N; i++) g.set([20 + rnd() * 280, 20 + rnd() * 140, rnd() * 6.283, 0.5 + rnd() * 1.5, rnd() * 40, 15 + rnd() * 25], i * 6);
+      gl.useProgram(gp); gl.bindVertexArray(gvao); gl.bindBuffer(gl.ARRAY_BUFFER, gb); gl.bufferData(gl.ARRAY_BUFFER, g, gl.STATIC_DRAW);
+      results.push(measureGL('gl_part_points_gpu_sim_static_buffer', frames, (f) => {
+        gl.useProgram(gp); gl.bindVertexArray(gvao); gl.disable(gl.BLEND);
+        gl.uniform2f(gl.getUniformLocation(gp, 'res'), RW, RH); gl.uniform1f(gl.getUniformLocation(gp, 'ps'), 2 * s); gl.uniform1f(gl.getUniformLocation(gp, 'sc'), s); gl.uniform1f(gl.getUniformLocation(gp, 't'), f); gl.uniform3fv(gl.getUniformLocation(gp, 'cols'), cols);
+        gl.drawArrays(gl.POINTS, 0, N);
+      }, { section: 'particles', particles: N, draw_calls: 1 }));
+    }
+  }
+  if (sections.includes('telegraph')) {
+    const tp = glProg(gl, TELE_VS, TELE_FS); const tvao = gl.createVertexArray(); gl.bindVertexArray(tvao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); const lcc = gl.getAttribLocation(tp, 'corner'); gl.enableVertexAttribArray(lcc); gl.vertexAttribPointer(lcc, 2, gl.FLOAT, false, 0, 0);
+    const tb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, tb);
+    const lA = gl.getAttribLocation(tp, 'A'), lB = gl.getAttribLocation(tp, 'B');
+    gl.enableVertexAttribArray(lA); gl.vertexAttribPointer(lA, 4, gl.FLOAT, false, 32, 0); gl.vertexAttribDivisor(lA, 1);
+    gl.enableVertexAttribArray(lB); gl.vertexAttribPointer(lB, 4, gl.FLOAT, false, 32, 16); gl.vertexAttribDivisor(lB, 1);
+    const D = makeDecals(); const data = new Float32Array(20 * 8);
+    for (const dither of [0, 1]) {
+      results.push(measureGL(dither ? 'gl_tele_dither_discard' : 'gl_tele_real_alpha_blend', frames, (f) => {
+        gl.useProgram(tp); gl.bindVertexArray(tvao); gl.bindBuffer(gl.ARRAY_BUFFER, tb);
+        for (let i = 0; i < 20; i++) { const d = D[i]; data.set([d.x * s, d.y * s, d.r * s, d.cone ? 1 : 0, d.a || 0, d.h || 0, ((f + i * 5) % 60) / 60, 0], i * 8); }
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STREAM_DRAW);
+        gl.uniform2f(gl.getUniformLocation(tp, 'res'), RW, RH); gl.uniform1f(gl.getUniformLocation(tp, 'dither'), dither); gl.uniform1f(gl.getUniformLocation(tp, 'px'), s);
+        if (dither) gl.disable(gl.BLEND); else { gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 20); gl.disable(gl.BLEND);
+      }, { section: 'telegraph', decals: 20, draw_calls: 1 }));
+    }
+  }
+  return { info, results };
+}
+
+// ======================================================================
+// 6. Web Audio
+// ======================================================================
+function hitBuffer(ctx) {
+  const sr = ctx.sampleRate, len = Math.floor(0.3 * sr); const b = ctx.createBuffer(1, len, sr); const d = b.getChannelData(0); reseed(9);
+  let ph = 0; for (let i = 0; i < len; i++) { const t = i / sr; const f = 60 + 340 * Math.exp(-t * 20); ph += f / sr; d[i] = Math.exp(-t * 14) * (0.6 * ((ph % 1) < 0.5 ? 1 : -1) + 0.4 * (rnd() * 2 - 1)) * 0.3; }
+  return b;
+}
+function trigOsc(ctx, dest, when, pitch) {
+  const o = ctx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(400 * pitch, when); o.frequency.exponentialRampToValueAtTime(60 * pitch, when + 0.25);
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(0.2, when + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, when + 0.3);
+  o.connect(g); g.connect(dest); o.start(when); o.stop(when + 0.31);
+}
+function trigBuf(ctx, dest, buf, when, pitch) { const sn = ctx.createBufferSource(); sn.buffer = buf; sn.playbackRate.value = pitch; const g = ctx.createGain(); g.gain.value = 0.2; sn.connect(g); g.connect(dest); sn.start(when); }
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+async function runAudio(opts) {
+  const res = []; const sr = 48000;
+  // (a) offline render cost: how much audio-thread CPU per second of audio
+  for (const type of ['osc_gain', 'buffer_gain']) for (const rate of [8, 32, 128, 512]) {
+    const dur = 4; const oc = new OfflineAudioContext(2, sr * dur, sr); const buf = hitBuffer(oc); reseed(2);
+    const a = performance.now();
+    for (let k = 0; k < rate * dur; k++) { const when = k / rate, p = 0.95 + rnd() * 0.1; if (type === 'osc_gain') trigOsc(oc, oc.destination, when, p); else trigBuf(oc, oc.destination, buf, when, p); }
+    const schedMs = performance.now() - a; const r0 = performance.now(); await oc.startRendering(); const renderMs = performance.now() - r0;
+    res.push({ name: 'audio_offline_' + type, section: 'audio', hits_per_s: rate, concurrent_voices_est: +(rate * 0.3).toFixed(1), audio_s: dur, schedule_ms_per_trigger: +(schedMs / (rate * dur)).toFixed(4),
+      render_ms_per_audio_s: +(renderMs / dur).toFixed(2), audio_thread_load_pct: +(renderMs / dur / 10).toFixed(2), realtime_factor: +(dur * 1000 / renderMs).toFixed(1) });
+  }
+  // (b) realtime context: latency fields, trigger cost on the main thread, audio clock health, playback stats if present
+  let ctx;
+  try { ctx = new AudioContext({ latencyHint: 'interactive' }); await Promise.race([ctx.resume(), sleep(1000)]); } catch (e) { res.push({ name: 'audio_realtime_ERROR', error: String(e) }); return { audioInfo: {}, results: res }; }
+  const statsObj = () => { const st = ctx.playbackStats || ctx.playoutStats; if (!st) return null; const o = {}; for (const k in st) { if (typeof st[k] !== 'function') o[k] = st[k]; } return o; };
+  const audioInfo = { state: ctx.state, sampleRate: ctx.sampleRate, baseLatency_ms: ctx.baseLatency * 1000, outputLatency_ms: (ctx.outputLatency || 0) * 1000, has_playbackStats: !!ctx.playbackStats, has_playoutStats: !!ctx.playoutStats, render_quantum_ms: 128 / ctx.sampleRate * 1000 };
+  const master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); // near silent
+  const buf = hitBuffer(ctx);
+  for (const type of ['osc_gain', 'buffer_gain']) for (const rate of [8, 32, 128, 512]) {
+    const durMs = 2000; const js = []; const lateness = [];
+    const st0 = statsObj(); const c0 = ctx.currentTime, w0 = performance.now(); let k = 0;
+    while (performance.now() - w0 < durMs) {
+      const due = w0 + k * 1000 / rate; const now = performance.now();
+      if (now >= due) { const a = performance.now(); const p = 0.95 + Math.random() * 0.1;
+        if (type === 'osc_gain') trigOsc(ctx, master, ctx.currentTime, p); else trigBuf(ctx, master, buf, ctx.currentTime, p);
+        js.push(performance.now() - a); lateness.push(now - due); k++; }
+      else await sleep(Math.max(0, Math.min(4, due - now)));
+    }
+    const wall = (performance.now() - w0) / 1000, aud = ctx.currentTime - c0; const st1 = statsObj();
+    const ts = ctx.getOutputTimestamp ? ctx.getOutputTimestamp() : null;
+    const sj = stats(js.slice()), sl = stats(lateness.slice());
+    res.push({ name: 'audio_realtime_' + type, section: 'audio', hits_per_s: rate, triggers: k, trigger_js_median_ms: sj.median_ms, trigger_js_p95_ms: sj.p95_ms, timer_lateness_p95_ms: sl.p95_ms,
+      audio_clock_vs_wall: +(aud / wall).toFixed(4), output_timestamp_lag_ms: ts ? +((performance.now() - ts.performanceTime)).toFixed(2) : null, stats_before: st0, stats_after: st1 });
+    await sleep(400);
+  }
+  audioInfo.state_end = ctx.state; await ctx.close();
+  return { audioInfo, results: res };
+}
+
+async function runAll(opts) {
+  opts = opts || {};
+  const frames = opts.frames || 300;
+  const sections = opts.sections || ['dmg', 'particles', 'flash', 'shake', 'telegraph', 'raf', 'audio'];
+  const t0 = performance.now();
+  const results = runCanvas2D(frames, sections);
+  let info = {};
+  for (const native of [false, true]) { try { const g = runWebGL(frames, sections, native); info = Object.assign(info, g.info); results.push(...g.results); } catch (e) { results.push({ name: 'webgl_ERROR', error: String(e) }); } }
+  if (sections.includes('raf')) { const T = makeTarget(false); for (const m of ['none', 'setTransform', 'css']) results.push(await rafTest(T, m, 120)); T.disp.remove(); }
+  let audioInfo = null;
+  if (sections.includes('audio')) { try { const a = await runAudio(opts); audioInfo = a.audioInfo; results.push(...a.results); } catch (e) { results.push({ name: 'audio_ERROR', error: String(e) }); } }
+  const out = { info: Object.assign({ userAgent: navigator.userAgent, hardwareConcurrency: navigator.hardwareConcurrency, dpr: devicePixelRatio, crossOriginIsolated: self.crossOriginIsolated }, info), audioInfo, results, total_s: +((performance.now() - t0) / 1000).toFixed(1), sink };
+  document.getElementById('log').textContent = JSON.stringify(out, null, 1).slice(0, 20000);
+  return out;
+}
+</script>
+</body></html>

@@ -221,6 +221,11 @@
      "id": "npc-dialog",
      "label": "NPCs & dialog",
      "desc": "Talking to NPCs: bubbles, dialog boxes, portraits, quest givers, shops"
+    },
+    {
+     "id": "combat-feel",
+     "label": "Combat feel",
+     "desc": "Hit feedback, targeting, telegraphs and the feel of fights"
     }
    ]
   },
@@ -527,6 +532,46 @@
      "id": "voice-blips",
      "label": "Voice blips",
      "desc": "Per-character beeps with pitch per speaker"
+    },
+    {
+     "id": "hitstop",
+     "label": "Hitstop",
+     "desc": "Freezing the attacker and victim sprites for a few frames on impact"
+    },
+    {
+     "id": "screen-shake",
+     "label": "Screen shake",
+     "desc": "Trauma-based and positional camera shake with falloff"
+    },
+    {
+     "id": "hit-flash",
+     "label": "Hit flash",
+     "desc": "White or tinted silhouette frames when a sprite is hit"
+    },
+    {
+     "id": "damage-numbers",
+     "label": "Damage numbers",
+     "desc": "Floating combat text with merging, caps and crit styling"
+    },
+    {
+     "id": "telegraphs",
+     "label": "Telegraphs",
+     "desc": "Ground markers and wind-ups that warn of an attack"
+    },
+    {
+     "id": "tab-targeting",
+     "label": "Tab targeting",
+     "desc": "Target selection, cycling rules, soft lock and auto-aim"
+    },
+    {
+     "id": "client-prediction",
+     "label": "Client prediction",
+     "desc": "Playing actions locally before the server confirms them"
+    },
+    {
+     "id": "spell-queue",
+     "label": "Spell queue",
+     "desc": "Input buffers, queue windows and cooldown locks"
     }
    ]
   },

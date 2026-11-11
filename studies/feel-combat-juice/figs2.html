@@ -1,0 +1,273 @@
+<!--FIG targetui-->
+<figure class="fig" data-demo="targetui" id="fig-targetui">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A battle list makes "next target" predictable</h4><span class="illu">Creatures, damage and timings are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="120" aria-label="A knight on a grass field with goblins, a slime, an orc mage and another player around it. A battle list on the right lists them with health bars. The selected target has a red square on its tile, and any goblin that just hit the knight has a black square. A target frame at the top shows the target's name, health and cast bar"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sort" role="group" aria-label="Sort the battle list by"><button type="button" class="on" data-v="time">Time</button><button type="button" data-v="dist">Distance</button><button type="button" data-v="hp">HP</button><button type="button" data-v="name">Name</button></div>
+    <button type="button" class="btn ghost" data-b="next">Next target</button><button type="button" class="btn ghost" data-b="clear">Clear</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mark" role="group" aria-label="Target marker"><button type="button" class="on" data-v="square">Tibia square</button><button type="button" data-v="ring">Ring</button><button type="button" data-v="brackets">Brackets</button></div>
+    <label><input type="checkbox" data-k="tot"> Target of target</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a creature or a row in the list. OTClient sorts the battle list by display time, distance, hit points or name, and "attack next target" walks that order, so the next pick is never a surprise [V, S15, S35]. The target gets a red outline on its tile and a goblin that hits you gets a black square for 1000 ms [V, S10, S12, S16]. With no target, a dim ring shows what Next would pick, which turns a hidden rule into visible UI [I, note 11]. The frame at the top shows health and the orc mage's cast bar, on by default as in WoW, and target of target stays off by default [V, S104]. Each change is one packet [V, S34].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tabcycle-->
+<figure class="fig" data-demo="tabcycle" id="fig-tabcycle">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tab order by tiles, then clockwise from your facing</h4><span class="illu">Positions are illustrative; the rule is Asterion's</span></div>
+  <div style="max-width:680px;"><div class="stage click" tabindex="0"><canvas width="170" height="110" aria-label="A knight in the middle of a tile field with goblins, a pet wolf and two enemy players. Faint squares mark equal tile distance. A number above each enemy shows its place in the Tab cycle; the pet is marked as skipped"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="tab">Tab</button>
+    <div class="seg" data-seg="face" role="group" aria-label="Facing"><button type="button" class="on" data-v="u">Up</button><button type="button" data-v="r">Right</button><button type="button" data-v="d">Down</button><button type="button" data-v="l">Left</button></div>
+    <button type="button" class="btn ghost" data-b="wander">Let them move</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="lock"> Combat lock</label>
+    <label><input type="checkbox" data-k="pvp"> Players first (PvP)</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Press Tab, click a tile to move, or click yourself to turn. The faint squares are equal Chebyshev distance, the number of tiles counting diagonals as one. Ties go to the smallest clockwise angle from your facing, then the lowest id, so the client and server always agree [I, note 11]. Combat lock cycles only the goblins marked "!" that fight you, like WoW's <code>TargetPriorityCombatLock</code>, and Players first puts enemy players ahead, like <code>TargetPriorityPvp</code> [V, S104]. Summons are always skipped, since cycling through pets is one of the oldest complaints [U, S107].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG softlock-->
+<figure class="fig" data-demo="softlock" id="fig-softlock">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Aim snap bends the start direction, then the shot flies straight</h4><span class="illu">Goblin paths are illustrative; 12 tiles/s and 8 tiles are Asterion's</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="100" aria-label="A knight on the left aims at two goblins walking up and down on the right. A dotted line shows the raw aim, two faint lines show the snap cone, and gold dots show the direction the shot will actually start in"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <label class="rng">Snap cone <input type="range" min="0" max="90" step="1" value="15" data-k="cone"><output data-o="cone">15°</output></label>
+    <div class="seg" data-seg="pre" role="group" aria-label="Preset"><button type="button" class="on" data-v="15">PvE 15°</button><button type="button" data-v="0">PvP 0°</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="home"> Homing (the wrong way)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Move over the field to aim and click to fire. If a goblin sits inside the cone around your aim, the start direction snaps to it, by at most 15 degrees in PvE and 0 in PvP [I]. The shot then flies straight, so a goblin that keeps walking can still dodge it. Turn on homing to see why a soft lock that curves breaks "aimed skills can miss" [I, note 04]. Every shot then hits. New World had to nerf a PvP lock that guaranteed hits [V, S109]. The cost is one cone query per cast.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tapdrag-->
+<figure class="fig" data-demo="tapdrag" id="fig-tapdrag">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tap fires at the pick, drag aims, drag back cancels</h4><span class="illu">Goblin health and paths are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="120" aria-label="A knight faces three monsters labelled A, B and C. A dim ring marks the monster a tap would hit. A round skill button sits in the bottom right corner; dragging from it draws an aim line from the knight, and dragging back onto it cancels"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="pick" role="group" aria-label="Auto pick"><button type="button" class="on" data-v="closest">Closest</button><button type="button" data-v="hp">Low HP</button><button type="button" data-v="pct">Low HP %</button></div>
+    <div class="seg" data-seg="rule" role="group" aria-label="Distance rule"><button type="button" data-v="float">Float</button><button type="button" data-v="tiles">Tiles</button><button type="button" class="on" data-v="hyst">Tiles + 1</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tap the round button to fire at the ringed monster, or press and drag to aim and release to fire. Drag back onto the button to cancel. Brawl Stars works this way, and Wild Rift offers Closest, Low Health and Low Health % [V, S112, S114]. Goblin B shuffles across A's distance. With plain tiles the pick flips at every step, the "ping-pong between two targets" Wild Rift fixed [V, S115]. With Tiles + 1 the pick holds until another is a whole tile closer [I, note 11]. A tap fires at the target's tile with no lead, so a moving monster can still dodge it [I, note 11].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG castmodes-->
+<figure class="fig" data-demo="castmodes" id="fig-castmodes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Three cast modes, counted in presses and wait</h4><span class="illu">Range and monsters are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="116" aria-label="A knight faces three monsters. A hotbar below has three skills with a corner mark each: a dot for a targeted bolt, a crosshair for an aimed shot and a circle for a ground blast. While a skill is held, gold dots preview its line or a ring previews its circle"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Cast mode"><button type="button" class="on" data-v="normal">Normal</button><button type="button" data-v="quick">Quick</button><button type="button" data-v="qi">Quick + indicator</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Pick a slot on the hotbar, then press on the field. Normal cast shows the shape and needs a second click to confirm. Quick cast fires at the cursor on the press. Quick cast with indicator shows the shape while you hold and fires on release, which is Asterion's default [V, S127, S128; I, notes 04 and 05]. The ground circle clamps at max range, as in GW2 [V, S108]. No game marks aimable skills with an icon, so the corner glyph and the preview do that job. A line or circle says "aimed", and no preview says "homes" [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG skillshot-->
+<figure class="fig" data-demo="skillshot" id="fig-skillshot">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A skillshot fast enough to hurt, slow enough to dodge, with a tail that points</h4><span class="illu">Goblin walk is illustrative; speeds and widths are the report's</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="100" aria-label="A knight on the left fires blue bolts at a goblin that walks up and down on the right. Each bolt has fading afterimages behind it. A pink outline can show the real hitbox of the bolt and the goblin"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="spd" role="group" aria-label="Projectile"><button type="button" data-v="ez">Ezreal Q</button><button type="button" class="on" data-v="fast">Fast</button><button type="button" data-v="orb">Orb</button></div>
+    <button type="button" class="btn ghost" data-b="freeze">Freeze frame</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="hb" role="group" aria-label="Hitbox"><button type="button" class="on" data-v="match">Matches art</button><button type="button" data-v="big">Too big</button><button type="button" data-v="small">Too small</button></div>
+    <label><input type="checkbox" data-k="tail" checked> Tail</label>
+    <label><input type="checkbox" data-k="show"> Show hitbox</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click to fire. Ezreal's Q is 2000 units/s, 120 wide and 1200 long, about 15.4 tiles/s, 0.92 tiles wide and 9.2 long [V, S129; I, note 05]. Asterion's fast bolt is 12 tiles/s and the orb 6, both 0.75 tile wide and 8 tiles long [I]. The demo aims at the goblin with no lead, so the orb misses at range and the fast bolt mostly lands. Freeze the frame. With the tail on, a still picture shows the direction, as Riot asks [V, S130]. A hitbox bigger than the art hits shots that look like misses, which is unfair in PvP.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG groundaoe-->
+<figure class="fig" data-demo="groundaoe" id="fig-groundaoe">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The hit is decided when the marker ends; the explosion is only the show</h4><span class="illu">Lead times are estimates; no source gives them in ms</span></div>
+  <div style="max-width:680px;"><div class="stage click" tabindex="0"><canvas width="170" height="110" aria-label="An orc mage casts orange tile-snapped circles on the knight's tile. Each circle fills from the centre and resolves when the fill reaches the edge, with a white flash and an explosion ring"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="pre" role="group" aria-label="Lead time"><button type="button" data-v="500">Trash 500</button><button type="button" class="on" data-v="1200">Caster 1200</button><button type="button" data-v="2500">Elite 2500</button></div>
+    <label class="rng">Lead <input type="range" min="200" max="3000" step="100" value="1200" data-k="lead"><output data-o="lead">1200 ms</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="late"> Resolve on explosion (the wrong way)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a tile or use the arrow keys to walk out. FFXIV snapshots its markers when the telegraph disappears, so on a grid "am I in it" is yes or no [V, S131, S132]. Lead estimates are trash 400 to 600 ms, elite 1000 to 1500 and boss 2000 to 3000, never under 400, and the slider will not go lower [I, note 05]. The bot dodges after 250 to 500 ms, so trash circles catch it now and then. Turn on the wrong way and the hit is judged at the explosion's peak by a round blob, and the shape you read stops being the rule. Twenty overlapping decals cost 0.24 ms in WebGL2 on the M4 [V, S4].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG nearmiss-->
+<figure class="fig" data-demo="nearmiss" id="fig-nearmiss">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Misses keep flying, and a close call gets a whoosh</h4><span class="illu">Aim spread and walk speed are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="100" aria-label="An orc mage on the left fires pink bolts at a knight who steps up and down. Bolts that miss fly on and puff against a stone wall. When a bolt passes close to the knight's feet, white streaks and the word close appear"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="view" role="group" aria-label="Whose screen"><button type="button" class="on" data-v="dodger">Dodger</button><button type="button" data-v="caster">Caster</button><button type="button" data-v="by">Bystander</button></div>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="hurt"> Show hurt circle</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The part of the knight that can be hit is a 14 px circle at the feet on 32 px tiles, much smaller than the sprite [I, note 05]. A bolt that misses keeps flying and puffs on the wall, so the projectile shows the miss and no "MISS" word is needed, as in Heroes of Hammerwatch and Nuclear Throne [V, S57, S65]. A bolt that passes within half a tile plays a whoosh, only once the bolt has passed, and only for the dodger and the caster [I, note 05]. The test reuses the hit test. Touhou rewards the same feeling with a graze bonus [V, S83].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG predict-->
+<figure class="fig" data-demo="predict" id="fig-predict">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Start the cast at once, land the number on the server's word</h4><span class="illu">Wind-up 120 ms and the 1 in 3 rejection are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="110" aria-label="A mage casts a purple bolt at a goblin six tiles away. Below, a timeline shows the client row with the wind-up, the flight and the moment the number appears, and the server row with the moment it receives and resolves the cast"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="cast">Cast</button>
+    <label class="rng">RTT <input type="range" min="0" max="400" step="10" value="150" data-k="rtt"><output data-o="rtt">150 ms</output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="What the client predicts"><button type="button" data-v="wait">Wait</button><button type="button" class="on" data-v="anim">Animation</button><button type="button" data-v="fx">+ effects</button><button type="button" data-v="num">+ numbers</button></div>
+    <label><input type="checkbox" data-k="rej"> Server rejects 1 in 3</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click Cast and drag the RTT. Wait starts nothing until the server answers, which is Path of Exile's Lockstep [V, S143]. Animation predicts the wind-up and the launch, and the bolt flies 150 ms times the square root of the tiles, about 367 ms for 6 [V, S8]. The number waits for the server's confirm, so at high RTT the bolt hovers at the goblin until the answer comes [I, note 06]. Turn on rejections and try the last two modes. Predicted sparks become phantom hits, and predicted numbers have to be struck out [I, note 06]. Wind-ups of 100 to 150 ms hide most of the round trip [I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG favour-->
+<figure class="fig" data-demo="favour" id="fig-favour">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Favour the target or the shooter, and someone feels cheated</h4><span class="illu">Strafing, 200 ms reaction and 100 ms interpolation are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="110" aria-label="Two screens of the same fight. On top, the shooter's screen shows the target drawn late. Below, the target's screen shows its own moves at once and the shot arriving later. Each screen marks hits, misses and the shots its player thinks were not fair"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Who the server favours"><button type="button" class="on" data-v="target">Favour target</button><button type="button" data-v="shooter">Favour shooter</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Shooter ping <input type="range" min="0" max="300" step="10" value="150" data-k="ls"><output data-o="ls">150 ms</output></label>
+    <label class="rng">Target ping <input type="range" min="0" max="300" step="10" value="80" data-k="lt"><output data-o="lt">80 ms</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The shooter aims at the target where its screen shows it, which is a ping and an interpolation delay in the past. Favour the shooter rewinds the target to that moment, as Source does, and a target that had already stepped clear on its own screen still gets hit [V, S149, S150]. Gambetta calls that "somewhat unfair" [V, S148]. Favour the target checks current positions, so a dodge you saw is a dodge [I]. The shooter now sees some bolts pass through, but the bolt's flight hides most near misses [I]. Asterion favours the target and would rewind at most 100 to 150 ms if PvP tests show stolen shots [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ticks-->
+<figure class="fig" data-demo="ticks" id="fig-ticks">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Beats hide lag, but every press waits for the next beat</h4><span class="illu">Press timing is yours; the beats are the games'</span></div>
+  <div style="max-width:680px;"><div class="stage click" tabindex="0"><canvas width="170" height="110" aria-label="Three timelines scroll to the left. Each press is a white mark and each action a red bar. The OSRS row waits for the next 600 ms tick, the step row for the next 100 ms, and the per-entity row only when the 2000 ms swing is not ready. Below, ten goblins light up one after another in their 100 ms slots"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="press">Press</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Press the button, click the timeline or tap Space. OSRS runs everything on a 600 ms tick, so an action waits 0 to nearly 600 ms, and players turn that into skill with prayer flicking [V, S40, S44, S45]. TFS has no combat tick. Each player's swing has its own 2000 ms timer, and creatures think every 1000 ms in 10 slots of 100 ms, the goblins at the bottom [V, S19, S16]. Asterion steps movement and projectiles every 100 ms and runs combat on per-entity events [I, note 06]. A coarse tick feels fine for targeted play and like lag for dodging [I, note 01].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tiers-->
+<figure class="fig" data-demo="tiers" id="fig-tiers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Your effects full, strangers' off, the boss always on</h4><span class="illu">Fight layout and cast rates are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="120" aria-label="Thirty knights stand around a large goblin boss. Your knight, ringed in gold, and four green party members cast at the boss with sparks and numbers. The boss drops orange circles on the crowd"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <span style="font-size:13px;color:var(--mute)">Party</span><div class="seg" data-seg="party" role="group" aria-label="Party effects"><button type="button" data-v="full">Full</button><button type="button" class="on" data-v="reduced">Reduced</button><button type="button" data-v="off">Off</button></div>
+    <span style="font-size:13px;color:var(--mute)">Others</span><div class="seg" data-seg="others" role="group" aria-label="Other players' effects"><button type="button" data-v="full">Full</button><button type="button" data-v="reduced">Reduced</button><button type="button" class="on" data-v="off">Off</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="tags"> Source tags</label>
+    <label><input type="checkbox" data-k="cull"> Cull hostile too (the bug)</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Set others to Full and watch the boss vanish under thirty players' sparks, the "Where's Waldo book" Diablo IV players described [V, S156]. WoW's Spell Density reduces only other players and keeps your own and enemy spells full, and FFXIV sets self, party and others to All, Limited or Off [V, S152, S153, S154, S155]. The boss's circles always show. Culling hostile telegraphs is a fairness bug, so try it and count the hits you never saw coming. Source tags show Canary's OWN, OTHERS and CREATURES, which also set the volume, 0, −10 and −6 dB [V, S31, S32; I, note 07]. One cull cuts particles, numbers and voices together.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG queue-->
+<figure class="fig" data-demo="queue" id="fig-queue">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same mashing under a queue, an exhaust, a tick and a lock</h4><span class="illu">One 1000 ms cooldown for all rows is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="112" aria-label="Four timelines scroll to the left, one per game. Each press is a small mark and each skill that fires a coloured block. Rejected presses are red crosses, Tibia rows show the word exhausted, and a queued press pulses until it fires"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="s1">Skill 1</button><button type="button" class="btn ghost" data-b="s2">Skill 2</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">WoW window <input type="range" min="0" max="400" step="10" value="400" data-k="win"><output data-o="win">400 ms</output></label>
+    <label class="rng">Ping <input type="range" min="0" max="300" step="10" value="100" data-k="ping"><output data-o="ping">100 ms</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mash Skill 1 and Skill 2, or let the demo mash. WoW keeps one slot open for the last 400 ms of the cooldown, and the newest press wins, so a late change of mind still fires on time [V, S104, S117]. Tibia rejects an early press with "You are exhausted" [V, S28, S29, S30]. OSRS lands the action on the next 600 ms tick [V, S40]. FFXIV locks the client for 500 ms and waits for the server's 600 ms plus ping, so ping stretches every weave [V, S120, player analysis]. Shrink the WoW window to 0 and it behaves like Tibia, where a press 50 ms early is lost [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pvp-->
+<figure class="fig" data-demo="pvp" id="fig-pvp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Players hit players for less, never freeze, and stuns shrink</h4><span class="illu">The 4 s base stun is illustrative; the DR rule is WoW's</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="On the left a knight hits a goblin, which freezes, flinches and is pushed back. On the right the same knight hits an enemy player, who keeps walking. Below, a timeline shows each stun on the player shrinking from 100 percent to 50 percent to immune"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="hit">Hit both</button><button type="button" class="btn ghost" data-b="stun">Stun the player</button><button type="button" class="btn ghost" data-b="kb">Knock back</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="view" role="group" aria-label="Whose screen"><button type="button" class="on" data-v="att">Attacker</button><button type="button" data-v="vic">Victim</button></div>
+    <label><input type="checkbox" data-k="fast"> Time 4x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hit both, then stun the player three times. WoW's rule since 12.1.0 is 100%, then 50%, then immune, with a 20 s reset and a 6 s cap in PvP [V, S121]. A knockback makes a player immune to knockbacks for 10 s, while the goblin takes every push [V, S121; I, note 04]. TFS halves player damage, so the player takes 10 where the goblin takes 20 [V, S23]. The goblin freezes and flinches, the player keeps walking with a 1 px flinch, and only the local player's camera shakes [I]. Switch to the victim's screen to see that the player hit still steers.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG voices-->
+<figure class="fig" data-demo="voices" id="fig-voices">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sixteen voices, three per sound, and your own hits never cut</h4><span class="illu">Hit mix and synth settings are illustrative, within jsfxr's ranges</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="Sixteen voice slots fill with coloured bars as hit sounds play and drain as they end. A white flash marks a stolen voice. Below, the last two seconds of triggers are plotted by priority: dots played, small rings stolen, red crosses dropped"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+    <button type="button" class="btn warm" data-b="own">My hit</button>
+    <label><input type="checkbox" data-k="pool" checked> Pool limits</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Hits per second <input type="range" min="1" max="128" step="1" value="24" data-k="hps"><output data-o="hps">24 /s</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Turn the sound on and push the rate. A pool of 16, at most 3 voices per sound and 40 ms between starts of one sound keep the mix clear, and a full pool steals from the lowest priority. The order is own hit, hit on you, crit or kill involving you, others, ambient [I, notes 07 and 09]. FMOD never lets a lower priority steal a higher one [V, S164]. Each hit is synthesized in jsfxr's hitHurt ranges, square, saw or noise at 145 to 2260 Hz with a downward slide and a decay under 204 ms, pitched ±1 semitone except crits [V, S168; I, note 07]. Turn off the limits at 128 hits per second to hear the mud. Each Web Audio voice cost about 0.1% of an M4 core [V, S4].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG critstack-->
+<figure class="fig" data-demo="critstack" id="fig-critstack">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Which layers carry a crit, and who should feel each one</h4><span class="illu">Damage values are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="96" aria-label="A blue knight strikes a red enemy knight. Normal hits show a small red number and a spark. Crits add big yellow digits that pop, a longer freeze, a white flash, a camera kick and more sparks. Overkill ends in a bigger death pop"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="norm">Normal hit</button><button type="button" class="btn warm" data-b="crit">Crit</button><button type="button" class="btn ghost" data-b="over">Overkill</button>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="num" checked> Number</label>
+    <label><input type="checkbox" data-k="stop" checked> Hitstop</label>
+    <label><input type="checkbox" data-k="flash" checked> Flash</label>
+    <label><input type="checkbox" data-k="kick" checked> Kick</label>
+    <label><input type="checkbox" data-k="snd" checked> Sound</label>
+    <label><input type="checkbox" data-k="sparks" checked> Sparks</label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="view" role="group" aria-label="Whose screen"><button type="button" class="on" data-v="att">Attacker</button><button type="button" data-v="vic">Victim</button><button type="button" data-v="by">Bystander</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Switch layers off one at a time and press Crit. Asterion's crit stacks bigger yellow digits with a 2x pop for 3 frames, 6 frames of hitstop instead of 3, trauma +0.3 with a 2 px kick away from the target, and a crit sound [I, note 07]. Most of it belongs to the attacker and the victim. Tibia sends the crit effect to every spectator and the "critical attack" text only to the attacker, so a bystander sees the impact sprite and hears the sound at −12 dB [V, S31; I, note 07]. Crit shake on every client is the classic MMO mistake. Overkill shows only as a bigger death pop [I, note 07].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG death-->
+<figure class="fig" data-demo="death" id="fig-death">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Kill, pop, corpse in 133 ms, then rot in stages</h4><span class="illu">Rot shown much faster than real time</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="100" aria-label="A knight kills goblins one after another. Each goblin flashes white for two frames, squashes wide and dissolves in a dither pattern, and a corpse appears that turns from fresh to rotting with flies to bones. A strip below shows the nine frames of the death"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="kill">Kill</button>
+    <div class="seg" data-seg="ts" role="group" aria-label="Rot speed"><button type="button" data-v="1">1x</button><button type="button" class="on" data-v="20">20x</button><button type="button" data-v="60">60x</button></div>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="tibia"> Tibia style (instant corpse)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Press Kill. Everyone sees 2 white frames, a squash to 1.2 by 0.8 with a dither fade, and the corpse at about 133 ms, the 8 frames in the strip [I, note 07]. Only the killer gets the kill blip and "+120 xp" rising 16 px over 800 ms. Players spam-click corpses, so any longer animation before loot feels like lag [I, note 07]. Tibia has no death animation at all and drops a splash and the corpse at once, which the toggle shows [V, S25, S26]. Corpses rot 120 + 120 + 30 s in Asterion's plan, against 300 + 300 + 60 s for Canary's rat [V, S33; I, note 07].</figcaption>
+</figure>
+<!--/FIG-->

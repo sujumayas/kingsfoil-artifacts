@@ -1,0 +1,237 @@
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five generations of combat feel in online games, 1997 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or filter by generation. The axis is linear from 1996 to 2027. Each event keeps its evidence tag and source from §3.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG swing-->
+<figure class="fig" data-demo="swing" id="fig-swing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A three-phase swing keeps the strike at 150 ms and gets its weight from the wind-up and the hold</h4><span class="illu">Timings from Slynyrd; art made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="w" role="group" aria-label="Weapon"><button type="button" class="on" data-v="sword">Sword</button><button type="button" data-v="spear">Spear</button><button type="button" data-v="hammer">Hammer</button></div></div>
+  <div class="stage"><canvas width="160" height="80" aria-label="A knight swings at a goblin; below, a strip of six frames sized by their milliseconds lights up the current frame, with the three strike frames in red and the hold in blue"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Wind-up <input type="range" data-k="ant" min="50" max="400" step="10" value="100"><output data-o="ant">100 ms</output></label>
+    <label class="rng">Hold <input type="range" data-k="hold" min="0" max="400" step="10" value="100"><output data-o="hold">100 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Swing</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Slynyrd's 6-frame top-down attack in ms per frame. Sword 100, 50, 50, 50, 100, 50. Spear 200, 50, 50, 50, 150, 50. Hammer 250, 50, 50, 50, 300, 100 <span class="cite"><b class="tag tv">V</b> S80</span>. Only the first and fifth frames change, so a sword takes 400 ms and a hammer 800 ms with the same three 50 ms strike frames. The spark, flash and number land on the hold, as §4 proposes. Drag the wind-up past 250 ms and the swing starts to feel like input lag <span class="cite"><b class="tag tv">V</b> S79<i>;</i> <b class="tag ti">I</b></span>. Tick slow motion to watch single frames.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG smear-->
+<figure class="fig" data-demo="smear" id="fig-smear">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One smear frame shows the blade's path, and the hitbox sweeps along the same arc</h4><span class="illu">Art made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="hb" role="group" aria-label="Hitbox"><button type="button" class="on" data-v="sweep">Hitbox sweeps</button><button type="button" data-v="pop">Hitbox pops in</button></div></div>
+  <div class="stage"><canvas width="144" height="80" aria-label="A knight swings a sword through three goblins standing in an arc; a pale smear fills the middle strike frame and a red area shows where the hitbox is live"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="sm" checked> Smear frame</label>
+    <label><input type="checkbox" data-k="hit" checked> Show the hitbox</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Swing</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite">The goblins flash when the hitbox reaches them.</div>
+  <figcaption>Smears should be "few and fast", often a single frame, and they sit only between wind-up and follow-through; the hold is drawn clean <span class="cite"><b class="tag tv">V</b> S79, S80</span>. A sword covers about 90 degrees <span class="cite"><b class="tag tv">V</b> S79</span>, and Heroes of Hammerwatch sweeps its melee rays over 150 ms <span class="cite"><b class="tag tv">V</b> S63</span>. With <b>Hitbox sweeps</b> the three goblins are hit one after another as the blade passes them. With <b>Hitbox pops in</b> all three are hit on one frame, after the blade has already gone by. Turn the smear off and the swing reads as a pose change. Keep the red area no wider than the drawn smear, or the hit lies about the art <span class="cite"><b class="tag tv">V</b> S130</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG directions-->
+<figure class="fig" data-demo="directions" id="fig-directions">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What each direction choice costs in frames, and why 4 body directions can read as 8</h4><span class="illu">Art made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="m" role="group" aria-label="Directions"><button type="button" class="on" data-v="4m">4 mirrored</button><button type="button" data-v="4">4</button><button type="button" data-v="8m">8 mirrored</button><button type="button" data-v="8">8</button><button type="button" data-v="16">16</button></div></div>
+  <div class="stage click"><canvas width="192" height="96" aria-label="A ring of direction slots around a knight; orange slots are drawn, dark slots are mirrored and the gold slot is in use; three panels on the right show the body, weapon and effect layers on their own"></canvas><span class="tagl">Point to aim</span></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="lb" checked> Body layer</label>
+    <label><input type="checkbox" data-k="lw" checked> Weapon layer</label>
+    <label><input type="checkbox" data-k="le" checked> Effect layer</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>One 6-frame attack costs 18 frames at 4 directions mirrored, 24 unmirrored, 30 at 8 mirrored, 48 unmirrored and 96 at 16 <span class="cite"><b class="tag ti">I</b> arithmetic</span>. Tibia maps diagonals to east or west, Slynyrd draws 8 unmirrored directions on separate body, sword, shield and cape layers, and Diablo II draws 16 <span class="cite"><b class="tag tv">V</b> S10, S80, S71</span>. Point at the left half of the arena to aim. The body only ever uses 4 directions here, while the sword and smear snap to the mode's count. At 32 px the smear hides the body, so 4 body directions with 8 smears read as 8 <span class="cite"><b class="tag ti">I</b> note 10</span>. Turn layers off to see each one alone. Aim left in a mirrored mode and the sword changes hands.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rhythm-->
+<figure class="fig" data-demo="rhythm" id="fig-rhythm">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One auto-attack every 2000 ms, drawn as a swing on the hit, a stretched swing and an effect only</h4><span class="illu">Art made up</span></div>
+  <div class="stage"><canvas width="192" height="124" aria-label="Three lanes of a knight hitting a goblin on the same 2 second timer; a bar below shows the cycle, the server hit and when the packet arrives"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Packet delay <input type="range" data-k="lat" min="0" max="300" step="10" value="60"><output data-o="lat">60 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia swings every 2000 ms in every shipped vocation, scheduled per player <span class="cite"><b class="tag tv">V</b> S24, S16</span>. The top lane plays the 400 ms sword swing at the hit and holds a guard pose in between. Its wind-up starts on the expected time and the strike snaps to the packet, so 100 ms of wind-up covers a 50 to 100 ms delay <span class="cite"><b class="tag ti">I</b> note 10</span>. Past that the pose waits up to 150 ms more, then strikes without a number <span class="cite"><b class="tag ti">I</b></span>. Drag the delay to 300 ms to see it. The middle lane stretches the same swing over the whole timer, which the study warns against. The blade drifts and the hit lands nowhere in particular. Tibia outfits have no attack animation, so the bottom lane shows only the effect and the number <span class="cite"><b class="tag tv">V</b> S10</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cancel-->
+<figure class="fig" data-demo="cancel" id="fig-cancel">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">After the hit a cancel ends recovery on your screen at once, and before it the server decides</h4><span class="illu">Art made up</span></div>
+  <div class="stage"><canvas width="176" height="112" aria-label="A knight winds up a hammer at a goblin; below, two timelines for you and the server show the swing, a cancel press, its arrival and the verdict"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="go">Swing</button>
+    <button type="button" class="btn warm" data-b="cx">Cancel or move</button>
+    <label class="rng">Round trip <input type="range" data-k="rtt" min="0" max="400" step="10" value="120"><output data-o="rtt">120 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Two windows <span class="cite"><b class="tag ti">I</b> note 10</span>. Press during the gold wind-up and the cancel travels to the server, which accepts it if it arrives before the hit frame. League refuses cancels in a 33 ms grace tick before the attack fires <span class="cite"><b class="tag tv">V</b> S125</span>; that is the red sliver. Until the answer comes back, your knight holds the last wind-up pose. Press after the hit and recovery ends at once, locally, because the damage is already applied. Dota calls that leftover backswing and lets commands cut it <span class="cite"><b class="tag tv">V</b> S126</span>. Raise the round trip and only the wait for the verdict grows.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cast-->
+<figure class="fig" data-demo="cast" id="fig-cast">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A cast in three parts with a cast bar that says whether it can be interrupted</h4><span class="illu">Cast time, art and damage made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="k" role="group" aria-label="Cast type"><button type="button" class="on" data-v="int">Interruptible</button><button type="button" data-v="shield">Shielded</button></div></div>
+  <div class="stage"><canvas width="176" height="100" aria-label="A mage raises an orb, loops it while charging and releases a bolt at a goblin; two cast bars show the caster's own bar and the bar other players see"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="go">Cast</button>
+    <button type="button" class="btn warm" data-b="int">Interrupt</button>
+    <label class="rng">Delay to others <input type="range" data-k="lat" min="0" max="400" step="10" value="150"><output data-o="lat">150 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Note 10 proposes a raise of about 150 ms, a hold loop at 100 to 150 ms per frame, a 2-frame release on the castpoint <span class="cite"><b class="tag ti">I</b> note 10</span>. Heroes of Hammerwatch keeps the castpoint apart from the animation <span class="cite"><b class="tag tv">V</b> S62</span>, and Albion cut Magic Shock to 0.35 s so it can work as an interrupt <span class="cite"><b class="tag tv">V</b> S54</span>. Press <b>Interrupt</b> during the loop. The interruptible bar breaks red. The shielded bar has a steel rim and keeps filling, so nobody wastes a stun on it. The lower bar is what other players see. It starts late by the delay but fills from server timestamps, so it is shorter but honest and ends with yours <span class="cite"><b class="tag ti">I</b> note 05</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hitstop-->
+<figure class="fig" data-demo="hitstop" id="fig-hitstop">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">On a shared screen, hitstop freezes the two fighters and never the world</h4><span class="illu">Art and damage made up</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="mode" role="group" aria-label="Who freezes"><button type="button" class="on" data-v="per">Per entity</button><button type="button" data-v="global">Global</button></div>
+    <div class="seg" data-seg="k" role="group" aria-label="Hit kind"><button type="button" class="on" data-v="3">Normal 3 f</button><button type="button" data-v="5">Heavy 5 f</button><button type="button" data-v="6">Crit 6 f</button><button type="button" data-v="8">Kill 8 f</button></div>
+  </div>
+  <div class="stage"><canvas width="192" height="96" aria-label="A blue knight and a red knight trade sword hits in the middle while three other players walk past above and below"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Frames <input type="range" data-k="f" min="0" max="30" value="3"><output data-o="f">3 f</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <svg class="chart hs-chart" role="img" aria-label="Smash Ultimate hitlag frames against damage, for one on one and for eight players, with the Asterion band of 3 to 8 frames shaded"></svg>
+  <figcaption>Asterion's proposal freezes only the attacker's and the target's sprites, by the wall clock, and only when you are one of them. Normal 3 frames, heavy 5, crit 6, kill 8, with a cap of 8 frames, 133 ms <span class="cite"><b class="tag ti">I</b></span>. The target also shakes 1 px, as Sakurai shook the victim's sprite but not its hurtbox <span class="cite"><b class="tag tv">V</b> S85</span>. Switch to <b>Global</b> and the players walking past stop too. Drag the frames toward 13 for fighting-game freezes <span class="cite"><b class="tag tv">V</b> S87</span> and watch how long a crowd would wait. The chart is Smash Ultimate's hitlag, 0.65 × damage + 6 frames with a cap of 30. Its 8-player factor acts only above 10 frames and ramps toward 0.75, so a 20-frame hit becomes 17.5 <span class="cite"><b class="tag tv">V</b> S86</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flash-->
+<figure class="fig" data-demo="flash" id="fig-flash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hit flashes in white, Hammerwatch red and immune purple, and what each one costs</h4><span class="illu">Art made up</span></div>
+  <div class="stage click"><canvas width="192" height="128" aria-label="Three goblins flash white, red and purple when hit; below, a crowd of 100 small goblins flashes in a wave"></canvas><span class="tagl">Tap a goblin</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="cost" role="group" aria-label="How the 100 sprites flash"><button type="button" class="on" data-v="baked">Pre-baked silhouette</button><button type="button" data-v="atop">Per-frame source-atop</button></div>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The left goblin follows Asterion's proposal, 2 frames of full white and a 4-frame fade, 100 ms in all <span class="cite"><b class="tag ti">I</b></span>. The middle one is Heroes of Hammerwatch, a 50% red overlay that fades over 100 ms <span class="cite"><b class="tag tv">V</b> S57</span>. The right one is immune. It flashes purple with its own word, as Hammerwatch's immortal targets do, then pulses between 0.4 and 0.9 brightness for 2 s, as a MapleStory fan client does for invulnerable players <span class="cite"><b class="tag tv">V</b> S57, S49</span>. The crowd below measures the cost on your device. A silhouette baked once and drawn on top costs about the same as no flash; filling each sprite with <code>source-atop</code> every frame was 21x slower in our benchmark <span class="cite"><b class="tag tv">V</b> S4</span>. In Godot one shared material with an instance uniform does the same job <span class="cite"><b class="tag tv">V</b> S176</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG knockback-->
+<figure class="fig" data-demo="knockback" id="fig-knockback">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Knockback that the server owns moves whole tiles; recoil only moves the sprite</h4><span class="illu">Half scale; art made up</span></div>
+  <div class="stage"><canvas width="192" height="96" aria-label="Two knights hit two goblins on a tile grid; the left goblin slides one tile, the right goblin's sprite jolts a few pixels and springs back while its blue tile square stays"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="hit">Hit</button>
+    <button type="button" class="btn warm" data-b="crit">Crit</button>
+    <label><input type="checkbox" data-k="sq" checked> Squash</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion's proposal <span class="cite"><b class="tag ti">I</b></span>. Server knockback is 1 tile over 150 ms and always ends on a tile, so pathing and click targets stay true. Cosmetic recoil is 4 px over 3 frames out and 3 frames back, 8 px on crits; this figure runs at half scale, so 2 and 4 px. Squash is a 1 to 2 px scale tween in code and costs no art <span class="cite"><b class="tag ti">I</b> note 10</span>. Heroes of Hammerwatch commented knockback out of its generic damage path and keeps it for specific skills <span class="cite"><b class="tag tv">V</b> S57</span>. Recoil that drifted off the tile would make the blue square lie.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG reaction-->
+<figure class="fig" data-demo="reaction" id="fig-reaction">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same hits on two orcs, one flinching every time and one only when a hit matters</h4><span class="illu">HP, damage and players made up</span></div>
+  <div class="stage"><canvas width="192" height="96" aria-label="Two orcs surrounded by attacking players take the same hits; the left one flinches on every hit, the right one only on big hits and crits"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Players <input type="range" data-k="n" min="1" max="30" value="12"><output data-o="n">12</output></label>
+    <label class="rng">Threshold <input type="range" data-k="div" min="8" max="64" step="8" value="16"><output data-o="div">16</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both orcs have 400 HP and take identical hits. Every hit flashes red. The left orc plays a 2-frame flinch on every hit, so with 30 players it vibrates. The right one flinches only when damage is at least max HP / 16, or on a crit, which is Asterion's rule <span class="cite"><b class="tag ti">I</b></span>. Diablo II uses divisors of 8, 16, 32 or 64 by hit class <span class="cite"><b class="tag tv">V</b> S69</span>; drag the threshold through them. The rule is deterministic, so every client agrees on who flinched.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG trauma-->
+<figure class="fig" data-demo="trauma" id="fig-trauma">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Your hits add trauma, the camera shakes by trauma squared, and a slam fades with distance</h4><span class="illu">Half scale; art made up</span></div>
+  <div class="stage click"><canvas width="192" height="112" aria-label="A knight stands in an arena with an orc boss inside a dashed 6-tile ring; the whole view shakes in whole pixels when trauma is added"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="hit">Hit taken</button>
+    <button type="button" class="btn ghost" data-b="crit">Your crit</button>
+    <button type="button" class="btn ghost" data-b="str">Stranger's crit</button>
+    <button type="button" class="btn warm" data-b="slam">Boss slam</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="pow" role="group" aria-label="Shake curve"><button type="button" class="on" data-v="2">trauma²</button><button type="button" data-v="3">trauma³</button></div>
+    <div class="seg" data-seg="nz" role="group" aria-label="Offsets"><button type="button" class="on" data-v="smooth">Smooth noise</button><button type="button" data-v="white">White random</button></div>
+    <label class="rng">Shake setting <input type="range" data-k="amt" min="0" max="100" value="100"><output data-o="amt">100%</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <svg class="chart tr-chart" role="img" aria-label="Trauma and shake over the last four seconds"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Eiserloh's model <span class="cite"><b class="tag tv">V</b> S93</span>. Trauma runs from 0 to 1 and decays on its own; the shake is trauma squared or cubed, so chip damage barely moves the view and big hits dominate. In Asterion's values a hit taken adds 0.2 + 0.3 × damage / max HP and your crit adds 0.3 with a 2 px kick. Trauma decays 1.5 per second, and the offset is at most 6 px, half that vertically, in whole pixels <span class="cite"><b class="tag ti">I</b></span>. This figure is at half scale, so 3 px. Drag the boss. Its slam adds 0.6 × (6 − distance) / 6, Heroes of Hammerwatch's falloff over a 6-tile range <span class="cite"><b class="tag tv">V</b> S58</span>. A stranger's crit adds nothing. Compare smooth noise with white random, and keep the setting slider, because shake makes some players sick <span class="cite"><b class="tag tv">V</b> S101</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG numbers-->
+<figure class="fig" data-demo="numbers" id="fig-numbers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tibia's damage numbers live one second, rise 48 px, and add up when hits share a colour</h4><span class="illu">Half scale; damage made up</span></div>
+  <div class="stage"><canvas width="224" height="112" aria-label="A goblin takes hits; coloured numbers rise above it, and a panel on the right shows the age of each live number against the 400 ms merge window and the 833 ms fade"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Hits per second <input type="range" data-k="hps" min="0.5" max="12" step="0.5" value="3"><output data-o="hps">3 /s</output></label>
+    <div class="seg" data-seg="col" role="group" aria-label="Damage types"><button type="button" class="on" data-v="one">One colour</button><button type="button" data-v="mix">Mixed elements</button></div>
+    <label><input type="checkbox" data-k="mg" checked> Merge inside 400 ms</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The rules are OTClient's <span class="cite"><b class="tag tv">V</b> S5, S6, S7</span>. A number lives 1000 ms and rises 48 px in a straight line from 8 px below its anchor. It stays opaque until 833 ms, then fades. A new hit adds into a live number of the same colour on the same tile if that number is under 400 ms old, and the sum keeps the old age. Otherwise a number under 250 ms old pushes the new one lower, so they sit 12 px apart. This figure runs at half scale, so 24 px and 6 px. Raise the rate and switch to mixed elements to see stacking take over from merging. Each bar on the right is one live number. The green part is the merge window and the pale end is the fade.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG aggregate-->
+<figure class="fig" data-demo="aggregate" id="fig-aggregate">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Aggregation and caps: 24 players on 3 targets, with numbers that stay readable and cheap</h4><span class="illu">Damage and players made up</span></div>
+  <div class="stage"><canvas width="224" height="112" aria-label="Three orcs, each surrounded by eight attacking players, with damage numbers rising over each orc"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Swings per second, each <input type="range" data-k="rate" min="0.5" max="5" step="0.5" value="1.5"><output data-o="rate">1.5 /s each</output></label>
+    <label><input type="checkbox" data-k="agg" checked> Merge per target inside 400 ms</label>
+    <label><input type="checkbox" data-k="cap" checked> Caps: 4 per target, 64 on screen</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion merges hits per target, tier and damage type inside 400 ms, keeps crits apart, and caps numbers at 4 per target and 64 on screen, dropping the oldest <span class="cite"><b class="tag ti">I</b> note 05</span>. Old School RuneScape keeps 4 hitsplat slots per actor <span class="cite"><b class="tag tv">V</b> S38, S39</span>. Turn both boxes off and push the rate up. The numbers turn into a wall, and the cost readout climbs with them, because each glyph is one blit. In our benchmark, folding 1000 live numbers into 100 cut the glyph-blit cost from 3.38 to 0.94 ms on the M4 GPU and from 13.18 to 4.18 ms under a 6x CPU throttle <span class="cite"><b class="tag tv">V</b> S4</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crit-->
+<figure class="fig" data-demo="crit" id="fig-crit">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A crit is a stack of small layers, and Diablo III keeps "big" rare with a falling benchmark</h4><span class="illu">Damage values made up</span></div>
+  <div class="stage"><canvas width="192" height="84" aria-label="A knight hits a goblin; crits show a bold yellow number that pops to double size for three frames"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="hit">Hit</button>
+    <button type="button" class="btn warm" data-b="crit">Crit</button>
+    <label><input type="checkbox" data-k="dig" checked> Bold yellow digits</label>
+    <label><input type="checkbox" data-k="pop" checked> 2x pop, 3 frames</label>
+    <label><input type="checkbox" data-k="life" checked> 1200 ms life</label>
+    <label><input type="checkbox" data-k="stop" checked> 6 f hitstop</label>
+    <label><input type="checkbox" data-k="kick" checked> Camera kick</label>
+    <label><input type="checkbox" data-k="snd"> Sound</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <svg class="chart crit-chart" role="img" aria-label="A stream of hit values over the last 12 seconds; orange dots mark hits that beat the decaying benchmark line"></svg>
+  <div class="ctl"><label><input type="checkbox" data-k="pause"> Pause the hit stream</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion's crit gets larger yellow digits, a 2x integer pop for 3 frames, a 1200 ms life and is never merged <span class="cite"><b class="tag ti">I</b></span>, plus 6 frames of hitstop instead of 3 and a small camera kick. Untick layers to feel which ones carry the crit. Integer scaling keeps the pixel font sharp <span class="cite"><b class="tag tv">V</b> S140</span>. The chart is Diablo III's 2.4.0 rule. A number over 10,000 turns orange only if it beats the last orange one, and that benchmark decays 3% per second. It calibrates on the first 10 hits and resets after 10 s idle <span class="cite"><b class="tag tv">V</b> S138</span>; pause the stream for 10 s to see the reset.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG misses-->
+<figure class="fig" data-demo="misses" id="fig-misses">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Your numbers in full, party dimmed, strangers off, and misses only for the two players involved</h4><span class="illu">Outcomes made up</span></div>
+  <div class="stage"><canvas width="224" height="96" aria-label="Three fights side by side: you, a party member and a stranger each attack a goblin; numbers and miss words appear according to the settings"></canvas></div>
+  <div class="ctl">
+    <span class="lbl">Party</span><div class="seg" data-seg="party" role="group" aria-label="Party numbers"><button type="button" data-v="full">Full</button><button type="button" class="on" data-v="half">50%</button><button type="button" data-v="off">Off</button></div>
+    <span class="lbl">Strangers</span><div class="seg" data-seg="str" role="group" aria-label="Strangers' numbers"><button type="button" data-v="full">Full</button><button type="button" data-v="dim">Dim</button><button type="button" class="on" data-v="off">Off</button></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="style" role="group" aria-label="Miss style"><button type="button" class="on" data-v="words">Miss, Block, Immune words</button><button type="button" data-v="tibia">Tibia grey puff</button></div>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion's defaults <span class="cite"><b class="tag ti">I</b> note 05</span>. Your numbers and the ones on you show in full, party numbers at 50% alpha and strangers' are off. "Miss", "Block" and "Immune" are grey, smaller and do not rise, and only the two players involved see them. Tibia shows no miss text. A shield block is a grey puff and 0 damage sends no number <span class="cite"><b class="tag tv">V</b> S17</span>. Vampire Survivors, Hades II and Diablo IV let players switch numbers off <span class="cite"><b class="tag tv">V</b> S73, S76, S139</span>. Filtering on the client costs nothing, but give healers and leaders per-tier settings instead of one switch.</figcaption>
+</figure>
+<!--/FIG-->

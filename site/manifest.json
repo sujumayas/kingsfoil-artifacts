@@ -262,5 +262,23 @@
   "title": "Top-down pixel NPCs and dialog Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-11"
+ },
+ {
+  "path": "/thumbs/feel-combat-juice.png",
+  "title": "Thumbnail feel-combat-juice.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/feel-combat-juice-topdown-pixel.html",
+  "title": "Top-down pixel combat juice: hit feedback, targeting and aimed skills for a 2D MMORPG",
+  "description": "Making fights feel good in a Tibia-like world with targeted and aimed skills: swings, hitstop, flashes, shake, damage numbers, targeting, telegraphs and PvP rules, with the server and latency rules and the measured cost behind each.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/feel-combat-juice-sandbox.html",
+  "title": "Top-down pixel combat juice Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-11"
  }
 ]
