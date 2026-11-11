@@ -1,0 +1,234 @@
+<!--FIG portrait-->
+<figure class="fig" data-demo="portrait" id="fig-portrait">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One bust at 32, 48 and 64 px, five expressions, a mouth that stops with the text</h4><span class="illu">Face, lines and blink timing are estimates</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="112" aria-label="Three pixel busts of the same villager at 32, 48 and 64 pixels above a dialog box. The mouths open and close while the line types and stop when it ends; the eyes blink every few seconds"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="ex" role="group" aria-label="Expression"><button type="button" class="on" data-v="neutral">Neutral</button><button type="button" data-v="happy">Happy</button><button type="button" data-v="sad">Sad</button><button type="button" data-v="angry">Angry</button><button type="button" data-v="surprised">Surprised</button></div>
+    <button type="button" class="btn ghost" data-b="say">Say it again</button>
+    <label><input type="checkbox" data-k="flap" checked> Mouth flaps</label>
+    <label><input type="checkbox" data-k="blink" checked> Blink</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The three busts are drawn from one recipe, so each size gets its own pixels instead of a scaled copy. Stardew uses 64x64 and Village Monsters 48x48 [V, S71, S85]. The mouth swaps two frames every 120 ms while glyphs appear, closes during the comma and sentence pauses, and stops when the line ends [I, note 09; V, S96]. A mouth that keeps flapping while the game waits for input looks broken. The blink runs half, closed, half over 5 frames every 2 to 6 s, and the closed frame is 2 px tall like Fire Emblem's [V, S94; I, note 09]. Four expressions, two mouth frames and a blink as overlays on one base is about 7 small frames per NPC [I, note 09].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG emotes-->
+<figure class="fig" data-demo="emotes" id="fig-emotes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Emote balloons on Emerald's integer hop</h4><span class="illu">Balloons drawn at 11 px for 12 px villagers</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="112" aria-label="Four villagers on a grass path. Clicking one pops a balloon above its head that hops up 15 pixels and back down in whole-pixel steps. A strip below plots the height of the balloon for each of its 60 frames"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="k" role="group" aria-label="Emote"><button type="button" class="on" data-v="!">!</button><button type="button" data-v="?">?</button><button type="button" data-v="heart">Heart</button><button type="button" data-v="anger">Anger</button><button type="button" data-v="...">...</button><button type="button" data-v="rand">Random</button></div>
+    <button type="button" class="btn ghost" data-b="all">Everyone at once</button>
+    <label><input type="checkbox" data-k="slow"> Quarter speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a villager. Emerald starts the hop at −5 and adds 1 every frame, so the balloon climbs −5, −9, −12, −14, −15 and falls back in about 10 frames, then holds until frame 60 [V, S61, S62]. Every step is a whole pixel, which is why it reads as a hop and not a float. Each balloon has a 1 px dark outline so it reads on any floor [I, note 09]. One event byte is enough for every client to play the same hop [I, note 09]. Try "Everyone at once" to see why emotes need bark priority in a crowd (B4).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG turnface-->
+<figure class="fig" data-demo="turnface" id="fig-turnface">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Turn to face, stop wandering, restore the old facing after the talk</h4><span class="illu">Radius and 2.5 s restore delay are our picks</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="100" aria-label="A villager wanders at a crossroads inside a dotted talk radius. Two players, Ana and Bo, can be dragged around. When one greets, the villager turns to face them, and after both leave it waits and turns back to its old facing"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="h1">Ana says hi</button><button type="button" class="btn ghost" data-b="b1">Ana bye</button>
+    <button type="button" class="btn ghost" data-b="h2">Bo says hi</button><button type="button" class="btn ghost" data-b="b2">Bo bye</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="rule" role="group" aria-label="Which talker the NPC faces"><button type="button" class="on" data-v="first">First talker (TFS)</button><button type="button" data-v="latest">Latest talker (Canary)</button></div>
+    <label><input type="checkbox" data-k="fix"> Direction fix</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Drag Ana or Bo around the villager while they talk. RPG Maker's <code>lock()</code> saves the facing, turns to the player and stops wandering, and <code>unlock()</code> restores it [V, S91, S92]. TFS turns to the first player still in focus every tick, and Canary faces the latest talker [V, S4, S9, S20]. With two talkers, first-in-focus stays put while latest snaps to whoever spoke last [I]. Walking out of the radius ends the talk. Direction fix makes turning a no-op, for guards and clerks [V, S91; I, note 10]. The whole effect is one direction byte [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG markers-->
+<figure class="fig" data-demo="markers" id="fig-markers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Quest markers: shape for the kind, a second cue for the state</h4><span class="illu">Colour-blind views are approximate simulations</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="76" aria-label="Five villagers with quest markers bobbing above them: a gold exclamation mark, a grey exclamation mark, a hollow grey question mark, a gold question mark and a blue exclamation mark, each labelled with its state"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="d" role="group" aria-label="Marker design"><button type="button" class="on" data-v="shape">Shape + colour</button><button type="button" data-v="colour">Colour only</button></div>
+    <div class="seg" data-seg="v" role="group" aria-label="Vision"><button type="button" class="on" data-v="none">Normal</button><button type="button" data-v="deu">Deuteranopia</button><button type="button" data-v="pro">Protanopia</button><button type="button" data-v="gry">Greyscale</button></div>
+    <label><input type="checkbox" data-k="bob" checked> Whole-pixel bob</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>WoW's base set is a yellow <code>!</code> for available, grey <code>!</code> for a few levels away, grey <code>?</code> for unfinished and yellow <code>?</code> to turn in [V, S97, S98]. Players found the blue marks hard to see, and in 2023 Blizzard promised icons that differ "without relying on shades of color" [V, S104, S105]. Switch to colour only and then to greyscale or a colour-blind view, and states merge. The hollow grey <code>?</code> keeps its meaning in greyscale [I, notes 03 and 09]. The bob is 0, 1, 2, 1 px in whole steps [I]. Launch with 4 states and a repeatable one, not WoW's 10 variants [I, note 03].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG questflow-->
+<figure class="fig" data-demo="questflow" id="fig-questflow">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Offer, accept, progress, turn in: the four beats of a fetch quest</h4><span class="illu">Quest, text and reward are illustrative</span></div>
+  <div class="sm"><svg viewBox="0 0 344 38" role="img" aria-label="Quest states from offer to done; the current state is outlined in gold"></svg></div>
+  <div style="max-width:680px;margin-top:6px"><div class="stage click"><canvas width="170" height="112" aria-label="A quest giver named Mira stands by a path with a gold exclamation mark. Clicking her opens an offer card; after accepting, moonleaf plants can be picked and a tracker in the corner counts up to three; then a gold question mark appears and handing in shows a reward popup"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl"><button type="button" class="btn ghost" data-b="reset">Reset</button></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click Mira, accept, pick three moonleaf and come back. The offer card puts the task in one plain line, and the same line goes to the tracker [I, notes 03 and 04]. Kaplan's rules are clear objectives, instant progress feedback and quest givers that are easy to find [V, S106]. The marker changes with the state, from gold <code>!</code> to hollow <code>?</code> to gold <code>?</code> (E1). The server keeps the count as an integer per player, the way Canary stores quest progress, and the client only shows it [V, S21]. Each tracker update is a byte or two [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hearts-->
+<figure class="fig" data-demo="hearts" id="fig-hearts">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A renown heart fills with any mix of help, then the farmer sells</h4><span class="illu">Task values and the 13 px heart are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="100" aria-label="A farmer stands beside a crop field with an empty heart over his head. Crows, weeds and dry plants in the field can be clicked; each one fills the heart a few pixel rows from the bottom, and a full heart turns into a coin bag"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="pct"> Show the hidden percentage</label>
+    <button type="button" class="btn ghost" data-b="reset">Reset</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Scare crows, pull weeds or water plants in any mix. There is no quest to accept. Guild Wars 2 fills an empty heart from the bottom and hides the exact percentage, and afterwards the NPC sells for karma [V, S119, S118]. A level 2 heart pays 90 karma [V, S119]. Here the heart fills in whole 1 px rows, one progress byte per update [I, note 10]. Tasks come back after a few seconds, so the area feels lived in. The cost is world design, since every heart needs task objects and an area trigger [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG handoff-->
+<figure class="fig" data-demo="handoff" id="fig-handoff">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Skip the gossip for one service; speak the player in and out of a shop</h4><span class="illu">Rooms, items and prices are illustrative</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="m" role="group" aria-label="Which NPC"><button type="button" class="on" data-v="bank">Banker (one service)</button><button type="button" data-v="shop">Merchant (keyword trade)</button></div></div>
+  <div style="max-width:680px;margin-top:8px"><div class="stage click"><canvas width="170" height="112" aria-label="Banker mode: a banker behind a counter opens the bank straight away or shows a short menu first. Merchant mode: a shopkeeper with a chat log; saying trade opens a compact shop window and closing it gets a goodbye line"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl" data-only="bank">
+    <button type="button" class="btn ghost" data-b="talk">Talk to the banker</button>
+    <label><input type="checkbox" data-k="skip" checked> Skip gossip when there is one service</label>
+    <label><input type="checkbox" data-k="quest"> Banker has a new quest</label>
+  </div>
+  <div class="ctl" data-only="shop" hidden>
+    <button type="button" class="btn ghost" data-b="hi">hi</button><button type="button" class="btn ghost" data-b="trade">trade</button><button type="button" class="btn ghost" data-b="bye">bye</button><button type="button" class="btn ghost" data-b="away">Walk away</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The WoW client skips the gossip menu when an NPC has one non-gossip option, and <code>ForceGossip()</code> stops the skip [V, S109]. A bank you visit ten times a session should cost one click [I]. Tick the quest box and the menu comes back, because skipping must never hide a new quest [V, S110]. In merchant mode, "trade" opens the window with "Of course, just browse through my wares." and closing it gets "Thank you, come back whenever you're in need of something else." [V, S4]. Walking away releases focus and closes the window [V, S4, S20]. Tibia's window is 550x515 px, too big for a 640x360 buffer, so this panel is compact [V, S29; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG revalidate-->
+<figure class="fig" data-demo="revalidate" id="fig-revalidate">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Never trust the menu: the server checks every purchase again</h4><span class="illu">Byte layout, prices and gold are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="Left, the client with a shop listing rope for 50 gold and the player's gold and items. A packet flies to the right, where the server runs five checks that light up green or red"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-sc="honest">Buy 1 rope</button>
+    <button type="button" class="btn ghost" data-sc="zero">Forge amount 0</button>
+    <button type="button" class="btn ghost" data-sc="stack">Forge amount 250</button>
+    <button type="button" class="btn ghost" data-sc="sale">Forge a crown</button>
+    <button type="button" class="btn ghost" data-sc="poor">Forge 5 ropes</button>
+    <button type="button" class="btn ghost" data-sc="closed">Buy after leaving</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="trust"> Trust the client (no server checks)</label>
+    <button type="button" class="btn ghost" data-b="reset">Reset gold</button>
+  </div>
+  <div class="readout" data-log aria-live="polite"></div>
+  <figcaption>A purchase is 7 bytes after the opcode, and anyone can send one without the menu [V, S15]. TFS rejects amount 0 or more than a stack, and needs an open shop owner and <code>hasShopItemForSale</code> [V, S15, S11]. Ending focus closes the shop and clears its state, so a buy after leaving fails [V, S4]. Our rule re-checks gold, items and stage when a choice is applied and never predicts a state change on the client [I, note 05]. Tick "Trust the client" and replay the forgeries to see gold go negative and a crown appear from nowhere. Every check needs a failure line the writers must cover [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG barks-->
+<figure class="fig" data-demo="barks" id="fig-barks">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Barks from a rule table: the rule with the most matching facts wins</h4><span class="illu">Lines are ours; timers compressed (poll 2 to 4 s, said 16 s)</span></div>
+  <div class="chips" role="group" aria-label="Facts in the query">
+    <button type="button" data-f="day">Day</button><button type="button" data-f="night">Night</button><button type="button" data-f="rain">Rain</button><button type="button" data-f="near">Player near</button><button type="button" data-f="wolves">Wolves about</button><button type="button" data-f="cleared">Wolves cleared</button>
+  </div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="100" aria-label="A villager stands between two cottages on a path. Rain, night and a nearby player change the scene, and the villager says short lines in a speech bubble"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="q">Query now</button>
+    <label><input type="checkbox" data-k="auto" checked> Poll on a timer</label>
+    <label><input type="checkbox" data-k="gate"> 30% gate</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <div class="readout" data-hist aria-live="polite"><div>no barks yet</div></div>
+  <figcaption>Toggle facts and watch which line fires. Ruskin's system treats a query as a set of facts. The rule with the most matching criteria wins and ties go at random [V, S163]. Fired rules write facts back with an expiry, so "speaking" and "already said" are the same mechanism as any cooldown [V, S163]. Turn on rain at night and the three-fact rule beats the one-fact rules. Our starting values poll every 8 to 15 s when a player is within 8 tiles, mark the NPC as speaking for 4 to 6 s, remember a line for 2 to 5 min and gate at 20 to 40% [I, note 08]. A lookup takes under 1 µs [V, S163].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG schedule-->
+<figure class="fig" data-demo="schedule" id="fig-schedule">
+  <style>#fig-schedule table.sched{border-collapse:collapse;width:100%;font:11px "IBM Plex Mono",monospace;margin-top:8px;table-layout:fixed}#fig-schedule .sched th{color:var(--mute);font-weight:500;padding:2px 1px;text-align:center}#fig-schedule .sched tr th:first-child{width:34px;text-align:left;color:var(--ice)}#fig-schedule .sched td{color:#f4efe2;text-align:center;padding:3px 0;border:1px solid #1b1d28;opacity:.55;overflow:hidden;font-size:10px}#fig-schedule .sched td.now{opacity:1;outline:2px solid var(--warm);outline-offset:-2px}</style>
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Schedules from the clock: eight slots of three hours</h4><span class="illu">Town, routines and jitter are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="112" aria-label="A small town with three cottages, a shop, an inn and a field. Three villagers walk between them as the clock in the corner turns; the town darkens at night and windows light up"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <label class="rng">Clock <input type="range" data-k="h" min="0" max="23.95" step="0.05" value="8"><output data-o="h"></output></label>
+    <label><input type="checkbox" data-k="run" checked> Run the clock</label>
+  </div>
+  <div data-tab></div>
+  <figcaption>Drag the clock face in the corner or the slider. Ultima VII stores up to 8 records of 4 bytes per NPC, each a 5-bit activity, a 3-bit slot for one of eight 3-hour slots, and a position [V, S167]. Each villager here also has a fixed 12 to 55 min jitter, inside the 1 to 60 min the design essay suggests, so they do not all move on the hour [V, S168]. Positions come from the clock alone, so every client can predict the walk with no per-move packets [I, note 08]. Tam keeps the shop open 15 hours, near the essay's 14 [V, S168]. A needed NPC asleep across town is friction, so keep schedules for ambient folk [I, note 08].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG blips-->
+<figure class="fig" data-demo="blips" id="fig-blips">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Voice blips: one soft beep every second glyph, pitched per speaker</h4><span class="illu">Voices and lines are ours</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="Three speakers, each with a one-line dialog box that types out. A strip at the bottom shows each blip as a dot, one row per speaker, placed higher for higher pitch"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="snd">Sound off</button>
+    <button type="button" class="btn ghost" data-play="0">Gran Ola</button><button type="button" class="btn ghost" data-play="1">Riona</button><button type="button" class="btn ghost" data-play="2">Pip</button><button type="button" class="btn ghost" data-play="all">All three</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="n" role="group" aria-label="Blip on every Nth glyph"><button type="button" data-v="1">Every glyph</button><button type="button" class="on" data-v="2">Every 2nd</button><button type="button" data-v="3">Every 3rd</button></div>
+    <label><input type="checkbox" data-k="jit" checked> ±0.5 semitone jitter</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Press "Sound off" to turn sound on; nothing plays before that. Each blip is a 45 ms square wave. Pitch is set per speaker within ±4 semitones, with ±0.5 random jitter, on every 2nd glyph, skipping spaces and at least 40 ms apart [I, note 08]. ALttP plays a sound per glyph and Undertale-style engines set a voice per character [V, S66, S68]. Try "Every glyph" with all three at once. One blip per glyph is a machine gun, and a crowd of them is a wall of chirps, so play blips only for your own dialog [I, notes 02 and 08]. Golden Sun's beeps get called "overt", so keep them soft [V, S78].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG access-->
+<figure class="fig" data-demo="access" id="fig-access">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Accessibility: integer text size, speed, auto-advance, reduce motion, colour plus shape</h4><span class="illu">Lines are ours</span></div>
+  <div style="max-width:680px;"><div class="stage click"><canvas width="170" height="120" aria-label="A villager with a bobbing quest marker above a dialog box. The text types out with a waving word, a shaking word and highlighted keywords"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sz" role="group" aria-label="Text size"><button type="button" class="on" data-v="1">1x text</button><button type="button" data-v="2">2x text</button></div>
+    <div class="seg" data-seg="spd" role="group" aria-label="Text speed"><button type="button" data-v="slow">Slow</button><button type="button" class="on" data-v="normal">Normal</button><button type="button" data-v="fast">Fast</button><button type="button" data-v="instant">Instant</button></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="kw" role="group" aria-label="Keyword style"><button type="button" class="on" data-v="col">Keyword colour</button><button type="button" data-v="ul">Colour + underline</button></div>
+    <label><input type="checkbox" data-k="auto"> Auto-advance</label>
+    <label><input type="checkbox" data-k="rm"> Reduce motion</label>
+    <label><input type="checkbox" data-k="grey"> Greyscale</label>
+    <button type="button" class="btn ghost" data-b="next">Next</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click the box to complete a line or go on. Pixel fonts cannot scale freely, so large text is a whole-number 2x [I, note 09]. An 8 px font at 2x on 1080p is 16 px, under the 18 px PC floor, and 24 px at 3x [V, S175; I, notes 08 and 09]. Speeds are 83, 50 and 30 ms per glyph plus instant, as in §7. Auto-advance waits 1.5 s plus 0.06 s per character, Ren'Py's rule (C7). Reduce motion stops the wave, the shake and the marker bob. Turn on greyscale with colour-only keywords and they vanish into the text. The underline keeps them, because no information should rest on colour alone [V, S178, S179].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG focus-->
+<figure class="fig" data-demo="focus" id="fig-focus">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Many players and one NPC: one focus and a queue, or private sessions for all</h4><span class="illu">Arrivals and talk lengths illustrative; time runs 10x</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="A clerk behind a counter with players arriving in a half circle. In queue mode one player talks while the others show a waiting balloon and a timer; in multi-focus mode everyone talks at once"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Focus model"><button type="button" class="on" data-v="queue">One focus + queue (TFS 0.3)</button><button type="button" data-v="multi">Multi-focus (TFS 1.x)</button></div>
+    <label class="rng">Players <input type="range" data-k="n" min="1" max="10" value="6"><output data-o="n"></output></label>
+    <label><input type="checkbox" data-k="grief"> Ana idles for 120 s</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>TFS 0.3 had a default mode with one focus and a queue, which tells others "wait for your turn" with the queue size [V, S17, S18]. TFS 1.x keeps a list of focuses with a topic per player, and facing is the only shared state [V, S4]. Tick the idle box in queue mode. Ana holds the NPC until the 120 s idle limit ungreets her, and everyone behind her waits [V, S4, S8; I, note 05]. Multi-focus drops the queue and keeps walk-up-and-say-hi, and the NPC still turns to the first talker, so bystanders see it is busy [I]. Each conversation is one small server record [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wire-->
+<figure class="fig" data-demo="wire" id="fig-wire">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bytes per NPC line over a crowd, and a token bucket for chat</h4><span class="illu">Byte counts are arithmetic, not captures</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="104" aria-label="An NPC in the middle of a crowd speaks every 1.5 seconds and a packet flies to each player. Below, a row of token pips empties as chat messages are sent and refills over time"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="f" role="group" aria-label="Line format"><button type="button" class="on" data-v="text">Full text, 86 B</button><button type="button" data-v="id">Line id, 8 B</button><button type="button" data-v="idn">Id + name, 15 B</button></div>
+    <label class="rng">Players <input type="range" data-k="n" min="1" max="60" value="30"><output data-o="n"></output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="ch" role="group" aria-label="Bucket"><button type="button" class="on" data-v="chat">Chat (TFS)</button><button type="button" data-v="npc">NPC talk (ours)</button></div>
+    <button type="button" class="btn" data-b="spam">Send a message</button>
+    <button type="button" class="btn ghost" data-b="reset">Reset</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A Tibia NPC say with a 62-character greeting is 86 bytes. The proposed <code>npc_line</code> is 8 bytes bare and 15 with a 5-character name [V, S22; I, notes 05 and 07]. One line to 30 players is 2,580 bytes as text and 240 as ids [I, note 07]. Bandwidth is not why ids win. They win because the client holds its own language and the server never trusts what the client shows [I]. Press Send fast. TFS gives 4 messages, one back every 1.5 s, and the 5th mutes for <code>5 · n²</code> s, so 5, 20, 45, 80 [V, S13, S12]. NPC talk gets its own bucket of 3 per second with a burst of 5, so "hi, trade, yes" never mutes a shopper [I, note 05].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG expansion-->
+<figure class="fig" data-demo="expansion" id="fig-expansion">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same line in English, Spanish and German, in a fixed bubble and fixed buttons</h4><span class="illu">Our translations; widths measured in this font</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="88" aria-label="A speech bubble sized for three lines of English above a villager, and three fixed-width buttons. Switching language makes the text longer; lines that do not fit turn red and long button labels are clipped"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="l" role="group" aria-label="Language"><button type="button" class="on" data-v="en">English</button><button type="button" data-v="es">Spanish</button><button type="button" data-v="de">German</button><button type="button" data-v="ps">Pseudo +30%</button></div>
+    <label><input type="checkbox" data-k="spare"> Room for one more line</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>IBM's table says strings up to 10 characters grow 200 to 300%, 31 to 50 characters 140 to 160%, and over 70 about 130% [V, S160]. Short labels grow most, which is why the buttons break first. Pseudolocalization at 0.3 "is sufficient for most practical cases": it accents the letters and pads the string so overflow shows up before any translator starts [V, S159]. Our rule is a box for 3 English lines so German fits 4 [I, note 06]. Tick "Room for one more line" and German fits. Pick languages before fonts. Languages without spaces need about 4 MB of line-break data on the web [V, S158].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG llm-->
+<figure class="fig" data-demo="llm" id="fig-llm">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Time to the first word: a scripted line against a model-driven NPC</h4><span class="illu">Scripted round trip 150 ms is our estimate</span></div>
+  <div style="max-width:680px;"><div class="stage"><canvas width="170" height="96" aria-label="Two dialog boxes start at the same moment on a shared time axis. The scripted one opens and starts typing within a fraction of a second; the model one shows dots until 1.6 or 3.4 seconds"></canvas><div class="hud" data-hud></div></div></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="go">Talk to both</button>
+    <div class="seg" data-seg="s" role="group" aria-label="Model location"><button type="button" class="on" data-v="device">On-device, 1.6 s</button><button type="button" data-v="cloud">Cloud, 3.4 s</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The scripted line plays the box open at once. A 100 to 200 ms round trip hides inside the 8-frame open (133 ms) [I, note 05]. PUBG Ally runs a quantized 2B model on the player's GPU at a median 1.6 s per voice exchange, and 3.4 s in the cloud [V, S204, S206]. Krafton reports $3.70 to $7.10 per match had it used Claude models in the cloud, and $0.02 to $0.06 on Gemma 4 31B [V, self-reported]. Where Winds Meet players got rewards by repeating the NPC's line as a question or claiming a riddle solved [V, S198 to S201]. A weak web client cannot run a 2B model, so the study keeps runtime LLMs off quest, shop, bank and travel NPCs [I, note 08].</figcaption>
+</figure>
+<!--/FIG-->

@@ -1,0 +1,204 @@
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five generations of talking to NPCs, 1986 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or filter by generation. The axis is linear from 1985 to 2027. Each event keeps its evidence tag and source from §3.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG keyword-->
+<figure class="fig" data-demo="keyword" id="fig-keyword">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia keyword NPC: say "hi", follow the keywords, say "bye", all inside a 3-tile radius</h4><span class="illu">NPC, town and lines made up</span></div>
+  <div class="kw-wrap">
+    <div class="stage click"><canvas width="256" height="144" aria-label="A guard stands in a cobbled square; the tiles within 3 tiles of him are tinted gold; drag the player in or out of the range"></canvas><span class="tagl">Drag the player</span></div>
+    <div class="kw-side">
+      <div class="kwlog" aria-live="polite"></div>
+      <form class="kwform" autocomplete="off"><input type="text" data-kw maxlength="40" placeholder="Type hi, name, job, gate, trade, bye" aria-label="Say something to the guard"><button type="submit" class="btn">Say</button></form>
+      <div class="chips" data-chips role="group" aria-label="Say a keyword"><button type="button" data-say="hi">hi</button><button type="button" data-say="name">name</button><button type="button" data-say="job">job</button><button type="button" data-say="trade">trade</button><button type="button" data-say="bye">bye</button></div>
+    </div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The rules are TFS's: greet with "hi" or "hello", leave with "bye" or "farewell", talk radius 3 tiles measured as Chebyshev distance, and a 1 s delay before every reply [V, S4, S5]. Matching is a substring test with a word-boundary guard, and a keyword tree remembers the last question, so "yes" answers the gate question [V, S7, S6]. The idle clock resets only when a keyword matched and ends the talk after 120 s; here it runs 10 times faster, so 12 s. Walk out of the gold square and the guard says goodbye. NPC replies are cyan, and words in <code>{braces}</code> become clickable links, as OTClient draws them [V, S28, S21]. A reply costs one packet of 18 bytes plus name plus text [V, S15].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG printers-->
+<figure class="fig" data-demo="printers" id="fig-printers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Text printers: the same line at the real frames per glyph of Emerald, Crystal and A Link to the Past</h4><span class="illu">Line made up; ALttP speeds illustrative</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="g" role="group" aria-label="Game"><button type="button" class="on" data-v="em">Pokémon Emerald</button><button type="button" data-v="cr">Pokémon Crystal</button><button type="button" data-v="lt">A Link to the Past</button></div>
+  </div>
+  <div class="stage click"><canvas width="256" height="132" aria-label="Three small text boxes type the same line at three speeds; a frame counter runs at the top and a down arrow bobs when a line is done"></canvas><span class="tagl">Hold to fast-forward</span></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="again">Type again</button>
+    <label><input type="checkbox" data-k="snd"> Blip on every glyph (sound)</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Emerald's table says Slow 8, Mid 4, Fast 1, but the printer prints and then counts down, so a glyph really takes 9, 5 or 2 frames at 60 fps, that is 6.7, 12 or 30 glyphs per second [V, S57, S56]. Crystal's source comment gives 5, 3 and 1 frames [V, S63]. In A Link to the Past the speed is a code inside each message, and speed 0 chains glyphs within one frame [V, S66]; its other lanes here use made-up waits. Press and hold the canvas to fast-forward. Emerald and Crystal then run 1 glyph per frame, but only after a fresh press [V, S56]. When a line is done the arrow bobs 0, 1, 2, 1 px at 9 frames per step, a 36-frame cycle [V, S56]. ALttP plays a sound on nearly every glyph [V, S66]; tick the box to hear blips. None of these printers pauses on punctuation by itself [V, S60, S66].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tilepinned-->
+<figure class="fig" data-demo="tilepinned" id="fig-tilepinned">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tile-pinned overhead text: words stay where they were said and live max(3 s, 60 ms × chars)</h4><span class="illu">View at half of Tibia's 480×352</span></div>
+  <div class="stage"><canvas width="240" height="176" aria-label="A walker crosses a cobbled square and leaves outlined lines of text on the tiles where each line was said; each line fades on its own timer"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="who" role="group" aria-label="Speaker"><button type="button" class="on" data-v="say">Player say</button><button type="button" data-v="npc">NPC reply</button><button type="button" data-v="yell">Yell</button></div>
+    <label><input type="checkbox" data-k="walk" checked> Walk</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Characters per line <input type="range" data-k="ch" min="5" max="255" value="40"><output data-o="ch">40</output></label>
+    <button type="button" class="btn ghost" data-b="say">Say a line now</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>OTClient keeps each line <code>max(60 ms · chars, 3000 ms)</code>, doubled for yells: 3.0 s for 50 characters and 15.3 s for 255, about 16.7 characters per second of reading [V, S25, S24]. The text sits on the tile, so a walking speaker leaves it behind. Stop the walker and its lines merge into one block, since a block takes lines with the same tile, name and mode and holds 11 [V, S26, S24]. Player say is yellow (239, 239, 0) and NPC replies are cyan <code>#5FF7F7</code> [V, S24, S28]; a yell here keeps the say colour and lives twice as long. Tibia wraps at 275 px in a 480×352 view and clamps text inside the view; this view is half that size, so the wrap is 137 px [V, S24, S27]. A line costs nothing to follow because the anchor never moves.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pushup-->
+<figure class="fig" data-demo="pushup" id="fig-pushup">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Greedy push-up: each line moves above any line it overlaps, with a 2 px margin</h4><span class="illu">Speakers and lines made up</span></div>
+  <div class="stage"><canvas width="256" height="128" aria-label="A row of townsfolk standing close together; their speech lines stack upward instead of overlapping"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Speakers <input type="range" data-k="n" min="2" max="12" value="7"><output data-o="n">7</output></label>
+    <label><input type="checkbox" data-k="push" checked> Push up</label>
+    <label><input type="checkbox" data-k="sort" checked> Oldest first</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>RuneScape's 2006 client tests line k against lines 0 to k−1 with a 2 px margin and moves it above any overlap, then tests again, O(n²) in draw order, up to 50 strings per frame [V, S31]. Untick <b>Push up</b> to see the overlap it prevents. Sorting oldest first keeps old lines in their slots so only new ones move [I, note 05]; untick it and the column jitters as lines come and go. The layout is under 1,000 rectangle tests for 32 bubbles, cheap next to the text itself [I; V, S3]. The readout shows the tests this frame and the time the layout took on your device.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stream-->
+<figure class="fig" data-demo="stream" id="fig-stream">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The upward stream: bubbles start over the speaker and scroll up 15 px per tick</h4><span class="illu">Tavern and lines made up</span></div>
+  <div class="stage"><canvas width="256" height="160" aria-label="A tavern room seen from above; speech bubbles appear in a band above the guests and climb toward the top in steps, older bubbles losing their tails"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="iv" role="group" aria-label="Scroll interval"><button type="button" data-v="3" class="on">Every 3 s</button><button type="button" data-v="6">6 s</button><button type="button" data-v="12">12 s</button></div>
+    <button type="button" class="btn ghost" data-b="talk">Someone talks</button>
+    <label><input type="checkbox" data-k="auto" checked> Guests chat on their own</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Habitat in 1986 put the balloon over the latest speaker; older balloons lost their tails and scrolled up [V, S49]. Habbo's Nitro client spawns each bubble at <code>speakerX − width/2</code> at the bottom of the band, moves every bubble up 15 px per tick of 3, 6 or 12 s, and removes it once its top passes −2 heights [V, S46, S45, S47]. In line mode a new bubble shifts all the others up at once, as here [V, S45]. The reading order is clear. The cost is distance, because bubbles drift away from their speakers, which suits a tavern room more than an open town [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG clutter-->
+<figure class="fig" data-demo="clutter" id="fig-clutter">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bubble clutter: a crowd talks around your conversation, and the strategy decides what you can read</h4><span class="illu">Crowd and lines made up</span></div>
+  <div class="stage"><canvas width="320" height="180" aria-label="A town square full of chatting players; the player talks to an elder in the middle while crowd bubbles are stacked, capped or sent to a log"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="st" role="group" aria-label="Strategy"><button type="button" data-v="none">None</button><button type="button" data-v="stack">Stack</button><button type="button" class="on" data-v="prio">Priority + caps</button><button type="button" data-v="log">Overflow to log</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Chatters <input type="range" data-k="n" min="0" max="60" value="24"><output data-o="n">24</output></label>
+    <label><input type="checkbox" data-k="cache" checked> Cache bubbles</label>
+  </div>
+  <ul class="clog" aria-live="off"></ul>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each chatter speaks a line every 20 s on average, and every bubble lives <code>max(3 s, 60 ms × chars)</code> [V, S25], so the number alive tracks the crowd. <b>None</b> draws everything where it lands. <b>Stack</b> pushes overlaps up and lets the column grow. <b>Priority + caps</b> sorts your conversation first, then the rest by age, keeps 3 bubbles per speaker and 12 on screen, and hides the rest [V, S50, S51; I, note 05]. <b>Overflow to log</b> sends what is hidden to the log below, so nothing said is lost [I]. Untick <b>Cache bubbles</b> to redraw every glyph each frame and watch the ms rise; our benchmark measured 50 redrawn bubbles at 10.51 ms on a 6x throttled CPU and 1.13 ms cached [V, S3].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG offscreen-->
+<figure class="fig" data-demo="offscreen" id="fig-offscreen">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Offscreen speakers: clamp the bubble, keep the tail on the speaker, then show an edge chip</h4><span class="illu">Proposal from note 10</span></div>
+  <div class="stage click"><canvas width="256" height="144" aria-label="An elder talking near the edge of the view; her bubble stays inside the view with its tail pointing at her, and when she walks out a small chip with an arrow sits on the edge"></canvas><span class="tagl">Drag the elder past the edge</span></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="clamp" checked> Clamp 4 px inside</label>
+    <label><input type="checkbox" data-k="tail" checked> Tail follows the speaker</label>
+    <label><input type="checkbox" data-k="chip" checked> Edge chip</label>
+    <label><input type="checkbox" data-k="auto" checked> Auto walk</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>OTClient's <code>bind()</code> slides overhead text back inside the view instead of cutting it [V, S24]. Untick <b>Clamp</b> to see the crop that an AGS module does [V, S187]. Untick <b>Tail follows</b> to see Adventure Creator's failure, where the clamped tail "no longer appears under the speaking character" [V, S186]. Once the speaker leaves the view, a chip sits on the edge where the line from the centre to the speaker crosses it, like an offscreen target marker [V, S184, S185]. The 4 px inset, the sliding tail and a chip for NPCs and party only are the study's rules [I, note 10]. It costs four comparisons per bubble and one sprite per chip.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG typewriter-->
+<figure class="fig" data-demo="typewriter" id="fig-typewriter">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Typewriter timing: four speed presets, pauses at punctuation, hold to fast-forward</h4><span class="illu">Presets are the study's proposal</span></div>
+  <div class="stage click"><canvas width="256" height="72" aria-label="A parchment dialog box with a portrait types a line letter by letter, stopping briefly at commas and full stops"></canvas><span class="tagl">Click to complete or advance · hold to fast-forward</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Text speed"><button type="button" data-v="83">Slow</button><button type="button" class="on" data-v="50">Normal</button><button type="button" data-v="30">Fast</button><button type="button" data-v="0">Instant</button></div>
+    <label><input type="checkbox" data-k="pause" checked> Pauses at punctuation</label>
+    <label><input type="checkbox" data-k="snd"> Blips (sound)</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The presets are Slow 83 ms (12 glyphs per second), Normal 50 ms (20), Fast 30 ms (33, Stardew's fixed speed) and Instant [I; V, S73]. Handhelds sit at 12 to 20 per second and modern engines start at 33 or instant (§6a). A held button runs 1 glyph per frame, 60 per second, as in Emerald and Crystal [V, S56, S63]. Pauses add 5 glyph-times after a comma and 10 after a sentence, so 250 ms and 500 ms at Normal, close to RPG Maker's 15 frames and Crystal's 30 [I; V, S89, S64]. Lines wrap in full before typing starts, so words never jump lines mid-type [V, S84]. Blips play on every second glyph and skip spaces. The readout times the line with and without pauses.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG guard-->
+<figure class="fig" data-demo="guard" id="fig-guard">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The mash test: press fast and count the lines you skip without reading</h4><span class="illu">Quest lines made up</span></div>
+  <div class="stage click"><canvas width="256" height="72" aria-label="A quest giver's dialog box; each press either finishes the line or moves to the next page"></canvas><span class="tagl">Click or tap to press</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Input rule"><button type="button" data-v="0">Press advances, no guard</button><button type="button" class="on" data-v="1">Press completes + 200 ms guard</button></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="press">Press A</button>
+    <button type="button" class="btn ghost" data-b="mash">Mash for 3 s</button>
+    <button type="button" class="btn ghost" data-b="reset">Start over</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew completes a typing line on the first click and advances on the second, and holds a 750 ms safety timer on each new box [V, S73]. A Link to the Past waits 28 frames after a page before a press counts [V, S66]. For an MMO the study proposes 150 to 300 ms after each page, 200 ms here, so a server line that lands in the middle of a mash still gets read [I, note 02]. <b>Mash for 3 s</b> presses 8 times a second. Without the rule, mashing skips most pages before they finish; with it, each page is complete before it can be dismissed. A 750 ms guard felt sticky, so Stardew shaves it on early clicks [V, S73].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tags-->
+<figure class="fig" data-demo="tags" id="fig-tags">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Inline tags: colour, wave, shake, pause and speed inside the line, never counted as glyphs</h4><span class="illu">Tag syntax from the sandbox</span></div>
+  <label class="tagsrc"><span>Edit the line</span><textarea data-src rows="3" spellcheck="false">Bring me [c=key]3 herbs[/c] from the [wave]old garden[/wave].[p=20] And [shake]hurry[/shake], [spd=0.5]the tonic[/spd] will not brew itself!</textarea></label>
+  <div class="stage"><canvas width="256" height="64" aria-label="The edited line typed in a dialog box with coloured, waving and shaking words"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="still"> Reduce motion</label>
+    <label><input type="checkbox" data-k="ul" checked> Underline keywords</label>
+    <button type="button" class="btn ghost" data-b="again">Type again</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The tags are <code>[c=key]…[/c]</code> for colour, <code>[wave]</code> and <code>[shake]</code> for motion, <code>[p=12]</code> for a pause in frames and <code>[spd=2]</code> for speed, as in the sandbox (§8). Celeste writes the same ideas as <code>{~}</code>, <code>{*}</code>, <code>{#F94A4A}</code>, <code>{>> 0.5}</code> and <code>{0.5}</code> [V, S67]. Tags must not count toward speed or length, so the readout counts glyphs, not characters. The wave moves 1 to 2 px, the right amplitude for a 7 px glyph [I, note 06]. A wave on a 192-glyph box measured the same as a static one [V, S3], but in Godot an effect makes RichTextLabel redraw every frame per glyph [V, S196]. Keywords carry an underline as well as a colour, because colour alone fails colour-blind players [V, S178]. Reduce motion stops wave and shake.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ninepatch-->
+<figure class="fig" data-demo="ninepatch" id="fig-ninepatch">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The 9-slice box: stretched edges smear, tiled edges stay crisp, and the box opens in 8 frames</h4><span class="illu">Frame art drawn for this page</span></div>
+  <div class="stage click"><canvas width="256" height="112" aria-label="Two copies of the same pixel frame side by side: the left one stretches its rope edge into uneven blobs, the right one repeats it cleanly"></canvas><span class="tagl">Drag to resize</span></div>
+  <div class="ctl">
+    <label class="rng">Width <input type="range" data-k="w" min="36" max="120" value="83"><output data-o="w">83</output></label>
+    <label class="rng">Height <input type="range" data-k="h" min="28" max="96" value="57"><output data-o="h">57</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="snap"> Snap size to the 6 px edge period</label>
+    <button type="button" class="btn ghost" data-b="open">Replay the open</button>
+    <label><input type="checkbox" data-k="slow" checked> Slow motion (x8)</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A 9-slice keeps the four corners, repeats or stretches the four edges and fills the centre, 9 quads from one texture [I, note 10]. Godot's NinePatchRect defaults to STRETCH, which smears pixel borders; use TILE and snap sizes to the edge period [V, S189]. Drag the size to an odd value and the stretched rope turns lumpy while the tiled one stays even. Snapping also keeps a box from landing on half pixels when it is centred [I, note 10]. RPG Maker opens a window in 8 frames, adding 32 of 255 openness per frame, 133 ms [V, S88]. The arrow bobs 0, 1, 2, 1 px at 9 frames per step [V, S56].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG choices-->
+<figure class="fig" data-demo="choices" id="fig-choices">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Choice menus: the cursor starts on the safe answer, and cancel always means no</h4><span class="illu">Shop line made up</span></div>
+  <div class="stage click"><canvas width="192" height="96" aria-label="A shopkeeper asks whether to sell your sword; a small yes or no box opens with the cursor on No" tabindex="0"></canvas><span class="tagl">Arrows, Enter, Escape</span></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="up">▲</button><button type="button" class="btn" data-b="down">▼</button>
+    <button type="button" class="btn" data-b="a">A · confirm</button><button type="button" class="btn" data-b="b">B · cancel</button>
+    <button type="button" class="btn ghost" data-b="ask">Ask again</button>
+    <button type="button" class="btn ghost" data-b="mash">Mash A at open</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="trap"> Default on Yes (the trap)</label>
+    <label><input type="checkbox" data-k="ign" checked> Ignore input for 5 frames at open</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Emerald's yes/no box is 40×32 px, <code>initialCursorPos</code> sets the default, and both B and "No" return 0 [V, S57, S59]. It ignores input for 5 frames after it opens [V, S59], so a press meant for the previous page cannot answer the question. <b>Mash A at open</b> presses A every 2 frames from the moment the box opens. With the default on No, a mash at worst cancels; tick <b>Default on Yes</b> and the same mash sells your sword. A default on "Buy 100" is a trap, and the server must re-check the answer when it applies it (F3) [I, note 02].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG autoadvance-->
+<figure class="fig" data-demo="autoadvance" id="fig-autoadvance">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Auto-advance: the wait grows with the line, and a log keeps what scrolled past</h4></div>
+  <div class="duo wide-l">
+    <div><svg class="chart aa-chart" viewBox="0 0 360 200" role="img" aria-label="Wait after typing against line length for Ren'Py, Dialogic and the study's proposal"></svg>
+      <div class="ctl"><label class="rng">Line length <input type="range" data-k="len" min="0" max="160" value="40"><output data-o="len">40</output></label></div></div>
+    <div><div class="stage"><canvas width="192" height="48" aria-label="A dialog box that advances on its own after each line"></canvas></div>
+      <div class="ctl" style="margin-top:6px"><div class="seg" data-seg="rule" role="group" aria-label="Timing rule"><button type="button" class="on" data-v="r">Ren'Py</button><button type="button" data-v="d">Dialogic</button><button type="button" data-v="o">Ours</button></div></div>
+      <ol class="aalog" aria-live="polite"></ol></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ren'Py's defaults wait 1.5 s plus 0.06 s per character after typing ends, Dialogic's 1.0 s plus 0.1 s [V, S124, S125, S128]. A 40-character line waits 3.9 s and 5.0 s [I, note 04]. The study proposes <code>1.2 s + 0.05 s/char</code>, clamped to 2 to 10 s and off by default for NPC talk [I, note 04]. The box on the right auto-advances with the rule you pick, and each finished line goes to the log, as OTClient keeps 100 lines per tab and CrossCode added a log for skipped messages [V, S28, S81]. Per-character timing breaks for CJK text [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->

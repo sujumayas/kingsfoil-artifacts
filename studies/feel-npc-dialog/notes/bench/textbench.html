@@ -1,0 +1,208 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Text bench</title>
+<style>body{background:#111;color:#ddd;font:12px monospace}canvas{image-rendering:pixelated}</style></head>
+<body>
+<p>NPC dialog text bench. Call <code>runAll({frames})</code> from the console or run.py. No external assets.</p>
+<pre id="log"></pre>
+<script>
+// ---------- setup ----------
+const W = 320, H = 180, S = 4;             // logical res and upscale factor
+const GW = 6, GH = 8;                      // glyph cell in the bitmap atlas
+const FIRST = 32, COUNT = 95;              // printable ASCII
+const COLS = 16;
+const SAMPLE = "Welcome to Thais, traveller. Say hi, trade, or bye. ";
+
+// Build a 1-bit bitmap font atlas procedurally: rasterize monospace and threshold alpha.
+function buildAtlas(scale) {
+  const c = document.createElement('canvas');
+  c.width = COLS * GW * scale; c.height = Math.ceil(COUNT / COLS) * GH * scale;
+  const tmp = document.createElement('canvas'); tmp.width = COLS * GW; tmp.height = Math.ceil(COUNT / COLS) * GH;
+  const t = tmp.getContext('2d');
+  t.font = '8px monospace'; t.textBaseline = 'top'; t.fillStyle = '#fff';
+  for (let i = 0; i < COUNT; i++) t.fillText(String.fromCharCode(FIRST + i), (i % COLS) * GW, Math.floor(i / COLS) * GH);
+  const id = t.getImageData(0, 0, tmp.width, tmp.height);
+  for (let p = 3; p < id.data.length; p += 4) { const on = id.data[p] > 90; id.data[p] = on ? 255 : 0; id.data[p-1] = id.data[p-2] = id.data[p-3] = 255; }
+  t.putImageData(id, 0, 0);
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(tmp, 0, 0, c.width, c.height);
+  return c;
+}
+// 9-slice frame source (24x24, 8px corners)
+function buildFrame(scale) {
+  const c = document.createElement('canvas'); c.width = c.height = 24 * scale;
+  const x = c.getContext('2d'); x.scale(scale, scale);
+  x.fillStyle = '#000'; x.fillRect(0, 0, 24, 24);
+  x.fillStyle = '#f4e8c8'; x.fillRect(1, 1, 22, 22);
+  x.fillStyle = '#c9b48a'; x.fillRect(2, 20, 20, 2);
+  return c;
+}
+function makeTarget(native) {
+  const s = native ? S : 1;
+  const c = document.createElement('canvas'); c.width = W * s; c.height = H * s;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  const disp = document.createElement('canvas'); disp.width = W * S; disp.height = H * S;
+  const dctx = disp.getContext('2d', { willReadFrequently: false }); dctx.imageSmoothingEnabled = false;
+  document.body.appendChild(disp);
+  return { native, s, c, ctx, disp, dctx, atlas: buildAtlas(s), frame: buildFrame(s) };
+}
+
+function glyph(T, ctx, code, x, y) {
+  const i = code - FIRST; if (i < 0 || i >= COUNT) return;
+  const s = T.s;
+  ctx.drawImage(T.atlas, (i % COLS) * GW * s, Math.floor(i / COLS) * GH * s, GW * s, GH * s, x * s, y * s, GW * s, GH * s);
+}
+function textLine(T, ctx, str, x, y, wave, t) {
+  for (let k = 0; k < str.length; k++) {
+    const dy = wave ? Math.round(Math.sin(t * 0.2 + k * 0.6) * 1.5) : 0;
+    glyph(T, ctx, str.charCodeAt(k), x + k * GW, y + dy);
+  }
+}
+function nineSlice(T, ctx, x, y, w, h) {
+  const s = T.s, f = T.frame, c = 8 * s, m = 8 * s; // corner and middle source size
+  const X = x * s, Y = y * s, Wd = w * s, Hd = h * s;
+  const xs = [X, X + c, X + Wd - c], ws = [c, Wd - 2 * c, c];
+  const ys = [Y, Y + c, Y + Hd - c], hs = [c, Hd - 2 * c, c];
+  for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++)
+    ctx.drawImage(f, i * m, j * m, m, m, xs[i], ys[j], ws[i], hs[j]);
+}
+function lineOf(n, off) { let s = ''; while (s.length < n + off) s += SAMPLE; return s.substr(off, n); }
+
+// ---------- timing ----------
+let sinkPx;
+function present(T) {
+  if (!T.native) T.dctx.drawImage(T.c, 0, 0, W * S, H * S); else T.dctx.drawImage(T.c, 0, 0);
+  sinkPx = T.dctx.getImageData(0, 0, 1, 1).data[0]; // forces the GPU canvas to flush
+}
+function measure(name, T, frames, drawFn, extra) {
+  const times = [];
+  const run = (f) => { T.ctx.clearRect(0, 0, T.c.width, T.c.height); drawFn(T, T.ctx, f); present(T); };
+  for (let f = 0; f < Math.min(30, frames); f++) run(f);
+  for (let f = 0; f < frames; f++) { const a = performance.now(); run(f); times.push(performance.now() - a); }
+  times.sort((a, b) => a - b);
+  const q = (p) => times[Math.min(times.length - 1, Math.floor(p * times.length))];
+  return Object.assign({ name, target: T.native ? 'native1280x720' : 'lowres320x180+upscale', frames, median_ms: +q(0.5).toFixed(4), mean_ms: +(times.reduce((a,b)=>a+b,0)/times.length).toFixed(4), p95_ms: +q(0.95).toFixed(4), min_ms: +times[0].toFixed(4) }, extra || {});
+}
+
+// ---------- tests ----------
+function bubbleLayout(n) {
+  const out = [];
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const lines = 1 + (i % 3), chars = 14 + Math.floor(rnd() * 12);
+    const w = chars * GW + 8, h = lines * GH + 8;
+    const L = []; for (let l = 0; l < lines; l++) L.push(lineOf(chars, (i * 7 + l * 13) % SAMPLE.length));
+    out.push({ x: Math.floor(rnd() * (W - w)), y: Math.floor(rnd() * (H - h)), w, h, L, cache: null });
+  }
+  return out;
+}
+function drawBubble(T, ctx, b) { nineSlice(T, ctx, b.x, b.y, b.w, b.h); for (let l = 0; l < b.L.length; l++) textLine(T, ctx, b.L[l], b.x + 4, b.y + 4 + l * GH, false, 0); }
+function cacheBubble(T, b) {
+  const c = document.createElement('canvas'); c.width = b.w * T.s; c.height = b.h * T.s;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  const saved = { x: b.x, y: b.y }; b.x = 0; b.y = 0; drawBubble(T, x, b); b.x = saved.x; b.y = saved.y;
+  b.cache = c;
+}
+
+function runCanvas2D(frames) {
+  const res = [];
+  for (const native of [false, true]) {
+    const T = makeTarget(native);
+    res.push(measure('baseline_empty_frame', T, frames, () => {}));
+    // (a) bitmap glyph blits, (b) fillText fallback
+    for (const N of [100, 500, 2000]) {
+      const perLine = 50, lines = Math.ceil(N / perLine);
+      const L = []; for (let l = 0; l < lines; l++) L.push(lineOf(Math.min(perLine, N - l * perLine), l % 40));
+      res.push(measure('a_bitmap_glyph_blits', T, frames, (T, ctx) => { for (let l = 0; l < L.length; l++) textLine(T, ctx, L[l], 2, 2 + (l % 21) * GH, false, 0); }, { glyphs: N, drawImage_calls: N }));
+      res.push(measure('b_fillText_monospace', T, frames, (T, ctx) => {
+        ctx.font = (8 * T.s) + 'px monospace'; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff';
+        for (let l = 0; l < L.length; l++) ctx.fillText(L[l], 2 * T.s, (2 + (l % 21) * GH) * T.s);
+      }, { glyphs: N, fillText_calls: L.length }));
+    }
+    // (d) typewriter box 4 lines x 48 chars, static vs wave; text reveals over time
+    const box = [lineOf(48, 0), lineOf(48, 11), lineOf(48, 23), lineOf(48, 31)];
+    const drawBox = (wave) => (T, ctx, f) => {
+      nineSlice(T, ctx, 4, 120, 312, 56);
+      let shown = (f * 2) % 240; // 2 chars per frame reveal, loops
+      for (let l = 0; l < 4 && shown > 0; l++) { const s = box[l].substr(0, Math.min(48, shown)); shown -= 48; textLine(T, ctx, s, 10, 126 + l * 11, wave, f); }
+    };
+    res.push(measure('d_typewriter_static', T, frames, drawBox(false), { glyphs_max: 192 }));
+    res.push(measure('d_typewriter_wave', T, frames, drawBox(true), { glyphs_max: 192 }));
+    // (c)+(e) N bubbles, redraw every frame vs pre-rendered cache
+    for (const N of [1, 10, 50, 200]) {
+      const B = bubbleLayout(N);
+      const glyphs = B.reduce((a, b) => a + b.L.reduce((x, s) => x + s.length, 0), 0);
+      res.push(measure('e_bubbles_redraw', T, frames, (T, ctx) => { for (const b of B) drawBubble(T, ctx, b); }, { bubbles: N, glyphs, drawImage_calls: glyphs + 9 * N }));
+      const c0 = performance.now(); for (const b of B) cacheBubble(T, b); const cacheBuild = performance.now() - c0;
+      res.push(measure('c_bubbles_cached_blit', T, frames, (T, ctx) => { for (const b of B) ctx.drawImage(b.cache, b.x * T.s, b.y * T.s); }, { bubbles: N, glyphs, drawImage_calls: N, cache_build_ms_total: +cacheBuild.toFixed(3), cache_bytes_est: B.reduce((a, b) => a + b.cache.width * b.cache.height * 4, 0) }));
+    }
+    T.disp.remove();
+  }
+  return res;
+}
+
+// (f) WebGL2 instanced glyph quads: one draw call per frame for all glyphs
+function runWebGL(frames) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const gl = c.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false });
+  if (!gl) return { info: { webgl2: false }, results: [] };
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const info = { webgl2: true, renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) };
+  const vs = `#version 300 es
+  in vec2 corner; in vec4 inst; // x,y,glyphIndex,unused
+  uniform vec2 res; uniform float t; uniform float wave;
+  out vec2 uv;
+  void main(){ float gi=inst.z; vec2 cell=vec2(mod(gi,16.0), floor(gi/16.0));
+    float dy = wave*floor(sin(t*0.2+inst.w*0.6)*1.5+0.5);
+    vec2 p = inst.xy + vec2(0.0,dy) + corner*vec2(6.0,8.0);
+    uv = (cell + corner) / vec2(16.0, 6.0);
+    vec2 ndc = p/res*2.0-1.0; gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0); }`;
+  const fs = `#version 300 es
+  precision mediump float; in vec2 uv; uniform sampler2D atlas; out vec4 o;
+  void main(){ vec4 c = texture(atlas, uv); if (c.a < 0.5) discard; o = vec4(0.1,0.1,0.1,1.0); }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  const cb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0,0,1,0,0,1,1,1]), gl.STATIC_DRAW);
+  const lc = gl.getAttribLocation(pr, 'corner'); gl.enableVertexAttribArray(lc); gl.vertexAttribPointer(lc, 2, gl.FLOAT, false, 0, 0);
+  const ib = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, ib);
+  const li = gl.getAttribLocation(pr, 'inst'); gl.enableVertexAttribArray(li); gl.vertexAttribPointer(li, 4, gl.FLOAT, false, 0, 0); gl.vertexAttribDivisor(li, 1);
+  const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, buildAtlas(1));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  const uRes = gl.getUniformLocation(pr, 'res'), uT = gl.getUniformLocation(pr, 't'), uWave = gl.getUniformLocation(pr, 'wave');
+  gl.uniform2f(uRes, W, H); gl.viewport(0, 0, W, H);
+  const px = new Uint8Array(4);
+  const results = [];
+  for (const N of [500, 2000, 10000]) for (const mode of ['static_buffer', 'rebuild_buffer_each_frame', 'gpu_wave']) {
+    const data = new Float32Array(N * 4);
+    const fill = () => { for (let i = 0; i < N; i++) { const k = i % 50; data[i*4] = 2 + k * 6; data[i*4+1] = 2 + (Math.floor(i / 50) % 21) * 8; data[i*4+2] = SAMPLE.charCodeAt((i + Math.floor(i/50)) % SAMPLE.length) - FIRST; data[i*4+3] = k; } };
+    fill(); gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    gl.uniform1f(uWave, mode === 'gpu_wave' ? 1 : 0);
+    const frame = (f) => {
+      if (mode === 'rebuild_buffer_each_frame') { fill(); gl.bufferSubData(gl.ARRAY_BUFFER, 0, data); }
+      gl.uniform1f(uT, f); gl.clearColor(1, 1, 1, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, N);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    };
+    for (let f = 0; f < 30; f++) frame(f);
+    const times = []; for (let f = 0; f < frames; f++) { const a = performance.now(); frame(f); times.push(performance.now() - a); }
+    times.sort((a, b) => a - b);
+    results.push({ name: 'f_webgl2_instanced_' + mode, target: 'webgl2_320x180', glyphs: N, draw_calls: 1, frames, median_ms: +times[Math.floor(times.length / 2)].toFixed(4), mean_ms: +(times.reduce((a,b)=>a+b,0)/times.length).toFixed(4), p95_ms: +times[Math.floor(times.length * 0.95)].toFixed(4), min_ms: +times[0].toFixed(4) });
+  }
+  // baseline: clear + readPixels only
+  const tb = []; for (let f = 0; f < frames; f++) { const a = performance.now(); gl.clear(gl.COLOR_BUFFER_BIT); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); tb.push(performance.now() - a); }
+  tb.sort((a, b) => a - b);
+  results.unshift({ name: 'f_webgl2_baseline_clear_readback', target: 'webgl2_320x180', frames, median_ms: +tb[Math.floor(tb.length / 2)].toFixed(4), mean_ms: +(tb.reduce((a,b)=>a+b,0)/tb.length).toFixed(4), p95_ms: +tb[Math.floor(tb.length * 0.95)].toFixed(4) });
+  return { info, results };
+}
+
+function runAll(opts) {
+  const frames = (opts && opts.frames) || 300;
+  const t0 = performance.now();
+  const results = runCanvas2D(frames);
+  const g = runWebGL(frames);
+  const out = { info: Object.assign({ userAgent: navigator.userAgent, hardwareConcurrency: navigator.hardwareConcurrency, dpr: devicePixelRatio }, g.info), results: results.concat(g.results), total_s: +((performance.now() - t0) / 1000).toFixed(1), sink: sinkPx };
+  document.getElementById('log').textContent = JSON.stringify(out, null, 1);
+  return out;
+}
+</script>
+</body></html>

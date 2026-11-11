@@ -216,6 +216,11 @@
      "id": "difficulty-curves",
      "label": "Difficulty curves",
      "desc": "Difficulty, learning and power curves for one game"
+    },
+    {
+     "id": "npc-dialog",
+     "label": "NPCs & dialog",
+     "desc": "Talking to NPCs: bubbles, dialog boxes, portraits, quest givers, shops"
     }
    ]
   },
@@ -482,6 +487,46 @@
      "id": "playtest-metrics",
      "label": "Playtest metrics",
      "desc": "Funnels, win rate by stage, small-sample rules"
+    },
+    {
+     "id": "typewriter-text",
+     "label": "Typewriter text",
+     "desc": "Characters per second, punctuation pauses, complete-then-advance"
+    },
+    {
+     "id": "bitmap-font",
+     "label": "Bitmap fonts",
+     "desc": "Glyph atlas blits and cached text for crisp, cheap pixel text"
+    },
+    {
+     "id": "speech-bubbles",
+     "label": "Speech bubbles",
+     "desc": "Anchored overhead text with lifetimes, stacking and clutter rules"
+    },
+    {
+     "id": "dialog-graph",
+     "label": "Dialog graphs",
+     "desc": "Nodes, options, conditions and variables in a data format"
+    },
+    {
+     "id": "npc-focus",
+     "label": "NPC focus and sessions",
+     "desc": "Who an NPC talks to when many players share it"
+    },
+    {
+     "id": "quest-markers",
+     "label": "Quest markers",
+     "desc": "Overhead ! and ? states, pins and trackers"
+    },
+    {
+     "id": "barks",
+     "label": "Barks",
+     "desc": "Short ambient lines chosen by rules, priorities and cooldowns"
+    },
+    {
+     "id": "voice-blips",
+     "label": "Voice blips",
+     "desc": "Per-character beeps with pitch per speaker"
     }
    ]
   },
