@@ -290,9 +290,9 @@ function updateStorm(dt){flash=Math.max(0,flash-dt);boltT=Math.max(0,boltT-dt);i
     for(let k=0;k<10;k++)parts.push({k:'spark',x:tx,y:ty,z:2,vx:(rnd()-.5)*80,vy:(rnd()-.5)*40,vz:20+rnd()*30,life:.35});}}
 
 // ---------- particles & drops ----------
-function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.life-=dt;if(p.life<=0){parts.splice(k,1);continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
-  if(p.k==='spl'||p.k==='mud'||p.k==='spark'){p.vz-=150*dt;if(p.z<0){parts.splice(k,1);continue;}}
-  else if(p.k==='drip'){p.vz-=200*dt;if(p.z<=0){impact(p.x,p.y,1,true);const i=(p.y|0)*W+(p.x|0);if(i>0&&i<NP){WAT[i]+=.03;if(S[i]===WATER||WAT[i]>.12)R0[i]-=1.5;else if(rnd()<.5)parts.push({k:'spl',x:p.x,y:p.y,z:0,vx:(rnd()-.5)*20,vy:0,vz:14,life:.2});}parts.splice(k,1);continue;}}
+function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.life-=dt;if(p.life<=0){parts[k]=parts[parts.length-1];parts.pop();continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
+  if(p.k==='spl'||p.k==='mud'||p.k==='spark'){p.vz-=150*dt;if(p.z<0){parts[k]=parts[parts.length-1];parts.pop();continue;}}
+  else if(p.k==='drip'){p.vz-=200*dt;if(p.z<=0){impact(p.x,p.y,1,true);const i=(p.y|0)*W+(p.x|0);if(i>0&&i<NP){WAT[i]+=.03;if(S[i]===WATER||WAT[i]>.12)R0[i]-=1.5;else if(rnd()<.5)parts.push({k:'spl',x:p.x,y:p.y,z:0,vx:(rnd()-.5)*20,vy:0,vz:14,life:.2});}parts[k]=parts[parts.length-1];parts.pop();continue;}}
   else if(p.k==='flame'){p.vx+=wind*10*dt;}}}
 function updateDrops(dt){const want=Math.min(MAXD,Math.round(I>.02?60+1300*Math.pow(I,1.25):0));
   for(let k=0;k<MAXD;k++){if(!D.on[k]){if(k<want&&rnd()<dt*4)spawnDrop(k);continue;}
@@ -352,7 +352,7 @@ const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const q=i/255;HEAT[i]=pac
 // ---------- loop & UI ----------
 const hud=document.getElementById('hud'),windEl=document.getElementById('wind'),intEl=document.getElementById('inten'),calmEl=document.getElementById('calm');
 function setWeather(w){weather=w;targetI=LEVELS[w];document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.classList.toggle('on',b.dataset.w===w));}
-let last=performance.now(),acc=0,manualI=false;
+let last=performance.now(),acc=0,manualI=false,effK=1;
 // frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
 // enough to redraw the scene and refresh the HUD
 let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
@@ -365,10 +365,12 @@ function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Ma
     if(!manualI){I+=(targetI-I)*Math.min(1,dt*.35);intEl.value=Math.round(I*100);}else I=intEl.value/100;
     if(I>.02)lastRain=t;document.getElementById('intv').textContent=Math.round(I*100)+'%';
     const wb=Math.round(wind*3);if(wb!==windBucket){windBucket=wb;computeExposure(wb/3);}
-    const t0=performance.now();acc+=dt*60*speed;let n=0;while(acc>=1&&n<16){simStep(weather==='sun');acc--;n++;}if(acc>4)acc=0;simMs=simMs*.9+(performance.now()-t0)*.1;
+    const t0=performance.now();acc+=dt*60*speed;let n=0;while(acc>=1&&n<16&&(n<1||performance.now()-t0<7)){simStep(weather==='sun');acc--;n++;}if(acc>4)acc=0;
+    // steps run against steps asked for. Under 1 means the 7 ms budget cut the speed
+    effK+=((n/Math.max(1,Math.round(dt*60*speed)))-effK)*.1;simMs=simMs*.9+(performance.now()-t0)*.1;
     updateDrops(dt);updateChars(dt);updateFire(dt);updateStorm(dt);updateParts(dt);frameN++;}
   render();if(frameN%8===0){const names={sun:'Sun',overcast:'Overcast',drizzle:'Drizzle',light:'Light rain',moderate:'Moderate rain',heavy:'Heavy rain',storm:'Thunderstorm'};
-    hud.textContent=`${names[weather]} · ${Math.round(I*100)}% · wind ${wind<-.1?'←':wind>.1?'→':'·'}${Math.abs(wind).toFixed(1)} · barrel ${Math.round(barrel.fill*100)}% · fire ${fire.on?'lit':'out'} · you ${Math.round(player.wet*100)}% wet · sim ${simMs.toFixed(2)} ms`;}}
+    hud.textContent=`${names[weather]} · ${Math.round(I*100)}% · wind ${wind<-.1?'←':wind>.1?'→':'·'}${Math.abs(wind).toFixed(1)} · barrel ${Math.round(barrel.fill*100)}% · fire ${fire.on?'lit':'out'} · you ${Math.round(player.wet*100)}% wet · sim ${simMs.toFixed(2)} ms${effK<.85&&!paused?` · over budget, running ${(speed*effK).toFixed(1)}× of ${speed}×`:''}`;}}
 document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.onclick=()=>{auto=false;manualI=false;document.getElementById('auto').classList.remove('on');setWeather(b.dataset.w);});
 document.getElementById('auto').onclick=e=>{auto=!auto;manualI=false;e.target.classList.toggle('on',auto);};
 intEl.oninput=()=>{manualI=true;auto=false;document.getElementById('auto').classList.remove('on');weather=intEl.value>=85?'storm':intEl.value>=65?'heavy':intEl.value>=40?'moderate':intEl.value>=20?'light':intEl.value>=3?'drizzle':'overcast';document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.classList.toggle('on',b.dataset.w===weather));};
