@@ -921,7 +921,11 @@ How to use this file:
   Done: the highlight compared the 4 values the preset sets. It now compares all of them except Players,
   which is a scenario and not a constant. With Dmg / lvl at 12% the button stayed lit, now it goes dark. A
   click on Current with other knobs still changed says how many differ and points at Reset.
-- [ ] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
+- [x] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
+  Done: the load check took any 5-long array and any value of the right type, so `hp:[null,"x",{},1,2]`
+  threw in the first render and left an empty page. A saved value now needs the knob's type, numbers are
+  clamped to the slider range, and anything else keeps the build value. With a file of 11 bad entries the
+  page had 0 cards and 0 charts, now 6 and 5.
 
 ## curves-matchrpg
 

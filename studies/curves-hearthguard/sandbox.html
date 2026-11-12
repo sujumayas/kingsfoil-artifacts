@@ -191,7 +191,13 @@ var KN=[
 var KEY="hg-curve-lab-v1";
 function clone(o){return JSON.parse(JSON.stringify(o));}
 var S=clone(BASE);
-try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){for(var k in BASE){if(saved[k]!==undefined&&typeof saved[k]===typeof BASE[k]&&(!Array.isArray(BASE[k])||(Array.isArray(saved[k])&&saved[k].length===5)))S[k]=saved[k];}}}catch(e){}
+// a saved value is used only when it has the knob's type, and numbers are clamped to the slider range. Anything else keeps the build value
+var RNG={};KN.forEach(function(g){g.items.forEach(function(it){RNG[it.k]=it;});});
+function okNum(v,it){if(typeof v!=="number"||!isFinite(v))return null;v=Math.min(it.max,Math.max(it.min,v));return it.st>=1?Math.round(v):v;}
+try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){for(var k in BASE){var it=RNG[k],sv=saved[k];if(sv===undefined||!it)continue;
+  if(it.chk){if(typeof sv==="boolean")S[k]=sv;}
+  else if(it.arr){if(Array.isArray(sv)&&sv.length===5){var arr=sv.map(function(v){return okNum(v,it);});if(arr.every(function(v){return v!==null;}))S[k]=arr;}}
+  else{var nv=okNum(sv,it);if(nv!==null)S[k]=nv;}}}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 function fmtVal(it,v){
