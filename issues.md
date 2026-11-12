@@ -162,7 +162,10 @@ How to use this file:
   said who took them. Before, both lay there until they despawned. If you die with no killer, the enemies
   are outsiders and still wait out the 60 s. The 1.5 s search channel applies to the body only, not to
   spilled items.
-- [ ] **29.** `P4` PvP enemies respawn twice, at 5 s and again at 6 s (`:454` and `:538`).
+- [x] **29.** `P4` PvP enemies respawn twice, at 5 s and again at 6 s (`:454` and `:538`).
+  Done: svKill skips its 5 s monster respawn for PvP enemies. The 6 s respawn in hitEnt, which places them
+  on the right side of the map, is the only one left. Traced one kill before and after. It came back at 4.9
+  s and jumped at 5.9 s before, and comes back once at 5.9 s now.
 - [ ] **30.** `P3` After Showcase the allies never move (`:921`, `think=now+1e9`) and a staged gold pile stays as
   a permanent ghost (`:925`, `:934`). Latency, Juice and "Alt: all labels" also stay changed after Reset.
 - [ ] **31.** `P3` A pickup in flight when you die stays pending forever (`:488` returns before the reply).

@@ -451,7 +451,7 @@ function svKill(m,T,boss,forceSpill){m.sdead=true;const list=[...m.dmg.entries()
   if(HYBRID&&!corpse.spill){let g=0;for(const id of corpse.items){const it=SV.items.get(id);if(it&&(!it.personal||it.owner===PL.id)&&canLoot(PL.id,it,T))g=Math.max(g,it.tier);}cs.glint=g;}// tier glint on corpses you may loot
   cs.prio=corpse.prio;cs.prioUntil=corpse.ownUntil;repl(m.x,m.y,TUNING.bytes.corpse);downMe(T,0,()=>clDie(m,cs));
   if(corpse.items.length===0&&STYLE!=='corpse'&&!cs.isBag){/* nothing inside */}
-  if(!boss)later(T+TUNING.mobs.respawnMs,()=>{if(!ENTS.includes(m))return;const [x,y]=freeSpot(100,310,20,170);Object.assign(m,{x,y,hp:m.mhp,sdead:false,dead:false,dieT:-1,dmg:new Map(),first:null});repl(x,y,TUNING.bytes.add);});}
+  if(!boss&&m.kind!=='pvp')later(T+TUNING.mobs.respawnMs,()=>{if(!ENTS.includes(m))return;const [x,y]=freeSpot(100,310,20,170);Object.assign(m,{x,y,hp:m.mhp,sdead:false,dead:false,dieT:-1,dmg:new Map(),first:null});repl(x,y,TUNING.bytes.add);});}
 function lootLine(who,items){let g=0;const rest=[];for(const i of items){if(ITEMS[i.def].gold)g+=i.n;else rest.push(i);}rest.sort((a,b)=>b.tier-a.tier);const parts=[];if(g)parts.push(g+' GOLD');for(const i of rest.slice(0,5))parts.push(nameOf(i.def,i.tier,i.n));if(rest.length>5)parts.push((rest.length-5)+' MORE');return 'LOOT OF '+who+': '+(parts.join(', ')||'NOTHING')+'.';}
 function placeItems(corpse,roll,T,delay,boss,contrib){const L=roll.items;
   const O=TUNING.owner,own={owner:roll.owner,ownUntil:corpse.ownUntil,tiers:corpse.tiers,partyShare:true,personal:!!roll.personal};
