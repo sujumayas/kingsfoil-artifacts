@@ -1,7 +1,7 @@
 /* Kingsfoil Artifacts: shared site bar.
    Every study and sandbox includes this file with <script src="nav.js" defer></script>.
-   It reads nav.json (generated from catalog.json by `python -m studykit index`) and adds
-   a top bar (home, series, previous/next, study/sandbox switch) and, on studies, the
+   It sets the browser-tab icon, reads nav.json (generated from catalog.json by
+   `python -m studykit index`) and adds a top bar (home, series, previous/next, study/sandbox switch) and, on studies, the
    end-of-page links. Both live in a shadow root, so page styles and bar styles never mix.
    Without JavaScript the pages keep their own static links. */
 (() => {
@@ -74,6 +74,13 @@ ${p.pair ? `<a class="play" href="${esc(p.pair)}"><small>Playable</small>▶ ${e
 ${p.next ? `<a rel="next" href="${esc(p.next.href)}"><small>Next study →</small>${esc(p.next.name)}</a>` : ""}
 <a href="${esc(home)}?series=${esc(p.series)}"><small>Library</small>All of the ${esc(p.label)}</a>
 </nav>`, true);
+  }
+
+  // browser-tab icon, for pages that do not link one themselves
+  if (!document.querySelector('link[rel~="icon"]')) {
+    const ico = document.createElement("link");
+    ico.rel = "icon"; ico.type = "image/svg+xml"; ico.href = new URL("favicon.svg", src).href;
+    document.head.appendChild(ico);
   }
 
   fetch(new URL("nav.json", src)).then(r => (r.ok ? r.json() : null)).then(n => n && render(n)).catch(() => {});

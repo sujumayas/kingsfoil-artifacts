@@ -18,6 +18,7 @@ site/                 the deployed website (committed, prebuilt). Netlify publis
   browse.html         technique atlas + list of every page, generated the same way
   nav.json            per-page links for the top bar, generated the same way
   nav.js              the shared top bar and end-of-study links (hand-written; every page loads it)
+  favicon.svg         browser-tab icon, linked by the homepage and added to every other page by nav.js
 formats.yaml          registered study formats: template recipe, sandbox rule, page names, format doc
 studies/<id>/         one folder per study (id = catalog id)
   study.yaml          config: page names, report, sandbox, thumbnail recipe, QA budget

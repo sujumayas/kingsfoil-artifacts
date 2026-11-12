@@ -268,6 +268,7 @@ def head(title, desc):
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:image" content="https://kingsfoil-artifacts.netlify.app/thumbs/vfx-light.png">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 {FONTS}
 <style>{CSS}</style>
 </head>'''
@@ -371,6 +372,7 @@ upsert("/index.html", "Kingsfoil Artifacts", "Library homepage generated from ca
 upsert("/browse.html", "Techniques and all pages", "Technique atlas and the sortable list of every page, generated from catalog.json.", cat["updated"])
 upsert("/nav.json", "Navigation data", "Per-page series, previous/next and study/sandbox links, generated from catalog.json and read by nav.js.", cat["updated"])
 upsert("/nav.js", "Shared top bar", "Adds the site bar (home, series, previous/next, study/sandbox switch) and the end-of-study links to every page.", cat["updated"])
+upsert("/favicon.svg", "Favicon", "The Kingsfoil mark for the browser tab. Linked by index.html and browse.html, added to every other page by nav.js.", cat["updated"])
 upsert("/catalog.json", "Catalog (v2)", "Rich data model: items, series, tags, stats, pairs. Source of truth for the homepage.", cat["updated"])
 upsert("/taxonomy.json", "Taxonomy", "Controlled vocabulary of facets and tag values.", cat["updated"])
 for f in sorted(glob.glob(f"{SITE}/thumbs/*")):

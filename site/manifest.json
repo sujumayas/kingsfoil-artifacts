@@ -334,5 +334,11 @@
   "title": "Shared top bar",
   "description": "Adds the site bar (home, series, previous/next, study/sandbox switch) and the end-of-study links to every page.",
   "date": "2026-11-11"
+ },
+ {
+  "path": "/favicon.svg",
+  "title": "Favicon",
+  "description": "The Kingsfoil mark for the browser tab. Linked by index.html and browse.html, added to every other page by nav.js.",
+  "date": "2026-11-11"
  }
 ]
