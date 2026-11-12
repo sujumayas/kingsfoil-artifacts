@@ -693,7 +693,7 @@ function clientRecv(r){if(r.v){CL.v=r.v;CL.gold=r.gold;CL.inv=r.inv;}
   if(r.t==='dlg'){if(r.to===PL)onDlg(r);else othersLine(r);}}
 // a simulated player learns what the sailor answered when the line reaches it: @busy makes it wait, @next resumes it
 function othersLine(r){const n=NPCS[r.npc];if(r.key&&r.to)r.to.heard=r.key;if(!heard(n,PL,'say')){NET.lost++;return;}for(const l of r.lines){const txt=fmt(str(l.id),r.args);bubble(n,txt,'npc',dist(n,PL)<5?2:3);logAdd(npcName(n),txt,'npc');}}
-function onDlg(r){const n=NPCS[r.npc];
+function onDlg(r){const n=NPCS[r.npc];talkAt=-1e9;
   if(r.leave){for(const l of r.lines){const t=fmt(str(l.id),r.args);bubble(n,t,'npc',0);logAdd(npcName(n),t,'npc');hist(npcName(n),t);}if(D.on&&D.npc===n)closeDlg();return;}
   if(D.on&&D.npc!==n)return;
   if(!D.on||D.closing)openDlg(n);
@@ -723,7 +723,9 @@ function advance(){
 function choose(i){const o=D.opts&&D.opts[i];if(!o)return;const t=plain(str(o.id));sfx('choice');hist(PL.name,t);if(D.style==='chat'){bubble(PL,t,'me',0);logAdd(PL.name,t,'me');}
   D.opts=null;D.state='wait';intent(PL,{t:'opt',n:i});}
 function leaveDlg(){if(!D.on)return;if(D.kw){playerSay(LANG==='es'?'adiós':'bye');return;}if(SV.sess.me)SV.sess.me.leaving=true;intent(PL,{t:'leave'});closeDlg();}
-function talk(n){if(D.on||TRADE.on||CARD.on)return;PL.d=dirTo(PL,n);n.face=PL;
+// one talk request at a time: until its answer lands (or 2 s pass) another E press sends nothing
+let talkAt=-1e9;
+function talk(n){if(D.on||TRADE.on||CARD.on)return;PL.d=dirTo(PL,n);n.face=PL;if(n.kind!=='kw'){if(ms()-talkAt<2000)return;talkAt=ms();}
   if(n.kind==='kw'){playerSay(LANG==='es'?'hola':'hi');return;}
   intent(PL,{t:'talk',npc:n.id});if(OPTIM)openDlg(n);}
 function playerSay(text){text=text.trim().slice(0,48);if(!text)return;
@@ -994,7 +996,7 @@ $('talk').onclick=()=>{ensureAudio();act();};
 function act(){if(LOGV.on){LOGV.on=false;return;}if(CARD.on){CARD.choose(CARD.sel);return;}if(TRADE.on){TRADE.doSel();return;}
   if(D.on){if(D.closing)return;if(D.style==='chat'){if(D.state==='opts')choose(D.cursor);return;}if(D.state==='idle')return;advance();return;}
   const f=facing();if(f&&f.npc)talk(f.npc);else if(f&&f.pl!=null)pickHerb(f.pl);}
-function reset(){svReset();Object.assign(CL,{v:{q1:0,herbs:0,q2:0},gold:25,inv:{potion:1}});CLH.fill(true);NET.q.length=0;NET.times.length=0;Object.assign(NET,{dropped:0,lastId:0,lastTxt:0,totId:0,totTxt:0,steps:0,up:0,down:0,lost:0});
+function reset(){svReset();talkAt=-1e9;Object.assign(CL,{v:{q1:0,herbs:0,q2:0},gold:25,inv:{potion:1}});CLH.fill(true);NET.q.length=0;NET.times.length=0;Object.assign(NET,{dropped:0,lastId:0,lastTxt:0,totId:0,totTxt:0,steps:0,up:0,down:0,lost:0});
   BUBS.length=EMOS.length=POPS.length=LOG.length=0;D.hist.length=0;D.on=D.closing=false;D.state='off';D.open=0;CARD.on=TRADE.on=REW.on=LOGV.on=false;LOGV.dirty=true;
   Object.assign(PL,{tx:14,ty:12,fx:14,fy:12,mv:0,d:'u',path:null,after:null,lim:null});
   VIL.forEach((v,i)=>{const s=v.sched[0];Object.assign(v,{tx:s[0],ty:s[1],fx:s[0],fy:s[1],mv:0,path:null,hold:0,lastBark:-99,lastNotice:-99,near:false});});

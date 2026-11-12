@@ -279,7 +279,11 @@ How to use this file:
 - [x] **53.** `P4` Server sessions view prints "?" for "@". The small font has no `@` (`:925`).
   Done: the line reads "YOU: ELDER AT ELDER.OFFER". A 3 by 5 pixel @ would not be readable, so the font
   stays as it is.
-- [ ] **54.** `P3` "Wait for server" mode repeats the dialog when E is pressed more than once in flight (`:723`).
+- [x] **54.** `P3` "Wait for server" mode repeats the dialog when E is pressed more than once in flight (`:723`).
+  Done: talk() keeps the time of the request in flight and clears it when the reply lands. At 400 ms
+  latency, 3 presses sent 3 requests and the elder said his 3 opening lines 3 times, 9 lines before the
+  offer. Now 1 request and 3 lines. The keyword sailor is not gated, saying "hi" twice is chat and has its
+  own rate limit.
 - [ ] **55.** `P6` Pause does not pause popups and emotes. They add a fixed 1/60 per frame (`:829`, `:833`, `:892`,
   `:894`, `:899`, `:908`), so they also run 2x fast at 120 Hz.
 - [ ] **56.** `P6` A long word with no spaces overflows the chat log and bubble (`:166` to `:168`).
