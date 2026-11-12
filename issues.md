@@ -797,7 +797,12 @@ How to use this file:
   Done: the fireplace shows logs and the candle no flame while their lights are off. Indoor ambient goes
   from 28% of the sky at night to 75% with the sun 20 degrees up. Floor light multiplier indoors at noon:
   0.16 before, 0.43 after.
-- [ ] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).
+- [x] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).
+  Done: a wall, window or roof pixel takes the light of the ground 2 px in front of its base. The base row
+  is inside the wall occluder, where each ray stops at a slightly different depth, and that showed as
+  stripes. Jumps in brightness between same-colour neighbours along one row at 23:00: house A wall 11 to 0,
+  house A roof 14 to 0, house B wall 12 to 5, house B roof 4 to 0. The indoor back wall now takes the room's
+  light too.
 - [ ] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
   2.48 px (`:217`).
 - [ ] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips

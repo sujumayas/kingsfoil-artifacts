@@ -311,7 +311,8 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
     const cls=CLF[i];let r=RGB[idx*3],g=RGB[idx*3+1],b=RGB[idx*3+2];
     if(cls===WIN){const on=HOUSE[i]===1?houseOn.A:houseOn.B;if(on){const k=winI;out32[i]=(255<<24)|((106*k)<<16)|((207*k)<<8)|(255*k|0);continue;}}
     if(EMIS[idx]){if(idx===LAMPON||idx===BULB||idx===FFLY||idx===MUSH||idx===ORB||FIRE.includes(idx)||CRYS.includes(idx)||idx===RUNE){out32[i]=(255<<24)|(b<<16)|(g<<8)|r;continue;}}
-    const x=i%W,y=(i/W)|0;const elev=(cls===WALLF||cls===OBJ||cls===ROOF||cls===CANOPY||cls===WIN);const bi=elev?clamp(OBF[i],0,H-1)*W+x:i;
+    const x=i%W,y=(i/W)|0;const elev=(cls===WALLF||cls===OBJ||cls===ROOF||cls===CANOPY||cls===WIN);// a wall or roof takes the light of the ground 2 px in front of its base. The base row itself is inside the wall occluder, where ray hits alias into stripes
+    const bi=elev?clamp(OBF[i]+(cls===WALLF||cls===WIN||cls===ROOF?2:0),0,H-1)*W+x:i;
     let lr,lg,lb;const indoor=INF[i]||(elev&&roofOff&&INF[bi]);
     if(indoor){const sp=SUNP[bi]?.95:0;lr=ar*inK+sr*sp;lg=ag*inK+sg*sp;lb=ab*inK+sb*sp;}
     else{let f=1;if(cls===WALLF||cls===WIN)f=fWall;else if(cls===OBJ)f=fObj;else if(cls===ROOF)f=fRoof;else if(cls===CANOPY)f=.85;const shaded=(cls!==ROOF&&cls!==CANOPY)&&(DSH[bi]||SH[bi]&&(!elev||SHX[bi]||SHC[bi]!==OBF[i]+1));const s=shaded?0:f;lr=ar+sr*s;lg=ag+sg*s;lb=ab+sb*s;}
