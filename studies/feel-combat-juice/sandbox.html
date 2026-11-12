@@ -367,8 +367,10 @@ function spawn(kind,x,y,o){const e=Object.assign({id:++EID,kind,x,y,px:x,py:y,lp
 let PL=null;
 function mkPlayer(){PL=spawn('player',150,116,{team:'me',hp:600,mhp:600,chp:600,r:TUNING.proj.playerR,sheet:SPR.player,weapon:'sword',name:'YOU',CH:new Float32Array(RING*2),dir:'r'});fillH(PL,150,116);}
 const GOBN=['GOBLIN','GOBLIN','GOBLIN RUNT','GOBLIN'];const PVPN=['RAVEN','MORDO','SKARN'];
-function spawnMob(kind,i){const side=()=>{const r=rnd();return r<.5?{x:280+rnd()*30,y:40+rnd()*130}:r<.75?{x:90+rnd()*210,y:38+rnd()*8}:{x:90+rnd()*210,y:162+rnd()*10};};
-  if(kind==='gob'){let p;do{p=side();}while(solidAt(p.x,p.y));return spawn('gob',p.x,p.y,{hp:260,mhp:260,chp:260,r:6,spd:34+rnd()*8,sheet:SPR.gob,weapon:'club',name:pick(GOBN),dir:'l'});}
+// goblins come in from the right, the back or the front, one to three tiles off the walls, so a fight has room on every side
+function gobSpot(){let p;do{const r=rnd();p=r<.5?{x:256+rnd()*40,y:46+rnd()*116}:r<.75?{x:90+rnd()*200,y:46+rnd()*14}:{x:90+rnd()*200,y:148+rnd()*14};}while(solidAt(p.x,p.y));return p;}
+function spawnMob(kind,i){
+  if(kind==='gob'){const p=gobSpot();return spawn('gob',p.x,p.y,{hp:260,mhp:260,chp:260,r:6,spd:34+rnd()*8,sheet:SPR.gob,weapon:'club',name:pick(GOBN),dir:'l'});}
   if(kind==='imp')return spawn('imp',284,56,{hp:300,mhp:300,chp:300,r:6,spd:26,sheet:SPR.imp,weapon:'staff',name:'GOBLIN HEXER',dir:'l'});
   if(kind==='golem')return spawn('golem',236,104,{hp:1400,mhp:1400,chp:1400,r:10,spd:15,sheet:SPR.golem,weapon:'none',name:'STONE WARDEN',dir:'l',aggro:false});
   if(kind==='pvp'){const k=i%3;return spawn('pvp',250+rnd()*40,50+k*45,{hp:900,mhp:900,chp:900,r:TUNING.proj.playerR,spd:44,sheet:SPR.pvp[k],weapon:k===1?'staff':'sword',name:PVPN[k],dir:'l'});}
@@ -407,7 +409,7 @@ function svShove(att,vic,T){if(vic.kind==='golem'||vic.kind==='dummy'||vic.kind=
   if(vic===PL){const dx=q.x-vic.x,dy=q.y-vic.y;down(T,TUNING.bytes.pos,()=>clPush(dx,dy));}else vic.shv={x0:vic.x,y0:vic.y,x1:q.x,y1:q.y,t0:T};return true;}
 function svStun(vic,T){const D=TUNING.pvp;if(T-vic.dr.last>D.drWindow)vic.dr.n=0;const m=D.drSteps[Math.min(vic.dr.n,D.drSteps.length-1)];vic.dr.n++;vic.dr.last=T;const dur=Math.min(D.ccCap,D.stun*m);
   if(dur>0)vic.sStun=Math.max(vic.sStun,T+dur);down(T,6,()=>clStun(vic,dur,m));}
-function svRespawn(e,T){e.sdead=false;e.hp=e.mhp;if(e===PL){e.x=150;e.y=116;}else if(e.kind==='gob'){do{const r=rnd();e.x=r<.5?290+rnd()*20:90+rnd()*210;e.y=r<.5?40+rnd()*130:r<.75?38+rnd()*8:162+rnd()*10;}while(solidAt(e.x,e.y));}else if(e.kind==='golem'){e.x=236;e.y=104;e.aggro=false;}else if(e.kind==='pvp'){e.x=280;e.y=60+rnd()*90;}else if(e.kind==='imp'){e.x=284;e.y=56;}
+function svRespawn(e,T){e.sdead=false;e.hp=e.mhp;if(e===PL){e.x=150;e.y=116;}else if(e.kind==='gob'){const p=gobSpot();e.x=p.x;e.y=p.y;}else if(e.kind==='golem'){e.x=236;e.y=104;e.aggro=false;}else if(e.kind==='pvp'){e.x=280;e.y=60+rnd()*90;}else if(e.kind==='imp'){e.x=284;e.y=56;}
   e.tgt=null;e.busy=0;e.sStun=0;const x=e.x,y=e.y;if(e!==PL)fillH(e,x,y);down(T,TUNING.bytes.pos,()=>clSpawn(e,x,y));}
 function inCone(o,x,y,ang,range,half){const d=Math.hypot(o.x-x,o.y-y);if(d>range+o.r)return false;let a=Math.atan2(o.y-y,o.x-x)-ang;while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;return Math.abs(a)<=half+Math.atan2(o.r,Math.max(1,d));}
 function posAt(o,T,rew){if(!rew)return {x:o.x,y:o.y};NET.lastRewind=Math.round(REWIND());return hsampA(o.H,T-REWIND(),{x:0,y:0});}
@@ -455,7 +457,14 @@ function svMove(dt){const T=now;
     if(e.kind==='gob'){if(t)svMoveTo(e,t.x+(e.x<t.x?-12:12),t.y,e.spd,dt,2);}
     else if(e.kind==='imp'){if(t){const d=dist(e,t);if(d<70)svMoveTo(e,e.x+(e.x-t.x),e.y+(e.y-t.y),e.spd,dt,0);else if(d>110)svMoveTo(e,t.x,t.y,e.spd,dt,100);}}
     else if(e.kind==='golem'){if(t&&e.aggro)svMoveTo(e,t.x,t.y,e.spd,dt,20);}
-    else if(e.kind==='ally'){if(t){const sl=e.id*2.39996,rad=e.ranged?68+(e.id%4)*10:16+(e.id%3)*5;svMoveTo(e,t.x+Math.cos(sl)*rad,t.y+Math.sin(sl)*rad*.75,e.spd,dt,2);}}
+    else if(e.kind==='ally'){if(t){
+      // an ally whose target fights back does not back away from it, or the pair chases each other into a wall.
+      // Ranged allies hold their ground. Melee allies stand where a goblin wants them, 14 px to its side
+      if(t.tgt===e){if(e.ranged)continue;if(t.kind==='gob'){svMoveTo(e,t.x+(e.x<t.x?-14:14),t.y,e.spd,dt,2);continue;}}
+      // otherwise a slot on a ring around the target, clamped to the floor. Melee rings sit outside the 11 and 15 px push-apart distances,
+      // inside the warden's 20 px stand-off and the 24 px strike range. Ranged rings are 68 to 98 px
+      const sl=e.id*2.39996,rad=e.ranged?68+(e.id%4)*10:t.kind==='golem'?18+e.id%3:14+(e.id%3)*2,ry=e.ranged?.75:1;
+      svMoveTo(e,Math.max(14,Math.min(306,t.x+Math.cos(sl)*rad)),Math.max(FY+14,Math.min(168,t.y+Math.sin(sl)*rad*ry)),e.spd,dt,2);}}
     else if(e.kind==='pvp'){if(e.dodge&&e.dodge.until>T){svMoveTo(e,e.x+e.dodge.dx*20,e.y+e.dodge.dy*20,120,dt,0);continue;}if(e.busy>T&&e.castRoot)continue;
       if(!PL.sdead){const d=dist(e,PL),a=Math.atan2(e.y-PL.y,e.x-PL.x),want=e.weapon==='staff'?95:62,ra=d<want-10?1:d>want+10?-1:0;const tx=e.x+Math.cos(a)*ra*20+Math.cos(a+Math.PI/2)*e.str.dir*20,ty=e.y+Math.sin(a)*ra*20+Math.sin(a+Math.PI/2)*e.str.dir*20;if(!svMoveTo(e,tx,ty,e.spd*.75,dt,0))e.str.dir*=-1;}}}
   for(let i=0;i<ENTS.length;i++){const a=ENTS[i];if(a.sdead||a===PL||a.kind==='dummy')continue;for(let j=i+1;j<ENTS.length;j++){const b=ENTS[j];if(b.sdead||b===PL||b.kind==='dummy')continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),m=a.kind==='ally'&&b.kind==='ally'?14:Math.max(11,a.r+b.r-1);if(d<m&&d>.01){const k=(m-d)/2/d;if(!solidAt(a.x-dx*k,a.y-dy*k)){a.x-=dx*k;a.y-=dy*k;}if(!solidAt(b.x+dx*k,b.y+dy*k)){b.x+=dx*k;b.y+=dy*k;}}}}}

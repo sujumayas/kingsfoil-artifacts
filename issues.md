@@ -74,8 +74,15 @@ How to use this file:
   `clWhiff` for own projectiles when `PRED!=='wait'`.
 - [x] **13.** `P5` Tibia classic preset. The hotbar shows skills ready while the 2 s group cooldown still blocks
   them. `:807` ignores `CCD['g_'+sk.grp]`.
-- [ ] **14.** `P4` (taste) The brawl jams against the back wall and right edge within 10 s. Goblins spawn on the
+- [x] **14.** `P4` (taste) The brawl jams against the back wall and right edge within 10 s. Goblins spawn on the
   edge strips (`:366`, `:406`) and ally slot radius exceeds the goblin stand-off (`:451`, `:454`).
+  Done: the cause was a chase. An ally wanted to stand 16 to 26 px from a goblin that wanted to stand 12
+  px from the ally, so the pair walked until a wall stopped them. Allies whose target fights back now hold
+  position (ranged) or stand 14 px to the goblin's side (melee). Melee rings are 14 to 20 px, and slots
+  are clamped to the floor. Goblins spawn 1 to 3 tiles off the walls. Share of melee units within a tile
+  of a wall over 90 s, 4 seeds: 81% to 22% with 4 allies, 65% to 24% with 12, 63% to 32% with 30. An even
+  spread would give about 31%. Goblin kills per minute did not drop: 11 before and 14 after with 4
+  allies, 33 and 37 with 12.
 - [ ] **15.** `P4` X-ray panels cover what they explain. The server panel hides the dummy and a pillar. The
   timeline caption sits on the server lane (`:837`). Cost view rows alternate 7 and 8 px (`:841`).
 - [ ] **16.** `P5` "HIT CHECKS n/S" counts frames with a check, so it tops out at 60 (`:871`). (suspected)
