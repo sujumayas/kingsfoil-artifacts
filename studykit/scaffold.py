@@ -69,7 +69,9 @@ def new_study(sid, series, title, fmt=None, page=None, no_sandbox=False):
     (d / "report.md").write_text(f"# {title}\n\n" + "\n\n".join(h + "\n\nTODO" for h in heads[1:]) + "\n")
     if sbx: (d / "sandbox.html").write_text(f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} — Sandbox</title><style>html,body{{margin:0;background:#111;color:#ddd;font:14px system-ui}}canvas{{image-rendering:pixelated;width:100%;max-width:960px;display:block;margin:auto}}</style></head>
-<body><canvas id="c" width="320" height="180"></canvas><p style="text-align:center">TODO: playable sandbox for {title}. <a href="index.html" style="color:#9cf">All artifacts</a></p></body></html>
+<body><canvas id="c" width="320" height="180"></canvas><p style="text-align:center">TODO: playable sandbox for {title}. <a href="index.html" style="color:#9cf">All artifacts</a></p>
+<script src="nav.js" defer></script>
+</body></html>
 """)
     sbx_cfg = f"sandbox:\n  page: {sbx}\n  source: sandbox.html\n" if sbx else ""
     (d / "study.yaml").write_text(f"""# Study config — read by studykit and by the recipe (build.py) via studykit.ctx(__file__).

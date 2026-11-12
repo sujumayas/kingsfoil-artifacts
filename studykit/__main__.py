@@ -10,7 +10,7 @@
   python -m studykit list                   list studies with series and format
 """
 import argparse, runpy, shutil, subprocess, sys
-from . import REPO, SITE, load, all_studies, formats, catalog
+from . import REPO, SITE, load, all_studies, formats, catalog, add_site_nav
 
 
 def build(ids):
@@ -25,6 +25,7 @@ def build(ids):
             print(f"  published sandbox → site/{s.sandbox_name}")
         try:
             runpy.run_path(str(s.dir / "build.py"), run_name="__main__")
+            add_site_nav(s.out_path)  # shared top bar (site/nav.js), the same on every page
         except Exception as e:  # keep building the others; report at the end
             import traceback; traceback.print_exc(limit=-2)
             failed.append(f"{s.id}: {type(e).__name__}: {e}")

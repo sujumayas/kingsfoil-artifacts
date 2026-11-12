@@ -1,0 +1,437 @@
+{
+ "home": "index.html",
+ "pages": {
+  "vfx-snow-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#1 Snow",
+   "short": "Snow",
+   "pair": "vfx-snow-sandbox.html",
+   "prev": null,
+   "next": {
+    "href": "vfx-acid-topdown-pixel.html",
+    "name": "#2 Acid"
+   }
+  },
+  "vfx-acid-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#2 Acid",
+   "short": "Acid",
+   "pair": "vfx-acid-sandbox.html",
+   "prev": {
+    "href": "vfx-snow-topdown-pixel.html",
+    "name": "#1 Snow"
+   },
+   "next": {
+    "href": "vfx-rain-topdown-pixel.html",
+    "name": "#3 Rain"
+   }
+  },
+  "vfx-rain-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#3 Rain",
+   "short": "Rain",
+   "pair": "vfx-rain-sandbox.html",
+   "prev": {
+    "href": "vfx-acid-topdown-pixel.html",
+    "name": "#2 Acid"
+   },
+   "next": {
+    "href": "vfx-forest-topdown-pixel.html",
+    "name": "#4 Forest"
+   }
+  },
+  "vfx-forest-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#4 Forest",
+   "short": "Forest",
+   "pair": "vfx-forest-sandbox.html",
+   "prev": {
+    "href": "vfx-rain-topdown-pixel.html",
+    "name": "#3 Rain"
+   },
+   "next": {
+    "href": "vfx-light-topdown-pixel.html",
+    "name": "#5 Light"
+   }
+  },
+  "vfx-light-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#5 Light",
+   "short": "Light",
+   "pair": "vfx-light-sandbox.html",
+   "prev": {
+    "href": "vfx-forest-topdown-pixel.html",
+    "name": "#4 Forest"
+   },
+   "next": {
+    "href": "vfx-fire-topdown-pixel.html",
+    "name": "#6 Fire"
+   }
+  },
+  "vfx-fire-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#6 Fire",
+   "short": "Fire",
+   "pair": "vfx-fire-sandbox.html",
+   "prev": {
+    "href": "vfx-light-topdown-pixel.html",
+    "name": "#5 Light"
+   },
+   "next": {
+    "href": "vfx-water-topdown-pixel.html",
+    "name": "#7 Water"
+   }
+  },
+  "vfx-water-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#7 Water",
+   "short": "Water",
+   "pair": "vfx-water-sandbox.html",
+   "prev": {
+    "href": "vfx-fire-topdown-pixel.html",
+    "name": "#6 Fire"
+   },
+   "next": {
+    "href": "vfx-fog-topdown-pixel.html",
+    "name": "#8 Fog"
+   }
+  },
+  "vfx-fog-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#8 Fog",
+   "short": "Fog",
+   "pair": "vfx-fog-sandbox.html",
+   "prev": {
+    "href": "vfx-water-topdown-pixel.html",
+    "name": "#7 Water"
+   },
+   "next": {
+    "href": "vfx-grass-topdown-pixel.html",
+    "name": "#9 Grass"
+   }
+  },
+  "vfx-grass-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#9 Grass",
+   "short": "Grass",
+   "pair": "vfx-grass-sandbox.html",
+   "prev": {
+    "href": "vfx-fog-topdown-pixel.html",
+    "name": "#8 Fog"
+   },
+   "next": null
+  },
+  "vfx-snow-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#1 Snow",
+   "short": "Snow",
+   "pair": "vfx-snow-topdown-pixel.html",
+   "prev": null,
+   "next": {
+    "href": "vfx-acid-sandbox.html",
+    "name": "#2 Acid"
+   }
+  },
+  "vfx-acid-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#2 Acid",
+   "short": "Acid",
+   "pair": "vfx-acid-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-snow-sandbox.html",
+    "name": "#1 Snow"
+   },
+   "next": {
+    "href": "vfx-rain-sandbox.html",
+    "name": "#3 Rain"
+   }
+  },
+  "vfx-rain-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#3 Rain",
+   "short": "Rain",
+   "pair": "vfx-rain-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-acid-sandbox.html",
+    "name": "#2 Acid"
+   },
+   "next": {
+    "href": "vfx-forest-sandbox.html",
+    "name": "#4 Forest"
+   }
+  },
+  "vfx-forest-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#4 Forest",
+   "short": "Forest",
+   "pair": "vfx-forest-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-rain-sandbox.html",
+    "name": "#3 Rain"
+   },
+   "next": {
+    "href": "vfx-light-sandbox.html",
+    "name": "#5 Light"
+   }
+  },
+  "vfx-light-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#5 Light",
+   "short": "Light",
+   "pair": "vfx-light-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-forest-sandbox.html",
+    "name": "#4 Forest"
+   },
+   "next": {
+    "href": "vfx-fire-sandbox.html",
+    "name": "#6 Fire"
+   }
+  },
+  "vfx-fire-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#6 Fire",
+   "short": "Fire",
+   "pair": "vfx-fire-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-light-sandbox.html",
+    "name": "#5 Light"
+   },
+   "next": {
+    "href": "vfx-water-sandbox.html",
+    "name": "#7 Water"
+   }
+  },
+  "vfx-water-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#7 Water",
+   "short": "Water",
+   "pair": "vfx-water-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-fire-sandbox.html",
+    "name": "#6 Fire"
+   },
+   "next": {
+    "href": "vfx-fog-sandbox.html",
+    "name": "#8 Fog"
+   }
+  },
+  "vfx-fog-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#8 Fog",
+   "short": "Fog",
+   "pair": "vfx-fog-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-water-sandbox.html",
+    "name": "#7 Water"
+   },
+   "next": {
+    "href": "vfx-grass-sandbox.html",
+    "name": "#9 Grass"
+   }
+  },
+  "vfx-grass-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#9 Grass",
+   "short": "Grass",
+   "pair": "vfx-grass-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-fog-sandbox.html",
+    "name": "#8 Fog"
+   },
+   "next": null
+  },
+  "rts-enemy-ai-study.html": {
+   "kind": "study",
+   "series": "ai",
+   "label": "Game AI series",
+   "name": "#1 Enemy AI for Hero Defense",
+   "short": "Enemy AI for Hero Defense",
+   "pair": null,
+   "prev": null,
+   "next": null
+  },
+  "procedural-character-generation-study.html": {
+   "kind": "study",
+   "series": "procgen",
+   "label": "Procgen series",
+   "name": "#1 Characters by composition",
+   "short": "Characters by composition",
+   "pair": null,
+   "prev": null,
+   "next": null
+  },
+  "curves-hearthguard.html": {
+   "kind": "study",
+   "series": "curves",
+   "label": "Curves series",
+   "name": "#1 Hearthguard",
+   "short": "Hearthguard",
+   "pair": "curves-hearthguard-lab.html",
+   "prev": null,
+   "next": {
+    "href": "curves-matchrpg.html",
+    "name": "#2 MatchRPG"
+   }
+  },
+  "curves-matchrpg.html": {
+   "kind": "study",
+   "series": "curves",
+   "label": "Curves series",
+   "name": "#2 MatchRPG",
+   "short": "MatchRPG",
+   "pair": "curves-matchrpg-lab.html",
+   "prev": {
+    "href": "curves-hearthguard.html",
+    "name": "#1 Hearthguard"
+   },
+   "next": null
+  },
+  "curves-hearthguard-lab.html": {
+   "kind": "sandbox",
+   "series": "curves",
+   "label": "Curves series",
+   "name": "#1 Hearthguard",
+   "short": "Hearthguard",
+   "pair": "curves-hearthguard.html",
+   "prev": null,
+   "next": {
+    "href": "curves-matchrpg-lab.html",
+    "name": "#2 MatchRPG"
+   }
+  },
+  "curves-matchrpg-lab.html": {
+   "kind": "sandbox",
+   "series": "curves",
+   "label": "Curves series",
+   "name": "#2 MatchRPG",
+   "short": "MatchRPG",
+   "pair": "curves-matchrpg.html",
+   "prev": {
+    "href": "curves-hearthguard-lab.html",
+    "name": "#1 Hearthguard"
+   },
+   "next": null
+  },
+  "feel-npc-dialog-topdown-pixel.html": {
+   "kind": "study",
+   "series": "feel",
+   "label": "Game feel series",
+   "name": "#1 NPC dialog",
+   "short": "NPC dialog",
+   "pair": "feel-npc-dialog-sandbox.html",
+   "prev": null,
+   "next": {
+    "href": "feel-combat-juice-topdown-pixel.html",
+    "name": "#2 Combat juice"
+   }
+  },
+  "feel-combat-juice-topdown-pixel.html": {
+   "kind": "study",
+   "series": "feel",
+   "label": "Game feel series",
+   "name": "#2 Combat juice",
+   "short": "Combat juice",
+   "pair": "feel-combat-juice-sandbox.html",
+   "prev": {
+    "href": "feel-npc-dialog-topdown-pixel.html",
+    "name": "#1 NPC dialog"
+   },
+   "next": {
+    "href": "feel-loot-pickup-topdown-pixel.html",
+    "name": "#3 Loot and pickup"
+   }
+  },
+  "feel-loot-pickup-topdown-pixel.html": {
+   "kind": "study",
+   "series": "feel",
+   "label": "Game feel series",
+   "name": "#3 Loot and pickup",
+   "short": "Loot and pickup",
+   "pair": "feel-loot-pickup-sandbox.html",
+   "prev": {
+    "href": "feel-combat-juice-topdown-pixel.html",
+    "name": "#2 Combat juice"
+   },
+   "next": null
+  },
+  "feel-npc-dialog-sandbox.html": {
+   "kind": "sandbox",
+   "series": "feel",
+   "label": "Game feel series",
+   "name": "#1 NPC dialog",
+   "short": "NPC dialog",
+   "pair": "feel-npc-dialog-topdown-pixel.html",
+   "prev": null,
+   "next": {
+    "href": "feel-combat-juice-sandbox.html",
+    "name": "#2 Combat juice"
+   }
+  },
+  "feel-combat-juice-sandbox.html": {
+   "kind": "sandbox",
+   "series": "feel",
+   "label": "Game feel series",
+   "name": "#2 Combat juice",
+   "short": "Combat juice",
+   "pair": "feel-combat-juice-topdown-pixel.html",
+   "prev": {
+    "href": "feel-npc-dialog-sandbox.html",
+    "name": "#1 NPC dialog"
+   },
+   "next": {
+    "href": "feel-loot-pickup-sandbox.html",
+    "name": "#3 Loot and pickup"
+   }
+  },
+  "feel-loot-pickup-sandbox.html": {
+   "kind": "sandbox",
+   "series": "feel",
+   "label": "Game feel series",
+   "name": "#3 Loot and pickup",
+   "short": "Loot and pickup",
+   "pair": "feel-loot-pickup-topdown-pixel.html",
+   "prev": {
+    "href": "feel-combat-juice-sandbox.html",
+    "name": "#2 Combat juice"
+   },
+   "next": null
+  }
+ }
+}

@@ -6,7 +6,8 @@ Used by the `feel` series. The layout is the vfx-pixel layout with the changes l
 ## Pages
 
 - Study page `{id}-topdown-pixel.html`, built by `build.py` from `report.md`, `figs*.html` and `demos*.js`.
-- Sandbox `{id}-sandbox.html`, required: a single hand-written file (`sandbox.html`), no external assets,
+- Sandbox `{id}-sandbox.html`, required: a single hand-written file (`sandbox.html`), no external assets
+  (the one exception is the shared top bar: keep `<script src="nav.js" defer></script>` before `</body>`),
   a 320×180 native canvas `#c` scaled with `image-rendering: pixelated`. It plays the recommended
   architecture from §7 and is described in §8. The homepage thumbnail is grabbed from this canvas
   (`thumb: from: sandbox` in `study.yaml`).
