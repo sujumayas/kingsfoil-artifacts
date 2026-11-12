@@ -520,8 +520,13 @@ How to use this file:
   ground cells that lie directly north of a tree or house, one at a time. Flame pixels drawn over
   objects in front: 2,664 before and 0 after with sprites, 3,232 before and 0 after with DOOM. Flame
   pixels elsewhere are unchanged (474 and 11,638).
-- [ ] **100.** `P3` Budget cap makes fire spread only north-west. The 3 ignitions per tick go to the lowest cell
+- [x] **100.** `P3` Budget cap makes fire spread only north-west. The 3 ignitions per tick go to the lowest cell
   indices (`:236`). Fix: sort candidates by a hash.
+  Done: candidates are sorted by `hash(cell, tick, 11, seed)`, index as tie-break, so every client
+  still picks the same 3. Test on an all-grass map, no wind, one ignition at the centre, 40 ticks with
+  the cap on. Burnt cells north and south of the start: 86 and 17 before, 51 and 51 after. Mean row
+  offset: -4.31 cells before, 0.09 after. The bias was to the north. West and east were already even
+  (47 and 53 before).
 - [ ] **101.** `P4` "Active cells" view flashes every cell that ever ignited. `FLASH` only decays inside the
   x-ray draw (`:201`, `:439`).
 - [ ] **102.** `P3` Pause freezes the fire grid but not the sheep or fireballs (`:455` to `:457`, `:312`).

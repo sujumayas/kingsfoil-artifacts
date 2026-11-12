@@ -234,7 +234,8 @@ function simTick(){const t0=performance.now();tick++;nIgn=0;nExt=0;
       if(rain&&(hash(c,tick,7,seed)%1000)<(200+30*Math.min(AGE[c],15))/4){extinguish(c);continue;}
       FUEL[c]--;AGE[c]++;HEAT[c]=255;if(!FUEL[c]){STA[c]=EMB;TIM[c]=EMBT[MAT[c]];}}
     else if(s===EMB){TIM[c]-=TIM[c]>1&&rain?2:1;if(TIM[c]<=0){STA[c]=ASHS;MAT[c]=ASH;DEAD[c]=1;OIL[c]=0;HEAT[c]=0;}}}
-  cand.sort((a,b)=>a-b);let budget=capOn?3:1e9;
+  // the budget goes to candidates in a per-tick hash order, the same on every client. Plain index order gave it to the northmost cells
+  cand.sort((a,b)=>hash(a,tick,11,seed)-hash(b,tick,11,seed)||a-b);let budget=capOn?3:1e9;
   for(const c of cand){PEND[c]=0;if(budget>0&&ignite(c))budget--;}
   const na=[];let nb=0;for(let c=0;c<NC;c++){const s=STA[c];if(s>=IGN&&s<=EMB){na.push(c);if(s!==EMB)nb++;}}active=na;
   const nf=[];for(const c of fieldList){if(!FLD[c])continue;if(--FLT[c]<=0){FLD[c]--;FLT[c]=10;}if(FLD[c])nf.push(c);}fieldList=nf;
