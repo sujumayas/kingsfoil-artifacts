@@ -677,7 +677,13 @@ function render(dt){let t0=now(),t;const tv=view==='tiers';
 
 // ---------- loop and HUD ----------
 let last=now(),hudN=0,secT=0;const f2=v=>v.toFixed(2);
-function loop(tn){requestAnimationFrame(loop);let dt=(tn-last)/1000;last=tn;if(dt>.1)dt=.1;if(dt<0)dt=0;const sdt=paused?0:slow?dt*.25:dt;
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(tn){requestAnimationFrame(loop);if(skipFrame())return;let dt=(tn-last)/1000;last=tn;if(dt>.1)dt=.1;if(dt<0)dt=0;const sdt=paused?0:slow?dt*.25:dt;
   for(const k in A)A[k]=0;if(!paused)step(sdt);render(sdt);
   let tot=0;for(const k in A){T[k]+=(A[k]-T[k])*.08;tot+=A[k];}T.total+=(tot-T.total)*.08;
   secT+=dt;if(secT>=1){secT-=1;evRate=evSec;byRate=bySec;evSec=bySec=0;evictRate=evictSec;evictSec=0;flashAskR=flashAsk;flashShowR=flashShow;flashAsk=flashShow=0;}

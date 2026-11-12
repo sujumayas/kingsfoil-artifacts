@@ -42,8 +42,11 @@ How to use this file:
 - [x] **6.** `P2` Tap-to-walk onto a blocked spot makes the character walk in place forever. Grass (`:558`, `:560`),
   magic (`:575`) and fog (`:298`, suspected). Fix: set the moving flag only when the position changed, and clear
   the walk target when blocked. Acid handles this case correctly.
-- [ ] **7.** `P6` Full render continues while paused and while the canvas is off-screen in every sandbox. Paused
+- [x] **7.** `P6` Full render continues while paused and while the canvas is off-screen in every sandbox. Paused
   costs about the same as running.
+  Done: a frame gate at the top of each loop skips step and render while the canvas is off-screen. While
+  paused, only the 12 frames after an input or resize run. Forest and light have no pause, so they only get
+  the off-screen half.
 - [ ] **8.** `P6` At 390 px the HUD covers the canvas. Rain (top 38 px), light (top quarter), forest (top third),
   acid (43%, `:21`). On desktop the fog HUD covers the tower and its beacon (taste). Fix: fog's
   `@media (max-width:640px){.hud{position:static}}` rule everywhere, and move the fog HUD below the canvas.

@@ -312,7 +312,11 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
 
 // ---------- loop & UI ----------
 let last=performance.now(),placing=false;
-function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;if(auto)hour=(hour+dt*speed*.2)%24;scheduleLights();updateChars(dt);render();frameN++;
+// frame gate: nothing runs while the canvas is off-screen
+let onScreen=true;
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;}).observe(cv);
+function skipFrame(){return !onScreen;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;if(auto)hour=(hour+dt*speed*.2)%24;scheduleLights();updateChars(dt);render();frameN++;
   if(frameN%6===0){const S=sky(hour);const hh=String(hour|0).padStart(2,'0'),mm=String(((hour%1)*60)|0).padStart(2,'0');const on=lights.filter(l=>l.on&&l.I>.02);
     document.getElementById('hud').textContent=`${hh}:${mm} · sun ${S.el>0?Math.round(S.el)+'°':'below horizon'} · ${on.length} lights (${on.filter(l=>l.T.sh).length} with shadows) · ray re-casts ${raysFrame}/frame · ${roofOff?'indoors':'outdoors'} · ${ms.toFixed(2)} ms`;}}
 document.querySelectorAll('#tbtns [data-h]').forEach(b=>b.onclick=()=>{hour=+b.dataset.h;auto=false;document.getElementById('auto').classList.remove('on');});
