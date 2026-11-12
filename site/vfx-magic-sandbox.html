@@ -377,7 +377,7 @@ function hit(c,S,tier,e,x,y){ev('effect','EFFECT '+tl(x,y)+' '+ELN[S.el]+(e?' HI
 function areaField(c,S,tier,tx,ty){const cx=tx>>4,cy=ty>>4;ev('area','AREA '+tl(tx,ty)+' MASK3X3 '+S.id,tx,ty,24,0);areaMaskB+=PRM.bytes.area;areaTileB+=9*PRM.bytes.effect;impactFx(tx,ty-2,S.el,tier,1);
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)addField(cx+dx,cy+dy,S.el,S.linger.dur,tier,(dx||dy)?PRM.ringMs/1000:0,dx===0&&dy===0?1:0,c);}
 function addField(tx,ty,el,dur,tier,delay,main,c){if(tx<0||ty<0||tx>=20||ty>=12||ty*16+8>=H)return;const k=ty*20+tx;let f=FIELD[k];
-  if(f&&f.on){merged++;f.dur=f.t+dur;f.el=el;if(TIERPRI[tier]>TIERPRI[f.tier]){f.tier=tier;f.pri=TIERPRI[tier]*100+20;}if(main){f.main=1;f.own=c;}return;}
+  if(f&&f.on){merged++;f.t=0;f.dur=dur;f.el=el;if(TIERPRI[tier]>TIERPRI[f.tier]){f.tier=tier;f.pri=TIERPRI[tier]*100+20;}if(main){f.main=1;f.own=c;}return;}
   f=spawn(8,tier,el,dur);if(!f)return;f.k=k;f.x=tx*16+8;f.y=ty*16+8;f.delay=delay;f.main=main;f.own=c;FIELD[k]=f;}
 const SPT=new Float32Array(240).fill(-9),SPE=new Uint8Array(240);
 function sparkFr(ms){if(!sparkFront)return Math.min(4,(ms/PRM.sparkMs)|0);const F=PRM.sparkFront;let a=0;for(let i=0;i<5;i++){a+=F[i];if(ms<a)return i;}return 4;}

@@ -330,8 +330,10 @@ How to use this file:
   Done: confirmed and fixed. All five read simT at their 60 Hz rate (arcs 20/s, beam orb 15/s, meteor tail
   60/s, dummy shake 30/s, brazier 7.5/s). Dummy shake flips per second of sim time: 30 at 60 Hz and 60 at
   120 Hz before, 30 and 29 after. In Slow motion it flipped 30 times per real second, now 7.
-- [ ] **63.** `P3` Recasting on a field extends its duration but keeps its age, so it stays shrunk (`:380`).
+- [x] **63.** `P3` Recasting on a field extends its duration but keeps its age, so it stays shrunk (`:380`).
   Fix: `f.t=0;f.dur=dur`.
+  Done: as suggested. A 12 s poison field recast at 10 s: stage 1 of 0 to 2 (shrunk) with age 10 of 22
+  before, stage 0 with age 0 of 12 after.
 - [ ] **64.** `P4` Server events view draws area boxes one tile too big, 8x8 for the 7x7 meteor (`:370`, `:377`,
   `:672`).
 - [ ] **65.** `P4` Holding Beam while paused draws it to the top-left corner (`:396`, `:483`).
