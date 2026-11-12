@@ -916,8 +916,11 @@ How to use this file:
   taking chapter 5 from 49 to 148 hits. A target sawtooth on the ratio chart, 0.92 at each chapter start and
   15% higher at the boss. A mob count chart per corridor and for the party. Copy settings writes the 2 new
   constants.
-- [ ] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
+- [x] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
   `:242`).
+  Done: the highlight compared the 4 values the preset sets. It now compares all of them except Players,
+  which is a scenario and not a constant. With Dmg / lvl at 12% the button stayed lit, now it goes dark. A
+  click on Current with other knobs still changed says how many differ and points at Reset.
 - [ ] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
 
 ## curves-matchrpg

@@ -231,11 +231,13 @@ function buildKnobs(){
     });
   });
   box.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){
-    var p=b.dataset.preset==="pro"?PROPOSED:BASE;S.hp=p.hp.slice();S.atk=p.atk.slice();S.step=p.step;S.xpC=p.xpC;save();sync(true);render();});});
+    var p=b.dataset.preset==="pro"?PROPOSED:BASE;S.hp=p.hp.slice();S.atk=p.atk.slice();S.step=p.step;S.xpC=p.xpC;save();sync(true);render();
+    var n=offBase().length;setStatus(p===BASE&&n?"Mob scaling and the XP curve are back to b509a56. "+n+" other knob"+(n>1?"s":"")+" still differ"+(n>1?"":"s")+". Reset clears them.":"");});});
   document.getElementById("reset").addEventListener("click",function(){S=clone(BASE);save();sync(true);render();setStatus("Reset to b509a56 values.");});
   document.getElementById("copy").addEventListener("click",copy);
 }
 function same(a,b){return Math.abs(a-b)<1e-9;}
+function offBase(){var out=[];for(var k in BASE){if(k==="players")continue;var a=S[k],b=BASE[k];if(Array.isArray(b)?!b.every(function(v,i){return same(v,a[i]);}):typeof b==="number"?!same(a,b):a!==b)out.push(k);}return out;}
 function sync(setInputs){
   inputs.forEach(function(o){
     var it=o.it,el=o.el,v;
@@ -248,7 +250,8 @@ function sync(setInputs){
     el.parentNode.title=same(v,b)?"Current build value":"Changed. Current build: "+fmtVal(it,b);
   });
   var isP=function(p){return p.hp.every(function(v,i){return same(v,S.hp[i]);})&&p.atk.every(function(v,i){return same(v,S.atk[i]);})&&same(p.step,S.step)&&same(p.xpC,S.xpC);};
-  document.querySelector('[data-preset="cur"]').classList.toggle("on",isP(BASE));
+  // Current means the whole build: every tuning knob at its b509a56 value. Players is a scenario, not a constant
+  document.querySelector('[data-preset="cur"]').classList.toggle("on",offBase().length===0);
   document.querySelector('[data-preset="pro"]').classList.toggle("on",isP(PROPOSED));
 }
 
