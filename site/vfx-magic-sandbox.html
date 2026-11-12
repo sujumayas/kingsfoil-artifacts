@@ -366,7 +366,7 @@ function release(c,S,tier,tg,px,py){const hx=hand(c),hy=c.y-11,el=S.el,tr=S.trav
     const f=spawn(4,tier,el,.3);if(f)f.hit=pts;
     for(const e of list){ev('effect','EFFECT '+tl(e.x,e.y)+' ENERGY HIT',e.x,e.y,0,0);impactFx(e.x,e.y-8,el,tier,1);hurt(e,S.impact.dmg,el,tier);cond(e,S.cond.k,S.cond.dur,tier);}
     const last=list[list.length-1];addField(last.x>>4,last.y>>4,2,1.6,tier,0,0,c);}
-  else if(S.heal){const e=tg&&tg.act&&!tg.dead?tg:c;ev('effect','EFFECT '+tl(e.x,e.y)+' HEAL',e.x,e.y,0,0);e.hp=Math.min(e.mx,e.hp+S.heal);e.healT=.9;e.healTier=tier;if(e.kind!==4)dmgNum(e.x-5,e.y-24,'+'+S.heal,RAMP[4][4]);lightQ(e.x,e.y-8,3,4,.6,tier);}
+  else if(S.heal){const e=tg&&tg.act&&!tg.dead?tg:c;ev('effect','EFFECT '+tl(e.x,e.y)+' HEAL',e.x,e.y,0,0);e.hp=Math.min(e.mx,e.hp+S.heal);e.healT=.9;e.healTier=tier;if(e.kind!==4)dmgNum(e.x-5,e.y-24,'+'+S.heal,RAMP[4][4]);}
   else if(S.aura){ev('cond','COND #'+c.id+' SHIELD ON',c.x,c.y,0,0);c.shield=S.aura.dur;c.shTier=tier;c.shHit=.2;burst(3,tier,1,5,c.x,c.y-8,8,10,26,.3,.6,6);}
   else if(S.area){const ctx_=c.x>>4,cty=c.y>>4,pol=POL[tier];ev('area','AREA '+tl(c.x,c.y)+' MASK37 '+S.id+(inPhase?'':' DELAY '+PRM.ringMs+'MS/RING'),c.x,c.y,56,0);areaMaskB+=PRM.bytes.area;areaTileB+=37*PRM.bytes.effect;
     reqFlash(el,tier,c.x,c.y-8);const g=spawn(7,tier,el,PRM.shockMs/1000);if(g){g.x=c.x;g.y=c.y;g.r=62;}
@@ -533,8 +533,9 @@ function auraBack(e){const cx=e.x|0,fy=e.y|0;
   if(e.shield>0){const rp=RAMP[1],pol=POL[e.shTier],h=e.shHit>0;cOp=pol.op;cTint=view==='tiers'?TCOL[e.shTier]:0;
     ell(cx,fy-8,9,10,rp[2],.5,1);ell(cx,fy,9,3,rp[2],.5,1);
     if(!pol.mini&&!pol.red)for(let k=0;k<3;k++){const a=(rm?0:simT/1.6)*6.2832+k*2.0944,s=Math.sin(a);if(s<0){const x=Math.round(cx+Math.cos(a)*11),y=Math.round(fy-8+s*4);fp(x,y,rp[4]);fp(Math.round(cx+Math.cos(a-.25)*11),Math.round(fy-8+Math.sin(a-.25)*4),rp[2]);}}}
-  if(e.healT>0){const p=1-e.healT/.9,rp=RAMP[4],r=3+p*10;cOp=POL[e.healTier].op;cTint=view==='tiers'?TCOL[e.healTier]:0;ell(cx,fy,r,r*.45,rp[p<.3?5:p<.6?4:3],0,1,p>.7?1:0);ell(cx,fy-p*17,7,3,rp[3],.5,1);}
-  if(e.lvlT>0){const p=1-e.lvlT/1.4,rp=RAMP[4];cOp=16;cTint=0;ell(cx,fy,4+p*14,(4+p*14)*.45,rp[p<.4?5:3],0,1,p>.75?1:0);
+  if(e.healT>0){const p=1-e.healT/.9,rp=RAMP[4],r=3+p*10;cOp=POL[e.healTier].op;cTint=view==='tiers'?TCOL[e.healTier]:0;ell(cx,fy,r,r*.45,rp[p<.3?5:p<.6?4:3],0,1,p>.7?1:0);ell(cx,fy-p*17,7,3,rp[3],.5,1);lightQ(cx,fy-8,3,4,.6*(1-p),e.healTier);}
+  // heal and level-up lights are queued here, during render. A lightQ call from the step or a click is wiped when render clears the queue
+  if(e.lvlT>0){const p=1-e.lvlT/1.4,rp=RAMP[4];cOp=16;cTint=0;lightQ(cx,fy-8,5,4,1-p,tierOf(e));ell(cx,fy,4+p*14,(4+p*14)*.45,rp[p<.4?5:3],0,1,p>.75?1:0);
     for(let k=1;k<7;k+=2){const x=cx-10+k*3,hk=(12+hash(k,3)*20)*Math.min(1,p*3),y0=fy-(p>.5?(p-.5)*2*hk:0);for(let y=y0;y>fy-hk;y--)fp(x,y|0,rp[y<fy-hk+4?3:4]);}}
   cOp=16;cTint=0;}
 function auraFront(e){const cx=e.x|0,fy=e.y|0,tv=view==='tiers';
@@ -714,7 +715,7 @@ const syRes=tog('residue',()=>residue,v=>residue=v),syAur=tog('auras',()=>aurasO
 const syMgr=tog('mgr',()=>mgr,v=>{mgr=v;$('mgr').textContent=v?'Manager on':'Manager off';setPolicy();}),syMons=tog('mons',()=>monsOn,v=>monsOn=v),syPause=tog('pause',()=>paused,v=>paused=v),sySlow=tog('slow',()=>slow,v=>slow=v);
 const syPh=tog('inphase',()=>inPhase,v=>inPhase=v),sySf=tog('sfront',()=>sparkFront,v=>sparkFront=v),syDim=tog('dim',()=>dimOn,v=>dimOn=v);
 const syHaste=tog('haste',()=>P.haste>0,v=>P.haste=v?600:0);$('lvl').onclick=levelUp;
-function levelUp(){P.lvlT=1.4;ev('effect','EFFECT '+tl(P.x,P.y)+' LEVELUP',P.x,P.y,0,0);burst(3,0,4,5,P.x,P.y-8,18,20,50,.5,.9,14);lightQ(P.x,P.y-8,5,4,1,0);}
+function levelUp(){P.lvlT=1.4;ev('effect','EFFECT '+tl(P.x,P.y)+' LEVELUP',P.x,P.y,0,0);burst(3,0,4,5,P.x,P.y-8,18,20,50,.5,.9,14);}
 const setCrowd=v=>{crowdN=+v;$('crowd').value=v;$('crowdl').textContent=v;},setStress=v=>{stress=+v;$('stress').value=v;$('stressl').textContent=v+'x';};
 $('crowd').oninput=e=>setCrowd(e.target.value);$('stress').oninput=e=>setStress(e.target.value);
 function setTarget(e){if(target!==e){target=e;targT=0;}}

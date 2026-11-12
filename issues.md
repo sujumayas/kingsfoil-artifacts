@@ -374,8 +374,11 @@ How to use this file:
   cap counted as 1 evicted before, now 0 evicted and 1 refused. Ten particles written over live ones in a
   full range counted as 10 refused before, now 10 overwritten. A real eviction still counts 1 evicted, and
   10 particles over the cap still count 10 refused.
-- [ ] **74.** `P6` `lightQ` calls for level up (`:704`) and heal (`:368`) are cleared before render, so those
+- [x] **74.** `P6` `lightQ` calls for level up (`:704`) and heal (`:368`) are cleared before render, so those
   lights never show.
+  Done: the aura pass queues both lights each frame while the effect plays, fading with it. At night, holy
+  lights in the queue one frame after the cast: 0 before, 1 after for each. Brightness gain around the mage:
+  level up 16,053 before and 116,181 after, heal 17,166 and 47,003.
 - [ ] **75.** `P6` Colour-blind mode leaves hostile impact particles and damage numbers in the element colour
   (`:256`, `:375`, `:338`).
 - [ ] **76.** `P6` Reset does not unpause or clear the note, and the first haste afterimages flash at pre-reset
