@@ -247,7 +247,7 @@ const PSPR={};for(const dir of ['down','up','left','right'])for(let f=0;f<3;f++)
 let season=1,auto=false,wind=.45,occ='dither',layers={shadows:true,dapple:true,birds:true,grid:false},time=0,frameMs=0,lastGroundSeason=-1;
 const player={x:pathX(520),y:520,dir:'down',anim:0,moving:false,tx:null,ty:null};let camX=0,camY=0;
 const sIdx=t=>{const s=season-t.off;return ((Math.floor(s+.5)%4)+4)%4;};
-const swayOf=t=>{const sp=SPECIES[t.sp];const g=vnoise((t.x+t.y*.35)/80-time*wind*1.3,t.y/120)-.35;return wind*sp.flex*(.5*Math.sin(time*1.7+t.ph)+1.2*g)+t.shake*Math.sin(time*30)*2.6;};
+const swayOf=t=>{const sp=SPECIES[t.sp];const g=vnoise((t.x+t.y*.35)/80-gust,t.y/120)-.35;return wind*sp.flex*(.5*Math.sin(time*1.7+t.ph)+1.2*g)+t.shake*Math.sin(time*30)*2.6;};
 const keys={};const parts=[],litter=[];
 function nearby(x,y,r,cb){const x0=clamp(((x-r)/GS)|0,0,GCW-1),x1=clamp(((x+r)/GS)|0,0,GCW-1),y0=clamp(((y-r)/GS)|0,0,GCH-1),y1=clamp(((y+r+48)/GS)|0,0,GCH-1);
   for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx])cb(trees[i],i);}
@@ -277,7 +277,9 @@ function drawBirdFlying(b){const fr=(Math.sin(b.flap)>0)?0:1,x=Math.round(b.x-ca
 function drawBirdPerch(b){const x=Math.round(b.px-camX+(b.tree.sw||0)),y=Math.round(b.py-camY+(b.hop<.15?-1:0));ctx.fillStyle=b.col[0];ctx.fillRect(x,y,2,2);ctx.fillRect(x-1,y+1,1,1);ctx.fillStyle=b.col[1];ctx.fillRect(x+2,y,1,1);ctx.fillRect(x,y+1,1,1);}
 
 // ---------- update ----------
-function update(dt){time+=dt;if(auto){season=(season+dt*.025)%4;}
+// gust: how far the gust field has travelled. Integrated, so a wind change alters its speed and not its position
+let gust=0;
+function update(dt){time+=dt;gust+=wind*1.3*dt;if(auto){season=(season+dt*.025)%4;}
   const gs=Math.floor(season+.5)%4;if(gs!==lastGroundSeason){lastGroundSeason=gs;useGround(gs);drawAtlas(gs);document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===gs));}
   let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.arrowright||keys.d)ix++;if(keys.arrowup||keys.w)iy--;if(keys.arrowdown||keys.s)iy++;
   if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<1.5)player.tx=null;else{ix=dx/L;iy=dy/L;}}

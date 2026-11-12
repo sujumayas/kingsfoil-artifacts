@@ -847,8 +847,11 @@ How to use this file:
   three in the first 1.2 s after load. A season switch cost 49 to 62 ms (291 to 381 ms at 6x throttle) every
   time. After the bake it costs 0.2 to 1 ms (0 to 1.8 ms throttled). Memory cost is 3 more 1280 x 960
   canvases.
-- [ ] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,
+- [x] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,
   phase is `time*wind`). Fix: accumulate a gust phase.
+  Done: the gust noise was sampled at `time*wind`, so one slider step moved the field by time times the
+  step. The gust offset is now integrated. Mean change in sway for one slider step of 0.01: 0.016 at 10 s
+  and 0.115 at 10 min before, 0.004 and 0.005 after.
 - [ ] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
 - [ ] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
   (`:253`, `:256`, `:351`).
