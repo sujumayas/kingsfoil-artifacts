@@ -260,7 +260,7 @@ function updateSlimes(dt){
 
 // ---------- player ----------
 const player={x:36,y:72,dir:'down',anim:0,dist:0,foot:0,moving:false,tx:null,ty:null,hp:100,eq:{},feetAcid:0,hurtT:0,swing:0,cool:0,dead:false,deadT:0,kx:0,ky:0,sizzle:0};
-function repair(){player.eq={helm:{q:1},chest:{q:1},boots:{q:1},sword:{q:1}};player.hp=100;player.dead=false;}
+function repair(){player.eq={helm:{q:1},chest:{q:1},boots:{q:1},sword:{q:1}};player.hp=100;player.dead=false;document.getElementById('msg').style.display='none';}
 function hurt(v){player.hp-=v;player.hurtT=.12;if(player.hp<=0&&!player.dead){player.dead=true;player.deadT=2.6;document.getElementById('msg').style.display='block';
   spill(player.x|0,(player.y-3)|0,5,.4);for(let k=0;k<14;k++)parts.push({k:'smoke',x:player.x+(rnd()-.5)*6,y:player.y,z:4+rnd()*8,vx:(rnd()-.5)*8,vy:0,vz:10+rnd()*8,life:1.5});}}
 const keys={};

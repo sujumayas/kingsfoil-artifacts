@@ -633,8 +633,10 @@ How to use this file:
   legs (`:380`). Fix: test row `fl.y+4`.
   Done: the support check reads row `fl.y+4`, the table top. 4 flasks alive after the first frame and after
   2 s (were 0). A flask still falls when the wood under it is gone, and the sword still breaks one.
-- [ ] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
+- [x] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
   pause (`:262`, `:277`).
+  Done: `repair()` hides the message. It stayed up after both buttons during the death pause, now it is gone
+  after either.
 - [ ] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never
   blurred or decayed (`:224`, `:197`), and reset clears `G` but not `G2`.
 - [ ] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
