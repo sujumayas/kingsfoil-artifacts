@@ -296,7 +296,7 @@ function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.l
   else if(p.k==='flame'){p.vx+=wind*10*dt;}}}
 function updateDrops(dt){const want=Math.min(MAXD,Math.round(I>.02?60+1300*Math.pow(I,1.25):0));
   for(let k=0;k<MAXD;k++){if(!D.on[k]){if(k<want&&rnd()<dt*4)spawnDrop(k);continue;}
-    const l=D.l[k],vz=[110,170,240][l]*(.55+.45*I);D.z[k]-=vz*dt;D.x[k]+=wind*vz*.55*dt;
+    const l=D.l[k],vz=[110,170,240][l]*(.55+.45*I);D.z[k]-=vz*dt; // x is the ground point. The slant comes from the height when drawing
     if(D.z[k]<=0){impact(D.x[k],D.y[k],l);if(k<want)spawnDrop(k);else D.on[k]=0;}}}
 
 // ---------- render ----------

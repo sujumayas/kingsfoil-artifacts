@@ -690,8 +690,10 @@ How to use this file:
   now 0.04, and a sky drop aimed at sheltered ground is dropped with probability 1 minus exposure. Drips
   from the eaves, the awning and trees still land. Rows 53 to 55 after 60 s of storm: 95% wet before, 7%
   after. The drip line in rows 56 and 57 stays wet.
-- [ ] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point
+- [x] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point
   (`:285`) and again from height (`:324`). Fix: delete the line at `:285`.
+  Done: the wind push on the ground point is gone, the slant comes from height alone. At wind 0.6 a streak
+  travelled at slope 0.66 and was drawn at 0.33. Both are 0.33 now.
 - [ ] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
 - [ ] **132.** `P6` Sim speed 8 in a storm costs 82 ms per frame at 6x throttle. The catch-up loop allows 16
   steps (`:348`).
