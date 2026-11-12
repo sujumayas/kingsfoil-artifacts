@@ -629,8 +629,10 @@ How to use this file:
 - [x] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
   Done: no code change beyond #116. On the burst spot `feetA()` was NaN and 1 s of walking moved 0 px. Now
   it reads 0.27 and the traveller moves 39 px.
-- [ ] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
+- [x] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
   legs (`:380`). Fix: test row `fl.y+4`.
+  Done: the support check reads row `fl.y+4`, the table top. 4 flasks alive after the first frame and after
+  2 s (were 0). A flask still falls when the wood under it is gone, and the sword still breaks one.
 - [ ] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
   pause (`:262`, `:277`).
 - [ ] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never

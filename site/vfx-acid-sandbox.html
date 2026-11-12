@@ -384,7 +384,7 @@ function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){const t0=performance.now();simAcc+=dt*60*simSpeed;let n=0;while(simAcc>=1&&n<16){simStep();simAcc--;n++;}if(simAcc>4)simAcc=0;
     if(frame%4===0)computeGlow();simMs=simMs*.9+(performance.now()-t0)*.1;
-    updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+6)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
+    updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+4)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
     if(down&&tool!=='walk'&&tool!=='item'&&tool!=='slime')applyTool(lastPt[0],lastPt[1]);frame++;}
   render();if(frame%6===0)hud();}
 function hud(){let tot=0;for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++)tot+=A[y*W+x];
