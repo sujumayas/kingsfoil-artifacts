@@ -384,8 +384,11 @@ How to use this file:
   Done: part() and the damage number in hurt() apply the same hostile rule as spawn(). A hostile arcane hit
   with the palette on: 10 arcane particles and an arcane number before, 10 in the orange danger ramp and an
   orange number after.
-- [ ] **76.** `P6` Reset does not unpause or clear the note, and the first haste afterimages flash at pre-reset
+- [x] **76.** `P6` Reset does not unpause or clear the note, and the first haste afterimages flash at pre-reset
   positions (`:720` to `:722`).
+  Done: Reset unpauses, syncs the Pause button and zeroes each actor's afterimage sample count. Paused after
+  Reset: yes before, no after. Stale samples after a hasted walk and Reset: 12 before (at 148,100, home is
+  88,100), 0 after. The note was already cleared by reset().
 
 ## vfx-grass
 
