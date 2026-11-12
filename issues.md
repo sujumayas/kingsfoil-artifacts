@@ -637,8 +637,11 @@ How to use this file:
   pause (`:262`, `:277`).
   Done: `repair()` hides the message. It stayed up after both buttons during the death pause, now it is gone
   after either.
-- [ ] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never
+- [x] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never
   blurred or decayed (`:224`, `:197`), and reset clears `G` but not `G2`.
+  Done: border cells run the same blur with clean air outside the grid, and `buildRoom` clears `G2`. With
+  the bars gone and the trench flooded at 8x for 20 s, the border peaked at 0.48 against 0.33 inside and
+  kept 0.48 after Reset room. Now the border reads 0.00 and reset leaves 0.
 - [ ] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
 - [ ] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
 - [ ] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
