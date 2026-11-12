@@ -397,8 +397,11 @@ How to use this file:
   Done: one step at every crush level, never below G1 and never the outline black. A 2 s walk through tall
   grass, 410 trail pixels: 211 black and 132 G0 before, 2 black and 63 G0 after (those were G0 or outline
   already). Mean luminance 34.7 before, 60 after, against 69 untrampled.
-- [ ] **78.** `P3` Frogs marked for despawn freeze forever and fill the 5 slots. The `LST===9` test sits inside
+- [x] **78.** `P3` Frogs marked for despawn freeze forever and fill the 5 slots. The `LST===9` test sits inside
   `if(LST[j]===0)` (`:535`). Rabbits have a rarer version (`:523` to `:532`).
+  Done: a marked frog leaps to the pond and a marked rabbit runs off, like scared ones. spawnTick only marks
+  resting frogs and rabbits. 5 frogs and 5 rabbits, then winter (targets 0 and 1), 30 s: 5 frogs and 4
+  rabbits left, all frozen in state 9 before. 0 frogs and 1 resting rabbit after.
 - [ ] **79.** `P4` Butterflies never bob and their wings freeze about half the time. `threat()` writes the flee
   direction into `LVZ` and `LB` (`:428`), which butterflies use for vertical velocity and rest flag. `LPH` is
   advanced while perched (`:468`). The same overwrite flattens some rabbit hops. Fix: give `threat()` its own

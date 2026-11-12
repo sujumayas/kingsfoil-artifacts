@@ -460,7 +460,7 @@ function targets(){const ph=phaseOf(tod),s=sTo,wet=weather==='rain',dk=TP.l,stor
   for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;TGT[k]=KON[k]?Math.min(KC[k],Math.round(TGT[k]*(k===3||k===4?Math.min(d,1.5):d))):0;}}
 function spawnTick(dt){if(holdT>0){holdT-=dt;return;}for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;SPT[k]-=dt;if(SPT[k]>0)continue;SPT[k]=k===0?2.5+rnd()*2.5:k===5||k===9?.15:.6;
   if(ALIVE[k]<TGT[k]){const n=k===0?1+(rnd()*2|0):1;for(let m=0;m<n;m++)spawnAt(k,false);}
-  else if(ALIVE[k]>TGT[k]){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(LA[j]&&LST[j]!==9){LST[j]=9;break;}}}}
+  else if(ALIVE[k]>TGT[k]){const s=KS[k],e=s+KC[k],hop=k===6||k===7;for(let j=s;j<e;j++)if(LA[j]&&LST[j]!==9&&!(hop&&LST[j]!==0)){LST[j]=9;break;}}}}
 function prefill(){targets();for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;while(ALIVE[k]<TGT[k])if(spawnAt(k,true)<0)break;}}
 // per-kind updates
 const offscreen=(x,y,m)=>x<-m||x>W+m||y<-m||y>H+m;
@@ -521,6 +521,7 @@ function upFfly(j,dt){LANG[j]+=(rnd()-.5)*3*dt;const x=LX[j],y=LY[j];if(x<8)LANG
 function hopTo(j,a,dist,dur,peak){LANG[j]=a;LVX[j]=Math.cos(a)*dist/dur;LVY[j]=Math.sin(a)*dist/dur*.8;LT[j]=0;LT2[j]=dur;LB[j]=peak;}
 function hopStep(j,dt){LT[j]+=dt;const u=LT[j]/LT2[j];LX[j]+=LVX[j]*dt;LY[j]+=LVY[j]*dt;LZ[j]=Math.sin(Math.PI*Math.min(1,u))*LB[j];return u>=1;}
 function upRabbit(j,dt){tickThreat(j,dt);const th=threat(j,LX[j],LY[j],true);
+  if(LST[j]===9){LST[j]=2;hopTo(j,Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
   if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;if(th<PRM.rabbitFlee){LST[j]=2;hopTo(j,Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
     else if(LT[j]<=0){LST[j]=1;hopTo(j,rnd()*6.283,4,.2,2);}return;}
   if(hopStep(j,dt)){LZ[j]=0;stamp(4+(j&3),LX[j],LY[j],3,3);
@@ -528,11 +529,12 @@ function upRabbit(j,dt){tickThreat(j,dt);const th=threat(j,LX[j],LY[j],true);
     const c=CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)];
     if(th>PRM.rabbitStop||offscreen(LX[j],LY[j],4)){if(hides(c)||th>PRM.rabbitStop*1.2||offscreen(LX[j],LY[j],4)){kill(j,6);return;}}
     let a=th<PRM.rabbitStop?Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.6:LANG[j];for(let n=0;n<6;n++){const nx=LX[j]+Math.cos(a)*10,ny=LY[j]+Math.sin(a)*8;if(!blockedPx(nx,ny)||offscreen(nx,ny,0))break;a+=1.1;}
-    hopTo(j,a,PRM.rabbitSpeed*.22,.22,3);}
-  if(LST[j]===9&&LST[j]!==2){}}
+    hopTo(j,a,PRM.rabbitSpeed*.22,.22,3);}}
 function LVZ_t(j){return LVZ[j];}
 function upFrog(j,dt){tickThreat(j,dt);
-  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;const th=threat(j,LX[j],LY[j],true);if(th<PRM.frogFlee||LST[j]===9){LST[j]=1;const a=Math.atan2(PCY-LY[j],PCX-LX[j]);hopTo(j,a,14,PRM.frogLeap,PRM.frogPeak);}else if(LT[j]<=0){LT[j]=3+rnd()*5;}return;}
+  // a frog marked for despawn leaps to the pond like a scared one
+  if(LST[j]===9){LST[j]=1;hopTo(j,Math.atan2(PCY-LY[j],PCX-LX[j]),14,PRM.frogLeap,PRM.frogPeak);}
+  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;const th=threat(j,LX[j],LY[j],true);if(th<PRM.frogFlee){LST[j]=1;const a=Math.atan2(PCY-LY[j],PCX-LX[j]);hopTo(j,a,14,PRM.frogLeap,PRM.frogPeak);}else if(LT[j]<=0){LT[j]=3+rnd()*5;}return;}
   if(LST[j]===1&&LT2[j]<=0)hopTo(j,LANG[j],14,PRM.frogLeap,PRM.frogPeak);
   if(hopStep(j,dt)){LZ[j]=0;const i=clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1);if(PT[i]===3){const b=alloc(KB);if(b>=0){LX[b]=LX[j];LY[b]=LY[j];LST[b]=3;LT[b]=.5;LZ[b]=0;}kill(j,7);return;}hopTo(j,Math.atan2(PCY-LY[j],PCX-LX[j]),14,PRM.frogLeap,PRM.frogPeak);}}
 function upCricket(j,dt){if(LT2[j]<=0)hopTo(j,LANG[j],6,.18,4);if(hopStep(j,dt)){LZ[j]=0;LTG[j]--;if(LTG[j]<=0){kill(j,8);return;}hopTo(j,LANG[j]+(rnd()-.5)*1.5,6,.18,4);}}
