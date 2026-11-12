@@ -398,7 +398,7 @@ function hud(){let tot=0;for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++)tot+=
   const e=player.eq,set=(id,v)=>document.getElementById(id).style.width=Math.max(0,v*100)+'%';set('b_hp',player.hp/100);set('b_helm',e.helm.q);set('b_chest',e.chest.q);set('b_boots',e.boots.q);set('b_sword',e.sword.q);}
 let lastPt=[0,0];
 function applyTool(x,y){if(tool==='acid'){for(let yy=y-3;yy<=y+3;yy++)for(let xx=x-3;xx<=x+3;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>10)continue;const i=yy*W+xx;if(!SOL[i])A[i]+=.12;}
-    bx0=Math.min(bx0,x-4);bx1=Math.max(bx1,x+4);by0=Math.min(by0,y-4);by1=Math.max(by1,y+4);}
+    bx0=Math.max(1,Math.min(bx0,x-4));bx1=Math.min(W-2,Math.max(bx1,x+4));by0=Math.max(1,Math.min(by0,y-4));by1=Math.min(H-2,Math.max(by1,y+4));}
   else if(tool==='lime'){for(let yy=y-7;yy<=y+7;yy++)for(let xx=x-7;xx<=x+7;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>49)continue;const i=yy*W+xx;
       if(A[i]>0){SALTB[i]=Math.min(255,SALTB[i]+A[i]*200+40);gasAdd(i,A[i]*.08);if(rnd()<.05)parts.push({k:'smoke',x:xx,y:yy,z:0,vx:0,vy:0,vz:8,life:.8});A[i]=0;}}
     for(const s of slimes)if(Math.hypot(s.x-x,s.y-y)<rad(s)+7){s.mass=Math.max(0,s.mass-.6);s.hurt=.1;}}}

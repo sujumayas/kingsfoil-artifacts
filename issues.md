@@ -645,7 +645,9 @@ How to use this file:
 - [x] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
   Done: the tool searches up to 16 px for a free pixel. Clicks on the top wall and the left wall spawned
   slimes that were still inside the wall 5 s later. Now they land at the wall foot and walk off.
-- [ ] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
+- [x] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
+  Done: `applyTool` clamps the wet bounding box. A pour 30 px above the canvas set `by0` to -34 and the HUD
+  read "acid NaN u". Now `by0` stays 1 and the HUD reads a number.
 - [ ] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
   slime cap.
 - [ ] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
