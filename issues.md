@@ -421,7 +421,9 @@ How to use this file:
   Done: the overlay covers all 11 sprite rows and only replaces grass and wheat colours, so trees, sheep and
   flower heads in front stay on top. In wheat: 0 head pixels shown before, 6 after (body 11 both). Player
   pixels drawn over the tree canopy: 3 before, 0 after. Over a sheep in front: 3 before, 0 after.
-- [ ] **82.** `P4` (taste) Field-layer mode crops 6 of 11 sprite rows, leaving a floating head (`:613`, `:614`).
+- [x] **82.** `P4` (taste) Field-layer mode crops 6 of 11 sprite rows, leaving a floating head (`:613`, `:614`).
+  Done: the crop is 3 rows (legs and hem), for the traveller and the villager. Rows drawn in tall grass: 5 of
+  11 before, 8 of 11 after.
 - [ ] **83.** `P4` Grass freezes mid-lean with gust sheen stuck on when wind drops to Calm or Reduce motion
   turns on. The settled shortcut returns a non-upright cached key (`:584`).
 - [ ] **84.** `P4` Changing season mid-transition pops to the full previous season in one frame (`:736`).

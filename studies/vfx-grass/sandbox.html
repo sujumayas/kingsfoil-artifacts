@@ -613,8 +613,8 @@ function buildEnts(){EN=0;addE(P.y,0,0);if(V.x>-6&&(!villHidden||leak||V.adj))ad
   for(const k of[6,7,8]){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(LA[j])addE(LY[j],5,j);}
   for(let i=0;i<EN;i++)EO[i]=i;for(let i=1;i<EN;i++){const v=EO[i];let j=i-1;while(j>=0&&ENY[EO[j]]>ENY[v]){EO[j+1]=EO[j];j--;}EO[j+1]=v;}}
 function drawEnt(e,crop){const k=ENK[e],j=ENJ[e];
-  if(k===0){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,crop?6:0);}
-  else if(k===1){const S=V.mv?VIL[1+((V.at*7|0)&1)]:VIL[0];blitS(S,(V.x|0)-3,(V.y|0)-S.h+1,V.face<0,crop?6:0);}
+  if(k===0){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,crop?3:0);}
+  else if(k===1){const S=V.mv?VIL[1+((V.at*7|0)&1)]:VIL[0];blitS(S,(V.x|0)-3,(V.y|0)-S.h+1,V.face<0,crop?3:0);}
   else if(k===2){const s=SHEEP[j],S=SHP[s.st===1?0:((simT*1.2+j)|0)&1];blitS(S,(s.x|0)-4,(s.y|0)-S.h+1,s.face<0,crop?2:0);}
   else if(k===3)drawTree(TREES[j]);
   else if(k===4){const L=lamps[j],x=L.x,y=L.y;for(let h=0;h<9;h++)ip(x,y-h,E0);ip(x-1,y,E1);ip(x+1,y,E1);ip(x-1,y-9,R1);ip(x+1,y-9,R1);ip(x,y-10,R1);ip(x,y-9,TP.l>.4?FL:R3);}
