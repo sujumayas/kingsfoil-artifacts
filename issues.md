@@ -319,8 +319,11 @@ How to use this file:
   Done: the telegraph asks with 999 at spawn. With 96 own effects alive, a monster cast showed 0 telegraphs
   before and 1 after, and one own spark is evicted for it. The monster's own cast circle and missile still
   lose to own effects, which is the report's order (own, hostile, party, others).
-- [ ] **61.** `P4` Ribbon trails and afterimages take one sample per frame (`:410`), so they halve at 120 Hz and
+- [x] **61.** `P4` Ribbon trails and afterimages take one sample per frame (`:410`), so they halve at 120 Hz and
   shrink to a stub in Slow motion. Fix: sample every 1/60 s of sim time.
+  Done: one trail point per 1/60 s of sim time, interpolated along the frame's move, plus a closing segment
+  from the newest point to the head. Ice shard trail measured mid-flight: 49.4 px at 60 Hz before, 25.4 at
+  120 Hz, 98.4 at 30 Hz and 12.4 in Slow motion. Now 49.4 px in all four.
 - [ ] **62.** `P6` Animations driven by the `frame` counter ignore slow motion and run 2x at 120 Hz. Shocked
   arcs (`:540`), beam end orb (`:488`), meteor tail (`:508`), dummy shake (`:548`), brazier light (`:634`).
   (suspected)

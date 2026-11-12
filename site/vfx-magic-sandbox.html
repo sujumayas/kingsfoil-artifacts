@@ -250,7 +250,7 @@ function setPolicy(){for(let t=0;t<4;t++){const p=POL[t];p.pm=1;p.op=16;p.red=0;
 setPolicy();
 // effect types: 1 cast circle, 2 missile, 3 beam, 4 chain, 5 spark, 6 area tile, 7 shockwave, 8 field, 11 telegraph
 const FX=[],TRL=new Int16Array(HARD_FX*32),FIELD=new Array(240).fill(null);
-for(let i=0;i<HARD_FX;i++)FX.push({on:0,slot:i,ty:0,tier:0,el:0,pri:0,own:null,tg:null,sp:0,x:0,y:0,z:0,x0:0,y0:0,x1:0,y1:0,cx:0,cy:0,t:0,dur:0,delay:0,a:0,r:0,seed:0,n:0,k:0,rel:0,main:0,tick:0,hit:null});
+for(let i=0;i<HARD_FX;i++)FX.push({on:0,slot:i,ty:0,tier:0,el:0,pri:0,own:null,tg:null,sp:0,x:0,y:0,z:0,x0:0,y0:0,x1:0,y1:0,cx:0,cy:0,t:0,dur:0,delay:0,a:0,r:0,seed:0,n:0,k:0,rel:0,main:0,tick:0,sa:0,hit:null});
 let liveFx=0,fxHi=0,fxCur=0;
 function kill(f){if(!f.on)return;f.on=0;liveFx--;if(f.ty===8&&FIELD[f.k]===f)FIELD[f.k]=null;f.own=f.tg=f.hit=null;}
 function spawn(ty,tier,el,dur){const t0=now();let f=null,ok=true;if(cbOn&&tier===3)el=0;
@@ -260,7 +260,7 @@ function spawn(ty,tier,el,dur){const t0=now();let f=null,ok=true;if(cbOn&&tier==
       for(let i=0;i<fxHi;i++){const g=FX[i];if(!g.on)continue;const gv=g.pri+(g.dur>50?9:(1-g.t/g.dur)*9);if(gv<wv){wv=gv;w=g;}}
       evicted++;evictSec++;if(w&&wv<v)kill(w);else ok=false;}}
   if(ok){let i=-1;for(let n=0;n<HARD_FX;n++){const j=(fxCur+n)%HARD_FX;if(!FX[j].on){i=j;break;}}
-    if(i>=0){f=FX[i];fxCur=(i+1)%HARD_FX;f.on=1;f.ty=ty;f.tier=tier;f.el=el;f.dur=dur;f.t=0;f.delay=0;f.pri=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10;f.own=f.tg=f.hit=null;f.rel=f.n=f.k=f.main=0;f.a=f.z=f.tick=0;f.seed=(rnd()*65535)|0;liveFx++;if(i>=fxHi)fxHi=i+1;}}
+    if(i>=0){f=FX[i];fxCur=(i+1)%HARD_FX;f.on=1;f.ty=ty;f.tier=tier;f.el=el;f.dur=dur;f.t=0;f.delay=0;f.pri=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10;f.own=f.tg=f.hit=null;f.rel=f.n=f.k=f.main=0;f.a=f.z=f.tick=f.sa=0;f.seed=(rnd()*65535)|0;liveFx++;if(i>=fxHi)fxHi=i+1;}}
   A.clar+=now()-t0;return f;}
 function clarityPass(){const t0=now();TC[0]=TC[1]=TC[2]=TC[3]=0;while(fxHi>0&&!FX[fxHi-1].on)fxHi--;for(let i=0;i<fxHi;i++)if(FX[i].on)TC[FX[i].tier]++;
   pressure=mgr?Math.max(liveFx/PRM.cap.fx,liveP/PRM.cap.parts):0;setPolicy();A.clar+=now()-t0;}
@@ -401,13 +401,14 @@ function updCast(dt){for(let i=0;i<fxHi;i++){const f=FX[i];if(!f.on)continue;
     if(f.ty===1){f.t+=dt;const c=f.own;if(c.dead||!c.act||f.t>=f.dur+.25){kill(f);continue;}if(!f.rel&&f.t>=f.dur)f.rel=1;
       if(!f.rel&&!rm&&f.r>=9){const v=dt*(f.r>20?70:36)*POL[f.tier].pm;let m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--){const a=rnd()*6.2832,r=Math.min(f.r,24)*(.9+rnd()*.7);part(0,f.tier,f.el,2,hand(c)+Math.cos(a)*r,c.y-11+Math.sin(a)*r*.7,hand(c),c.y-11,.32+rnd()*.15);}}}
     else if(f.ty===11){f.t+=dt;if(f.t>=f.dur)kill(f);}}}
-const TFADE=8*1.4/60; // Mindustry: a dead missile's trail shrinks out over its length x 1.4 ticks
+const SAMP=1/60,TFADE=8*1.4/60; // Mindustry: a dead missile's trail shrinks out over its length x 1.4 ticks
 function updProj(dt){for(let i=0;i<fxHi;i++){const f=FX[i];if(!f.on)continue;
-    if(f.ty===2){if(f.rel){f.tick+=dt;if(f.tick>=TFADE)kill(f);continue;}f.t+=dt;const p=f.t/f.dur;if(p>=1){if(trail==='ribbon'&&POL[f.tier].trail&&!POL[f.tier].mini&&f.n>2){f.rel=1;f.tick=0;f.tg=null;}else kill(f);continue;}const q=1-p;
+    if(f.ty===2){if(f.rel){f.tick+=dt;if(f.tick>=TFADE)kill(f);continue;}f.t+=dt;const p=f.t/f.dur;if(p>=1){if(trail==='ribbon'&&POL[f.tier].trail&&!POL[f.tier].mini&&f.n>2){f.rel=1;f.tick=0;f.tg=null;}else kill(f);continue;}const q=1-p,ox=f.x,oy=f.y-f.z;
       if(f.k===0){const tx=f.tg.x,ty=f.tg.y-7;if(f.t>.06){let da=Math.atan2(ty-f.cy,tx-f.cx)-f.a;da=Math.atan2(Math.sin(da),Math.cos(da));const mt=3.67*dt*(1+p*4);f.a+=clamp(da,-mt,mt);}f.cx+=Math.cos(f.a)*f.r*dt;f.cy+=Math.sin(f.a)*f.r*dt;const w=p<.6?0:(p-.6)/.4,sm=w*w*(3-2*w);f.x=f.cx+(tx-f.cx)*sm;f.y=f.cy+(ty-f.cy)*sm;}
       else if(f.k===1){f.x=f.x0+(f.x1-f.x0)*p;f.y=f.y0+(f.y1-f.y0)*p;}
       else{f.x=f.x0+(f.x1-f.x0)*p;f.y=f.y0+(f.y1-f.y0)*p;f.z=11*q+4*f.r*p*q;f.a=Math.atan2((f.y1-f.y0)-(4*f.r*(1-2*p)-11),f.x1-f.x0);}
-      const o=f.slot*32+(f.n&15)*2;TRL[o]=f.x;TRL[o+1]=f.y-f.z;f.n++;
+      // trail samples follow sim time, one per 1/60 s, placed along this frame's move. The trail then has the same length at 30, 60 and 120 Hz and in slow motion
+      f.sa+=dt;if(f.sa>=SAMP-1e-6){const a0=f.sa-dt,nx=f.x,ny=f.y-f.z,m=clamp((f.sa/SAMP+1e-4)|0,1,8);for(let j=1;j<=m;j++){const u=Math.min(1,(j*SAMP-a0)/dt),o=f.slot*32+(f.n&15)*2;TRL[o]=ox+(nx-ox)*u;TRL[o+1]=oy+(ny-oy)*u;f.n++;}f.sa=Math.max(0,f.sa-m*SAMP);}
       if(trail==='wake'&&POL[f.tier].trail){const pol=POL[f.tier],X=f.x,Y=f.y-f.z;let v=dt*100*pol.pm,m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--)part(1,f.tier,f.el,f.el===0?1:0,X+(rnd()-.5)*3,Y+(rnd()-.5)*3,(rnd()-.5)*10,(rnd()-.5)*10,.1+rnd()*.1);
         if(!pol.red){if(rnd()<dt*18*pol.pm)part(1,f.tier,f.el,f.el===3?3:f.el===1?4:0,X,Y,(rnd()-.5)*26,(rnd()-.5)*26-4,.6+rnd()*.2);if(rnd()<dt*7*pol.pm)part(1,f.tier,f.el,6,X,Y,(rnd()-.5)*5,-7,1.4+rnd()*.1);}}}
     else if(f.ty===3){const c=f.own;if(!c.beamOn||c.dead||!c.act){kill(f);continue;}f.t+=dt;if(POL[f.tier].pm>0&&!rm&&rnd()<dt*24*POL[f.tier].pm)part(1,f.tier,5,0,c.bx,c.by,(rnd()-.5)*70,(rnd()-.5)*50,.2+rnd()*.25);}
@@ -464,7 +465,9 @@ function drawProj(f){const pol=POL[f.tier],rp=RAMP[f.el],x=Math.round(f.x),y=Mat
   if(pol.mini){fp(x,y,rp[5]);fp(x-1,y,rp[4]);fp(x+1,y,rp[4]);fp(x,y-1,rp[4]);fp(x,y+1,rp[4]);return;}
   const m=Math.min(f.n,pol.red?5:8),base=f.slot*32;
   if(pol.trail&&m>1){
-    if(trail==='ribbon'){for(let j=m-1;j>=1;j--){const a=base+((f.n-1-j)&15)*2,b=base+((f.n-j)&15)*2,u=j/m,c=rp[u<.3?4:u<.62?3:2];line(TRL[a],TRL[a+1],TRL[b],TRL[b+1],c);if(u<.45)line(TRL[a],TRL[a+1]+1,TRL[b],TRL[b+1]+1,rp[u<.2?3:2]);}}
+    if(trail==='ribbon'){for(let j=m-1;j>=1;j--){const a=base+((f.n-1-j)&15)*2,b=base+((f.n-j)&15)*2,u=j/m,c=rp[u<.3?4:u<.62?3:2];line(TRL[a],TRL[a+1],TRL[b],TRL[b+1],c);if(u<.45)line(TRL[a],TRL[a+1]+1,TRL[b],TRL[b+1]+1,rp[u<.2?3:2]);}
+      // between samples the head runs ahead of the newest one: close the gap
+      const h=base+((f.n-1)&15)*2;line(TRL[h],TRL[h+1],x,y,rp[4]);line(TRL[h],TRL[h+1]+1,x,y+1,rp[3]);}
     else if(trail==='after'){const S=MS[f.sp][0],di=Math.round(f.a/.7854)&7,km=cOp;for(let j=5;j>=1;j--){if(f.n<=j*2)continue;const a=base+((f.n-1-j*2)&15)*2;cOp=j>2?Math.min(km,8):km;blit(S[di],TRL[a],TRL[a+1],RAMPD[f.el][(j-1)>>1]);}cOp=km;}}
   if(dirs==='rot')blitRot(MS[f.sp][0][0],f.x,f.y-f.z,f.a,rp);
   else if(dirs==='16')blit(MS[f.sp][1][Math.round(f.a/.3927)&15],x,y,rp);
