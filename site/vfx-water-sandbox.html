@@ -68,7 +68,7 @@ code{font:13px var(--mono);color:var(--cool)}
   <div class="explain">
     <div class="card"><h4>1 · Server water truth</h4><p>The coast is a 40 by 23 grid of 8 px cells. Each cell has a height, a water kind (shallow, deep, river, swamp, waterfall), a flow direction with speed 0 to 3 and a fishable flag. Shallow water slows you to 0.6, deep water blocks you like Tibia or lets you swim. One tide byte moves the shoreline: a cell is wet when its height sits under the level, so beach rows flip as it rises and falls.</p></div>
     <div class="card"><h4>2 · Distance and depth</h4><p>When the tide byte changes the client runs one multi-source BFS from the shore cells. That gives a signed distance for every cell, plus in water and minus on land. Depth per pixel mixes that distance with the height under the water level and picks one of 5 sea bands, 3 river bands or 3 swamp bands. The HUD shows what the recompute costs.</p></div>
-    <div class="card"><h4>3 · Colour and surface</h4><p>Each body has its own hue-shifted ramp, teal in the shallows down to navy, with a 4 by 4 Bayer dither at band borders and no alpha. <b>Palette cycle</b> rotates 4 reserved slots per band at 8 Hz, so the pixels never change and only the palette moves. <b>Animated tiles</b> play a 4 frame loop at 5 fps with a hashed phase per cell. Turn on <b>Sync tile phase</b> to see the grid shimmer that the phase offset hides.</p></div>
+    <div class="card"><h4>3 · Colour and surface</h4><p>Each body has its own hue-shifted ramp, teal in the shallows down to navy, with a 4 by 4 Bayer dither at band borders and no alpha. <b>Palette cycle</b> rotates 4 reserved slots per band at 8 Hz, so the pixels never change and only the palette moves. <b>Animated tiles</b> play a 4 frame loop at 5 fps. Each tile gets a hashed phase, and the tile rows are staggered by a hashed shift so the 8 px grid does not show. Turn on <b>Sync tile phase</b> to see the grid shimmer that this hides.</p></div>
     <div class="card"><h4>4 · Flow</h4><p>River pixels read a flow vector filtered from the cell grid and scroll a noise texture along it. Two samples run half a cycle apart with triangle weights, so the texture never stretches and the reset never shows. Fast cells turn the highlights white. The waterfall is a strip that scrolls down at 55 px/s with churn and mist particles at its base.</p></div>
     <div class="card"><h4>5 · Shore and waves</h4><p>The coast uses dual-grid marching squares. The 4 corner cells give one of 16 cases, and only mixed cases (1 to 14) and their neighbours do foam work. A swash line runs up the beach every 5 s, breaks into foam and pulls back past the tide line. It leaves wet sand that dries over about 6 s. Wave crests come in ahead of it.</p></div>
     <div class="card"><h4>6 · Reflections and caustics</h4><p>Trees, the hut and the walker draw a mirrored copy below their base line. Each row shifts by a sine wobble of up to 1 px, the copy is mixed with the water colour through the palette, and it is clipped to water pixels. Shallow water gets caustics, two scrolling Voronoi edge textures with a 1 px line where either edge is close.</p></div>
@@ -139,7 +139,10 @@ const VOR=new Uint8Array(4096);{const pts=[];for(let k=0;k<11;k++)pts.push([rnd(
   for(let y=0;y<64;y++)for(let x=0;x<64;x++){let d1=1e9,d2=1e9;for(const p of pts){let dx=Math.abs(x-p[0]),dy=Math.abs(y-p[1]);dx=Math.min(dx,64-dx);dy=Math.min(dy,64-dy);const d=Math.sqrt(dx*dx+dy*dy);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}VOR[y*64+x]=Math.min(255,(d2-d1)*20);}}
 const TILEF=[];{const pos=[0,1,2,1],row=[2,2,3,3];for(let f=0;f<4;f++){const a=new Uint8Array(64),put=(x,y,v)=>{const k=((y&7)<<3)|(x&7);if(v>a[k])a[k]=v;};
   const x0=pos[f],y0=row[f];put(x0,y0,1);put(x0+1,y0,2);put(x0+2,y0,f===1?2:1);put(x0+4,y0+4,1);put(x0+5,y0+4,f===3?1:2);put(x0+6,y0+4,1);TILEF.push(a);}}
-const PHC=new Uint8Array(NC);for(let c=0;c<NC;c++)PHC[c]=hash(c%GW,(c/GW)|0,40)&3;
+// tile layout with the phase offset on. Each 8 px row of tiles slides sideways by a hashed 0 to 7 px, and each tile gets its
+// own phase, a hashed row shift, and keeps both dashes or one. TKX is the tile texel per pixel (255 for a dropped dash)
+const TKX=new Uint8Array(NP),TPX=new Uint8Array(NP);for(let i=0;i<NP;i++){const y=YS[i],r=y>>3,xs=XS[i]+(hash(r,7,41)&7),h=hash(xs>>3,r,42),ty=(y+((h>>2)&7))&7,m=(h>>5)&3;
+  TPX[i]=h&3;TKX[i]=(m===2&&ty>=4)||(m===3&&ty<4)?255:(ty<<3)|(xs&7);}
 const CYCPAT=new Uint8Array(NP);for(let i=0;i<NP;i++){const x=XS[i],y=YS[i];if(vn(x/9,y/5,30)>.5){const s=x*.45+y*.9+vn(x/11,y/7,31)*5;CYCPAT[i]=1+(Math.floor(s)&3);}}
 
 // ---------- world geometry ----------
@@ -392,7 +395,8 @@ function render(){const t0=performance.now(),t=simT;IDX.set(BASEIDX);
       const s=(HS[q]*(1-ux)+HS[q+1]*ux)*(1-uy)+(HS[q+GW2]*(1-ux)+HS[q+GW2+1]*ux)*uy+(BY[i]/16-.5)*.5;
       if(s>3.2)IDX[i]=SWH;else if(s>1.1)IDX[i]=LIGHTM[IDX[i]];else if(s<-1.1)IDX[i]=DARKM[IDX[i]];continue;}
     if(cyc){const p=CYCPAT[i];if(p)IDX[i]=64+g*4+p-1;}
-    else{const f=(tfr+(sync?0:PHC[CELL[i]]))&3,v=TILEF[f][((YS[i]&7)<<3)|(XS[i]&7)];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}}
+    else if(sync){const v=TILEF[tfr&3][((YS[i]&7)<<3)|(XS[i]&7)];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}
+    else{const tk=TKX[i];if(tk!==255){const v=TILEF[(tfr+TPX[i])&3][tk];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}}}
   if(caust){const ax=(t*5)|0,ay=(t*3)|0,bx=(-t*4)|0,by=(t*6)|0;for(let k=0;k<SLIST.length;k++){const i=SLIST[k],x=XS[i],y=YS[i];
     const e=Math.min(VOR[(((y+ay)&63)<<6)|((x+ax)&63)],VOR[(((y-by+20)&63)<<6)|((x+bx+40)&63)]);if(e<18)IDX[i]=(BAND[i]===0||FORD[i])?A5:A4H;}}
   {const sp=.55,L=1/sp,p0=(t*sp)%1,p1=(p0+.5)%1,w0=1-Math.abs(2*p0-1),w1=1-w0,nrm=1/Math.sqrt(w0*w0+w1*w1),o0=p0*L,o1=p1*L,cf=(t*10)|0;

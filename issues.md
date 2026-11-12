@@ -494,7 +494,11 @@ How to use this file:
   lit and a dark flank that fades in about 1.5 s. Pond pixels shaded 1 s after a stone, less the 6% that
   lily pads and reflections always cover: 32% before, 9% after. Wading and fish pokes went from 2.5 and 3
   to 4 and 5 so they still show.
-- [ ] **96.** `P6` (taste) Animated tiles still read as a fixed 8 px lattice with phase offset on (`:140`).
+- [x] **96.** `P6` (taste) Animated tiles still read as a fixed 8 px lattice with phase offset on (`:140`).
+  Done: with the offset on, tile rows slide sideways by a hashed 0 to 7 px, and each tile gets a hashed
+  row shift and keeps both dashes or one. Baked into two byte arrays at load. Chance that a lit pixel has
+  a lit pixel 8 px to the right, 8 px below and 16 px to the right, on deep sea with a base rate near
+  12%: 35%, 50% and 31% before, 18%, 30% and 10% after. Sync tile phase still shows the aligned grid.
 
 ## vfx-fire
 
