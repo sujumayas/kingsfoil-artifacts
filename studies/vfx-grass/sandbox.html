@@ -573,7 +573,9 @@ const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,total:0};cons
 let flatN=0,tuftsDrawn=0,settled=0,lifeDrawAcc=0,playerHidden=false,villHidden=false;
 const ip=(x,y,c)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=c;if(smooth)AW[i]=255;}};
 const setL=(x,y,l)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x,cur=(IDX[i]>>7)&7;if(l>cur)IDX[i]=(IDX[i]&127)|(l<<7);}};
-function blitS(S,x0,y0,flip,crop,mask){const w=S.w,h=S.h-(crop||0),p=S.p;for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+(flip?w-1-x:x)];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;if(mask&&(y<4||((X+Y)&1)))continue;const i=Y*W+X;IDX[i]=v-1;if(smooth)AW[i]=255;}}}
+// mask: the see-through overlay of a hidden walker. Every other pixel, and only over grass and wheat colours,
+// so trees, sheep and anything else standing in front keep covering the walker
+function blitS(S,x0,y0,flip,crop,mask){const w=S.w,h=S.h-(crop||0),p=S.p;for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+(flip?w-1-x:x)];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;const i=Y*W+X;if(mask){if((X+Y)&1)continue;const g=IDX[i]&127;if(g<G0||g>W4)continue;}IDX[i]=v-1;if(smooth)AW[i]=255;}}}
 function blend(x,y,c,a){if(a<.06||x<0||x>=W||y<0||y>=H)return;const i=y*W+x;if(a>.94){IDX[i]=c;AW[i]=255;return;}IDX2[i]=IDX[i];IDX[i]=c;AW[i]=a*255|0;}
 let oscT1=0,oscT2=0,swayT=0;
 function tuftState(k){// returns key or -1, also lean in tuftLf

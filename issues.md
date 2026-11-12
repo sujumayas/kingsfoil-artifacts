@@ -416,8 +416,11 @@ How to use this file:
   Done: Reset clears fieldBakeT, and a dirty field rebakes at once while paused. After a 30 s run and Reset the
   field stayed stale for 30.3 s before, 0 s after. A cut while paused: not shown before, shown after
   (34,481 to 34,409 field pixels).
-- [ ] **81.** `P4` The hidden traveller in wheat is a headless dithered torso, and the overlay draws over trees
+- [x] **81.** `P4` The hidden traveller in wheat is a headless dithered torso, and the overlay draws over trees
   and sheep in front (`:678`, mask at `:575`).
+  Done: the overlay covers all 11 sprite rows and only replaces grass and wheat colours, so trees, sheep and
+  flower heads in front stay on top. In wheat: 0 head pixels shown before, 6 after (body 11 both). Player
+  pixels drawn over the tree canopy: 3 before, 0 after. Over a sheep in front: 3 before, 0 after.
 - [ ] **82.** `P4` (taste) Field-layer mode crops 6 of 11 sprite rows, leaving a floating head (`:613`, `:614`).
 - [ ] **83.** `P4` Grass freezes mid-lean with gust sheen stuck on when wind drops to Calm or Reduce motion
   turns on. The settled shortcut returns a non-upright cached key (`:584`).
