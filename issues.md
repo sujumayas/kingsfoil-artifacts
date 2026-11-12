@@ -724,8 +724,11 @@ How to use this file:
   Done: the melt pass picked from rows 1 to 178 only. After 30,000 melt steps at 6 °C the top row kept 317
   snowy ground pixels and the bottom row 320, against 92 and 79 one row in. Now 83 and 82, level with their
   neighbours.
-- [ ] **137.** `P4` Snow shading compares depth across surface boundaries, so the lit flank of every pine gets
+- [x] **137.** `P4` Snow shading compares depth across surface boundaries, so the lit flank of every pine gets
   the darkest shadow colour (`:336`). Fix: only use a neighbour of the same class.
+  Done: a neighbour only counts when it has the same surface class. After an instant fill, 112 of 1,635
+  snowy canopy pixels took the two darkest shadow colours, now 0. With the false shadow gone the pines were
+  white on white, so the right flank of a canopy now takes the mid snow tone.
 - [ ] **138.** `P3` Manual Heavy snow reaches the depth cap everywhere in under 2 minutes and flattens the scene
   (`:220`, `MAXD` at `:144`).
 - [ ] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.

@@ -334,9 +334,10 @@ function render(){
   for(let y=0;y<H;y++){const row=y*W;for(let x=0;x<W;x++){const i=row+x,s=S[i];let idx;
     if(s>=SOLID)idx=B[i];
     else{const d=D[i];
-      if(d>thr[i]){const l=x>0&&holds(S[i-1])?D[i-1]:d,r=x<W-1&&holds(S[i+1])?D[i+1]:d,u=y>0&&holds(S[i-W])?D[i-W]:d,dn=y<H-1&&holds(S[i+W])?D[i+W]:d;
+      if(d>thr[i]){const k=cls(s),l=x>0&&cls(S[i-1])===k?D[i-1]:d,r=x<W-1&&cls(S[i+1])===k?D[i+1]:d,u=y>0&&cls(S[i-W])===k?D[i-W]:d,dn=y<H-1&&cls(S[i+W])===k?D[i+W]:d;
         const sl=(r-l)+(dn-u);
         if(P[i]>110)idx=sl<-5?SN_PSH:SN_PACK;else if(d<thr[i]+4)idx=SN_BASE;else idx=sl>6?SN_HI:sl>=-6?SN_BASE:sl>=-13?SN_MID:sl>=-22?SN_SH:SN_DEEP;
+        if(s===CANOPY&&B[i]===CAN_B)idx=SN_MID; // the shaded right flank of a pine keeps a mid tone, so the tree reads against the ground
         if(sparkOn&&sl>=0&&((Math.imul(i^slot,2246822519)>>>23)===0))idx=SPARK;
         if(shadowOn&&SH[i])idx+=N;}
       else{idx=B[i];let v=0;if(shadowOn&&SH[i])v=1;if(Wt[i]>50)v+=2;idx+=v*N;}}
