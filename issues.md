@@ -451,7 +451,10 @@ How to use this file:
   Done: reproduced with the villager one cell away, the HUD read "hidden, villager gets 0 B". It now reads
   "hidden, but the villager is close and still gets you" when the villager is adjacent or in the same
   patch, and keeps the 0 B line when the villager is away.
-- [ ] **89.** `P5` A hidden villager is "not sent", yet the client keeps stamping its trail and rustle (`:384`).
+- [x] **89.** `P5` A hidden villager is "not sent", yet the client keeps stamping its trail and rustle (`:384`).
+  Done: while the villager is not sent, its stamps add wear only (server truth) and the rustle is skipped.
+  threat() ignores it too, so critters do not flee from it. 0.5 s hidden and not sent: crush up to 1.0, 2
+  rustling cells and 8 leaf bits before. All 0 after, with wear still added (76 units).
 - [ ] **90.** `P6` (taste) Winter arrives as scattered single white pixels. Dawn and dusk snow is a flat salmon.
   Burnt ground is fully covered by snow (`:345`).
 

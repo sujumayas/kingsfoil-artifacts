@@ -382,7 +382,10 @@ function interUpdate(dt){const dc=dt/PRM.crushFade,dp=dt/PRM.pushFade;
   if(wearOn){const dw=dt/PRM.wearT;for(let k=0;k<NTR;k++){const w=WEAR[k];if(w<=0)continue;const nw=w-w*dw-.02;WEAR[k]=nw>0?nw:0;const lv=WEAR[k]>PRM.wearDirt?3:WEAR[k]>PRM.wearWorn+30?2:WEAR[k]>PRM.wearWorn?1:0;
     if(lv!==WLV[k]){if(lv>=2||WLV[k]>=2)netTx(PRM.netTile);WLV[k]=lv;const c=CELL[((k/TW)|0)*4*W+(k%TW)*4];for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const cx=(c%GW)+ox,cy=((c/GW)|0)+oy;if(cx>=0&&cy>=0&&cx<GW&&cy<GH)markBlock(cy*GW+cx);}fieldDirty=true;}}}
   const walkers=[[P,0,8],[V,1,6]];
-  for(const [w,wi,R] of walkers){const vx=w.x-w.lx,vy=w.y-w.ly,m=Math.hypot(vx,vy);w.lx=w.x;w.ly=w.y;if(w===V&&V.x<0)continue;stamp(wi,w.x,w.y,m,R,vx,vy);rustle(w,wi);}
+  for(const [w,wi,R] of walkers){const vx=w.x-w.lx,vy=w.y-w.ly,m=Math.hypot(vx,vy);w.lx=w.x;w.ly=w.y;if(w===V&&V.x<0)continue;
+    // a villager the server does not send still wears the path (server truth), but this client has no entity to
+    // crush, push or rustle the grass with
+    const seen=w!==V||V.sent;stamp(wi,w.x,w.y,seen?m:0,R,vx,vy);if(seen)rustle(w,wi);}
   SHEEP.forEach((s,j)=>{const vx=s.x-(s.lx||s.x),vy=s.y-(s.ly||s.y),m=Math.hypot(vx,vy);s.lx=s.x;s.ly=s.y;stamp(2+j,s.x,s.y,m,5,vx,vy);});
   for(let c=0;c<NC;c++)if(SHK[c]>0)SHK[c]=Math.max(0,SHK[c]-dt);}
 const RCELL=new Int32Array(8).fill(-1);
@@ -425,7 +428,7 @@ function kill(j,k){if(LA[j]){LA[j]=0;ALIVE[k]--;}}
 // flee direction from the last threat check, one unit vector per creature
 const LAX=new Float32Array(NPL),LAY=new Float32Array(NPL);
 function threat(j,x,y,fire){LCK[j]-=1;if(LCK[j]>0)return LTD[j];threatChecks++;LCK[j]=1;
-  let bd=1e9,ax=0,ay=0;const chk=(px,py)=>{const d=Math.hypot(x-px,y-py);if(d<bd){bd=d;ax=x-px;ay=y-py;}};chk(P.x,P.y);if(V.x>0)chk(V.x,V.y);
+  let bd=1e9,ax=0,ay=0;const chk=(px,py)=>{const d=Math.hypot(x-px,y-py);if(d<bd){bd=d;ax=x-px;ay=y-py;}};chk(P.x,P.y);if(V.x>0&&V.sent)chk(V.x,V.y);
   if(fire){const c=CELL[clamp(y|0,0,H-1)*W+clamp(x|0,0,W-1)],cx=c%GW,cy=(c/GW)|0;for(let oy=-3;oy<=3;oy++)for(let ox=-3;ox<=3;ox++){const nx=cx+ox,ny=cy+oy;if(nx>=0&&ny>=0&&nx<GW&&ny<GH&&BURN[ny*GW+nx]===1)chk(nx*8+4,ny*8+4);}}
   const l=Math.hypot(ax,ay)||1;LAX[j]=ax/l;LAY[j]=ay/l;LTD[j]=bd;return bd;}
 const tickThreat=(j,dt)=>{LCK[j]-=dt/PRM.threatDt-1;};
