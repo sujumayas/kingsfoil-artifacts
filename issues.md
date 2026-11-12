@@ -507,8 +507,12 @@ How to use this file:
   Done: the haze block runs after the smoke and before the flames. Blaze demo, flame pixels inside the
   haze area that the haze pass changed: 2,423 of 4,203 before, 0 after. Sparks, rain and damage numbers
   are no longer shifted either.
-- [ ] **98.** `P3` Tools hit the ground cell behind the object you clicked. Clicking a tree crown ignites the
+- [x] **98.** `P3` Tools hit the ground cell behind the object you clicked. Clicking a tree crown ignites the
   grass north of it (`:484`). Fix: use `OWN[]` for the clicked pixel.
+  Done: useTool() takes the cell from `OWN[]` when a standing object owns the clicked pixel. Object pixels
+  that lie over another cell: 6,151 on trees and 1,350 on houses. Ignite clicks on them that hit the
+  object: 0 before, all 7,501 after. A click on a crown at (8,0) lit the grass cell north of the tree
+  before and lights the tree after.
 - [ ] **99.** `P4` Ground flames draw on top of houses and trees that stand in front of them (`:402` to `:404`).
 - [ ] **100.** `P3` Budget cap makes fire spread only north-west. The 3 ignitions per tick go to the lowest cell
   indices (`:236`). Fix: sort candidates by a hash.
