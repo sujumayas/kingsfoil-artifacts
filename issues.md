@@ -816,7 +816,10 @@ How to use this file:
 - [x] **155.** `P5` "Your light's rays" view shows stale rays when Light shadows is off (`:284`, `:310`).
   Done: with Light shadows off nothing recast the carried light, so the view kept the rays of the last spot.
   After a 43 px walk 78 of 256 rays were wrong. The view now casts its own, 0 wrong.
-- [ ] **156.** `P4` The carried lantern and torch handle draw through roofs and tree crowns (`:276` to `:278`).
+- [x] **156.** `P4` The carried lantern and torch handle draw through roofs and tree crowns (`:276` to `:278`).
+  Done: their pixels now take the same occlusion test as the character, for the traveller and the lantern-
+  bearer. Behind house B's roof and behind a crown the torch handle drew on top, now it is hidden. In the
+  open the lantern still draws.
 - [ ] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
 - [ ] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
   cage hole (`:271`). Fireflies drift at about 0.6 px/s and read as static. Noon cobbles clip to white (taste).

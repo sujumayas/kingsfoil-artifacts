@@ -291,9 +291,10 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
     else if(k==='magic'){p(-1,0,CRYSB);p(0,0,CRYSB);p(1,0,CRYSB);p(-1,-1,CRYS[0]);p(0,-1,CRYS[0]);p(1,-1,CRYS[1]);p(0,-2,CRYS[0]);p(1,-2,CRYS[1]);p(0,-3,CRYS[0]);}
     else if(k==='rune'){for(let d=0;d<=4;d++)p(0,-d,POST);p(-1,-5,POST);p(1,-5,POST);const c=L.I>.5?RUNE:HOOP;p(0,-5,c);p(0,-6,c);p(0,-7,POST);}
     else if(k==='mushroom'){p(0,0,STEM);p(-1,-1,MUSH);p(0,-1,MUSH);p(1,-1,MUSH);p(0,-2,MUSH);}}
-  if(carried){const cx=carried.x|0,cy=player.y|0;if(carryType==='torch'){putE(cx,cy-5,TRUNK[0],cy+1,null);putE(cx,cy-6,TRUNK[0],cy+1,null);flame(cx,cy-7,cy+1,false);}
-    else if(carryType==='lantern'){putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}else{const oy=Math.round(carried.y-14+Math.sin(t*2)*1.5);putE(cx,oy,ORB,cy+1,null);putE(cx+1,oy,ORB,cy+1,null);putE(cx,oy+1,ORB,cy+1,null);putE(cx+1,oy+1,ORB,cy+1,null);}}
-  if(npcLight.on){const cx=npcLight.x|0,cy=npc.y|0;putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}
+  // carried lights hide behind roofs and crowns like the character holding them
+  if(carried){const cx=carried.x|0,cy=player.y|0;if(carryType==='torch'){putE(cx,cy-5,TRUNK[0],cy+1,M);putE(cx,cy-6,TRUNK[0],cy+1,M);flame(cx,cy-7,cy+1,false);}
+    else if(carryType==='lantern'){putE(cx,cy-6,POST,cy+1,M);putE(cx,cy-5,LAMPON,cy+1,M);putE(cx,cy-4,POST,cy+1,M);}else{const oy=Math.round(carried.y-14+Math.sin(t*2)*1.5);putE(cx,oy,ORB,cy+1,M);putE(cx+1,oy,ORB,cy+1,M);putE(cx,oy+1,ORB,cy+1,M);putE(cx+1,oy+1,ORB,cy+1,M);}}
+  if(npcLight.on){const cx=npcLight.x|0,cy=npc.y|0;putE(cx,cy-6,POST,cy+1,M);putE(cx,cy-5,LAMPON,cy+1,M);putE(cx,cy-4,POST,cy+1,M);}
   // ---- light map ----
   LR.fill(0);LG.fill(0);LB2.fill(0);raysFrame=0;
   for(const L of lights){if(!L.on){L.I=0;continue;}let I=flicker(L,t);L.I=I;if(I<.02)continue;if(L.indoor&&!roofOff&&false)continue;
