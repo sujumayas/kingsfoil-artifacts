@@ -32,11 +32,13 @@ How to use this file:
   Affects light (`:331`), forest (`:354`), acid (`:397`), rain (`:363`, suspected) and snow (`:385`, suspected).
   Fix: return early for input and select targets or when a modifier is held, and clear `keys` on blur. Fog's
   handler (`:457`, `:465`) already does both.
-- [ ] **5.** `P2` Non-integer canvas scale. `fit()` reads `main.clientWidth` including 36 px of padding, so
+- [x] **5.** `P2` Non-integer canvas scale. `fit()` reads `main.clientWidth` including 36 px of padding, so
   viewports 640 to 677 and 960 to 997 px give 1.94x or 2.94x. Affects combat juice (`:954`), npc-dialog (`:1026`),
   grass (`:799`) and magic (`:750`). Water, fire and acid (`:20`) use `width:100%` with no fit at all (3.76x at
   1280). Fog only snaps at 640 px and above (`:466`). Fix: subtract the padding, give the three older sandboxes
   the same `fit()`, and use 1x below 640.
+  Done: one `fit()` in 12 sandboxes, including loot pickup, light, rain and snow, which had the same defect.
+  Scale is 1x up to a 677 px viewport, 2x from 678 and 3x from 998. Forest is tracked as #181.
 - [ ] **6.** `P2` Tap-to-walk onto a blocked spot makes the character walk in place forever. Grass (`:558`, `:560`),
   magic (`:575`) and fog (`:298`, suspected). Fix: set the moving flag only when the position changed, and clear
   the walk target when blocked. Acid handles this case correctly.
@@ -355,6 +357,9 @@ How to use this file:
 - [ ] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
   and particle (`:301`, `:320`). The HUD writes on about 6 of every 18 frames (`:339`).
 - [ ] **167.** `P6` The Wind slider has no value readout.
+- [ ] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
+  fixing #5. The stage sits in a `1fr 200px` grid next to the minimap (`:19`), so the shared `fit()` needs the
+  grid cell width, not `main`.
 
 ## curves-hearthguard
 

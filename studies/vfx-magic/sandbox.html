@@ -750,7 +750,8 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k===' '){paused=!paused;syPause();e.preventDefault();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;if(k==='7'){keys.beam=0;beamStop(P);}});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;keys.beam=0;beamStop(P);});
-function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
 window.spellSandbox={T,stats:()=>({liveFx,liveP,evicted,partDrop,fxN,odPx,maxOD,evRate,byRate,TC:TC.slice()})};
 reset();requestAnimationFrame(loop);

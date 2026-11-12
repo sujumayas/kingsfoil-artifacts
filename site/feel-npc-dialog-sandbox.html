@@ -1026,7 +1026,8 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k==='t'||k==='/'){$('kw').focus();e.preventDefault();}});
 addEventListener('keyup',e=>{const d=KM[e.key.toLowerCase()];if(d)keys[d]=0;});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
-function fit(){const st=cv.parentElement.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
 window.__sb={get:()=>({state:D.state,on:D.on,style:D.style,trade:TRADE.on,card:CARD.on,tx:PL.tx,ty:PL.ty,cam:[Math.round(cam.x),Math.round(cam.y)],q:CL.v,path:PL.path&&PL.path.length,after:!!PL.after,hits:HITS.length,msgs:NET.times.length})};
 if(innerWidth<640){BIG=true;$('big').classList.add('on');}

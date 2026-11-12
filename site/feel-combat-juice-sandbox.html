@@ -950,7 +950,8 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'&&e.targ
   else if(k==='p'){paused=!paused;frozenShow=false;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase(),d=KM[k];if(d)KEYS[d]=0;if(k>='1'&&k<='6')skillUp(+k-1);});
 addEventListener('blur',()=>{KEYS.l=KEYS.r=KEYS.u=KEYS.d=0;});
-function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';document.body.classList.toggle('coarse',matchMedia('(pointer:coarse)').matches||innerWidth<700);}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';document.body.classList.toggle('coarse',matchMedia('(pointer:coarse)').matches||innerWidth<700);}
 addEventListener('resize',fit);fit();
 window.__sb={get:()=>({cproj:CPROJ.length,tele:TELE.length,mode:MODE,target:TARGET&&TARGET.name,ents:ENTS.length,parts:PART.length,nums:NUMS.length,phantom:NET.phantom,rej:NET.rej,acc:NET.acc,hp:PL.chp,act:PL.act&&PL.act.type,gstop:GSTOP,queue:!!QUEUE,tick:SV.ticks,blits:ST.blits,total:T.total}),press,skillDown,skillUp,cycleTarget,setMode,preset,step:n=>{for(let i=0;i<n;i++)step(16);},pl:()=>PL,ents:()=>ENTS,aim:(x,y)=>{MX=x;MY=y;}};
 reset();preset('asterion');requestAnimationFrame(loop);

@@ -16,7 +16,7 @@ header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
 h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;letter-spacing:.5px;color:var(--ice)}
 .by{color:var(--mute);font-size:13px}
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
-.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(8,12,26,.72);padding:4px 8px;border-radius:4px;pointer-events:none;color:#e9f1ff}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
@@ -397,6 +397,9 @@ cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercanc
 setWeather('heavy');
 // start with a light existing cover so the scene reads instantly
 for(let i=0;i<NP;i++)if(holds(S[i]))D[i]=((S[i]===CANOPY?9:18)*SHL[i]*(S[i]===ICE?.6:1)+hash2(i,1)*4)|0;
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 requestAnimationFrame(frame);
 })();
 </script>

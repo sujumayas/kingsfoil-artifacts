@@ -16,7 +16,7 @@ header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
 h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--rain)}
 .by{color:var(--mute);font-size:13px}
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
-.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(6,10,16,.72);padding:4px 8px;border-radius:4px;pointer-events:none;color:#eef4fb;max-width:calc(100% - 16px)}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:10px}
@@ -367,6 +367,9 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H);if(Math.hypot(x-fire.x,y-fire.y)<8&&Math.hypot(player.x-fire.x,player.y-fire.y)<30){light();return;}player.tx=x;player.ty=y;});
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 setWeather('overcast');requestAnimationFrame(loop);
 })();
 </script>

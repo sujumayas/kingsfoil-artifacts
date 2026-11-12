@@ -16,7 +16,7 @@ header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
 h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--acid)}
 .by{color:var(--mute);font-size:13px}
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
-.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(8,12,6,.75);padding:5px 8px;border-radius:4px;pointer-events:none;color:#eef6e4;max-width:calc(100% - 16px)}
 .bars{display:grid;grid-template-columns:auto 90px;gap:2px 8px;align-items:center;margin-top:4px}
@@ -406,6 +406,9 @@ document.querySelectorAll('#vbtns [data-v]').forEach(b=>b.onclick=()=>{view=b.da
 const spEl=document.getElementById('speed');spEl.oninput=()=>{simSpeed=+spEl.value;document.getElementById('speedv').textContent=simSpeed+'×';};
 document.getElementById('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'Resume':'Pause';e.target.classList.toggle('on',paused);};
 document.getElementById('repair').onclick=()=>repair();document.getElementById('reset').onclick=()=>{buildRoom();bx0=1;bx1=W-2;by0=1;by1=H-2;};
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 buildRoom();requestAnimationFrame(loop);
 })();
 </script>
