@@ -824,8 +824,13 @@ How to use this file:
   Done: confirmed first: at 22:00 the moon shadow points left, so the moon is on the right, and the glint
   was at x 258, left of the pond centre at 272. The sign is flipped. Measured glint columns: 285 to 287 at
   22:00, 258 to 259 at 02:00 when the moon has crossed over.
-- [ ] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
+- [x] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
   cage hole (`:271`). Fireflies drift at about 0.6 px/s and read as static. Noon cobbles clip to white (taste).
+  Done: four small fixes. Each bulb sits 1 px under the wire at mid-span (wire y 155, bulb y 156), where it
+  was 1 px above the wire near a post. The lamp glass moved up 1 px into the cage hole. Fireflies do a
+  random walk at 7.4 px/s mean speed, up from 0.74, and the walk no longer depends on frame rate. Light
+  above 1 keeps 45% of its excess: sunlit cobbles at noon clipped to white on 57% of pixels, now 11%, all of
+  those around the carried torch.
 
 ## vfx-forest
 
