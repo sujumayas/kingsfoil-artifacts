@@ -197,8 +197,12 @@ How to use this file:
   Done: the ring and the bot go on the first side (right, left, down, up) where both spots are open ground.
   From x 312 the ring was at x 328 and the bot at 344 before. They are at 296 and 280 now, and the race
   still resolves.
-- [ ] **36.** `P5` "Label filter" buttons do nothing in the default preset, and the Alt path ignores the filter
+- [x] **36.** `P5` "Label filter" buttons do nothing in the default preset, and the Alt path ignores the filter
   (`:756`).
+  Done: with Labels off, Alt shows the items you may take that pass the filter. With Labels on nothing
+  changes: the filter applies all the time and Alt overrides it to show every label. Counted labels over 120
+  rain items with Labels off and Alt held. Before: 108 for every filter. After: 108 for Show all, 91 for
+  Hide junk, 10 for Only rare+. Card 7 describes both cases.
 - [ ] **37.** `P6` Loot window title is cut to 9 characters, "GOBLIN CH" (`:800`).
 - [ ] **38.** `P6` Preset button stays highlighted after changing party mode, pickup mode, tiers, magnet radius
   or filter (`:878` to `:883`).
