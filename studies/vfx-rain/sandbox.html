@@ -184,7 +184,8 @@ const player={x:140,y:112,dir:'down',anim:0,dist:0,foot:0,moving:false,tx:null,t
 const vill={x:72,y:96,dir:'down',anim:0,dist:0,foot:0,wp:0,wait:1,moving:false,wet:0,shoe:0};const VWP=[[72,96],[110,102],[150,113],[200,113],[214,74],[200,113],[150,113],[110,102],[68,150]]; // the plaza legs pass south of the fountain
 const frogs=[];const parts=[];
 const MAXD=1600;const D={x:new Float32Array(MAXD),y:new Float32Array(MAXD),z:new Float32Array(MAXD),l:new Uint8Array(MAXD),on:new Uint8Array(MAXD)};let nDrops=0;
-function curtain(x,y){return .45+.75*vnoise((x-wind*t*42)/46,y/38+t*.04);}
+// curOff is the wind integrated over time, so a wind change bends the curtains' path and does not move them
+let curOff=0;function curtain(x,y){return .45+.75*vnoise((x-curOff)/46,y/38+t*.04);}
 function spawnDrop(k){let x,y,tries=0;do{x=rnd()*(W+80)-40;y=rnd()*(H+90);tries++;}while(rnd()>curtain(x,y)*.8&&tries<4);
   D.x[k]=x;D.y[k]=y;D.z[k]=40+rnd()*60;const r=rnd();D.l[k]=r<.5?0:r<.85?1:2;D.on[k]=1;}
 
@@ -361,7 +362,7 @@ for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyu
 function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){t+=dt;if(auto){wTimer-=dt;if(wTimer<=0){cyc=(cyc+1)%CYCLE.length;setWeather(CYCLE[cyc][0]);wTimer=CYCLE[cyc][1];}
-      if(rnd()<dt*.12)windT=(rnd()*2-1)*(.25+I*.75);wind+=(windT-wind)*Math.min(1,dt*.5);windEl.value=Math.round(wind*100);}else wind=windEl.value/100;
+      if(rnd()<dt*.12)windT=(rnd()*2-1)*(.25+I*.75);wind+=(windT-wind)*Math.min(1,dt*.5);windEl.value=Math.round(wind*100);}else wind=windEl.value/100;curOff+=wind*42*dt;
     if(!manualI){I+=(targetI-I)*Math.min(1,dt*.35);intEl.value=Math.round(I*100);}else I=intEl.value/100;
     if(I>.02)lastRain=t;document.getElementById('intv').textContent=Math.round(I*100)+'%';
     const wb=Math.round(wind*3);if(wb!==windBucket){windBucket=wb;computeExposure(wb/3);}

@@ -702,8 +702,11 @@ How to use this file:
   Done: sim steps stop once 7 ms of the frame is spent, and the HUD then reads "over budget, running N× of
   8×". Particles are removed by swap in place of `splice`. Storm at 8x and 6x throttle: 47.5 ms per frame
   before, 13.6 ms after (running 2.1×). Unthrottled it runs the full 8× in 6.8 ms.
-- [ ] **133.** `P4` (suspected) Rain curtains jump when the wind changes, more the longer the page is open
+- [x] **133.** `P4` (suspected) Rain curtains jump when the wind changes, more the longer the page is open
   (`:180`, `wind*t*42`). Fix: integrate an offset.
+  Done: confirmed first: at t = 600 s a wind change of 0.1 moved the curtain noise by 2,520 px, a mean
+  change of 0.15 in curtain density. The offset is now the wind integrated over time, and the same change
+  moves nothing.
 - [ ] **134.** `P6` The Intensity readout and HUD do not update while paused.
 
 ## vfx-snow
