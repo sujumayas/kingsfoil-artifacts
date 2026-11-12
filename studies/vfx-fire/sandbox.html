@@ -443,6 +443,8 @@ function render(){
   ctx.putImageData(img,0,0);
   if(shake>0){const s=cv.getBoundingClientRect().width/W,m=shake>4?2:1;cv.style.transform=`translate(${((frameN&1)?m:-m)*s}px,${((frameN&2)?m:-m)*s*.5}px)`;}else if(cv.style.transform)cv.style.transform='';
 }
+// fuel view: three flat colours, and one colour per cell worked out once per frame
+const XWATER=px('10204a'),XASH=px('202020'),XNOFUEL=px('383838'),XC=new Uint32Array(NC);
 function xray(){
   if(view==='active'){for(let i=0;i<NP;i++){const c=out[i];out[i]=(255<<24|((((c>>16)&255)*.3)|0)<<16|((((c>>8)&255)*.3)|0)<<8|(((c&255)*.3)|0))>>>0;}
     const box=(c,col,fill)=>{const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=0;y<8;y++)for(let x=0;x<8;x++){if(!fill&&x&&y&&x<7&&y<7)continue;if(fill&&BY[(y0+y)*W+x0+x]>fill)continue;putE(x0+x,y0+y,col);}};
@@ -450,10 +452,11 @@ function xray(){
     for(let c=0;c<NC;c++){if(FLASH[c])box(c,WHITE,FLASH[c]);else if(STEAM[c]>2)box(c,CYAN,6);}
     for(const c of active){const s=STA[c];box(c,s===IGN?YEL:s===BURN?ORA:RED,0);if(s===IGN)box(c,YEL,5);}
     return;}
+  if(view==='fuel')for(let c=0;c<NC;c++){let col;if(MAT[c]===WATER)col=XWATER;else if(STA[c]===ASHS)col=XASH;else if(!ign16(c))col=XNOFUEL;
+    else{const f=FUEL0[c]?FUEL[c]/Math.max(FUEL0[c],1):0,mo=MOIST[c]/255,big=Math.min(1,FUEL0[c]/44);col=(255<<24|((30+mo*220)|0)<<16|((f*(90+big*140)*(1-mo*.6))|0)<<8|((f*220*(1-mo*.8)+20)|0))>>>0;}
+    XC[c]=col;}
   for(let i=0;i<NP;i++){const c=CELL[i],x=i%W,y=(i/W)|0,edge=(x&7)===0||(y&7)===0;let col;
-    if(view==='fuel'){const m=MAT[c];if(m===WATER)col=px('10204a');else if(STA[c]===ASHS)col=px('202020');else if(!ign16(c))col=px('383838');
-      else{const f=FUEL0[c]?FUEL[c]/Math.max(FUEL0[c],1):0,mo=MOIST[c]/255,big=Math.min(1,FUEL0[c]/44);col=(255<<24|((30+mo*220)|0)<<16|((f*(90+big*140)*(1-mo*.6))|0)<<8|((f*220*(1-mo*.8)+20)|0))>>>0;}
-      if(STA[c]===BURN||STA[c]===IGN)col=(i+frameN>>1)&1?ORA:col;}
+    if(view==='fuel'){col=XC[c];if(STA[c]===BURN||STA[c]===IGN)col=(i+frameN>>1)&1?ORA:col;}
     else if(view==='heat'){const h=(STA[c]===BURN||STA[c]===IGN)?255*Math.max(.3,FUEL[c]/Math.max(1,FUEL0[c])):STA[c]===EMB?60:HEAT[c];col=DOOMP[Math.min(36,(h*36/255)|0)];}
     else{const k=(y>>2)*FW+(x>>2),s=Math.min(1,SM[k]*.8),o=Math.min(1,SO[k]*.8),st=Math.min(1,SS[k]*.8);col=(255<<24|((20+st*235+s*150)|0)<<16|((16+st*235+s*150+o*30)|0)<<8|((18+s*150+o*90+st*60)|0))>>>0;}
     if(edge)col=lit(col,.75,.75,.75);out[i]=col;}

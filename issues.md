@@ -552,8 +552,12 @@ How to use this file:
   centre stood still for 7 steps and jumped 8 px on the 8th. After, it moves 1 px per px (0.25 px per
   quarter px for the sheep). Largest change of the light on a fixed pixel per 1 px of fireball travel:
   0.045 before, 0.006 after.
-- [ ] **106.** `P6` Fuel view calls `px('...')` three times per pixel (`:443`), 17.4 ms median at 6x. Hoist the
+- [x] **106.** `P6` Fuel view calls `px('...')` three times per pixel (`:443`), 17.4 ms median at 6x. Hoist the
   constants.
+  Done: the three `px()` colours are constants and the fuel colour is computed once per cell into
+  `XC[]`, 920 times a frame where it was 57,600. `xray()` in the fuel view after the Blaze demo,
+  median: 3.2 ms before and 0.5 ms after at 6x CPU throttle, 0.56 ms and 0.08 ms at 1x. The frame
+  hashes to the same value before and after.
 - [ ] **107.** `P6` `Math.exp` runs for each of 57,600 pixels every frame, also when idle or paused (`:364`).
 
 ## vfx-fog
