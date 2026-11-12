@@ -859,7 +859,9 @@ const T={sim:0,spr:0,fx:0,txt:0,cam:0,ui:0,total:0};const ema=(k,v)=>{T[k]+=(v-T
 function camOffset(){const S=TUNING.shake,tr=TRAUMA,amp=S.maxPx*SHK*(RSHAKE?.25:1)*tr*tr;let ox=0,oy=0;if(amp>0&&FX.shake){const t=now/1000*S.noiseHz;ox=(vn(t,0,41)*2-1)*amp;oy=(vn(t,7,43)*2-1)*amp*S.yMul;}
   if(KICKT<S.kickMs){const k=1-KICKT/S.kickMs;ox+=KICKX*k;oy+=KICKY*k;}return [Math.round(ox),Math.round(oy)];}
 function render(){ST.blits=0;ST.glyphs=0;COSTR.length=0;FC++;
-  const t0=performance.now();const [ox,oy]=camOffset();ctx.setTransform(1,0,0,1,ox,oy);
+  const t0=performance.now();const [ox,oy]=camOffset();
+  if(ox||oy){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=HX('ink');ctx.fillRect(0,0,W,H);} // the shaken background leaves a strip of up to 3 px uncovered: paint it, or last frame's pixels stay there
+  ctx.setTransform(1,0,0,1,ox,oy);
   LAYER=0;B(BG,0,0);for(const c of CORPSES){if(c.t>5000)ctx.globalAlpha=Math.max(0,(6000-c.t)/1000);B(c.img,Math.round(c.x)-c.img.width/2,Math.round(c.y)-c.img.height+3);ctx.globalAlpha=1;}
   const t1=performance.now();LAYER=1;drawTele();drawMarkers();drawAim();const t2=performance.now();
   LAYER=0;const list=ENTS.filter(e=>!(e.dead&&e.dieT>=999));list.sort((a,b)=>a.py-b.py);let pi=0;const PS=PILLARS.map(([x,y])=>({x,y,by:FY+y*16+13})).sort((a,b)=>a.by-b.by);

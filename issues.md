@@ -107,8 +107,11 @@ How to use this file:
   Done: confirmed in the code. Every chip stored gy and bounced at z = 0 on its spawn row, 7 px above the
   feet (10 px on the warden). One chip() helper now puts the ground point at gy and starts the chip gy - y
   above it. The first frame draws at the same pixel as before.
-- [ ] **20.** `P6` The canvas is never cleared and the background is drawn with the shake offset (`:847`), so the
+- [x] **20.** `P6` The canvas is never cleared and the background is drawn with the shake offset (`:847`), so the
   uncovered edge strip keeps old pixels. (suspected)
+  Done: confirmed in the code, not seen on screen. render() paints the frame ink before the shaken
+  background whenever the camera offset is not zero. The arena's side borders are ink already, so the
+  stale pixels could only show as a 1 to 2 px strip on the bottom row.
 - [ ] **21.** `P6` Telegraph decal cache holds a 305 x 305 canvas per angle per fill step, cleared only above 900
   entries (`:319`). Worst case is a few hundred MB. (suspected)
 - [ ] **22.** `P6` The HUD total under-reports by about a quarter in heavy mode. It leaves out the x-ray draw and
