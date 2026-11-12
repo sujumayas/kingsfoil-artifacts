@@ -737,7 +737,8 @@ How to use this file:
   was at the cap after 2 min, and after 4 min every ground pixel drew the same snow colour (depth sd 0.9).
   Now 0% at the cap after 8 min, depth sd 9.1, and 9% of the ground in highlight or shade tones. Card 1 says
   so.
-- [ ] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
+- [x] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
+  Done: the fence loop runs to x 201, so the post at 200 gets both columns like the other 8.
 - [ ] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
 - [ ] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
 - [ ] **142.** `P6` "Add snow" ignores the canopy cap of 14 (`:229`). Shovel never exposes ground.

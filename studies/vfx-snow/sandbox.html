@@ -178,7 +178,7 @@ for(const [tx,ty] of TREES){
     const b=k===0?CAN_D:(x<tx?CAN_A:(x===tx&&hash2(x,cy-k)<.5?CAN_A:CAN_B));put(x,cy-k,k===0?SOLID:CANOPY,b,26,ty,false);thr[(cy-k)*W+x]=3+vnoise(x/2.2,(cy-k)/1.6)*9+bay(x,cy-k)*.35+(x>tx+hw-2?3:0);}}
   for(let y=ty-2;y<=ty+1;y++)for(let x=tx-6;x<=tx+6;x++)if(x>=0&&x<W&&y<H)WOB[y*W+x]=Math.max(WOB[y*W+x],20);}
 // fence
-for(let x=120;x<=200;x++)for(let y=102;y<=110;y++){const post=(x-120)%10<2;let s=SOLID,b=FEN_D;
+for(let x=120;x<=201;x++)for(let y=102;y<=110;y++){const post=(x-120)%10<2;let s=SOLID,b=FEN_D;
   if(post){b=x%2?FEN_D:FEN_A;if(y===102)s=FENCETOP;}else if(y===104||y===107){b=FEN_A;s=FENCETOP;}else continue;put(x,y,s,b,8,110,y>=108);}
 // rocks
 for(const [cx,cy] of [[212,96],[95,160],[268,110],[20,80],[180,150]])for(let y=cy-5;y<=cy+4;y++)for(let x=cx-8;x<=cx+8;x++){const dx=(x-cx)/7.5,dy=(y-cy)/4.5;if(dx*dx+dy*dy<1){
