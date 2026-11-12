@@ -710,7 +710,7 @@ let serverAcc=0,lastWx='';
 function updateStages(){for(let c=0;c<NC;c++){const st=sP>=1?7:clamp(Math.round((sP*1.6-PHEN[c]*.6)*7),0,7);if(st!==STG[c]){STG[c]=st;SEAC[c]=st>=4?sTo:sFrom;markBlock(c);fieldDirty=true;const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=y0;y<Math.min(H,y0+8);y++)STGP.fill(st,y*W+x0,y*W+x0+8);}}}
 function step(dt){simT+=dt;frame++;swayT=step5?Math.floor(simT*5)/5:simT;
   if(tAuto)tod=(tod+dt/PRM.dayLen)%1;
-  if(sP<1){sP=Math.min(1,sP+dt/PRM.seasonLen);updateStages();}
+  if(sP<1){sP=Math.min(1,sP+dt/PRM.seasonLen*(sNext>=0?3:1));updateStages();if(sP>=1&&sNext>=0)setSeason(sNext,false);}
   serverAcc+=dt;if(serverAcc>=2){serverAcc-=2;const k=[windPre,windDir,Math.round(windStr*20),sTo,weather,phaseOf(tod)].join();if(k!==lastWx){netTx(PRM.netWx);lastWx=k;}}
   if(!rm)gustPh+=gustSpeed*dt;envPh+=gustSpeed*.35*dt;windUpdate();
   stepWalkers(dt);
@@ -733,7 +733,7 @@ function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now
   secT+=dt;if(secT>=1){secT-=1;netRate=netSec;netSec=0;stampRate=stampSec;stampSec=0;netFlat=flatCellsSec*PRM.netTile;flatCellsSec=0;threatSec=threatChecks;threatChecks=0;}
   if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`].join(' · ');
     const lifeS=[0,1,2,3,4,5,6,7,8,9].map(k=>`${['bfly','bee','dfly','gnat','moth','ffly','rabbit','frog','crick','drift'][k]} ${ALIVE[k]}/${KC[k]}`).join(' ');
-    const sea=sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo];
+    const sea=(sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo])+(sNext>=0?`→${SN[sNext]}`:'');
     $('hud').innerHTML=`${sea} · ${phaseOf(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${windPre} ${Math.round(windStr*100)}% · ${weather==='rain'?'after rain':'clear'} · ${rmode==='tufts'?'per-tuft':'field layer'}, ${smooth?'smooth':'snapped'}${paused?' · paused':''}<br>${L} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · ${rmode==='tufts'?`tufts ${tuftsDrawn}/${TN}, settled ${settled}, flattened ${flatN}`:`field px ${tuftsDrawn}`} · stamps ${stampRate}/s · regrow ${regN} cells/tick (${regChanged} grew) · ground rebakes ${bakeN}<br>net ${netRate} B/s (${netTotal} B total) · trampling 0 B (sending each flatten would be ${netFlat} B/s) · you: ${playerHidden?'hidden, villager gets 0 B':P.reveal>0?'revealed':'in the open'} · villager: ${V.x<0?'away':villHidden?(V.sent?(leak&&!V.adj?'hidden but SENT (leak)':'hidden, seen up close'):'hidden, not sent'):'visible'}<br>${lifeS} · sleeping ${sleeping} · threat checks ${threatSec}/s · fireflies lit ${litN} · night ${nightRollName}`;
     if(tAuto)syncTime();}}
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
@@ -742,7 +742,11 @@ const setTool=v=>{tool=v;mark('#tools button','t',v);},setView=v=>{view=v;mark('
 const setRmode=v=>{rmode=v;mark('#rmode button','r',v);fieldDirty=true;TKEY.fill(-1);},setSmooth=v=>{smooth=v==='smooth';mark('#smode button','s',v);TKEY.fill(-1);};
 function setWindPre(v){windPre=v;mark('#wpre button','w',v);const p=PRM.pre[v];windStr=p[0];gustSpeed=p[1];gustAmp=p[2];$('wstr').value=Math.round(windStr*100);$('wstrl').textContent=Math.round(windStr*100)+'%';}
 function setDir(d){windDir=d;wcx=Math.cos(d*Math.PI/180);wcy=Math.sin(d*Math.PI/180);$('wdir').value=d;$('wdirl').textContent=d+'°';}
-function setSeason(s,instant){s=+s;if(instant){sFrom=sTo=s;sP=1;STG.fill(7);SEAC.fill(s);STGP.fill(7);for(let c=0;c<NC;c++)markBlock(c);}else{if(s===sTo&&sP>=1)return;sFrom=sTo;sTo=s;sP=0;STG.fill(0);SEAC.fill(sFrom);STGP.fill(0);for(let c=0;c<NC;c++)markBlock(c);}lutDirty=true;fieldDirty=true;mark('#seas button','s',s);}
+// a season picked while another is still turning is queued in sNext. step() finishes the running turn at 3x speed
+// and starts the queued one from there, so no cell jumps a whole season in one frame
+let sNext=-1;
+function setSeason(s,instant){s=+s;if(!instant&&sP<1){sNext=s===sTo?-1:s;mark('#seas button','s',s);return;}
+  sNext=-1;if(instant){sFrom=sTo=s;sP=1;STG.fill(7);SEAC.fill(s);STGP.fill(7);for(let c=0;c<NC;c++)markBlock(c);}else{if(s===sTo)return;sFrom=sTo;sTo=s;sP=0;STG.fill(0);SEAC.fill(sFrom);STGP.fill(0);for(let c=0;c<NC;c++)markBlock(c);}lutDirty=true;fieldDirty=true;mark('#seas button','s',s);}
 function setWeather(v){weather=v;mark('#wx button[data-x]','x',v);lutDirty=true;for(let c=0;c<NC;c++)markBlock(c);}
 group('#tools button','t',setTool);group('#views button','v',setView);group('#rmode button','r',setRmode);group('#smode button','s',setSmooth);group('#wpre button','w',setWindPre);group('#seas button','s',v=>setSeason(v,false));group('#wx button[data-x]','x',setWeather);
 document.querySelectorAll('#life button').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;KON[k]^=1;b.classList.toggle('on',!!KON[k]);if(!KON[k]){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}});
@@ -801,7 +805,7 @@ let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEven
 const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
 addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
-  if(k==='s'&&e.shiftKey){setSeason((sTo+1)%4,false);e.preventDefault();return;}
+  if(k==='s'&&e.shiftKey){setSeason(((sNext>=0?sNext:sTo)+1)%4,false);e.preventDefault();return;}
   if(KM[k]){keys[KM[k]]=1;e.preventDefault();return;}
   if(k>='1'&&k<='5')setTool(['walk','cut','burn','plant','lamp'][+k-1]);
   else if(k==='t'){tAuto=!tAuto;syncAuto();}

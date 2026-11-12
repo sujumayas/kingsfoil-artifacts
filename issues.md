@@ -429,7 +429,10 @@ How to use this file:
   Done: the settled shortcut only reuses a cached key that is upright with no sheen. 3,068 tufts, Gusty then
   Calm: 2,715 leaning and 678 with sheen before, 12 leaning (crushed by the sheep) and 0 with sheen after.
   Gusty then Reduce motion: 2,772 and 200 before, 4 and 0 after.
-- [ ] **84.** `P4` Changing season mid-transition pops to the full previous season in one frame (`:736`).
+- [x] **84.** `P4` Changing season mid-transition pops to the full previous season in one frame (`:736`).
+  Done: a pick during a turn is queued. The running turn finishes at 3x speed, then the queued one starts.
+  Winter picked halfway through summer to autumn: 920 of 920 cells changed look in one frame before, 0
+  after. Winter is complete 9.4 s after the click, 8 s before.
 - [ ] **85.** `P4` A firefly halo darkens lamp light where they overlap. `setL` keeps the higher level number,
   not the brighter mix (`:574`, `:681`).
 - [ ] **86.** `P3` Showcase forces the interaction map on without syncing its button (`:759`).
