@@ -353,7 +353,9 @@ How to use this file:
   timer fires (`:717`).
   Done: the button tracks its held state and clears the pending timer on press. Tap, press again after 300
   ms and hold: the beam was off 500 ms later before, and stays on now. It still stops after release.
-- [ ] **69.** `P4` Residue toggle leaves scorch and frost decals for up to 12 s (`:317` has no `residue` check).
+- [x] **69.** `P4` Residue toggle leaves scorch and frost decals for up to 12 s (`:317` has no `residue` check).
+  Done: drawDecals skips drawing while Residue is off and keeps ageing the decals. A scorch decal with
+  Residue off: 123 px drawn before, 0 after. Switched back on, the 123 px return.
 - [ ] **70.** `P4` (taste) Meteor rune circle is a 108 x 54 ellipse centred on the mage. The blast is 112 x 112
   centred on the tile (`:448`, `:372`).
 - [ ] **71.** `P6` Beam damage numbers stack into an unreadable column (`:314`, `:600`).
