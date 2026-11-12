@@ -216,7 +216,10 @@ How to use this file:
   Done: the handler returns on key repeats for everything except movement. Holding B through 8 repeats gave
   9 boss drops before and 1 now. P, M, V, E, R and Space had the same repeat and are covered. Space still
   stops the page from scrolling while held.
-- [ ] **40.** `P6` Phone control buttons are 30 px tall.
+- [x] **40.** `P6` Phone control buttons are 30 px tall.
+  Done: buttons in the control panels get min-height 44 px under body.coarse, the class fit() sets for a
+  coarse pointer or a viewport under 700 px. Measured at 390 px: every button was 30 px and is 44 px now.
+  The panels grow from 1,715 to 2,107 px. Desktop buttons stay at 30 px.
 - [ ] **41.** `P3` (suspected) Lowering the Allied players slider removes live goblins with `gs.pop()` (`:377`),
   leaving stale targets.
 - [ ] **42.** `P3` (suspected) Magnet "far" rejects are meant to be silent, but `s.req=false` (`:618`) runs before
