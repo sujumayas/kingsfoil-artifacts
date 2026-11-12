@@ -787,7 +787,11 @@ How to use this file:
   Done: each of the two lights names the occluder it sits on, and its rays pass through that one. Light 20
   px above the crystal at night: 0.14 before, 0.95 after, against 1.24 below it. Above the brazier: 0
   before, 1.46 after.
-- [ ] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
+- [x] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
+  Done: each of the 7 kinds draws a small sprite on the clicked pixel: standing torch, campfire, candle,
+  hanging lantern, crystal, rune lamp and mushroom. The rune lamp uses `RUNE` and goes grey during its
+  blackouts. Changed pixels around a placed light went from 0 for every kind to between 3 (candle) and 16
+  (lantern).
 - [ ] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
   room is near black at noon (`:301`).
 - [ ] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).

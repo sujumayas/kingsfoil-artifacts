@@ -279,6 +279,15 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
   for(let k=0;k<8;k++){const x0=8+k*13+1;for(let x=x0;x<x0+13;x++){const tt=(x-x0)/13,y=Math.round(152+Math.sin(tt*Math.PI)*3);putE(x,y,WIRE,160,M);}}
   for(const f of flies){if(!f.on||f.I<.2)continue;putE(f.x,f.y-f.z,FFLY,f.y,null);}
   if(crystal.I>.85&&(frameN&4))putE(180+((frameN>>3)%3)-1,151,ORB,164,M);
+  // placed lights: a small sprite per kind, standing on the clicked pixel
+  for(const L of placed){const x=Math.round(L.x),y=Math.round(L.y),k=L.type,p=(dx,dy,c)=>putE(x+dx,y+dy,c,y,M);
+    if(k==='torch'){for(let d=0;d<=5;d++)p(0,-d,TRUNK[d<2?1:0]);flame(x,y-6,y,false);}
+    else if(k==='campfire'){for(let d=-3;d<=3;d++)p(d,0,d%2?LOG:STONE[1]);p(-2,-1,LOG);p(2,-1,LOG);flame(x,y-1,y,true);}
+    else if(k==='candle'){p(0,0,STEM);p(0,-1,STEM);p(0,-2,FIRE[ft?0:1]);}
+    else if(k==='lantern'){for(let d=0;d<=8;d++)p(2,-d,POST);p(1,-8,POST);p(0,-8,POST);p(0,-7,POST);p(0,-6,LAMPON);p(-1,-6,POST);p(1,-6,POST);p(0,-5,POST);}
+    else if(k==='magic'){p(-1,0,CRYSB);p(0,0,CRYSB);p(1,0,CRYSB);p(-1,-1,CRYS[0]);p(0,-1,CRYS[0]);p(1,-1,CRYS[1]);p(0,-2,CRYS[0]);p(1,-2,CRYS[1]);p(0,-3,CRYS[0]);}
+    else if(k==='rune'){for(let d=0;d<=4;d++)p(0,-d,POST);p(-1,-5,POST);p(1,-5,POST);const c=L.I>.5?RUNE:HOOP;p(0,-5,c);p(0,-6,c);p(0,-7,POST);}
+    else if(k==='mushroom'){p(0,0,STEM);p(-1,-1,MUSH);p(0,-1,MUSH);p(1,-1,MUSH);p(0,-2,MUSH);}}
   if(carried){const cx=carried.x|0,cy=player.y|0;if(carryType==='torch'){putE(cx,cy-5,TRUNK[0],cy+1,null);putE(cx,cy-6,TRUNK[0],cy+1,null);flame(cx,cy-7,cy+1,false);}
     else if(carryType==='lantern'){putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}else{const oy=Math.round(carried.y-14+Math.sin(t*2)*1.5);putE(cx,oy,ORB,cy+1,null);putE(cx+1,oy,ORB,cy+1,null);putE(cx,oy+1,ORB,cy+1,null);putE(cx+1,oy+1,ORB,cy+1,null);}}
   if(npcLight.on){const cx=npcLight.x|0,cy=npc.y|0;putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}
