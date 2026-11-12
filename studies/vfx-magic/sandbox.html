@@ -673,7 +673,7 @@ function render(dt){let t0=now(),t;const tv=view==='tiers';
       if(L.type==='cast'){for(let k=0;k<16;k++)up(Math.round(x+Math.cos(k*.3927)*7),Math.round(y-6+Math.sin(k*.3927)*9),c);}
       else if(L.type==='missile'){const d=Math.hypot(L.x1-x,L.y1-y)|0;for(let s=0;s<=d;s+=2)up(Math.round(x+(L.x1-x)*s/(d||1)),Math.round(y+(L.y1-y)*s/(d||1)),c);}
       else if(L.type==='cond'){for(let k=-2;k<=2;k++){up(x+k,y-22,c);up(x,y-22+k,c);}}
-      else{const r=L.type==='area'?L.x1:0,tx=((x-r)>>4)*16,ty=((y-r)>>4)*16,w=(((x+r)>>4)+1)*16-tx,h=(((y+r)>>4)+1)*16-ty;for(let k=0;k<=w;k++){up(tx+k,ty,c);up(tx+k,ty+h,c);}for(let k=0;k<=h;k++){up(tx,ty+k,c);up(tx+w,ty+k,c);}}}
+      else{const rt=(L.type==='area'?L.x1:0)>>4,tx=((x>>4)-rt)*16,ty=((y>>4)-rt)*16,w=(rt*2+1)*16-1;for(let k=0;k<=w;k++){up(tx+k,ty,c);up(tx+k,ty+w,c);up(tx,ty+k,c);up(tx+w,ty+k,c);}}}
     for(let n=0;n<14;n++){const L=LOG[(logN-1-n)&63];if(!L.type||n>=logN)break;const y=H-8-n*7,s=L.txt+' '+L.b+'B';for(let j=-1;j<6;j++)for(let i=0;i<s.length*4+3;i++)up(1+i,y+j,BLACK);txt(s,3,y,EC[L.type]);}
     txt('SERVER EVENTS '+evRate+'/S '+byRate+' B/S',3,3,WHITE,1);}
   ctx.putImageData(img,0,0);A.world+=now()-t0;}

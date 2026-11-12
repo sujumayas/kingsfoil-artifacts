@@ -334,8 +334,11 @@ How to use this file:
   Fix: `f.t=0;f.dur=dur`.
   Done: as suggested. A 12 s poison field recast at 10 s: stage 1 of 0 to 2 (shrunk) with age 10 of 22
   before, stage 0 with age 0 of 12 after.
-- [ ] **64.** `P4` Server events view draws area boxes one tile too big, 8x8 for the 7x7 meteor (`:370`, `:377`,
+- [x] **64.** `P4` Server events view draws area boxes one tile too big, 8x8 for the 7x7 meteor (`:370`, `:377`,
   `:672`).
+  Done: the box is the centre tile plus the radius in whole tiles and ends on the last pixel of the mask.
+  Meteor box 129 x 118 px before (x 144 to 272), 112 x 112 after (x 144 to 255, y 32 to 143), the mask
+  exactly. Poison 65 x 65 before, 48 x 48 after.
 - [ ] **65.** `P4` Holding Beam while paused draws it to the top-left corner (`:396`, `:483`).
 - [ ] **66.** `P4` Shock particles keep jittering while paused and at full speed in slow motion (`:286`).
 - [ ] **67.** `P3` Each tap of Beam while paused stacks another beam effect (`:396`, `:413`).
