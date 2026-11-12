@@ -245,7 +245,9 @@ How to use this file:
   Done: relayout(true) finds the page that holds the first glyph of the page being read. On the elder's
   Spanish greeting, page 2 of 2 in Large text became page 2 of 1 with 0 glyphs when Large text went off. Now
   it lands on page 1 of 1 with all 56 glyphs.
-- [ ] **45.** `P4` Letter "j" has a 2 px gap on its left, "cajas" reads "ca jas" (`:124`, glyph `40444444o`).
+- [x] **45.** `P4` Letter "j" has a 2 px gap on its left, "cajas" reads "ca jas" (`:124`, glyph `40444444o`).
+  Done: glyph is now 80888888g, 2 px wide. The gap between the a and the j stem in "cajas" went from 3 px to
+  2 px, the same as any other letter pair with a 1 px side bearing. Checked in a 3x screenshot.
 - [ ] **46.** `P4` Bubble style. The advance arrow covers the last character (`:879`, width at `:872`).
 - [ ] **47.** `P4` (taste) Bubble style. The choice menu covers the NPC you are talking to (`:881`).
 - [ ] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
