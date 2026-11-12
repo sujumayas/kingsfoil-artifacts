@@ -866,8 +866,13 @@ How to use this file:
   `:220`).
   Done: a flake is drawn only where the ground under it takes snow, the same `T < 0.62` test the ground bake
   uses. Winter flake pixels on screen: taiga 114 before and after, rainforest 114 before and 0 after.
-- [ ] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
+- [x] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
   visible trees (`:285`). Shadows pop at the top edge (`:299`). The minimap rectangle is antialiased (`:326`).
+  Done: all four confirmed first. Ferns swayed over their whole height, so the base row moved up to 1 px:
+  the lowest 2 rows of every sprite now stay put. A shaken tree out of view kept shake 1.0 after 5 s:
+  shaking trees sit in a set and decay anywhere, now 0. Trees were culled 4 px above the top edge while
+  their shadow reached into view, 6 cases on a 200 px walk north: the margin is 14 px, now 0 cases. The
+  minimap box was stroked at fractional positions, 170 blended pixels: it snaps to whole cells, now 0.
 - [ ] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
   and particle (`:301`, `:320`). The HUD writes on about 6 of every 18 frames (`:339`).
 - [ ] **167.** `P6` The Wind slider has no value readout.

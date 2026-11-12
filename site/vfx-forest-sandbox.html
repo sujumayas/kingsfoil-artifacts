@@ -249,6 +249,7 @@ const player={x:pathX(520),y:520,dir:'down',anim:0,moving:false,tx:null,ty:null}
 const sIdx=t=>{const s=season-t.off;return ((Math.floor(s+.5)%4)+4)%4;};
 const swayOf=t=>{const sp=SPECIES[t.sp];const g=vnoise((t.x+t.y*.35)/80-gust,t.y/120)-.35;return wind*sp.flex*(.5*Math.sin(time*1.7+t.ph)+1.2*g)+t.shake*Math.sin(time*30)*2.6;};
 const keys={};const parts=[],litter=[];
+const shaking=new Set(); // trees with shake > 0. They decay here whether or not they are on screen
 function nearby(x,y,r,cb){const x0=clamp(((x-r)/GS)|0,0,GCW-1),x1=clamp(((x+r)/GS)|0,0,GCW-1),y0=clamp(((y-r)/GS)|0,0,GCH-1),y1=clamp(((y+r+48)/GS)|0,0,GCH-1);
   for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx])cb(trees[i],i);}
 function trunkR(t){const sp=SPECIES[t.sp];if(t.u)return 0;return sp.kind==='broad'?(sp.big?4:3):2;}
@@ -286,13 +287,14 @@ function update(dt){time+=dt;gust+=wind*1.3*dt;if(auto){season=(season+dt*.025)%
   const gs=Math.floor(season+.5)%4;if(gs!==lastGroundSeason){lastGroundSeason=gs;useGround(gs);drawAtlas(gs);document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===gs));}
   let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.arrowright||keys.d)ix++;if(keys.arrowup||keys.w)iy--;if(keys.arrowdown||keys.s)iy++;
   if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<1.5)player.tx=null;else{ix=dx/L;iy=dy/L;}}
-  let slow=1;nearby(player.x,player.y,8,t=>{if(!t.u)return;const dx=player.x-t.x,dy=(player.y-t.y)*1.6;if(dx*dx+dy*dy<40){slow=.7;if(player.moving){t.shake=Math.max(t.shake,.55);if(rnd()<dt*6)leafBurst(t,1);}}});
+  let slow=1;nearby(player.x,player.y,8,t=>{if(!t.u)return;const dx=player.x-t.x,dy=(player.y-t.y)*1.6;if(dx*dx+dy*dy<40){slow=.7;if(player.moving){t.shake=Math.max(t.shake,.55);shaking.add(t);if(rnd()<dt*6)leafBurst(t,1);}}});
   const L=Math.hypot(ix,iy)||1,sp=42*slow;const nx=player.x+ix/L*sp*dt,ny=player.y+iy/L*sp*dt;let mx=0,my=0;if(!blocked(nx,player.y)){mx=nx-player.x;player.x=nx;}if(!blocked(player.x,ny)){my=ny-player.y;player.y=ny;}
   player.moving=Math.abs(mx)+Math.abs(my)>.001;if(player.tx!==null&&!player.moving)player.tx=null;if(player.moving){player.anim+=dt*8;if(Math.abs(ix)>Math.abs(iy))player.dir=ix>0?'right':'left';else player.dir=iy>0?'down':'up';}else player.anim=0;
   camX=clamp(Math.round(player.x-VW/2),0,WW-VW);camY=clamp(Math.round(player.y-VH/2-8),0,WH-VH);
   // seasonal particles from visible trees
   const s=Math.floor(season+.5)%4;
-  visible.forEach(t=>{t.shake*=Math.pow(.25,dt);const sp=SPECIES[t.sp],k=sIdx(t);if(t.u)return;if(k===2&&sp.dec&&rnd()<dt*.18)leafBurst(t,1);else if(k===0&&sp.blossom&&rnd()<dt*.35)leafBurst(t,1);});
+  for(const t of shaking){t.shake*=Math.pow(.25,dt);if(t.shake<.01){t.shake=0;shaking.delete(t);}}
+  visible.forEach(t=>{const sp=SPECIES[t.sp],k=sIdx(t);if(t.u)return;if(k===2&&sp.dec&&rnd()<dt*.18)leafBurst(t,1);else if(k===0&&sp.blossom&&rnd()<dt*.35)leafBurst(t,1);});
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=(p.vx+wind*14+Math.sin(time*3+p.ph)*6)*dt;p.z-=p.vz*dt;if(p.z<=0||p.life<=0){if(p.z<=0&&p.kind==='leaf'){litter.push([p.x|0,p.y|0,p.col]);if(litter.length>500)litter.shift();}parts.splice(i,1);}}
   if(s===3&&snowFlakes.length<90)snowFlakes.push([rnd()*VW,rnd()*VH,rnd()]);
   if(layers.birds)updateBirds(dt);}
@@ -302,11 +304,13 @@ const snowFlakes=[];
 
 // ---------- render ----------
 let visible=[],drawnCount=0;
+// rows above cb sway. The lowest 2 rows never do, so a fern keeps its foot on the ground
+const cbOf=(t,S)=>Math.min(S.cb,S.h-2);
 const u32hex=c=>'#'+[(c&255),(c>>8)&255,(c>>16)&255].map(v=>v.toString(16).padStart(2,'0')).join('');
 function render(){const t0=performance.now();
   ctx.globalAlpha=1;ctx.drawImage(ground,camX,camY,VW,VH,0,0,VW,VH);
   visible=[];const x0=clamp(((camX-40)/GS)|0,0,GCW-1),x1=clamp(((camX+VW+40)/GS)|0,0,GCW-1),y0=clamp(((camY-8)/GS)|0,0,GCH-1),y1=clamp(((camY+VH+80)/GS)|0,0,GCH-1);
-  for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx]){const t=trees[i];const S=SPR[t.sp][t.v][sIdx(t)];if(t.x+S.w<camX||t.x-S.w>camX+VW||t.y-S.h>camY+VH||t.y<camY-4)continue;visible.push(t);}
+  for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx]){const t=trees[i];const S=SPR[t.sp][t.v][sIdx(t)];if(t.x+S.w<camX||t.x-S.w>camX+VW||t.y-S.h>camY+VH||t.y<camY-14)continue;visible.push(t);} // 14 px above the top edge: a shadow reaches that far below its tree
   // litter
   for(const [x,y,c] of litter){const sx=x-camX,sy=y-camY;if(sx<0||sy<0||sx>=VW||sy>=VH)continue;ctx.fillStyle=u32hex(c);ctx.fillRect(sx,sy,1,1);}
   // shadows + sunflecks
@@ -320,7 +324,7 @@ function render(){const t0=performance.now();
   const pRect=[player.x-3,player.y-11,player.x+3,player.y];let occluded=false;const items=visible.map(t=>[t.y,t]);items.push([player.y+.5,null]);items.sort((a,b)=>a[0]-b[0]);
   for(const [,t] of items){if(!t){drawPlayer(inShade);continue;}const S=SPR[t.sp][t.v][sIdx(t)];const sw=swayOf(t);t.sw=sw;const X=Math.round(t.x-S.ax-camX),Y=Math.round(t.y-S.h+1-camY);
     const front=!t.u&&t.y>player.y&&pRect[2]>t.x-S.cw-1&&pRect[0]<t.x+S.cw+1&&pRect[3]>t.y-S.h+1&&pRect[1]<t.y-S.h+1+S.cb;if(front)occluded=true;
-    const src=front&&occ==='dither'?S.f:S.c,cb=S.cb,b1=Math.round(cb*.35),b2=Math.round(cb*.7);const bands=[[0,b1,Math.round(sw*2.2)],[b1,b2,Math.round(sw*1.4)],[b2,cb,Math.round(sw*.7)]];
+    const src=front&&occ==='dither'?S.f:S.c,cb=cbOf(t,S),b1=Math.round(cb*.35),b2=Math.round(cb*.7);const bands=[[0,b1,Math.round(sw*2.2)],[b1,b2,Math.round(sw*1.4)],[b2,cb,Math.round(sw*.7)]];
     if(front&&occ==='cutaway'){ctx.save();ctx.beginPath();ctx.rect(X-8,Y,S.w+16,cb);ctx.arc(player.x-camX,player.y-6-camY,13,0,6.283);ctx.clip('evenodd');}
     for(const [a,b,o] of bands)if(b>a)ctx.drawImage(src,0,a,S.w,b-a,X+o,Y+a,S.w,b-a);if(front&&occ==='cutaway')ctx.restore();
     if(cb<S.h)ctx.drawImage(S.c,0,cb,S.w,S.h-cb,X,Y+cb,S.w,S.h-cb);
@@ -335,7 +339,7 @@ function render(){const t0=performance.now();
   if(layers.grid){ctx.globalAlpha=.6;ctx.strokeStyle='#ffd27a';ctx.lineWidth=1;for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)ctx.strokeRect(gx*GS-camX+.5,gy*GS-camY+.5,GS,GS);ctx.globalAlpha=1;}
   frameMs=frameMs*.9+(performance.now()-t0)*.1;
   // minimap overlay
-  if(miniImg){mctx.putImageData(miniImg,0,0);mctx.strokeStyle='#ffffff';mctx.strokeRect(camX/CG+.5,camY/CG+.5,VW/CG,VH/CG);mctx.fillStyle='#ff4040';mctx.fillRect((player.x/CG|0)-1,(player.y/CG|0)-1,3,3);}}
+  if(miniImg){mctx.putImageData(miniImg,0,0);mctx.strokeStyle='#ffffff';mctx.strokeRect(Math.round(camX/CG)+.5,Math.round(camY/CG)+.5,VW/CG-1,Math.round(VH/CG)-1);mctx.fillStyle='#ff4040';mctx.fillRect((player.x/CG|0)-1,(player.y/CG|0)-1,3,3);}}
 const frameOf=()=>player.moving?[0,1,0,2][(player.anim|0)%4]:0;
 function drawPlayer(shade){ctx.drawImage(PSPR[player.dir+frameOf()+(shade?'1':'0')],Math.round(player.x-3-camX),Math.round(player.y-11-camY));}
 
@@ -371,7 +375,7 @@ let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEven
 const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
 addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}
-  if(k==='e'){let best=null,bd=26*26;nearby(player.x,player.y,26,t=>{if(t.u)return;const dx=t.x-player.x,dy=t.y-player.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=t;}});if(best){best.shake=1;leafBurst(best,10);}}});
+  if(k==='e'){let best=null,bd=26*26;nearby(player.x,player.y,26,t=>{if(t.u)return;const dx=t.x-player.x,dy=t.y-player.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=t;}});if(best){best.shake=1;shaking.add(best);leafBurst(best,10);}}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 spawnBirds();requestAnimationFrame(loop);
