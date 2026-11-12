@@ -339,7 +339,9 @@ How to use this file:
   Done: the box is the centre tile plus the radius in whole tiles and ends on the last pixel of the mask.
   Meteor box 129 x 118 px before (x 144 to 272), 112 x 112 after (x 144 to 255, y 32 to 143), the mask
   exactly. Poison 65 x 65 before, 48 x 48 after.
-- [ ] **65.** `P4` Holding Beam while paused draws it to the top-left corner (`:396`, `:483`).
+- [x] **65.** `P4` Holding Beam while paused draws it to the top-left corner (`:396`, `:483`).
+  Done: the aim and ray code is now beamRay(), called by the step and once by beamStart. Beam started while
+  paused with a dummy targeted at 200,67: end point 0,0 before, 196,67 after.
 - [ ] **66.** `P4` Shock particles keep jittering while paused and at full speed in slow motion (`:286`).
 - [ ] **67.** `P3` Each tap of Beam while paused stacks another beam effect (`:396`, `:413`).
 - [ ] **68.** `P3` The Beam button drops the beam while held if you tap, then press again within 600 ms. A stale

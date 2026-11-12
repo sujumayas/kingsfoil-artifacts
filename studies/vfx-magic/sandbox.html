@@ -393,7 +393,10 @@ function impactFx(x,y,el,tier,big){const pol=POL[tier],small=pol.mini||pol.red||
   else if(el===3){burst(2,tier,3,3,x,y,6*m,6,18,.5,1,6);burst(2,tier,3,0,x,y,6*m,20,45,.3,.5,14);}
   else if(el===4)burst(2,tier,4,5,x,y,8*m,8,24,.4,.8,12);
   else burst(2,tier,5,0,x,y,10*m,25,60,.3,.55,0);}
-function beamStart(c,tg){if(c.beamOn||c.dead||c.froz>0)return;c.beamOn=true;c.beamT=0;c.beamTg=tg;c.beamTier=tierOf(c);ev('cast','CAST #'+c.id+' BEAM ON',c.x,c.y,0,0);const f=spawn(3,c.beamTier,5,1e9);if(f)f.own=c;}
+// the beam's end point: the aim, cut at the first wall or foe on the ray. beamStart runs it once, so a beam started while paused has an end to draw to
+function beamRay(c){let ax,ay;if(c===P){const a=playerAim();ax=a[0];ay=a[1];}else{const t=c.beamTg;if(!t||!t.act||t.dead)return null;ax=t.x;ay=t.y-7;}
+  const x0=hand(c),y0=c.y-11;let dx=ax-x0,dy=ay-y0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;if(Math.abs(dx)>.2)c.face=dx<0?-1:1;const R=ray(c,x0,y0,dx,dy,160);c.bx=x0+dx*R.d;c.by=y0+dy*R.d;return R;}
+function beamStart(c,tg){if(c.beamOn||c.dead||c.froz>0)return;c.beamOn=true;c.beamT=0;c.beamTg=tg;c.beamTier=tierOf(c);if(!beamRay(c)){c.bx=hand(c);c.by=c.y-11;}ev('cast','CAST #'+c.id+' BEAM ON',c.x,c.y,0,0);const f=spawn(3,c.beamTier,5,1e9);if(f)f.own=c;}
 function beamStop(c){if(!c.beamOn)return;c.beamOn=false;ev('cast','CAST #'+c.id+' BEAM OFF',c.x,c.y,0,0);}
 
 // ---------- update: layers 3 to 6 ----------
@@ -599,8 +602,7 @@ function stepActors(dt){
     if(r<30)cast(c,0,tg===c?DUM[0]:tg,null,null,true);else if(r<52)cast(c,1,null,tg.x,tg.y-7,true);else if(r<64)cast(c,2,tg===c?DUM[1]:tg,null,null,true);else if(r<76)cast(c,3,null,tg.x,tg.y,true);
     else if(r<88)cast(c,4,tg.kind===4?tg:c,null,null,true);else if(r<93)cast(c,5,c,null,null,true);else if(r<97){if(tg!==c){beamStart(c,tg);after(.8,()=>beamStop(c));}}else cast(c,7,c,null,null,true);}
   // beams: the server ray and its ticks
-  for(const c of ents){if(!c.beamOn)continue;if(!c.act||c.dead||c.froz>0){beamStop(c);continue;}let ax,ay;if(c===P){const a=playerAim();ax=a[0];ay=a[1];}else{const t=c.beamTg;if(!t||!t.act||t.dead){beamStop(c);continue;}ax=t.x;ay=t.y-7;}
-    const x0=hand(c),y0=c.y-11;let dx=ax-x0,dy=ay-y0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;if(Math.abs(dx)>.2)c.face=dx<0?-1:1;const R=ray(c,x0,y0,dx,dy,160);c.bx=x0+dx*R.d;c.by=y0+dy*R.d;
+  for(const c of ents){if(!c.beamOn)continue;if(!c.act||c.dead||c.froz>0){beamStop(c);continue;}const R=beamRay(c);if(!R){beamStop(c);continue;}
     c.beamT-=dt;if(c.beamT<=0){c.beamT=SPELLS[6].travel.tick;ev('effect','EFFECT '+tl(c.bx,c.by)+' ARCANE TICK',c.bx,c.by,0,0);if(R.e)hurt(R.e,SPELLS[6].impact.dmg,5,c.beamTier);}}
   // showcase director: keeps one of everything on screen
   if(demoT>0){demoT-=dt;for(const d of DUM)d.hp=d.mx;P.hp=P.mx;P.shield=9;P.castT=.3;HL.froz=0;
