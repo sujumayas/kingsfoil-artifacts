@@ -329,8 +329,9 @@ function fogPass(){
   if(mode==='steps'){for(let i=0;i<NP;i++){let v=FV[i]+HZQ[i];if(!v)continue;if(v>255)v=255;const q=v*4;let L=q>>8;if((q&255)>BYN[i])L++;if(L)IDX[i]|=L<<6;}}
   else if(mode==='dither'){for(let i=0;i<NP;i++){const v=FV[i]+HZQ[i];if(v>BYT[i])IDX[i]|=5<<6;}}
   else{for(let i=0;i<NP;i++){const v=FV[i]+HZQ[i];AL[i]=v>255?255:v;}}}
-function shadowPass(){if(!cloudsOn||!shadowsOn||TP.s<.15)return;const th=CTH[coverC|0]-14,sun=Math.cos((tod-.25)*6.283),ox=(cox+sun*28)|0,oy=(coy-10)|0;
-  for(let y=0;y<H;y++){const r=(((y+oy)>>1)&127)<<7,row=y*W;for(let x=0;x<W;x++){const e=CT[r|(((x+ox)>>1)&127)]-th;if(e>0&&e*9>BYT[row+x]){const i=row+x;IDX[i]=DARKB[IDX[i]];}}}}
+// the shadow dither density is capped by the sun strength, so shadows thin out toward night instead of popping
+function shadowPass(){const cap=clamp(TP.s/.5,0,1)*255;if(!cloudsOn||!shadowsOn||cap<=8)return;const th=CTH[coverC|0]-14,sun=Math.cos((tod-.25)*6.283),ox=(cox+sun*28)|0,oy=(coy-10)|0;
+  for(let y=0;y<H;y++){const r=(((y+oy)>>1)&127)<<7,row=y*W;for(let x=0;x<W;x++){const e=CT[r|(((x+ox)>>1)&127)]-th;if(e>0&&(e*9<cap?e*9:cap)>BYT[row+x]){const i=row+x;IDX[i]=DARKB[IDX[i]];}}}}
 const FADEC=new Uint8Array(NP);for(let i=0;i<NP;i++){const x=i%W,y=(i/W)|0,d=Math.hypot((x-160)/150,(y-90)/85);FADEC[i]=clamp((d-.38)/.42,0,1)*255;}
 const OVM=new Uint8Array(NP);function overPass(){OVM.fill(0);if(!cloudsOn||!overOn)return;const th=CTH[(coverC*.45)|0],ox=(oox+40)|0,oy=(ooy+20)|0,px=P.x|0,py=(P.y-5)|0,al=mode==='alpha';
   for(let y=0;y<H;y++){const r=(((y+oy)>>1)&127)<<7,row=y*W,dy=y-py,dy2=dy*dy;for(let x=0;x<W;x++){const n=CT[r|(((x+ox)>>1)&127)],e=n-th;if(e<=0)continue;const i=row+x;let fd=FADEC[i];if(!fd)continue;

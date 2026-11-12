@@ -603,7 +603,10 @@ How to use this file:
   cast uses `P.y-2` (`:300`, `:290`).
   Done: the cast used `P.y-2`, the trigger `P.y`. Walking north for 200 frames gave 13 frames with a stale
   field of view, now 0.
-- [ ] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
+- [x] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
+  Done: the sun strength caps the shadow dither density, full above 0.5. Sweeping dusk under Overcast in
+  0.24 s steps, the largest change in shadowed pixels was 43,932 (all of them at once) and is now 2,978, one
+  Bayer level.
 - [ ] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
 - [ ] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
 - [ ] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
