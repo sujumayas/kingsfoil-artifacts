@@ -256,7 +256,7 @@ function kill(f){if(!f.on)return;f.on=0;liveFx--;if(f.ty===8&&FIELD[f.k]===f)FIE
 function spawn(ty,tier,el,dur){const t0=now();let f=null,ok=true;if(cbOn&&tier===3)el=0;
   if(mgr&&POL[tier].mini&&ty===7)ok=false;
   else{const cap=mgr?PRM.cap.fx:HARD_FX;
-    if(liveFx>=cap){const v=TIERPRI[tier]*100+TPRI[ty]*10+9;let w=null,wv=1e9;
+    if(liveFx>=cap){const v=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10+9;let w=null,wv=1e9;
       for(let i=0;i<fxHi;i++){const g=FX[i];if(!g.on)continue;const gv=g.pri+(g.dur>50?9:(1-g.t/g.dur)*9);if(gv<wv){wv=gv;w=g;}}
       evicted++;evictSec++;if(w&&wv<v)kill(w);else ok=false;}}
   if(ok){let i=-1;for(let n=0;n<HARD_FX;n++){const j=(fxCur+n)%HARD_FX;if(!FX[j].on){i=j;break;}}

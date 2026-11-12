@@ -313,9 +313,12 @@ How to use this file:
 
 ## vfx-magic
 
-- [ ] **60.** `P3` Monster telegraphs, cast circles and missiles vanish when your own effects fill the 96 cap.
+- [x] **60.** `P3` Monster telegraphs, cast circles and missiles vanish when your own effects fill the 96 cap.
   At spawn the telegraph competes with priority 399 (`:259` to `:261`) and only gets 999 once alive (`:263`).
   Fix: use 999 at spawn for type 11.
+  Done: the telegraph asks with 999 at spawn. With 96 own effects alive, a monster cast showed 0 telegraphs
+  before and 1 after, and one own spark is evicted for it. The monster's own cast circle and missile still
+  lose to own effects, which is the report's order (own, hostile, party, others).
 - [ ] **61.** `P4` Ribbon trails and afterimages take one sample per frame (`:410`), so they halve at 120 Hz and
   shrink to a stub in Slow motion. Fix: sample every 1/60 s of sim time.
 - [ ] **62.** `P6` Animations driven by the `frame` counter ignore slow motion and run 2x at 120 Hz. Shocked
