@@ -739,7 +739,10 @@ How to use this file:
   so.
 - [x] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
   Done: the fence loop runs to x 201, so the post at 200 gets both columns like the other 8.
-- [ ] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
+- [x] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
+  Done: the 1 px rails no longer hold snow, so the fence reads as wood with snow on the post tops. A rock's
+  snow cap draws a mid-tone rim where it touches the ground. Checked in a zoomed screenshot after an instant
+  fill.
 - [ ] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
 - [ ] **142.** `P6` "Add snow" ignores the canopy cap of 14 (`:229`). Shovel never exposes ground.
 - [ ] **143.** `P6` The HUD writes `textContent` every frame (`:362`).

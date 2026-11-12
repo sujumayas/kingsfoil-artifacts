@@ -177,9 +177,9 @@ for(const [tx,ty] of TREES){
   for(const [cy,r,h] of [[ty-5,11,10],[ty-12,8,8],[ty-18,5,7]])for(let k=0;k<=h;k++){const hw=Math.round(r*(1-k/h));for(let x=tx-hw;x<=tx+hw;x++){
     const b=k===0?CAN_D:(x<tx?CAN_A:(x===tx&&hash2(x,cy-k)<.5?CAN_A:CAN_B));put(x,cy-k,k===0?SOLID:CANOPY,b,26,ty,false);thr[(cy-k)*W+x]=3+vnoise(x/2.2,(cy-k)/1.6)*9+bay(x,cy-k)*.35+(x>tx+hw-2?3:0);}}
   for(let y=ty-2;y<=ty+1;y++)for(let x=tx-6;x<=tx+6;x++)if(x>=0&&x<W&&y<H)WOB[y*W+x]=Math.max(WOB[y*W+x],20);}
-// fence
+// fence. The rails are 1 px, so they stay wood. Only the post tops carry snow
 for(let x=120;x<=201;x++)for(let y=102;y<=110;y++){const post=(x-120)%10<2;let s=SOLID,b=FEN_D;
-  if(post){b=x%2?FEN_D:FEN_A;if(y===102)s=FENCETOP;}else if(y===104||y===107){b=FEN_A;s=FENCETOP;}else continue;put(x,y,s,b,8,110,y>=108);}
+  if(post){b=x%2?FEN_D:FEN_A;if(y===102)s=FENCETOP;}else if(y===104||y===107)b=FEN_A;else continue;put(x,y,s,b,8,110,y>=108);}
 // rocks
 for(const [cx,cy] of [[212,96],[95,160],[268,110],[20,80],[180,150]])for(let y=cy-5;y<=cy+4;y++)for(let x=cx-8;x<=cx+8;x++){const dx=(x-cx)/7.5,dy=(y-cy)/4.5;if(dx*dx+dy*dy<1){
   put(x,y,y<=cy?ROCKTOP:SOLID,y<=cy?(x>cx+2?ROCK_B:ROCK_A):ROCK_C,6,cy+4,true);}}
@@ -339,7 +339,9 @@ function render(){
       if(d>thr[i]){const k=cls(s),l=x>0&&cls(S[i-1])===k?D[i-1]:d,r=x<W-1&&cls(S[i+1])===k?D[i+1]:d,u=y>0&&cls(S[i-W])===k?D[i-W]:d,dn=y<H-1&&cls(S[i+W])===k?D[i+W]:d;
         const sl=(r-l)+(dn-u);
         if(P[i]>110)idx=sl<-5?SN_PSH:SN_PACK;else if(d<thr[i]+4)idx=SN_BASE;else idx=sl>6?SN_HI:sl>=-6?SN_BASE:sl>=-13?SN_MID:sl>=-22?SN_SH:SN_DEEP;
-        if(s===CANOPY&&B[i]===CAN_B)idx=SN_MID; // the shaded right flank of a pine keeps a mid tone, so the tree reads against the ground
+        if(s===CANOPY&&B[i]===CAN_B)idx=SN_MID;
+        // a rock's snow cap gets a mid-tone rim where it meets the ground, or it melts into the ground snow
+        else if(s===ROCKTOP&&S[i+W]===ROCKTOP&&(S[i-W]<=ICE||S[i-1]<=ICE||S[i+1]<=ICE))idx=SN_MID; // the shaded right flank of a pine keeps a mid tone, so the tree reads against the ground
         if(sparkOn&&sl>=0&&((Math.imul(i^slot,2246822519)>>>23)===0))idx=SPARK;
         if(shadowOn&&SH[i])idx+=N;}
       else{idx=B[i];let v=0;if(shadowOn&&SH[i])v=1;if(Wt[i]>50)v+=2;idx+=v*N;}}
