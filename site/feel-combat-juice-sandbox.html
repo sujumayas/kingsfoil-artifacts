@@ -602,7 +602,7 @@ function impact(att,vic,info,pred,critOnly){const own=att===PL,recv=vic===PL,lod
   sfx('hit',{tag:tagOf(att),crit,lod,recv,kill});}
 function bigFlash(){if(RFLASH){const t=now;BIGFLASHES=BIGFLASHES.filter(x=>t-x<1000);if(BIGFLASHES.length>=2)return;BIGFLASHES.push(t);REDF=Math.max(REDF,120);}else REDF=200;}
 function addTrauma(a){TRAUMA=Math.min(TUNING.shake.cap,TRAUMA+a*JUICE);}
-function posShake(x,y,a){if(!FX.shake||JUICE<=0)return;const d=Math.hypot(x-PL.px,y-PL.py),f=Math.max(0,1-d/TUNING.shake.slamRange);if(f>0)addTrauma(a*f);} // elite slam +0.6 at the centre, linear falloff over 6 tiles
+function posShake(x,y,a){if(!FX.shake||JUICE<=0)return;const d=Math.hypot(x-PL.px,y-PL.py),f=Math.max(0,1-d/TUNING.shake.slamRange);if(f>0)addTrauma(a*f);} // elite slam: TUNING.shake.slam at the centre, linear falloff over 6 tiles
 // ---------- particles: fillRect squares and streaks ----------
 function capP(own){if(!CAPS)return true;if(PART.length<TUNING.caps.particles)return true;if(!own)return false;const i=PART.findIndex(p=>!p.own);if(i>=0){PART.splice(i,1);return true;}return false;}
 function sparks(x,y,ang,n,crit,own){for(let i=0;i<n;i++){if(!capP(own))break;const a=ang+(rnd()-.5)*(crit?2.6:1.7)+(i%3===0?Math.PI:0)*.0,s=80+rnd()*120*(crit?1.4:1);PART.push({k:'spark',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:TUNING.sparks.life*(.6+rnd()*.6),col:rnd()<.5?HX('wh'):HX(crit?'o2':'a3'),own});}
@@ -695,7 +695,7 @@ function updProj(dt){const s=dt/1000;
   for(const p of SPROJ){if(p.own&&PRED!=='wait')continue;if(!p.homing&&p.fin&&!p.cEnd&&tv>=p.hitT){p.cEnd=1;if(p.fin!=='hit'){puff(p.ex,p.ey);if(p.owner===PL)sfx('puff',{tag:'own'});}}if(!p.cS&&tv>=p.t0){p.cS=1;if(p.kind==='fire'||p.kind==='foe')sfx('zap',{tag:'creatures',recv:1});}}}
 function teleBurst(t){const own=t.team==='me';if(JUICE>0&&FX.particles){ringFx(t.x,t.y,t.shape==='circle'?t.r:12,own?HX('a3'):HX('r3'),220);if(t.shape==='circle')dust(t.x,t.y,Math.round((t.slam?22:8)*JUICE));
   else{const c=Math.cos(t.ang),s=Math.sin(t.ang);for(let i=0;i<14;i++){const k=rnd()*t.len;PART.push({k:'spark',x:t.x+c*k,y:t.y+s*k,vx:(rnd()-.5)*40,vy:-20-rnd()*30,t:0,life:200,col:HX(i&1?'vi2':'r3'),own:1});}}}
-  if(t.slam){posShake(t.x,t.y,.5);sfx('boom',{tag:'creatures'});}else if(own&&t.own)sfx('boom',{tag:'own'});}
+  if(t.slam){posShake(t.x,t.y,TUNING.shake.slam);sfx('boom',{tag:'creatures'});}else if(own&&t.own)sfx('boom',{tag:'own'});}
 function updEnts(dt,dtv){const tv=vnow-DLY();nearPlayers=0;
   for(const e of ENTS){if(e!==PL&&isPlayerKind(e)&&dpx(e,PL)<120)nearPlayers++;
     const st=e.stop>0;if(st)e.stop-=dt;

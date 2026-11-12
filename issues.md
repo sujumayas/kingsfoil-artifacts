@@ -92,8 +92,10 @@ How to use this file:
 - [x] **16.** `P5` "HIT CHECKS n/S" counts frames with a check, so it tops out at 60 (`:871`). (suspected)
   Done: confirmed in the code. The log stored one entry per frame that had a check. It now stores the
   count, and the readout sums the last second. One lance in flight reads 140 to 220 checks/s.
-- [ ] **17.** `P5` Card 6 says the warden slam adds 0.6 trauma. The code passes .5 (`:685`) and
+- [x] **17.** `P5` Card 6 says the warden slam adds 0.6 trauma. The code passes .5 (`:685`) and
   `TUNING.shake.slam` is unused. (suspected)
+  Done: confirmed in the code. The slam now reads TUNING.shake.slam, which is 0.6 as in the report and
+  card 6.
 - [ ] **18.** `P5` Card 5 promises an 8-frame freeze on a kill, but the death flash and squash keep running
   during the victim's hitstop (`:691`). (suspected)
 - [ ] **19.** `P6` Debris ground height `gy` is never read (`:598` to `:604`), so chips bounce at chest height.
