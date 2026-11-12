@@ -346,6 +346,8 @@ function lit(c,a,b,d){const r=(c&255)*a,g=((c>>8)&255)*b,bb=((c>>16)&255)*d;retu
 // glow from a moving source, split over the 4 nearest cells so the light slides with it
 function glowAt(x,y,v){const gx=clamp(x/8-.5,0,GW-1),gy=clamp(y/8-.5,0,GH-1),x0=gx|0,y0=gy|0,fx=gx-x0,fy=gy-y0,x1=Math.min(GW-1,x0+1),y1=Math.min(GH-1,y0+1);
   GL[y0*GW+x0]+=v*(1-fx)*(1-fy);GL[y0*GW+x1]+=v*fx*(1-fy);GL[y1*GW+x0]+=v*(1-fx)*fy;GL[y1*GW+x1]+=v*fx*fy;}
+// glow response 1-e^-v for v in 0..8, in steps of 1/512. Replaces a Math.exp per pixel
+const GLUT=new Float32Array(4096);for(let k=0;k<4096;k++)GLUT[k]=1-Math.exp(-k/512);
 function render(){
   const ms=(tSec*1000)|0,t=tSec;
   for(let c=0;c<NC;c++){const s=STA[c];PROG[c]=(s===ASHS||s===EMB)?16:(FUEL0[c]?((FUEL0[c]-FUEL[c])*16/FUEL0[c])|0:0);EPR[c]=s===EMB?(16-(TIM[c]*16/EMBT[MAT[c]]))|0:0;}
@@ -370,7 +372,7 @@ function render(){
   // ground + object layers, lit by ambient + glow
   for(let y=0;y<H;y++){const gy=(y+.5)/8-.5,y0=gy<0?0:Math.floor(gy),fy=gy<0?0:gy-y0,r0=Math.min(GH-1,y0)*GW,r1=Math.min(GH-1,y0+1)*GW;
     for(let x=0;x<W;x++){const gx=(x+.5)/8-.5,x0=gx<0?0:Math.floor(gx),fx=gx<0?0:gx-x0,x1=Math.min(GW-1,x0+1);
-      const g=gmax*(1-Math.exp(-((GL[r0+x0]*(1-fx)+GL[r0+x1]*fx)*(1-fy)+(GL[r1+x0]*(1-fx)+GL[r1+x1]*fx)*fy)*gain));
+      const gv=((GL[r0+x0]*(1-fx)+GL[r0+x1]*fx)*(1-fy)+(GL[r1+x0]*(1-fx)+GL[r1+x1]*fx)*fy)*gain*512,g=gv<4096?gmax*GLUT[gv|0]:gmax;
       const i=y*W+x,lr=ar+g*wr,lg=ag+g*wg,lb=ab+g*wb;LR[i]=lr;LG[i]=lg;LB[i]=lb;
       let col=0,em=0;const oc=OWN[i];
       if(oc>=0&&OBJ[oc]){const s=STA[oc];

@@ -558,7 +558,12 @@ How to use this file:
   `XC[]`, 920 times a frame where it was 57,600. `xray()` in the fuel view after the Blaze demo,
   median: 3.2 ms before and 0.5 ms after at 6x CPU throttle, 0.56 ms and 0.08 ms at 1x. The frame
   hashes to the same value before and after.
-- [ ] **107.** `P6` `Math.exp` runs for each of 57,600 pixels every frame, also when idle or paused (`:364`).
+- [x] **107.** `P6` `Math.exp` runs for each of 57,600 pixels every frame, also when idle or paused (`:364`).
+  Done: a 4,096-entry table `GLUT[]` holds 1-e^-v in steps of 1/512 and the pixel loop reads it.
+  `render()` median at 6x CPU throttle: idle scene 6.1 ms before and 5.0 ms after, Blaze demo 6.8 ms
+  and 5.6 ms. At 1x: 1.07 ms and 0.86 ms idle. Largest change on any colour channel, day and night
+  frames of the Blaze demo with palette lock off: 1 of 255. Paused frames were already cut to the 12
+  after an input by #7.
 
 ## vfx-fog
 
