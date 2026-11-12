@@ -311,10 +311,16 @@ function updWalker(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy-
     if(wk.stepT>(wk.st==='swim'?.55:.3)){wk.stepT=0;if(pond)hfPoke(wk.x,wk.y,2.5);else ring(wk.x,wk.y-1,wk.st==='swim'?10:8,wk.st==='swim'?1:.75,0,2);}
     if(wk.wakeT>.07){wk.wakeT=0;wakePair(wk.x,wk.y,rvx,rvy,wk.st==='swim'?1.4:1.05);}}}
 const boat={on:false,x:0,y:0,vx:0,vy:0,tx:0,ty:0,face:1,wt:0};
-const boatOk=(x,y)=>{const tH=tideHOf(tide);for(const dx of[-8,0,8]){const X=(x+dx)|0,Y=y|0;if(X<0||X>=W||Y<0||Y>=H)return false;const j=Y*W+X;if(BODY[j]!==1||!WATER[j]||tH-HGT[j]<10||DECK[j])return false;}return true;};
-function updBoat(dt){if(!boat.on)return;const dx=boat.tx-boat.x,dy=boat.ty-boat.y,d=Math.hypot(dx,dy),des=d>3?Math.min(28,d*2):0,k=Math.min(1,dt*1.4);
-  boat.vx+=((d?dx/d:0)*des-boat.vx)*k;boat.vy+=((d?dy/d:0)*des-boat.vy)*k;const nx=boat.x+boat.vx*dt,ny=boat.y+boat.vy*dt;
-  if(boatOk(nx,ny)){boat.x=nx;boat.y=ny;}else{boat.vx*=.3;boat.vy*=.3;}
+// least water under the bow, the middle and the stern. The boat floats in 10 or more
+const boatDepth=(x,y)=>{const tH=tideHOf(tide);let m=1e9;for(const dx of[-8,0,8]){const X=(x+dx)|0,Y=y|0;if(X<0||X>=W||Y<0||Y>=H)return -1e9;const j=Y*W+X;if(BODY[j]!==1||DECK[j])return -1e9;m=Math.min(m,tH-HGT[j]);}return m;};
+const boatOk=(x,y)=>boatDepth(x,y)>=10;
+function updBoat(dt){if(!boat.on)return;let dx=boat.tx-boat.x,dy=boat.ty-boat.y,d=Math.hypot(dx,dy),des=d>3?Math.min(28,d*2):0;const k=Math.min(1,dt*1.4);
+  // when the ebb leaves the boat in less than 10 of water it slides down the beach until it floats again. Moves that do
+  // not lose depth are allowed meanwhile, so it can never be locked in place
+  const cur=boatDepth(boat.x,boat.y),aground=cur<10;
+  if(aground){dx=.55;dy=.835;d=1;des=14;if(!boat.ag&&cur<4)msg('Low tide. The boat slides back to deeper water.');}boat.ag=aground;
+  boat.vx+=((d?dx/d:0)*des-boat.vx)*k;boat.vy+=((d?dy/d:0)*des-boat.vy)*k;const nx=boat.x+boat.vx*dt,ny=boat.y+boat.vy*dt,nd=boatDepth(nx,ny);
+  if(nd>=10||(aground&&nd>=cur)){boat.x=nx;boat.y=ny;}else{boat.vx*=.3;boat.vy*=.3;}
   if(boat.vx<-1)boat.face=-1;else if(boat.vx>1)boat.face=1;const sp=Math.hypot(boat.vx,boat.vy);
   if(sp>4){boat.wt+=dt;if(boat.wt>.035){boat.wt=0;wakePair(boat.x-boat.face*6,boat.y+1,boat.vx,boat.vy,2.2);if(rnd()<.35)drop(boat.x-boat.face*9,boat.y+1,-boat.vx*.3,(rnd()-.5)*4,8+rnd()*8,WH);}}}
 const logs=[];

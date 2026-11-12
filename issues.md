@@ -481,7 +481,12 @@ How to use this file:
   `ramp[(k+step)&3]`.
   Done: `ramp[(k+step)&3]`. Highlight stripe per cycle step, where a higher stripe is further out to sea:
   3, 0, 1, 2 before, 3, 2, 1, 0 after.
-- [ ] **94.** `P3` The boat strands on sand at low tide and cannot be moved (`:315`).
+- [x] **94.** `P3` The boat strands on sand at low tide and cannot be moved (`:315`).
+  Done: while the hull has less than 10 of water the boat heads down the beach at 14 px/s, and steps
+  that do not lose depth are allowed. Parked at the shallow limit at tide 200, then tide 40: stuck on dry
+  sand at (194,150) for 25 s with a target set before. After, it floats again within 5 s and reaches the
+  target. Auto tide from 255 down to 1 with the boat parked: aground for 3,500 of 3,600 frames and still
+  aground before, 419 frames in short slides and afloat at the end after.
 - [ ] **95.** `P4` (taste) Pond heightfield shows large light and dark rectangles. The slope thresholds are
   tiny next to the poke size (`:373`, `:287`).
 - [ ] **96.** `P6` (taste) Animated tiles still read as a fixed 8 px lattice with phase offset on (`:140`).
