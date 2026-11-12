@@ -532,7 +532,11 @@ How to use this file:
   Done: the countdown moved from the x-ray draw to `step60()`. Blaze demo plus 20 ticks in the Normal
   view: cells with a pending flash went from 237 (every cell that ever ignited) to 0 one tick after the
   last ignition. A flash still lasts 12 frames.
-- [ ] **102.** `P3` Pause freezes the fire grid but not the sheep or fireballs (`:455` to `:457`, `:312`).
+- [x] **102.** `P3` Pause freezes the fire grid but not the sheep or fireballs (`:455` to `:457`, `:312`).
+  Done: the loop skips `step60()` while paused. Step tick and N run 15 frames of the 60 Hz layer and
+  then the tick, so one step moves the whole scene 0.25 s. Test: 60 paused frames with an input on
+  each. Sheep moved 14.75 px before and 0 after. A fireball cast while paused flew and landed before.
+  Now it waits and flies on resume or step. One step moves the sheep 3.75 px (0 before).
 - [ ] **103.** `P4` DOOM style shows no flame on the bottom cell row (`:279`).
 - [ ] **104.** `P4` Explosion ring fades in vertical stripes. It reads `BY` where it should read `BAY` (`:418`).
 - [ ] **105.** `P6` Light from the burning sheep and the fireball hops 8 px, one cell at a time (`:350`).

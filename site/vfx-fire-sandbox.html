@@ -467,7 +467,8 @@ function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;
   if(paused){if(queue.length){for(const a of queue)applyAction(a);queue.length=0;const na=[];for(let c=0;c<NC;c++)if(STA[c]>=IGN&&STA[c]<=EMB)na.push(c);active=na;}}
   else{acc+=dt;while(acc>=.25){acc-=.25;simTick();}}
-  fxAcc+=dt;let n=0;while(fxAcc>=1/60&&n<6){fxAcc-=1/60;step60();n++;}if(n>=6)fxAcc=0;
+  // pause stops the 60 Hz layer too: sheep, fireball, particles, smoke and flame frames hold still
+  if(paused)fxAcc=0;else{fxAcc+=dt;let n=0;while(fxAcc>=1/60&&n<6){fxAcc-=1/60;step60();n++;}if(n>=6)fxAcc=0;}
   render();
   if(++hudN%6===0){let nb=0;for(const c of active)if(STA[c]!==EMB)nb++;
     document.getElementById('hud').textContent=`tick ${tick}${paused?' (paused)':''} · burning ${nb} · active ${active.length} · sim ${simMs.toFixed(3)} ms/tick · net per tick: full set ${netFull} B, events ${netEv} B (illustrative) · particles ${pCount}/256${capOn?' · cap 3 ignitions/tick':''} · seed ${seed}`;}}
@@ -484,7 +485,9 @@ $('wv').oninput=e=>{windV=+e.target.value;syncWind();};
 const tog=(id,get,set)=>{const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle('on',get());};return ()=>b.classList.toggle('on',get());};
 const syncRain=tog('rain',()=>rain,v=>rain=v),syncNight=tog('night',()=>night,v=>night=v);tog('haze',()=>haze,v=>haze=v);tog('lock',()=>lock,v=>lock=v);tog('cap',()=>capOn,v=>capOn=v);
 const syncPause=tog('pause',()=>paused,v=>paused=v);
-$('step').onclick=()=>{simTick();};
+// one step is one 4 Hz tick. While paused it also runs the 15 frames of the 60 Hz layer that lead up to it
+const stepTick=()=>{if(paused)for(let f=0;f<15;f++)step60();simTick();};
+$('step').onclick=stepTick;
 $('reset').onclick=()=>reset();
 $('seed').onclick=()=>{seed=1+(rb()%9999);build();};
 document.querySelector('button[data-demo="blaze"]').onclick=()=>blaze();
@@ -518,7 +521,7 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k==='w'){windDir=(windDir+1)&7;if(!windV)windV=4;syncWind();}
   else if(k==='v'){setView(VIEWS[(VIEWS.indexOf(view)+1)%VIEWS.length]);}
   else if(k===' '){paused=!paused;syncPause();e.preventDefault();}
-  else if(k==='n'){simTick();}
+  else if(k==='n'){stepTick();}
   else return;});
 // whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
 function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
