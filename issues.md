@@ -424,8 +424,11 @@ How to use this file:
 - [x] **82.** `P4` (taste) Field-layer mode crops 6 of 11 sprite rows, leaving a floating head (`:613`, `:614`).
   Done: the crop is 3 rows (legs and hem), for the traveller and the villager. Rows drawn in tall grass: 5 of
   11 before, 8 of 11 after.
-- [ ] **83.** `P4` Grass freezes mid-lean with gust sheen stuck on when wind drops to Calm or Reduce motion
+- [x] **83.** `P4` Grass freezes mid-lean with gust sheen stuck on when wind drops to Calm or Reduce motion
   turns on. The settled shortcut returns a non-upright cached key (`:584`).
+  Done: the settled shortcut only reuses a cached key that is upright with no sheen. 3,068 tufts, Gusty then
+  Calm: 2,715 leaning and 678 with sheen before, 12 leaning (crushed by the sheep) and 0 with sheen after.
+  Gusty then Reduce motion: 2,772 and 200 before, 4 and 0 after.
 - [ ] **84.** `P4` Changing season mid-transition pops to the full previous season in one frame (`:736`).
 - [ ] **85.** `P4` A firefly halo darkens lamp light where they overlap. `setL` keeps the higher level number,
   not the brighter mix (`:574`, `:681`).

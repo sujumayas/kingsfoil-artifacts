@@ -582,9 +582,10 @@ function tuftState(k){// returns key or -1, also lean in tuftLf
   const c=TCELL[k];if(BURN[c]===2){TTOP[k]=0;return -1;}let hl=HL[c];const t=TT[k];
   if(t===3&&!(FMASK[TV[k]]&(1<<SEAC[c]))){TTOP[k]=0;return -1;}
   if(t===2&&SEAC[c]===3)hl=(k%7)?3:Math.max(hl,1);
+  // settled shortcut: reuse the cached key, but only if that key is the upright pose with no sheen (q 0, lean 0, hi 0)
   const tr=TTR[k];if(wearOn){const wl=WLV[tr];if(wl>=3){TTOP[k]=0;return -1;}if(wl>=2&&hl<2)hl=2;else if(wl>=1&&hl<1)hl=1;}
   const CR=CRU[tr],I=CR>1?1:CR,ps=PSH[tr],sh=SHK[c],w=WL[tr];
-  if(w===0&&I===0&&ps===0&&sh===0&&TKEY[k]>=0&&!smooth&&(TKEY[k]/(LN*2*3)|0)%4===hl){settled++;tuftLf=0;tuftQ=0;return TKEY[k];}
+  if(w===0&&I===0&&ps===0&&sh===0&&TKEY[k]>=0&&!smooth&&TKEY[k]%(LN*2*3)===12&&(TKEY[k]/(LN*2*3)|0)%4===hl){settled++;tuftLf=0;tuftQ=0;return TKEY[k];}
   const fl=TFL[k]?-1:1,spr=Math.max(PRM.spring,1-I),fac=TFAC[k];
   let lf=(w+(w>0?(.25+windStr*.5)*(.6*sinT(TPH[k]+oscT1)+.4*sinT(TPH[k]*1.7+oscT2)):0))*STF[t]*spr*wcx;
   lf+=TDX[tr]/64*(I*2+ps*PRM.pushPx)*fac;
