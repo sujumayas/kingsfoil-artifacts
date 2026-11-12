@@ -221,7 +221,6 @@ function bossPow(n,S){if(n<=180)return n<=108?S.lift:1;return dp(n,S)/dp(180,S);
 var KEY="mrpg-curve-lab-v1";
 function clone(o){return JSON.parse(JSON.stringify(o));}
 var S=clone(BASE),V={tier:2,first:false};
-try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){if(saved.S)for(var k in BASE){if(typeof saved.S[k]==="number"&&isFinite(saved.S[k]))S[k]=saved.S[k];}if(saved.V){if(saved.V.tier>=0&&saved.V.tier<=3)V.tier=saved.V.tier|0;V.first=!!saved.V.first;}}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,V:V}));}catch(e){}}
 
 var KN=[
@@ -252,6 +251,10 @@ var KN=[
   {k:"endless",lab:"Growth",min:0.08,max:0.20,st:0.01,name:"ENDLESS_POWER",at:"scripts/runner/runner.gd:77",pct:1,plus:1},
   {k:"lift",lab:"Lap 1 lift",min:1.0,max:2.0,st:0.05,name:"Lap 1 lift, worlds 1-3",at:"scripts/data/world_defs.gd:168-185",x:1,f:2}]}
 ];
+// saved settings: a number is used only inside its slider's range, clamped to it and snapped to whole steps where the slider is
+try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){
+  if(saved.S&&typeof saved.S==="object")KN.forEach(function(g){g.items.forEach(function(it){var v=saved.S[it.k];if(typeof v!=="number"||!isFinite(v))return;v=Math.min(it.max,Math.max(it.min,v));S[it.k]=it.st>=1?Math.round(v):v;});});
+  if(saved.V&&typeof saved.V==="object"){if(saved.V.tier>=0&&saved.V.tier<=3)V.tier=saved.V.tier|0;V.first=saved.V.first===true;}}}catch(e){}
 function fracTxt(v){var m=Math.round(v*24),d=24,a=m,b=d;while(b){var q=a%b;a=b;b=q;}return (m/a)+"/"+(d/a);} // 24ths in lowest terms: 9/24 reads 3/8
 function fmtVal(it,v){
   if(it.frac)return fracTxt(v);

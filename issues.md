@@ -963,8 +963,11 @@ How to use this file:
   entry, "Elite, current build". XP_PAST_LEVEL prints 24ths in lowest terms: the stops read 1/4, 7/24, 1/3,
   9/24, 10/24, 11/24, 1/2 and now 1/4, 7/24, 1/3, 3/8, 5/12, 11/24, 1/2. The unused `REACH` table is
   deleted.
-- [ ] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
+- [x] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
   would print NaN.
+  Done: confirmed first: a saved `every:0` with 8 other out-of-range values printed "Infinity" 14 times and
+  "0 enc." in the cards. Each saved number is now clamped to its slider's range and whole-step sliders are
+  rounded. The same file gives 0 NaN, 0 Infinity and 7 charts.
 
 ## Not covered by the review
 
