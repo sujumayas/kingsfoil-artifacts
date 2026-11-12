@@ -653,7 +653,12 @@ How to use this file:
   Done: confirmed first: paused on a frame not divisible by 6, Repair gear left the chest bar at 20%. The
   HUD now counts drawn frames, so it refreshes twice in the 12 frames after any input. 40 spawn clicks gave
   42 slimes, now 12.
-- [ ] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
+- [x] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
+  Done: two causes. Bubble and smoke particles had no cap and were removed with `splice`: a fully flooded
+  room held 14,167 of them. They now stop at 500 and are removed by swap. Sim steps stop once 7 ms of the
+  frame is spent, and the HUD then reads "over budget, running N× of 8×". Whole room flooded at 8x: 160.5 ms
+  per frame at 6x throttle before, 19.1 ms after (running 1×). Unthrottled 25.6 ms before, 8.9 ms after
+  (running 5×).
 
 ## vfx-rain
 
