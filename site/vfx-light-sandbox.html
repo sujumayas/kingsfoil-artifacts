@@ -128,15 +128,15 @@ for(let y=HA.y0;y<=HA.y1;y++)for(let x=HA.x0;x<=HA.x1;x++){const wall=x<=21||x>=
 for(let y=18;y<=62;y++)for(let x=18;x<=102;x++){let b=((y-18)%4===3)?RFA[1]:RFA[0];if(((x+((y>>2)&1)*3)%6)===0&&b===RFA[0])b=RFA[1];if(y===18||y===62||x===18||x===102)b=RFA[2];put(MOUT,x,y,b,ROOF,80);}
 for(let y=63;y<=80;y++)for(let x=20;x<=100;x++){let b=PL[0],cls=WALLF;if(x===20||x===100||y===63||y===80||(x-20)%20===0)b=TIMB;else if(hash2(x,y)<.2)b=PL[1];
   if(x>=56&&x<=63&&y>=68){b=(x===56||x===63||y===68)?TIMB:DOOR;}for(const wx of [30,80])if(x>=wx&&x<=wx+10&&y>=67&&y<=75){b=(x===wx||x===wx+10||y===67||y===75||x===wx+5)?TIMB:GLASS;if(b===GLASS){cls=WIN;HOUSE[y*W+x]=1;}}put(MOUT,x,y,b,cls,80);}
-// inside version: floor, low cut walls, furniture
+// inside version: floor, low cut walls, furniture. Bed and table are 3 high, under the 3.6 that blocks the fireplace and the candle
 for(let y=40;y<=80;y++)for(let x=20;x<=100;x++){const i=y*W+x;const wall=x<=21||x>=99||y<=41||y>=79;
   if(wall){const gap=isGapA(x,y);const door=y>=79&&x>=56&&x<=63;put(MIN,x,y,door?FLOOR[1]:gap?GLASS:(y<=41?STONE[0]:TIMB),door?INTER:OBJ,y);if(door)MIN.IN[i]=1;continue;}
   put(MIN,x,y,(y%4===0)?FLOOR[2]:(((x+(y>>2)*5)%11===0)?FLOOR[1]:FLOOR[0]),INTER,y);MIN.IN[i]=1;}
 for(let y=34;y<=39;y++)for(let x=20;x<=100;x++)put(MIN,x,y,y===34?STONE[2]:STONE[(x+y)%3===0?1:0],WALLF,41);
 for(let y=36;y<=46;y++)for(let x=52;x<=66;x++){const inner=x>=55&&x<=63&&y>=40;put(MIN,x,y,inner?STONE[2]:STONE[(x+y)%4===0?1:0],inner?INTER:OBJ,46);MIN.IN[y*W+x]=1;if(!inner&&y>=42)occ(x,y,8);}
-for(let y=44;y<=56;y++)for(let x=25;x<=39;x++){put(MIN,x,y,y<=47?BED[1]:BED[0],OBJ,56);MIN.IN[y*W+x]=1;occ(x,y,6);}
+for(let y=44;y<=56;y++)for(let x=25;x<=39;x++){put(MIN,x,y,y<=47?BED[1]:BED[0],OBJ,56);MIN.IN[y*W+x]=1;occ(x,y,3);}
 for(let y=62;y<=73;y++)for(let x=44;x<=72;x++){put(MIN,x,y,(x===44||x===72||y===62||y===73)?RUG[1]:RUG[0],INTER,y);}
-for(let y=56;y<=63;y++)for(let x=74;x<=86;x++){put(MIN,x,y,y===63?FLOOR[2]:TABLE,OBJ,63);occ(x,y,5);}
+for(let y=56;y<=63;y++)for(let x=74;x<=86;x++){put(MIN,x,y,y===63?FLOOR[2]:TABLE,OBJ,63);occ(x,y,3);}
 // wall torches beside the door (outside)
 // ---- house B (exterior only) ----
 const isGapB=(x,y)=>y>=63&&((x>=250&&x<=260)||(x>=288&&x<=298)||(x>=270&&x<=278));
@@ -184,11 +184,12 @@ for(const k in TYPES){TYPES[k].c=hex(TYPES[k].col);if(TYPES[k].col2)TYPES[k].c2=
 const lights=[];function addLight(type,x,y,o={}){const T=TYPES[type];const L={type,x,y,T,R:T.R,h:T.h,seed:(rnd()*1e4)|0,dist:new Float32Array(256),dirty:true,on:true,I:1,...o};lights.push(L);return L;}
 const LA=[addLight('fireplace',59,47,{house:'A',indoor:1}),addLight('candle',80,57,{house:'A',indoor:1})];
 const wallT=[addLight('torch',48,82,{wall:[48,70]}),addLight('torch',71,82,{wall:[71,70]})];
-const LB=addLight('house',274,44,{house:'B'});const brazier=addLight('brazier',284,76,{flame:[284,68]});
+// own: the occluder a light sits on top of. Its rays pass through it
+const LB=addLight('house',274,44,{house:'B'});const brazier=addLight('brazier',284,76,{flame:[284,68],own:[280,72,288,74]});
 const lampL=LAMPS.map(([x,y],k)=>addLight('lamp',x,y+2,{lamp:k,head:[x,y-15],off:k*.35}));
-const camp=addLight('campfire',58,142,{flame:[58,139]});const crystal=addLight('magic',180,166,{});
+const camp=addLight('campfire',58,142,{flame:[58,139]});const crystal=addLight('magic',180,166,{own:[176,162,184,164]});
 const mush=addLight('mushroom',219,178,{night:1});
-const bulbs=[];for(let k=0;k<8;k++){const x=14+k*13+6,sag=Math.sin((k%1+.5)*Math.PI)*3;bulbs.push(addLight('bulb',x,159,{bulb:[x,150+2],night:1}));}
+const bulbs=[];for(let k=0;k<8;k++){const x=15+k*13,sag=Math.round(Math.sin(6/13*Math.PI)*3);bulbs.push(addLight('bulb',x,159,{bulb:[x,152+sag+1],night:1}));}
 const flies=[];for(let k=0;k<14;k++)flies.push(addLight('firefly',150+rnd()*160,120+rnd()*55,{fly:1,vx:0,vy:0,night:1,z:4+rnd()*8}));
 let carried=null,carryType='torch';const placed=[];
 function flicker(L,t){const s=L.seed;switch(L.T.fl){
@@ -196,28 +197,35 @@ function flicker(L,t){const s=L.seed;switch(L.T.fl){
   case 'candle':return .95+.03*n1(t*1.5,s)-(hash2((t*3)|0,s)<.02?.22*n1(t*20,s+2):0);case 'lantern':return .95+.03*n1(t*4,s);case 'lamp':return .97+.02*n1(t*2,s);
   case 'magic':return .72+.28*Math.sin(t*Math.PI*.9+s);case 'rune':return (hash2((t*12)|0,s)<.04||hash2((t*12)|0,s+1)<.02)?.08:1;
   case 'breath':return .55+.45*Math.sin(t*1.2+s);case 'blink':return Math.pow(Math.max(0,Math.sin(t*1.7+s)),6);default:return 1;}}
-function castRays(L){const lx=L.x,ly=L.y,R=Math.min(RMAX-1,L.R),thr=L.h*.6,start=L.carried?3:1;for(let a=0;a<256;a++){const an=a/256*2*Math.PI,dx=Math.cos(an),dy=Math.sin(an);let d=start;
-  for(;d<R;d+=1){const px=(lx+dx*d)|0,py=(ly+dy*d)|0;if(px<0||py<0||px>=W||py>=H)break;const j=py*W+px;if(OCC[j]>=thr||OCCD[j]>=thr)break;}L.dist[a]=d+1.5;}L.dirty=false;}
+function castRays(L){const lx=L.x,ly=L.y,R=Math.min(RMAX-1,L.R),thr=L.h*.6,start=L.carried?3:1,o=L.own;for(let a=0;a<256;a++){const an=a/256*2*Math.PI,dx=Math.cos(an),dy=Math.sin(an);let d=start;
+  for(;d<R;d+=1){const px=(lx+dx*d)|0,py=(ly+dy*d)|0;if(px<0||py<0||px>=W||py>=H)break;const j=py*W+px;if(o&&px>=o[0]&&px<=o[2]&&py>=o[1]&&py<=o[3])continue;if(OCC[j]>=thr||OCCD[j]>=thr)break;}L.dist[a]=d+1.5;}L.dirty=false;}
 
 // ---------- sun & sky ----------
 let hour=17.2,auto=true,speed=1,overcast=false,mode='banded',opts={shadows:true,sunsh:true,refl:true},view='normal',frameN=0,t=0,ms=0,raysFrame=0;
 const SH=new Uint8Array(NP),DSH=new Uint8Array(NP),SUNP=new Uint8Array(NP);let lastSunKey='';
+// SHC: base row + 1 of the first caster that shadowed a pixel. SHX: a caster with another base row shadowed it too.
+// An object is in shadow only when some other object's shadow reaches its base, never from its own stamp
+const SHC=new Int16Array(NP),SHX=new Uint8Array(NP);
 function sky(h){const el=62*Math.sin((h-6)/12*Math.PI),az=(90+(h-6)/12*180)*Math.PI/180;const mel=40*Math.sin((h-18)/12*Math.PI),maz=(90+(h-18)/12*180)*Math.PI/180;
   let amb,sun,dir=null,len=0;const lerp=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k);
   const NIGHT=[.10,.12,.24],TWI=[.34,.28,.44],GOLDA=[.46,.42,.54],DAYA=[.5,.56,.7];
   if(el>20){amb=DAYA;sun=[1.02,.98,.9];}else if(el>6){const k=(el-6)/14;amb=lerp(GOLDA,DAYA,k);sun=lerp([1.05,.72,.42],[1.02,.98,.9],k);}
   else if(el>0){const k=el/6;amb=lerp(TWI,GOLDA,k);sun=lerp([.9,.42,.24],[1.05,.72,.42],k);}else if(el>-8){const k=(el+8)/8;amb=lerp(NIGHT,TWI,k);sun=[0,0,0];}else{amb=NIGHT;sun=[0,0,0];}
-  if(el>0){dir=[-Math.sin(az),Math.cos(az)];len=Math.min(4,1/Math.tan(Math.max(4,el)*Math.PI/180))*.62;}
-  else if(mel>4){sun=[.16,.19,.32];dir=[-Math.sin(maz),Math.cos(maz)];len=Math.min(3,1/Math.tan(mel*Math.PI/180))*.62;}
+  // sun and moon ramp in by elevation: the sun over its first 4 degrees, the moon from 2 to 10 degrees
+  if(el>0){const k=Math.min(1,el/4);sun=sun.map(v=>v*k);dir=[-Math.sin(az),Math.cos(az)];len=Math.min(4,1/Math.tan(Math.max(4,el)*Math.PI/180))*.62;}
+  else if(mel>2){const k=Math.min(1,(mel-2)/8);sun=[.16*k,.19*k,.32*k];dir=[-Math.sin(maz),Math.cos(maz)];len=Math.min(3,1/Math.tan(Math.max(4,mel)*Math.PI/180))*.62;}
   if(overcast){sun=[0,0,0];amb=el>0?lerp([.36,.36,.44],[.82,.84,.88],Math.min(1,el/25)):amb.map(v=>v*.8);dir=null;}
   return {el,amb,sun,dir,len,svy:dir?-dir[1]:0,svx:dir?-dir[0]:0};}
-function sunShadows(S,M){SH.fill(0);if(!S.dir||!opts.sunsh)return;const [dx,dy]=S.dir,k=S.len;
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,cls=M.CLS[i];if(cls===GROUND||cls===WATER||cls===INTER)continue;const ob=M.OB[i],h=ob-y;if(h<=0)continue;if(cls===CANOPY&&hash2(x*3,y*7)<.08)continue;
+function sunShadows(S,M){SH.fill(0);SHC.fill(0);SHX.fill(0);SUNP.fill(0);if(!S.dir)return;const [dx,dy]=S.dir,k=S.len;
+  if(opts.sunsh)for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,cls=M.CLS[i];if(cls===GROUND||cls===WATER||cls===INTER)continue;const ob=M.OB[i],h=ob-y;if(h<=0)continue;if(cls===CANOPY&&hash2(x*3,y*7)<.08)continue;
     // 3/4 view: roof rows encode depth (ground y = screen y + wall height); crown rows are part height, part depth
     let gy=ob,hh=h;if(cls===ROOF){hh=22;gy=y+22;}else if(cls===CANOPY){hh=15;gy=ob+(y-(ob-16))*.6;}
-    const sx=Math.round(x+dx*hh*k),sy=Math.round(gy+dy*hh*k),ext=cls===ROOF?3:2;for(let e=0;e<2;e++)for(let f=0;f<ext;f++){const px=sx+e,py=sy+f;if(px>=0&&py>=0&&px<W&&py<H)SH[py*W+px]=1;}}
+    // one height pixel covers up to 2.48 px of ground at low sun, so a thin post stamps in sub-steps to stay solid
+    const ext=cls===ROOF?3:2,steps=cls===ROOF||cls===CANOPY?1:Math.max(1,Math.ceil(k));
+    for(let s=0;s<steps;s++){const hq=hh-s/steps,sx=Math.round(x+dx*hq*k),sy=Math.round(gy+dy*hq*k);for(let e=0;e<2;e++)for(let f=0;f<ext;f++){const px=sx+e,py=sy+f;if(px>=0&&py>=0&&px<W&&py<H){const j=py*W+px;SH[j]=1;if(!SHC[j])SHC[j]=ob+1;else if(SHC[j]!==ob+1)SHX[j]=1;}}}}
   // house A interior sun patches: march toward the sun; walls block, window/door gaps let it in
-  SUNP.fill(0);if(roofOff){const lim=Math.min(40,16*k/.62);for(let y=42;y<=78;y++)for(let x=22;x<=98;x++){const i=y*W+x;if(!MIN.IN[i])continue;let lit=0;
+  // these run with Sun shadows off too: they are light coming in, not a shadow
+  if(roofOff){const lim=Math.min(40,16*k/.62);for(let y=42;y<=78;y++)for(let x=22;x<=98;x++){const i=y*W+x;if(!MIN.IN[i])continue;let lit=0;
     for(let s=1;s<=lim;s++){const px=Math.round(x-dx*s),py=Math.round(y-dy*s);if(px<0||py<0||px>=W||py>=H){lit=1;break;}const j=py*W+px;if(OCC[j]>=20){lit=0;break;}if(px<20||px>100||py<40||py>80){lit=1;break;}}SUNP[i]=lit;}}}
 
 // ---------- characters ----------
@@ -239,7 +247,8 @@ function updateChars(dt){let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.ar
   npcLight.on=night;npcLight.x=npc.x+(npc.dir==='left'?-4:4);npcLight.y=npc.y+Math.round(Math.sin(npc.anim*.5)*.8);
   if(carried){const sw=player.moving?Math.round(Math.sin(player.anim*.5)):0;if(carryType==='orb'){carried.x+=(player.x-5-carried.x)*Math.min(1,dt*3);carried.y+=(player.y-2-carried.y)*Math.min(1,dt*3);}
     else{carried.x=player.x+(player.dir==='left'?-4:4)+(carryType==='lantern'?sw:0);carried.y=player.y+1;}}
-  for(const f of flies){f.vx+=(rnd()-.5)*30*dt;f.vy+=(rnd()-.5)*30*dt;f.vx*=.97;f.vy*=.97;f.x=clamp(f.x+f.vx*dt,140,316);f.y=clamp(f.y+f.vy*dt,110,178);}}
+  // a random walk of about 6 px/s, the same at any frame rate
+  const fk=39*Math.sqrt(dt),fd=Math.pow(.16,dt);for(const f of flies){f.vx=(f.vx+(rnd()-.5)*fk)*fd;f.vy=(f.vy+(rnd()-.5)*fk)*fd;f.x=clamp(f.x+f.vx*dt,140,316);f.y=clamp(f.y+f.vy*dt,110,178);}}
 const npcLight=addLight('lantern',130,120,{carriedNpc:1});
 const isNight=()=>{const el=62*Math.sin((hour-6)/12*Math.PI);return el<3;};
 function scheduleLights(){const night=isNight();
@@ -261,22 +270,32 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
   IDX.set(M.IDX);OBF.set(M.OB);CLF.set(M.CLS);INF.set(M.IN);
   // dynamic occluders + character sun shadows
   OCCD.fill(0);DSH.fill(0);for(const c of [player,npc]){for(let dy=-1;dy<=0;dy++)for(let dx=-2;dx<=2;dx++){const px=(c.x|0)+dx,py=(c.y|0)+dy;if(px>=0&&py>=0&&px<W&&py<H)OCCD[py*W+px]=12;}
-    if(S.dir&&opts.sunsh){for(let h=1;h<=12;h++)for(let dx=-2;dx<=2;dx++){if(h>9&&Math.abs(dx)>1)continue;const px=Math.round(c.x+dx+S.dir[0]*h*S.len),py=Math.round(c.y+S.dir[1]*h*S.len);if(px>=0&&py>=0&&px<W&&py<H)DSH[py*W+px]=1;}}}
+    if(S.dir&&opts.sunsh){for(let h=1;h<=12;h++)for(let dx=-2;dx<=2;dx++){if(h>9&&Math.abs(dx)>1)continue;const px=Math.round(c.x+dx+S.dir[0]*h*S.len),py=Math.round(c.y+S.dir[1]*h*S.len);if(py===Math.round(c.y)&&Math.abs(px-Math.round(c.x))<=3)continue;if(px>=0&&py>=0&&px<W&&py<H)DSH[py*W+px]=1;}}}
   // sprites
   const ents=[[player.y,()=>drawChar(player,PMAP,M)],[npc.y,()=>drawChar(npc,NMAP,M)]];ents.sort((a,b)=>a[0]-b[0]).forEach(e=>e[1]());
   const ft=(frameN>>2)%3;
   const flame=(x,y,ob,big)=>{putE(x,y,FIRE[1],ob,M);putE(x,y-1,FIRE[ft===0?0:1],ob,M);putE(x+(ft===1?1:-1)*(big?1:0),y-2,FIRE[2],ob,M);if(big){putE(x-1,y,FIRE[2],ob,M);putE(x+1,y,FIRE[ft===2?1:2],ob,M);putE(x,y-3,FIRE[ft===0?2:1],ob,M);}};
   if(!roofOff)for(const L of wallT){putE(L.wall[0],L.wall[1]+2,POST,80,null);if(L.on)flame(L.wall[0],L.wall[1],80,false);}
-  if(roofOff){flame(59,44,46,true);putE(80,56,STEM,63,M);putE(80,55,FIRE[ft?0:1],63,M);}
+  if(roofOff){if(LA[0].on)flame(59,44,46,true);else for(let d=-1;d<=1;d++)putE(59+d,44,LOG,46,M);putE(80,56,STEM,63,M);if(LA[1].on)putE(80,55,FIRE[ft?0:1],63,M);}
   flame(camp.flame[0],camp.flame[1],143,true);flame(brazier.flame[0],brazier.flame[1],74,true);
-  for(const L of lampL){putE(L.head[0],L.head[1]+1,L.on?LAMPON:LAMPOFF,L.y-2,M);}
+  for(const L of lampL){putE(L.head[0],L.head[1],L.on?LAMPON:LAMPOFF,L.y-2,M);}
   for(const L of bulbs){const [bx,by]=L.bulb;putE(bx,by,L.on?BULB:LAMPOFF,160,M);}
   for(let k=0;k<8;k++){const x0=8+k*13+1;for(let x=x0;x<x0+13;x++){const tt=(x-x0)/13,y=Math.round(152+Math.sin(tt*Math.PI)*3);putE(x,y,WIRE,160,M);}}
   for(const f of flies){if(!f.on||f.I<.2)continue;putE(f.x,f.y-f.z,FFLY,f.y,null);}
   if(crystal.I>.85&&(frameN&4))putE(180+((frameN>>3)%3)-1,151,ORB,164,M);
-  if(carried){const cx=carried.x|0,cy=player.y|0;if(carryType==='torch'){putE(cx,cy-5,TRUNK[0],cy+1,null);putE(cx,cy-6,TRUNK[0],cy+1,null);flame(cx,cy-7,cy+1,false);}
-    else if(carryType==='lantern'){putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}else{const oy=Math.round(carried.y-14+Math.sin(t*2)*1.5);putE(cx,oy,ORB,cy+1,null);putE(cx+1,oy,ORB,cy+1,null);putE(cx,oy+1,ORB,cy+1,null);putE(cx+1,oy+1,ORB,cy+1,null);}}
-  if(npcLight.on){const cx=npcLight.x|0,cy=npc.y|0;putE(cx,cy-6,POST,cy+1,null);putE(cx,cy-5,LAMPON,cy+1,null);putE(cx,cy-4,POST,cy+1,null);}
+  // placed lights: a small sprite per kind, standing on the clicked pixel
+  for(const L of placed){const x=Math.round(L.x),y=Math.round(L.y),k=L.type,p=(dx,dy,c)=>putE(x+dx,y+dy,c,y,M);
+    if(k==='torch'){for(let d=0;d<=5;d++)p(0,-d,TRUNK[d<2?1:0]);flame(x,y-6,y,false);}
+    else if(k==='campfire'){for(let d=-3;d<=3;d++)p(d,0,d%2?LOG:STONE[1]);p(-2,-1,LOG);p(2,-1,LOG);flame(x,y-1,y,true);}
+    else if(k==='candle'){p(0,0,STEM);p(0,-1,STEM);p(0,-2,FIRE[ft?0:1]);}
+    else if(k==='lantern'){for(let d=0;d<=8;d++)p(2,-d,POST);p(1,-8,POST);p(0,-8,POST);p(0,-7,POST);p(0,-6,LAMPON);p(-1,-6,POST);p(1,-6,POST);p(0,-5,POST);}
+    else if(k==='magic'){p(-1,0,CRYSB);p(0,0,CRYSB);p(1,0,CRYSB);p(-1,-1,CRYS[0]);p(0,-1,CRYS[0]);p(1,-1,CRYS[1]);p(0,-2,CRYS[0]);p(1,-2,CRYS[1]);p(0,-3,CRYS[0]);}
+    else if(k==='rune'){for(let d=0;d<=4;d++)p(0,-d,POST);p(-1,-5,POST);p(1,-5,POST);const c=L.I>.5?RUNE:HOOP;p(0,-5,c);p(0,-6,c);p(0,-7,POST);}
+    else if(k==='mushroom'){p(0,0,STEM);p(-1,-1,MUSH);p(0,-1,MUSH);p(1,-1,MUSH);p(0,-2,MUSH);}}
+  // carried lights hide behind roofs and crowns like the character holding them
+  if(carried){const cx=carried.x|0,cy=player.y|0;if(carryType==='torch'){putE(cx,cy-5,TRUNK[0],cy+1,M);putE(cx,cy-6,TRUNK[0],cy+1,M);flame(cx,cy-7,cy+1,false);}
+    else if(carryType==='lantern'){putE(cx,cy-6,POST,cy+1,M);putE(cx,cy-5,LAMPON,cy+1,M);putE(cx,cy-4,POST,cy+1,M);}else{const oy=Math.round(carried.y-14+Math.sin(t*2)*1.5);putE(cx,oy,ORB,cy+1,M);putE(cx+1,oy,ORB,cy+1,M);putE(cx,oy+1,ORB,cy+1,M);putE(cx+1,oy+1,ORB,cy+1,M);}}
+  if(npcLight.on){const cx=npcLight.x|0,cy=npc.y|0;putE(cx,cy-6,POST,cy+1,M);putE(cx,cy-5,LAMPON,cy+1,M);putE(cx,cy-4,POST,cy+1,M);}
   // ---- light map ----
   LR.fill(0);LG.fill(0);LB2.fill(0);raysFrame=0;
   for(const L of lights){if(!L.on){L.I=0;continue;}let I=flicker(L,t);L.I=I;if(I<.02)continue;if(L.indoor&&!roofOff&&false)continue;
@@ -289,26 +308,29 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
   // water reflections: shimmering columns under nearby lights, moon and low sun
   if(opts.refl){const refl=(x0,str,c)=>{for(let x=Math.round(x0)-2;x<=Math.round(x0)+2;x++){if(x<0||x>=W)continue;for(let y=124;y<H;y++){const i=y*W+x;if(!POND[i])continue;const s=Math.sin(y*1.3+t*5+x*2.1)+Math.sin(y*.7-t*3.3);if(s<.9)continue;const w=str*(1-Math.abs(x-x0)/3);LR[i]+=c[0]*w;LG[i]+=c[1]*w;LB2[i]+=c[2]*w;}}};
     for(const L of lights){if(!L.on||L.I<.1||L.T.R<12)continue;if(L.x>226&&L.x<316&&L.y>108&&L.y<176&&!POND[(L.y|0)*W+(L.x|0)])refl(L.x,1.1*L.I,L.T.c);}
-    if(S.dir&&S.el<10&&S.el>0)refl(272+S.dir[0]*-30,1.4,S.sun);if(S.el<0&&!overcast){const mx=272-Math.cos((hour-18)/12*Math.PI)*28;refl(mx,.7,[.7,.78,1]);}}
+    if(S.dir&&S.el<10&&S.el>0)refl(272+S.dir[0]*-30,1.4,S.sun);if(S.el<0&&!overcast){const mx=272+Math.cos((hour-18)/12*Math.PI)*28;refl(mx,.7,[.7,.78,1]);}}
   // ---- compose ----
   const [ar,ag,ab]=S.amb,[sr,sg,sb]=S.sun;const fWall=.25+.75*Math.max(0,S.svy),fObj=.45+.55*Math.max(0,S.svy+.3*Math.abs(S.svx)),fRoof=.7+.3*Math.max(0,S.svy);
-  const winI=.85+.15*n1(t*6,9);
+  const winI=.85+.15*n1(t*6,9),inK=.28+.47*clamp(S.el/20,0,1); // indoors gets 28% of the sky at night and up to 75% by day, through the windows
   for(let i=0;i<NP;i++){const idx=IDX[i];if(view==='albedo'){out32[i]=(255<<24)|(RGB[idx*3+2]<<16)|(RGB[idx*3+1]<<8)|RGB[idx*3];continue;}
     const cls=CLF[i];let r=RGB[idx*3],g=RGB[idx*3+1],b=RGB[idx*3+2];
     if(cls===WIN){const on=HOUSE[i]===1?houseOn.A:houseOn.B;if(on){const k=winI;out32[i]=(255<<24)|((106*k)<<16)|((207*k)<<8)|(255*k|0);continue;}}
     if(EMIS[idx]){if(idx===LAMPON||idx===BULB||idx===FFLY||idx===MUSH||idx===ORB||FIRE.includes(idx)||CRYS.includes(idx)||idx===RUNE){out32[i]=(255<<24)|(b<<16)|(g<<8)|r;continue;}}
-    const x=i%W,y=(i/W)|0;const elev=(cls===WALLF||cls===OBJ||cls===ROOF||cls===CANOPY||cls===WIN);const bi=elev?clamp(OBF[i],0,H-1)*W+x:i;
+    const x=i%W,y=(i/W)|0;const elev=(cls===WALLF||cls===OBJ||cls===ROOF||cls===CANOPY||cls===WIN);// a wall or roof takes the light of the ground 2 px in front of its base. The base row itself is inside the wall occluder, where ray hits alias into stripes
+    const bi=elev?clamp(OBF[i]+(cls===WALLF||cls===WIN||cls===ROOF?2:0),0,H-1)*W+x:i;
     let lr,lg,lb;const indoor=INF[i]||(elev&&roofOff&&INF[bi]);
-    if(indoor){const sp=SUNP[bi]?.95:0;lr=ar*.28+sr*sp;lg=ag*.28+sg*sp;lb=ab*.28+sb*sp;}
-    else{let f=1;if(cls===WALLF||cls===WIN)f=fWall;else if(cls===OBJ)f=fObj;else if(cls===ROOF)f=fRoof;else if(cls===CANOPY)f=.85;const shaded=(cls!==ROOF&&cls!==CANOPY)&&(SH[bi]||DSH[bi]);const s=shaded?0:f;lr=ar+sr*s;lg=ag+sg*s;lb=ab+sb*s;}
+    if(indoor){const sp=SUNP[bi]?.95:0;lr=ar*inK+sr*sp;lg=ag*inK+sg*sp;lb=ab*inK+sb*sp;}
+    else{let f=1;if(cls===WALLF||cls===WIN)f=fWall;else if(cls===OBJ)f=fObj;else if(cls===ROOF)f=fRoof;else if(cls===CANOPY)f=.85;const shaded=(cls!==ROOF&&cls!==CANOPY)&&(DSH[bi]||SH[bi]&&(!elev||SHX[bi]||SHC[bi]!==OBF[i]+1));const s=shaded?0:f;lr=ar+sr*s;lg=ag+sg*s;lb=ab+sb*s;}
     const rec=cls===ROOF?.2:cls===CANOPY?.45:1;lr+=LR[bi]*rec;lg+=LG[bi]*rec;lb+=LB2[bi]*rec;
     if(view==='light'){out32[i]=(255<<24)|(clamp(lb*150,0,255)<<16)|(clamp(lg*150,0,255)<<8)|clamp(lr*150,0,255);continue;}
     if(view==='sun'){const v=(SH[bi]||DSH[bi])&&!elev?40:SUNP[bi]?250:(elev?90:200);out32[i]=(255<<24)|(v<<16)|(v<<8)|v;continue;}
     if(view==='occ'){const o=Math.max(OCC[i],OCCD[i]);out32[i]=o?(255<<24)|(40<<16)|((60+o*5)<<8)|(80+o*5):(255<<24)|((b*.3)<<16)|((g*.3)<<8)|(r*.3);continue;}
+    // soft shoulder: light over 1 keeps 45% of its excess, so sunlit cobbles and stacked lamps do not clip to white
+    if(lr>1)lr=1+(lr-1)*.45;if(lg>1)lg=1+(lg-1)*.45;if(lb>1)lb=1+(lb-1)*.45;
     if(mode==='colormap'){const lum=.3*lr+.55*lg+.15*lb;const lev=clamp(Math.floor(lum*11+BY[i]/16),0,15);out32[i]=CMAP[idx*16+lev];continue;}
     if(mode==='banded'){const B=BY[i]/16;lr=Math.floor(lr*6+B)/6;lg=Math.floor(lg*6+B)/6;lb=Math.floor(lb*6+B)/6;}
     r*=lr;g*=lg;b*=lb;out32[i]=(255<<24)|(clamp(b|0,0,255)<<16)|(clamp(g|0,0,255)<<8)|clamp(r|0,0,255);}
-  if(view==='rays'&&carried&&carried.T.sh){const lx=carried.x,ly=carried.y;for(let a=0;a<256;a+=2){const an=a/256*2*Math.PI,d=carried.dist[a];for(let s=0;s<d;s+=2){const px=(lx+Math.cos(an)*s)|0,py=(ly+Math.sin(an)*s)|0;if(px>=0&&py>=0&&px<W&&py<H)out32[py*W+px]=(255<<24)|(80<<16)|(220<<8)|255;}}}
+  if(view==='rays'&&carried&&carried.T.sh){if(!opts.shadows)castRays(carried);const lx=carried.x,ly=carried.y;for(let a=0;a<256;a+=2){const an=a/256*2*Math.PI,d=carried.dist[a];for(let s=0;s<d;s+=2){const px=(lx+Math.cos(an)*s)|0,py=(ly+Math.sin(an)*s)|0;if(px>=0&&py>=0&&px<W&&py<H)out32[py*W+px]=(255<<24)|(80<<16)|(220<<8)|255;}}}
   ctx.putImageData(img,0,0);ms=ms*.9+(performance.now()-t0)*.1;}
 
 // ---------- loop & UI ----------

@@ -79,7 +79,7 @@ code{font:13px var(--mono);color:var(--cool)}
     <div class="card"><h4>6 · Atmosphere</h4><p>Haze tints high ground and the top of the screen toward the sky colour and lowers contrast. Lamps light dithered rings whose radius grows with the fog around them. At dawn 4 pre-drawn slanted shafts brighten the scene by one or two palette steps, with slow light bands drifting down them, using a cached pixel list. <b>Radial blur</b> is the expensive comparison: a bright pass blurred toward the sun with N samples per pixel.</p></div>
     <div class="card"><h4>7 · Fog of war</h4><p>Recursive shadowcasting on the 40 by 23 cell grid with radius 20. It reruns only when the traveller changes cell or an opaque cell changes. Visible cells fade in over 0.3 s. Corner values are bilinearly upsampled with a Bayer threshold. Fully visible 8 by 8 blocks are skipped. Explored cells are drawn dark and desaturated, and unknown cells are solid dark.</p></div>
     <div class="card"><h4>8 · Magic fog</h4><p>The fog cloud tool adds density to a second field that drifts with the wind and decays by 4.5 % per update, about 6 s. Any 8 px cell whose spell fog is over the threshold counts as opaque, so the FOV is recomputed and sight is blocked.</p></div>
-    <div class="card"><h4>9 · Palette and access</h4><p>Night, dawn, morning, day and dusk palettes blend smoothly. <b>Reduce motion</b> stops all drift, flicker and shaft pulsing while the fog keeps its shape. <b>Fog strength</b> thins the fog for low-vision players. The dither pattern is locked to world pixels, so it never swims.</p></div>
+    <div class="card"><h4>9 · Palette and access</h4><p>Night, dawn, morning, day and dusk palettes blend smoothly. <b>Reduce motion</b> stops all drift, flicker and shaft pulsing while the fog keeps its shape, and the coastal fog bank fades in where it would roll in. <b>Fog strength</b> thins the fog for low-vision players. The dither pattern is locked to world pixels, so it never swims.</p></div>
   </div>
   <p class="keys" style="margin-top:16px">Full research: <a href="vfx-fog-topdown-pixel.html">Top-down pixel fog study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="vfx-light-sandbox.html">Light</a> · <a href="vfx-fire-sandbox.html">Fire</a> · <a href="vfx-water-sandbox.html">Water</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
 </main>
@@ -170,6 +170,8 @@ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,v=YVA[x],r=RYA[x],k=sm((x
 const PATH=[[262,96],[232,100],[204,101],[199,110],[190,116],[168,116],[150,112],[132,106],[116,94],[102,78],[90,62],[78,50],[68,40]],PATH2=[[168,116],[156,124],[152,136],[150,152],[146,180]];
 const segD=(P,x,y)=>{let bd=1e9;for(let k=0;k<P.length-1;k++){const a=P[k],b=P[k+1],dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy;let t=((x-a[0])*dx+(y-a[1])*dy)/L;t=t<0?0:t>1?1:t;const ex=a[0]+dx*t-x,ey=a[1]+dy*t-y,d=ex*ex+ey*ey;if(d<bd)bd=d;}return Math.sqrt(bd);};
 const PD=new Float32Array(NP);
+// BLK: pixels the walker cannot stand on (cliff faces off the path, house footprints). OB: base row of the object drawn at a pixel
+const BLK=new Uint8Array(NP),OB=new Uint8Array(NP);let curBy=0;
 const hAt=(x,y)=>HM[clamp(y,0,H-1)*W+clamp(x,0,W-1)];
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,h=HM[i],q=hf(x,y,22),n=vn(x/6,y/5,20)*.6+vn(x/2.5,y/2.5,21)*.4,r=RYA[x];
   const sh=(hAt(x-2,y+2)-hAt(x+2,y-2))*.05;let g;
@@ -180,11 +182,11 @@ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,h=HM[i],q=hf(x,y,22),n=vn
   else if(y<r){const t=n+(q-.5)*.3;g=t<.3?G3:t<.6?G4:t<.78?G5:(q<.5?R3:R2);if(q>.994)g=PK;}
   else if(marshF(x,y)>.45){const t=n+(q-.5)*.4;g=t<.38?M0:t<.66?M1:M2;}
   else{const t=1.2+(h-40)/55+sh+(n-.5)*1.3+(q-.5)*.5;g=[G1,G2,G3,G4,G5][clamp(t|0,0,4)];if(q>.996)g=[PK,YL,WH][hash(x,y,9)%3];}
-  const pd=Math.min(segD(PATH,x,y),segD(PATH2,x,y))+(vn(x/3,y/3,27)-.5)*1.2;PD[i]=pd;
+  const pd=Math.min(segD(PATH,x,y),segD(PATH2,x,y))+(vn(x/3,y/3,27)-.5)*1.2;PD[i]=pd;if(CLF[i]&&pd>=3)BLK[i]=1;
   if(pd<2.4&&!WAT[i]){if(CLF[i])g=(y&1)?E3:R3;else g=pd<1.4?(q<.3?E2:E3):E2;}
   GR[i]=g;}
 for(let y=1;y<H-1;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!WAT[i]&&!CLF[i]&&(WAT[i-W]===1||WAT[i+W]===1)&&PD[i]>2.4)GR[i]=hf(x,y,23)<.6?G1:E1;}
-const put=(x,y,c)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<W&&y<H)GR[y*W+x]=c;};
+const put=(x,y,c)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<W&&y<H){GR[y*W+x]=c;OB[y*W+x]=curBy;}};
 const shade=(cx,cy,rx,ryy)=>{for(let y=Math.floor(cy-ryy);y<=cy+ryy;y++)for(let x=Math.floor(cx-rx);x<=cx+rx;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=(x-cx)/rx,dy=(y-cy)/ryy;if(dx*dx+dy*dy<1){const i=y*W+x;GR[i]=DARKB[GR[i]];}}};
 const opq=(x,y)=>{if(x>=0&&y>=0&&x<W&&y<H)STAT[CELL[(y|0)*W+(x|0)]]=1;};
 function pine(x,by,hh,dark,op){const top=by-hh,hw=Math.max(2,Math.round(hh*.3)),P=dark?[G0,G1,G2]:[G1,G2,G3];
@@ -214,8 +216,8 @@ function bridge(){for(let y=118;y<=136;y++){const wv=Math.abs(y-yv(153));if(wv>5
 // object placement
 const objs=[];
 objs.push({by:38,f:()=>tower(66,38)});
-for(const [x,y] of[[192,62],[222,72],[250,61]])objs.push({by:y+19,f:()=>house(x,y)});
-objs.push({by:0,f:()=>cave(150,(ry(150)|0)+1)});objs.push({by:126,f:bridge});
+for(const [x,y] of[[192,62],[222,72],[250,61]]){objs.push({by:y+19,f:()=>house(x,y)});for(let r=5;r<20;r++)for(let dx=0;dx<22;dx++)BLK[(y+r)*W+x+dx]=1;}
+objs.push({by:0,f:()=>cave(150,(ry(150)|0)+1)});objs.push({by:126,flat:1,f:bridge});
 const okTree=(x,y,sp)=>{if(x<2||x>W-3||y>H+4)return false;const i=clamp(y,0,H-1)*W+x;if(PD[i]<5||WAT[i]||Math.abs(y-YVA[x])<6||CLF[i])return false;
   if(x>TX0-8&&x<TX1+8&&y>TY0-4&&y<TY1+12)return false;if(Math.abs(x-66)<14&&y<46)return false;if(Math.abs(x-150)<12&&Math.abs(y-RYA[150]-8)<10)return false;
   for(const o of objs)if(o.t&&Math.abs(o.x-x)<sp&&Math.abs(o.by-y)<sp)return false;return true;};
@@ -226,7 +228,7 @@ for(let k=0;k<500;k++){const x=(rnd()*278)|0,y=(rnd()*175)|0;let n=0;for(const o
 for(let y=14;y<186;y+=7)for(let x=284+((y/7)&1)*3;x<322;x+=7){const jx=x+(hf(x,y,40)*4|0)-2,jy=y+(hf(x,y,41)*4|0);const hh=12+(hf(x,y,42)*6|0);objs.push({t:1,x:jx,by:jy,f:()=>pine(jx,jy,hh,true,hf(x,y,43)<.45)});}
 for(let k=0;k<40;k++){const x=6+(rnd()*120|0),y=150+(rnd()*28|0),i=Math.min(y,H-1)*W+x;if(WAT[i]||marshF(x,y)<.5)continue;const hh=2+(rnd()*3|0);objs.push({by:y,f:()=>{for(let j=0;j<hh;j++)put(x,y-j,j===hh-1?E3:j<1?M2:G3);}});}
 for(let k=0;k<10;k++){const x=10+(rnd()*130|0),y=10+(rnd()*24|0);if(y>RYA[x]-4||Math.abs(x-66)<12)continue;objs.push({by:y,f:()=>{for(let dy=-2;dy<=0;dy++)for(let dx=-2;dx<=2;dx++)if(dx*dx+dy*dy*2<6)put(x+dx,y+dy,dy===-2||dx<0?R3:dx>1?R1:R2);}});}
-objs.sort((a,b)=>a.by-b.by);for(const o of objs)o.f();
+objs.sort((a,b)=>a.by-b.by);for(const o of objs){curBy=o.flat?0:Math.min(255,o.by);o.f();}
 const GR0=GR.slice();
 const WLST=[];for(let i=0;i<NP;i++)if(WAT[i]===1&&GR[i]===A2||GR[i]===A1&&WAT[i])WLST.push(i);
 // per field cell height and moisture; per pixel static haze
@@ -255,7 +257,8 @@ const FV=new Uint8Array(NP),AL=new Uint8Array(NP),IDX=new Uint16Array(NP),BR=new
 const P={x:176,y:116,tx:0,ty:0,hasT:false,mv:false,at:0,cell:-1};
 const keys={l:0,r:0,u:0,d:0};
 const LAMP0=[[204,96],[246,100],[268,82],[163,121],[100,147],[161,52,1],[66,6,2]];
-let lamps=[];
+// the flame pixel of each lamp kind: post, cave torch, tower beacon. Halos and fog holes centre on it
+let lamps=[];const lampY=L=>L.y-(L.k===2?0:L.k===1?6:9);
 const beasts=[{x:296,y:80,r:[284,40,316,170]},{x:300,y:140,r:[284,40,316,170]},{x:150,y:62,r:[130,56,176,72]}];
 function radiation(t){return t>=.78?sm((t-.78)/.1):t<.29?1:1-sm((t-.29)/.13);}
 function calcFT(){const ce=WS.ce;for(let f=0;f<NF;f++){const th=Math.max(0,ce-HF4[f]);FT[f]=255*(1-Math.exp(-th/26))*(.5+.5*MF4[f]/255);}}
@@ -274,7 +277,7 @@ function fieldUpdate(){FA.set(FBf);MA.set(MB);
     FBf[f]=T1[f]*.84+(T1[l]+T1[r]+T1[u]+T1[d])*.04;MB[f]=T2[f]*.72+(T2[l]+T2[r]+T2[u]+T2[d])*.07;}
   const clear=(px,py,R,keep)=>{const x0=Math.max(0,((px-R)>>2)),x1=Math.min(FW-1,((px+R)>>2)),y0=Math.max(0,((py-R)>>2)),y1=Math.min(FH-1,((py+R)>>2));
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=Math.hypot(x*4+2-px,y*4+2-py);if(d<R)FBf[y*FW+x]*=keep+(1-keep)*sm(d/R);}};
-  clear(P.x,P.y-5,26,.12);for(const L of lamps)clear(L.x,L.y-9,10,.6);
+  clear(P.x,P.y-5,26,.12);for(const L of lamps)clear(L.x,lampY(L),10,.6);
   let ch=false;for(let c=0;c<NC;c++){const cx=c%GW,cy=(c/GW)|0,f=cy*2*FW+cx*2;const m=cy*2+1<FH?(MB[f]+MB[f+1]+MB[f+FW]+MB[f+FW+1])/4:MB[f];const o=m>120?1:0;if(o!==MOP[c]){MOP[c]=o;ch=true;}}
   if(ch)fovDirty=true;}
 const OCT=[[1,0,0,-1,-1,0,0,1],[0,1,-1,0,0,-1,1,0],[0,1,1,0,0,-1,-1,0],[1,0,0,1,-1,0,0,-1]],RAD=20;
@@ -287,10 +290,10 @@ function cast(cx,cy,row,st,en,xx,xy,yx,yy){if(st<en)return;let ns=0;
       if(bl){if(op){ns=rsl;continue;}bl=false;st=ns;}
       else if(op&&j<RAD){bl=true;cast(cx,cy,j+1,st,ls,xx,xy,yx,yy);ns=rsl;}}
     if(bl)break;}}
-function fov(){const t0=performance.now();VT.fill(0);const cx=clamp(P.x>>3,0,GW-1),cy=clamp((P.y-2)>>3,0,GH-1);VT[cy*GW+cx]=1;
+function fov(){const t0=performance.now();VT.fill(0);const cx=clamp(P.x>>3,0,GW-1),cy=clamp(P.y>>3,0,GH-1);VT[cy*GW+cx]=1;
   for(let o=0;o<8;o++)cast(cx,cy,1,1,0,OCT[0][o],OCT[1][o],OCT[2][o],OCT[3][o]);
   for(let c=0;c<NC;c++)if(VT[c]&&!EX[c]){EX[c]=1;revealed++;}fovN++;fovDirty=false;fovMs=performance.now()-t0;}
-const blocked=(x,y)=>{if(x<3||x>W-4||y<12||y>H-1)return true;const c=CELL[(y|0)*W+(x|0)];return STAT[c]||WALL[c];};
+const blocked=(x,y)=>{if(x<3||x>W-4||y<12||y>H-1)return true;const c=CELL[(y|0)*W+(x|0)];return STAT[c]||WALL[c]||BLK[(y|0)*W+(x|0)];};
 function step(dt){simT+=dt;
   if(tAuto){tod=(tod+dt/120)%1;}
   serverAcc+=dt;if(serverAcc>=2){serverAcc-=2;serverTick();}
@@ -302,7 +305,8 @@ function step(dt){simT+=dt;
   for(const b of beasts){if(!b.tx||Math.hypot(b.tx-b.x,b.ty-b.y)<2){b.tx=b.r[0]+rnd()*(b.r[2]-b.r[0]);b.ty=b.r[1]+rnd()*(b.r[3]-b.r[1]);}
     const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy)||1,nx=b.x+dx/d*10*dt,ny=b.y+dy/d*10*dt;if(!WALL[CELL[(ny|0)*W+(nx|0)]]){b.x=nx;b.y=ny;}else b.tx=0;b.at=(b.at||0)+dt;}
   fieldAcc+=dt;while(fieldAcc>=.1){fieldAcc-=.1;const t0=performance.now();fieldUpdate();fieldMsAcc+=performance.now()-t0;fieldN++;fieldTimes.push(performance.now());}
-  if(PRE[preset].front)frontX+=WS.wx*dt;
+  // with Reduce motion the fog bank does not roll in: the front counts as arrived and the field fades up in place
+  if(PRE[preset].front){if(rm)frontX=W+60;else frontX+=WS.wx*dt;}
   if(!rm){const wx=WS.wx,wy=WS.wy;ax-=wx*.45*dt;ay-=wy*.45*dt;bx-=(wx*.8+2.2)*dt;by-=(wy*.5-1.6)*dt;wxo+=1.5*dt;cox-=wx*dt;coy-=wy*dt;oox-=wx*1.9*dt;ooy-=wy*1.9*dt;}
   const rate=dt/.3*255;for(let c=0;c<NC;c++){const t=VT[c]*255;if(VC[c]<t)VC[c]=Math.min(t,VC[c]+rate);else if(VC[c]>t)VC[c]=Math.max(t,VC[c]-rate);}}
 
@@ -326,8 +330,9 @@ function fogPass(){
   if(mode==='steps'){for(let i=0;i<NP;i++){let v=FV[i]+HZQ[i];if(!v)continue;if(v>255)v=255;const q=v*4;let L=q>>8;if((q&255)>BYN[i])L++;if(L)IDX[i]|=L<<6;}}
   else if(mode==='dither'){for(let i=0;i<NP;i++){const v=FV[i]+HZQ[i];if(v>BYT[i])IDX[i]|=5<<6;}}
   else{for(let i=0;i<NP;i++){const v=FV[i]+HZQ[i];AL[i]=v>255?255:v;}}}
-function shadowPass(){if(!cloudsOn||!shadowsOn||TP.s<.15)return;const th=CTH[coverC|0]-14,sun=Math.cos((tod-.25)*6.283),ox=(cox+sun*28)|0,oy=(coy-10)|0;
-  for(let y=0;y<H;y++){const r=(((y+oy)>>1)&127)<<7,row=y*W;for(let x=0;x<W;x++){const e=CT[r|(((x+ox)>>1)&127)]-th;if(e>0&&e*9>BYT[row+x]){const i=row+x;IDX[i]=DARKB[IDX[i]];}}}}
+// the shadow dither density is capped by the sun strength, so shadows thin out toward night instead of popping
+function shadowPass(){const cap=clamp(TP.s/.5,0,1)*255;if(!cloudsOn||!shadowsOn||cap<=8)return;const th=CTH[coverC|0]-14,sun=Math.cos((tod-.25)*6.283),ox=(cox+sun*28)|0,oy=(coy-10)|0;
+  for(let y=0;y<H;y++){const r=(((y+oy)>>1)&127)<<7,row=y*W;for(let x=0;x<W;x++){const e=CT[r|(((x+ox)>>1)&127)]-th;if(e>0&&(e*9<cap?e*9:cap)>BYT[row+x]){const i=row+x;IDX[i]=DARKB[IDX[i]];}}}}
 const FADEC=new Uint8Array(NP);for(let i=0;i<NP;i++){const x=i%W,y=(i/W)|0,d=Math.hypot((x-160)/150,(y-90)/85);FADEC[i]=clamp((d-.38)/.42,0,1)*255;}
 const OVM=new Uint8Array(NP);function overPass(){OVM.fill(0);if(!cloudsOn||!overOn)return;const th=CTH[(coverC*.45)|0],ox=(oox+40)|0,oy=(ooy+20)|0,px=P.x|0,py=(P.y-5)|0,al=mode==='alpha';
   for(let y=0;y<H;y++){const r=(((y+oy)>>1)&127)<<7,row=y*W,dy=y-py,dy2=dy*dy;for(let x=0;x<W;x++){const n=CT[r|(((x+ox)>>1)&127)],e=n-th;if(e<=0)continue;const i=row+x;let fd=FADEC[i];if(!fd)continue;
@@ -341,7 +346,7 @@ const SPXa=Int32Array.from(SPX),SPVa=Uint8Array.from(SPV),SPKa=Uint8Array.from(S
 function atmosPass(){
   if(hazeDirty){const k=hazeOn?PRE[preset].hz*fogStr/100/255:0;for(let i=0;i<NP;i++)HZQ[i]=HZ0[i]*k;hazeDirty=false;}
   const lk=TP.l;
-  for(let n=0;n<lamps.length;n++){const L=lamps[n],cx=L.x,cy=L.y-9,f=clamp(cy>>2,0,FH-1)*FW+clamp(cx>>2,0,FW-1);
+  for(let n=0;n<lamps.length;n++){const L=lamps[n],cx=L.x,cy=lampY(L),f=clamp(cy>>2,0,FH-1)*FW+clamp(cx>>2,0,FW-1);
     const amb=Math.min(1,(FT[f]*densC/255+MB[f])/255*fogStr/100),r=Math.min(13,lk*(5+amb*9))*(rm?1:1+.04*Math.sin(simT*9+n*2.1));if(r<2.5)continue;
     const R=Math.ceil(r),inten=(1.1+amb*1.4)*Math.min(1,lk*1.4)*255;
     for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy);if(d>=r)continue;
@@ -360,24 +365,25 @@ function fowPass(){if(fovDirty)fov();if(!fowOn)return;
       const ea=EX[cy0*GW+cx0]*255,eb=EX[cy0*GW+cx1]*255,ec=EX[cy1*GW+cx0]*255,ed=EX[cy1*GW+cx1]*255;
       for(let y=Math.max(ys,0);y<ye;y++){const fy=(y-ys+.5)/8,l=a+(c-a)*fy,r=b+(d-b)*fy,el=ea+(ec-ea)*fy,er=eb+(ed-eb)*fy;
         for(let x=Math.max(xs,0);x<xe;x++){const fx=(x-xs+.5)/8,i=y*W+x,t=BYN[i];if(l+(r-l)*fx>t)continue;if(el+(er-el)*fx>t)IDX[i]|=EXB;else{IDX[i]=UNK;AL[i]=0;}}}}}}
-function blit(S,x0,y0,ol){const w=S.w,h=S.h,p=S.p,al=mode==='alpha'&&ol,g=(x,y)=>x>=0&&y>=0&&x<w&&y<h?p[y*w+x]:0;
+// fy is the feet row. A pixel of an object whose base is below the feet hides the sprite, bar a checker silhouette
+function blit(S,x0,y0,ol,fy){const w=S.w,h=S.h,p=S.p,al=mode==='alpha'&&ol,hid=(X,Y)=>OB[Y*W+X]>fy&&((X+Y)&1),g=(x,y)=>x>=0&&y>=0&&x<w&&y<h?p[y*w+x]:0;
   if(ol)for(let y=-1;y<=h;y++)for(let x=-1;x<=w;x++){if(g(x,y))continue;
-    if(g(x-1,y)||g(x+1,y)||g(x,y-1)||g(x,y+1)){const X=x0+x,Y=y0+y;if(X>=0&&Y>=0&&X<W&&Y<H){IDX[Y*W+X]=OUT;if(al)AL[Y*W+X]=0;}}}
-  for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+x];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;IDX[Y*W+X]=v-1;if(al)AL[Y*W+X]=0;}}}
+    if(g(x-1,y)||g(x+1,y)||g(x,y-1)||g(x,y+1)){const X=x0+x,Y=y0+y;if(X>=0&&Y>=0&&X<W&&Y<H&&!hid(X,Y)){IDX[Y*W+X]=OUT;if(al)AL[Y*W+X]=0;}}}
+  for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+x];if(!v)continue;const X=x0+x;if(X<0||X>=W||hid(X,Y))continue;IDX[Y*W+X]=v-1;if(al)AL[Y*W+X]=0;}}}
 const ip=(x,y,c,al)=>{if(x>=0&&y>=0&&x<W&&y<H){IDX[y*W+x]=c;if(al)AL[y*W+x]=0;}};
 let sentN=0;
 function drawEnts(ol){const al=mode==='alpha'&&ol;
   for(const L of lamps){const x=L.x,y=L.y;if(L.k!==2){const hgt=L.k===1?4:7;ip(x-1,y,R1,al);ip(x,y,R1,al);ip(x+1,y,R1,al);for(let k=1;k<=hgt;k++)ip(x,y-k,E1,al);ip(x-1,y-hgt-1,R1,al);ip(x+1,y-hgt-1,R1,al);ip(x,y-hgt-1,FL,al);ip(x,y-hgt-2,FL,al);ip(x,y-hgt-3,R1,al);}
     else{ip(x,y,FL,al);ip(x,y+1,FL,al);ip(x-1,y+1,R1,al);ip(x+1,y+1,R1,al);}}
-  sentN=0;for(const b of beasts){const c=CELL[clamp(b.y|0,0,H-1)*W+clamp(b.x|0,0,W-1)],vis=!fowOn||!!VT[c];if(vis!==!!b.sent){netV+=6;b.sent=vis;}if(!vis)continue;sentN++;if(fowOn&&VC[c]<128)continue;blit(BST[(b.at*4|0)&1],(b.x|0)-3,(b.y|0)-4,ol);}
-  blit(P.mv?PLY[1+((P.at*6|0)&1)]:PLY[0],(P.x|0)-3,(P.y|0)-10,ol);}
+  sentN=0;for(const b of beasts){const c=CELL[clamp(b.y|0,0,H-1)*W+clamp(b.x|0,0,W-1)],vis=!fowOn||!!VT[c];if(vis!==!!b.sent){netV+=6;b.sent=vis;}if(!vis)continue;sentN++;if(fowOn&&VC[c]<128)continue;blit(BST[(b.at*4|0)&1],(b.x|0)-3,(b.y|0)-4,ol,b.y|0);}
+  blit(P.mv?PLY[1+((P.at*6|0)&1)]:PLY[0],(P.x|0)-3,(P.y|0)-10,ol,P.y|0);}
 // ---------- render ----------
 const T={draw:0,tex:0,pass:0,clouds:0,atmos:0,fow:0,field:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.05;};
 let costMs={};
 function render(){const now=performance.now;let t0=now.call(performance),t;
   if(Math.abs(tod-lutT)>.0015)buildLUT();
   IDX.set(GR);if(mode==='alpha')AL.fill(0);
-  const sh=rm?0:simT*1.2|0;for(let k=0;k<WLST.length;k++){const i=WLST[k],x=i%W,y=(i/W)|0;if(NT[(((y*3)&127)<<7)|((x+sh)&127)]>196)IDX[i]=A3;}
+  const sh=rm?0:simT*1.2|0;for(let k=0;k<WLST.length;k++){const i=WLST[k],x=i%W,y=(i/W)|0;if(!WALL[CELL[i]]&&NT[(((y*3)&127)<<7)|((x+sh)&127)]>196)IDX[i]=A3;}
   t=now.call(performance);const dDraw=t-t0;t0=t;
   shadowPass();t=now.call(performance);let dCl=t-t0;t0=t;
   if(!above)drawEnts(false);t=now.call(performance);let dDr2=t-t0;t0=t;
@@ -388,7 +394,11 @@ function render(){const now=performance.now;let t0=now.call(performance),t;
   atmosPass();t=now.call(performance);let dAt=t-t0;t0=t;
   fowPass();t=now.call(performance);const dFow=t-t0;t0=t;
   if(mode!=='alpha'){for(let i=0;i<NP;i++)out[i]=LUT[IDX[i]];}
-  else{const f=TP.f,fr=f[0]|0,fg=f[1]|0,fb=f[2]|0;for(let i=0;i<NP;i++){const c=LUT[IDX[i]],a=AL[i];if(!a){out[i]=c;continue;}const r=c&255,g=(c>>8)&255,b=(c>>16)&255;out[i]=(255<<24|(b+((fb-b)*a>>8))<<16|(g+((fg-g)*a>>8))<<8|(r+((fr-r)*a>>8)))>>>0;}}
+  else{const f=TP.f,fr=f[0]|0,fg=f[1]|0,fb=f[2]|0;for(let i=0;i<NP;i++){const ix=IDX[i],a=AL[i];if(!a){out[i]=LUT[ix];continue;}
+      // blend the fog into the lit colour first, then dim explored ground the way the palette table does
+      const c=LUT[ix&~EXB];let r=c&255,g=(c>>8)&255,b=(c>>16)&255;r+=(fr-r)*a>>8;g+=(fg-g)*a>>8;b+=(fb-b)*a>>8;
+      if(ix&EXB){const gr=r*.3+g*.59+b*.11;r=(r+(gr-r)*.7)*.52+10;g=(g+(gr-g)*.7)*.52+12;b=(b+(gr-b)*.7)*.56+22;}
+      out[i]=(255<<24|b<<16|g<<8|r)>>>0;}}
   t=now.call(performance);const dRes=t-t0;t0=t;
   if(rays==='blur'){radialBlur();t=now.call(performance);dAt+=t-t0;t0=t;}
   ema('draw',dDraw+dDr2+dRes);ema('tex',dTex);ema('pass',dPass);ema('clouds',dCl);ema('atmos',dAt);ema('fow',dFow);ema('field',fieldMsAcc);fieldMsAcc=0;
@@ -396,14 +406,15 @@ function render(){const now=performance.now;let t0=now.call(performance),t;
   if(view!=='normal')drawView();
   ctx.putImageData(img,0,0);}
 const heat=v=>{v=clamp(v,0,1);return pack(v<.5?40+v*2*60:100+(v-.5)*2*155,v<.5?30+v*2*170:200-(v-.5)*2*120,v<.5?90+v*2*20:110-(v-.5)*2*90);};
+const CFL=new Uint8Array(NP),CV=new Float32Array(NP);
 function drawView(){
   if(view==='height'){for(let i=0;i<NP;i++){const h=HM[i],c=CELL[i];let col=WAT[i]?pack(50,90,150):pack(20+h*.75,28+h*.8,40+h*.7);
       if(i>W&&((h/24)|0)!==((HM[i-W]/24)|0))col=pack(240,200,120);if(STAT[c]||WALL[c])col=(col&0xff00ffff)|0x0000d000;out[i]=col|0xff000000;}}
   else if(view==='density'){for(let i=0;i<NP;i++){const x=i%W,y=(i/W)|0,f=(y>>2)*FW+(x>>2),v=FD[f],m=Math.min(255,MB[f]);out[i]=pack(12+v*.75+m*.6,16+v*.85,40+v*.84+m*.5);if(((x&3)===0||(y&3)===0)&&v>4)out[i]=pack(10+v*.6,14+v*.7,34+v*.7);}}
   else if(view==='fow'){for(let i=0;i<NP;i++){const x=i%W,y=(i/W)|0,c=CELL[i],v=VC[c]/255;let col=!EX[c]?pack(6,6,10):pack(40+v*20,56+v*120,90-v*30);if(v>0&&v<1)col=pack(200,180,60);
       if(STAT[c]||WALL[c])col=pack(170,50,50);if(MOP[c])col=pack(160,70,200);if(c===P.cell)col=pack(250,250,250);if((x&7)===0||(y&7)===0)col=pack(((col&255)*.6),((col>>8&255)*.6),((col>>16&255)*.6));out[i]=col;}}
-  else if(view==='cost'){let nF=0,nC=0,nA=0,nW=0;const fl=[];for(let i=0;i<NP;i++){const b=IDX[i];let m=0;if(FV[i]||HZQ[i]){m|=1;nF++;}const bs=b&63;if(OVM[i]){m|=2;nC++;}if(b&LB){m|=4;nA++;}if(b&EXB||bs===UNK){m|=8;nW++;}fl.push(m);}
-    const pF=(T.tex+T.pass)/Math.max(nF,1),pC=T.clouds/NP,pA=(T.atmos)/Math.max(nA,1),pW=T.fow/Math.max(nW,1),pB=T.draw/NP;let mx=1e-9;const v=new Float32Array(NP);
+  else if(view==='cost'){let nF=0,nC=0,nA=0,nW=0;const fl=CFL,v=CV;for(let i=0;i<NP;i++){const b=IDX[i];let m=0;if(FV[i]||HZQ[i]){m|=1;nF++;}const bs=b&63;if(OVM[i]){m|=2;nC++;}if(b&LB){m|=4;nA++;}if(b&EXB||bs===UNK){m|=8;nW++;}fl[i]=m;}
+    const pF=(T.tex+T.pass)/Math.max(nF,1),pC=T.clouds/NP,pA=(T.atmos)/Math.max(nA,1),pW=T.fow/Math.max(nW,1),pB=T.draw/NP;let mx=1e-9;
     for(let i=0;i<NP;i++){const m=fl[i];let s=pB+pC;if(m&1)s+=pF;if(m&4)s+=pA;if(m&8)s+=pW;v[i]=s;if(s>mx)mx=s;}
     for(let i=0;i<NP;i++)out[i]=heat(Math.sqrt(v[i]/mx));costMs={pF,pA,pW,pC};}}
 // ---------- loop and UI ----------

@@ -140,7 +140,7 @@ const isObj=m=>m>=M_WOOD;
 const items=[];let flasks=[],slimes=[],parts=[];
 
 function buildRoom(){
-  M.fill(0);ROLE.fill(0);Iq.fill(0);SOL.fill(0);A.fill(0);ST.fill(0);SALTB.fill(0);RU.fill(0);G.fill(0);items.length=0;flasks=[];slimes=[];parts=[];
+  M.fill(0);ROLE.fill(0);Iq.fill(0);SOL.fill(0);A.fill(0);ST.fill(0);SALTB.fill(0);RU.fill(0);G.fill(0);G2.fill(0);items.length=0;flasks=[];slimes=[];parts=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
     const wall=y<24||y>=176||x<8||(x>=312&&!(y>=84&&y<=104));
     if(wall){M[i]=M_WALL;SOL[i]=1;FM[i]=M_WALL;let c=WL[0];
@@ -188,7 +188,7 @@ function spill(cx,cy,r,amt){for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x+
 
 // ---------- materials: stage colour ----------
 function matIdx(m,role,q,i){if(m===M_GOLD)return GOLD[role];const T=STG[m];
-  let si=Math.floor((1-q)*3.3+(BY[i]-7.5)/16*.9);si=si<0?0:si>3?3:si;
+  let si=Math.floor((1-q)*3.3+(BY[i]-7.5)/16*.9);si=si>0?(si>3?3:si):0; // NaN lands on 0
   if(q<.15&&HS[i]<(.15-q)*7)return -1;
   if(m===M_IRON){if(si===1&&HS[i]<.3)return IRON_PIT;if(si===2&&HS[i]<.45)return IRON_SALT;}
   return T[si][role];}
@@ -196,11 +196,15 @@ function matIdx(m,role,q,i){if(m===M_GOLD)return GOLD[role];const T=STG[m];
 // ---------- sim ----------
 const FILM=.3,EVAP=.00004;let bx0=1,bx1=W-2,by0=1,by1=H-2;
 function gasAdd(i,v){const x=i%W,y=(i/W)|0;G[(y>>1)*GW+(x>>1)]+=v;}
-function bubble(i,kind){parts.push({k:kind||'bub',x:i%W,y:(i/W)|0,z:0,vx:0,vy:0,vz:kind==='smoke'?10:0,life:kind==='smoke'?1.2:.45,t:0});}
+// bubbles and reaction smoke stop at 500 particles. Drops, shards and the player's own smoke are never dropped
+function bubble(i,kind){if(parts.length>=500)return;parts.push({k:kind||'bub',x:i%W,y:(i/W)|0,z:0,vx:0,vy:0,vz:kind==='smoke'?10:0,life:kind==='smoke'?1.2:.45,t:0});}
 function react(j,src,conc,mul,feed){const m=M[j];const dmg=RATE[m]*conc*.0035*mul*(.5+rnd());Iq[j]-=dmg;
   if(src>=0)A[src]=Math.max(0,A[src]-dmg*.55);gasAdd(j,dmg*GASK[m]*6);
   if(rnd()<dmg*26)bubble(j,m===M_WOOD||m===M_CLOTH||m===M_LEATH?'smoke':'bub');
   if(Iq[j]<=0)destroy(j);return dmg;}
+// fume cells on the grid border get the same blur, decay and drift. Outside the grid counts as clean air
+const gOut=(x,y)=>x<0||y<0||x>=GW||y>=GH?0:G[y*GW+x];
+function gEdge(x,y){const c=y*GW+x,d=(G[c]*4+gOut(x-1,y)+gOut(x+1,y)+gOut(x,y-1)+gOut(x,y+1))/8;G2[c]=(d*.8+((gOut(x,y+1)*4+gOut(x-1,y+1)+gOut(x+1,y+1))/6)*.2)*.991;}
 function simStep(){
   // 1) flow (bbox of wet area)
   const x0=Math.max(1,bx0-1),x1=Math.min(W-2,bx1+1),y0=Math.max(1,by0-1),y1=Math.min(H-2,by1+1);
@@ -223,6 +227,7 @@ function simStep(){
   bx0=nx0;bx1=nx1;by0=ny0;by1=ny1;if(nx0>nx1){bx0=1;bx1=0;by0=1;by1=0;}
   // 3) fumes: blur, decay, drift north
   for(let y=1;y<GH-1;y++)for(let x=1;x<GW-1;x++){const c=y*GW+x;const d=(G[c]*4+G[c-1]+G[c+1]+G[c-GW]+G[c+GW])/8;G2[c]=(d*.8+((G[c+GW]*4+G[c+GW-1]+G[c+GW+1])/6)*.2)*.991;}
+  for(let x=0;x<GW;x++){gEdge(x,0);gEdge(x,GH-1);}for(let y=1;y<GH-1;y++){gEdge(0,y);gEdge(GW-1,y);}
   const t=G;G=G2;G2=t;
   // 4) rust, stain & salt fading (sampled)
   for(let k=0;k<2500;k++){const i=(rnd()*NP)|0;const m=M[i];
@@ -233,10 +238,12 @@ function simStep(){
 
 // ---------- slimes ----------
 function newSlime(x,y,mass){return {x,y,mass,ph:rnd()*6,vx:0,vy:0,tx:x,ty:y,t:0,dir:1,blink:0,hurt:0};}
-const rad=s=>2.5+Math.sqrt(s.mass)*1.25;
+const rad=s=>2.5+Math.sqrt(Math.max(0,s.mass))*1.25;
 function burst(s){const r=rad(s)*1.5;spill(s.x|0,(s.y-2)|0,r|0,.5+s.mass*.025);for(let k=0;k<10;k++){const a=rnd()*6.28;parts.push({k:'drop',x:s.x,y:s.y,z:4,vx:Math.cos(a)*40,vy:Math.sin(a)*24,vz:30+rnd()*30,life:2});}}
 function split(s){const m=s.mass/2;s.mass=m;const a=rnd()*6.28;const n=newSlime(s.x+Math.cos(a)*4,s.y+Math.sin(a)*3,m);n.vx=Math.cos(a)*40;n.vy=Math.sin(a)*30;s.vx=-n.vx;s.vy=-n.vy;slimes.push(n);}
 function slimeBlocked(x,y){x|=0;y|=0;if(x<2||y<2||x>=W-2||y>=H-2)return true;const i=y*W+x;return M[i]===M_WALL||(SOL[i]&&M[i]!==M_WOOD);}
+// the spawn tool puts the slime on the nearest free pixel within 16 px, so a click on a wall or a crate lands beside it
+function spawnSlime(x,y){if(slimes.length>=12)return;for(let r=0;r<=16;r++){const n=Math.max(1,r*6);for(let k=0;k<n;k++){const a=k/n*6.283,sx=x+Math.cos(a)*r,sy=y+Math.sin(a)*r;if(!slimeBlocked(sx,sy)){slimes.push(newSlime(sx,sy,16));return;}}}}
 function updateSlimes(dt){
   for(let si=slimes.length-1;si>=0;si--){const s=slimes[si];const r=rad(s);s.t-=dt;s.hurt=Math.max(0,s.hurt-dt);
     const pd=Math.hypot(player.x-s.x,player.y-s.y);
@@ -260,7 +267,7 @@ function updateSlimes(dt){
 
 // ---------- player ----------
 const player={x:36,y:72,dir:'down',anim:0,dist:0,foot:0,moving:false,tx:null,ty:null,hp:100,eq:{},feetAcid:0,hurtT:0,swing:0,cool:0,dead:false,deadT:0,kx:0,ky:0,sizzle:0};
-function repair(){player.eq={helm:{q:1},chest:{q:1},boots:{q:1},sword:{q:1}};player.hp=100;player.dead=false;}
+function repair(){player.eq={helm:{q:1},chest:{q:1},boots:{q:1},sword:{q:1}};player.hp=100;player.dead=false;document.getElementById('msg').style.display='none';}
 function hurt(v){player.hp-=v;player.hurtT=.12;if(player.hp<=0&&!player.dead){player.dead=true;player.deadT=2.6;document.getElementById('msg').style.display='block';
   spill(player.x|0,(player.y-3)|0,5,.4);for(let k=0;k<14;k++)parts.push({k:'smoke',x:player.x+(rnd()-.5)*6,y:player.y,z:4+rnd()*8,vx:(rnd()-.5)*8,vy:0,vz:10+rnd()*8,life:1.5});}}
 const keys={};
@@ -268,7 +275,7 @@ function blocked(x,y){x|=0;y|=0;for(let xx=x-2;xx<=x+2;xx++){if(xx<0||xx>=W||y<2
 function feetA(){const i=(player.y|0)*W+(player.x|0);return (A[i]+A[i-1]+A[i+1])/3;}
 function attack(){if(player.dead||player.cool>0)return;player.cool=.32;player.swing=.18;const sw=player.eq.sword;if(sw.q<=0)return;
   const f={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[player.dir];const hx=player.x+f[0]*9,hy=player.y-4+f[1]*7;
-  for(const s of slimes.slice()){if(Math.hypot(s.x-hx,s.y-3-hy)<rad(s)+6){s.mass-=8;s.hurt=.15;sw.q=Math.max(0,sw.q-.06);s.vx+=f[0]*90;s.vy+=f[1]*70;
+  for(const s of slimes.slice()){if(Math.hypot(s.x-hx,s.y-3-hy)<rad(s)+6){s.mass=Math.max(0,s.mass-8);s.hurt=.15;sw.q=Math.max(0,sw.q-.06);s.vx+=f[0]*90;s.vy+=f[1]*70;
     for(let k=0;k<5;k++)parts.push({k:'drop',x:s.x,y:s.y,z:5,vx:f[0]*40+(rnd()-.5)*50,vy:f[1]*30+(rnd()-.5)*30,vz:25+rnd()*20,life:2});
     if(s.mass<5){burst(s);slimes.splice(slimes.indexOf(s),1);}else if(s.mass>=12&&slimes.length<10)split(s);}}
   for(const fl of flasks)if(fl.alive&&Math.hypot(fl.x+2-hx,fl.y+3-hy)<9)breakFlask(fl);}
@@ -291,9 +298,9 @@ function updatePlayer(dt){const p=player;p.cool-=dt;p.swing-=dt;p.hurtT-=dt;
 }
 
 // ---------- particles ----------
-function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const q=parts[k];q.life-=dt;q.t+=dt;if(q.life<=0){parts.splice(k,1);continue;}
+function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const q=parts[k];q.life-=dt;q.t+=dt;if(q.life<=0){parts[k]=parts[parts.length-1];parts.pop();continue;}
   q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;
-  if(q.k==='drop'||q.k==='shard'){q.vz-=120*dt;if(q.z<=0){if(q.k==='drop'){const x=q.x|0,y=q.y|0;if(x>1&&y>1&&x<W-1&&y<H-1&&!SOL[y*W+x]){A[y*W+x]+=.35;A[y*W+x+1]+=.08;A[y*W+x-1]+=.08;bx0=Math.min(bx0,x-1);bx1=Math.max(bx1,x+1);by0=Math.min(by0,y);by1=Math.max(by1,y);}parts.splice(k,1);continue;}q.z=0;q.vz=0;q.vx*=.6;q.vy*=.6;}}
+  if(q.k==='drop'||q.k==='shard'){q.vz-=120*dt;if(q.z<=0){if(q.k==='drop'){const x=q.x|0,y=q.y|0;if(x>1&&y>1&&x<W-1&&y<H-1&&!SOL[y*W+x]){A[y*W+x]+=.35;A[y*W+x+1]+=.08;A[y*W+x-1]+=.08;bx0=Math.min(bx0,x-1);bx1=Math.max(bx1,x+1);by0=Math.min(by0,y);by1=Math.max(by1,y);}parts[k]=parts[parts.length-1];parts.pop();continue;}q.z=0;q.vz=0;q.vx*=.6;q.vy*=.6;}}
   if(q.k==='smoke'){q.vx*=.98;}}}
 
 // ---------- glow ----------
@@ -381,25 +388,28 @@ let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
 if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
 for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
 function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+let effK=1,hudN=0; // counts drawn frames, so the HUD also refreshes during the frames that run while paused
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(!paused){const t0=performance.now();simAcc+=dt*60*simSpeed;let n=0;while(simAcc>=1&&n<16){simStep();simAcc--;n++;}if(simAcc>4)simAcc=0;
+  if(!paused){const t0=performance.now();simAcc+=dt*60*simSpeed;let n=0;while(simAcc>=1&&n<16&&(n<1||performance.now()-t0<7)){simStep();simAcc--;n++;}if(simAcc>4)simAcc=0;
+    // steps per frame against the steps asked for. Under 1 means the 7 ms budget cut the speed
+    effK+=((n/Math.max(1,Math.round(dt*60*simSpeed)))-effK)*.1;
     if(frame%4===0)computeGlow();simMs=simMs*.9+(performance.now()-t0)*.1;
-    updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+6)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
+    updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+4)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
     if(down&&tool!=='walk'&&tool!=='item'&&tool!=='slime')applyTool(lastPt[0],lastPt[1]);frame++;}
-  render();if(frame%6===0)hud();}
+  render();if(hudN++%6===0)hud();}
 function hud(){let tot=0;for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++)tot+=A[y*W+x];
-  document.getElementById('hudt').textContent=`acid ${tot.toFixed(0)} u · slimes ${slimes.length} · sim ${simMs.toFixed(2)} ms`;
+  document.getElementById('hudt').textContent=`acid ${tot.toFixed(0)} u · slimes ${slimes.length} · sim ${simMs.toFixed(2)} ms${effK<.85&&!paused?` · over budget, running ${(simSpeed*effK).toFixed(1)}× of ${simSpeed}×`:''}`;
   const e=player.eq,set=(id,v)=>document.getElementById(id).style.width=Math.max(0,v*100)+'%';set('b_hp',player.hp/100);set('b_helm',e.helm.q);set('b_chest',e.chest.q);set('b_boots',e.boots.q);set('b_sword',e.sword.q);}
 let lastPt=[0,0];
 function applyTool(x,y){if(tool==='acid'){for(let yy=y-3;yy<=y+3;yy++)for(let xx=x-3;xx<=x+3;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>10)continue;const i=yy*W+xx;if(!SOL[i])A[i]+=.12;}
-    bx0=Math.min(bx0,x-4);bx1=Math.max(bx1,x+4);by0=Math.min(by0,y-4);by1=Math.max(by1,y+4);}
+    bx0=Math.max(1,Math.min(bx0,x-4));bx1=Math.min(W-2,Math.max(bx1,x+4));by0=Math.max(1,Math.min(by0,y-4));by1=Math.min(H-2,Math.max(by1,y+4));}
   else if(tool==='lime'){for(let yy=y-7;yy<=y+7;yy++)for(let xx=x-7;xx<=x+7;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>49)continue;const i=yy*W+xx;
       if(A[i]>0){SALTB[i]=Math.min(255,SALTB[i]+A[i]*200+40);gasAdd(i,A[i]*.08);if(rnd()<.05)parts.push({k:'smoke',x:xx,y:yy,z:0,vx:0,vy:0,vz:8,life:.8});A[i]=0;}}
-    for(const s of slimes)if(Math.hypot(s.x-x,s.y-y)<rad(s)+7){s.mass-=.6;s.hurt=.1;}}}
+    for(const s of slimes)if(Math.hypot(s.x-x,s.y-y)<rad(s)+7){s.mass=Math.max(0,s.mass-.6);s.hurt=.1;}}}
 const toCell=e=>{const r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*W),Math.floor((e.clientY-r.top)/r.height*H)];};
 cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=toCell(e);lastPt=[x,y];
   if(tool==='walk'){player.tx=x;player.ty=y;const near=slimes.some(s=>Math.hypot(s.x-x,s.y-y)<rad(s)+4&&Math.hypot(s.x-player.x,s.y-player.y)<22);if(near){player.tx=null;const dx=x-player.x,dy=y-player.y;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');attack();}}
-  else if(tool==='slime')slimes.push(newSlime(x,y,16));else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
+  else if(tool==='slime')spawnSlime(x,y);else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
 cv.addEventListener('pointermove',e=>{lastPt=toCell(e);});cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercancel',()=>down=false);
 // a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
 let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);

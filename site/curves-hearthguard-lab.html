@@ -73,9 +73,9 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 
 <section class="panel" id="lab-main">
 <h2>Power ratio per wave</h2>
-<div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i class="d" style="border-color:var(--muted)"></i>1.0, even</span></div>
+<div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i class="d" style="border-color:var(--green)"></i>Target sawtooth</span><span><i class="d" style="border-color:var(--muted)"></i>1.0, even</span></div>
 <div class="chart" id="c-ratio"></div>
-<p class="cap">Hero damage multiplier at wave start divided by mob HP multiplier. Above 1.0 the hero gains on the mobs. A sawtooth rises inside each chapter and drops at the next chapter start. Six waves per chapter, wave 6 is the boss.</p>
+<p class="cap">Hero damage multiplier at wave start divided by mob HP multiplier. Above 1.0 the hero gains on the mobs. A sawtooth rises inside each chapter and drops at the next chapter start. The target starts each chapter at 0.92 and climbs 15% by the boss. Six waves per chapter, wave 6 is the boss.</p>
 </section>
 
 <aside id="knobs" aria-label="Tuning knobs"><div class="knobs-in" id="knobs-in"></div></aside>
@@ -85,13 +85,16 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 <div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span></div>
 <div class="chart" id="c-hearth"></div>
 <p class="cap">Mob hits a full Hearth can take, per corridor. One hit is 30 x the mob attack multiplier, an illustrative size. Every corridor gets a full wave, so the Hearth is split by player count.</p>
+<div class="legend" style="margin-top:12px"><span><i style="border-color:var(--warm)"></i>Mobs for the party</span><span><i class="d" style="border-color:var(--blue)"></i>One corridor</span></div>
+<div class="chart" id="c-mobs"></div>
+<p class="cap">Mobs per wave, elites included. The boss wave counts the boss and the adds of a solo-length fight. The party total is one corridor times the player count.</p>
 </section>
 
 <section class="panel" id="level">
 <h2>Hero level and gold</h2>
 <div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span></div>
 <div class="chart" id="c-level"></div>
-<p class="cap">Hero level at wave start. Per-hero XP equals solo in co-op because each corridor feeds the pool.</p>
+<p class="cap">Hero level at wave start. Per-hero XP equals solo in co-op because each corridor feeds the pool, so Players does not move this line. Players changes boss time: the solo time x boss HP for the party / players.</p>
 <div class="legend" style="margin-top:12px"><span><i style="border-color:var(--warm)"></i>Gold earned</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i style="border-color:var(--green)"></i>All 9 Town at level 1</span><span><i style="border-color:var(--red)"></i>All 9 at level 5</span></div>
 <div class="chart" id="c-gold"></div>
 <p class="cap" id="gold-cap">Cumulative gold. Co-op shows team gold, assuming even kills (killer gets all, others 30%).</p>
@@ -110,13 +113,13 @@ var EL=[[40,40],[40,50],[60,60],[65,65],[70,70]]; // elite xp, waves 3 and 5
 var BO=[[8000,400],[16000,700],[28000,1100],[42000,1500],[60000,2000]]; // boss HP, xp
 var BOSS_S=[150,90,75,75,75];
 var TC=[130,120,150,150,110,120,100,120,100];
-var SPAN=[22,28,28,26,28,0], GAP=12, CAMP=25, INTRO=5, HIT=30;
+var SPAN=[22,28,28,26,28,0], CAMP=25, INTRO=5, HIT=30;
 function cnt(c,w){return Math.round([14+8*c,22+12*c,18+10*c,40+30*c,28+16*c][w]*1.08);}
 function gold1(x){return 1+Math.floor(x/4);}
 function avgOf(r,f){var t=0,s=0;for(var k in r){t+=r[k];s+=f(k)*r[k];}return s/t;}
 function ones(list){var o={};list.forEach(function(k){o[k]=1;});return o;}
 
-var BASE={hp:[1.0,2.3,4.6,8.0,13.0],atk:[1.0,1.6,2.4,3.3,4.4],step:0.07,growth:0.09,xpA:80,xpB:70,xpC:6,players:1,hearth:6500,hearthPer:0.5,bossPer:0.75,goldPer:0.7,townMult:1.7,respBase:6,respStep:1.5,campfire:false};
+var BASE={hp:[1.0,2.3,4.6,8.0,13.0],atk:[1.0,1.6,2.4,3.3,4.4],step:0.07,growth:0.09,xpA:80,xpB:70,xpC:6,players:1,hearth:6500,hearthCh:0,hearthPer:0.5,gap:12,bossPer:0.75,goldPer:0.7,townMult:1.7,respBase:6,respStep:1.5,campfire:false};
 // Proposal: WAVE_STEP 0.03 so levels outpace mob HP inside a chapter, HP_SCALE fitted for a 20% ratio drop at each chapter start.
 var PROPOSED={hp:[1.0,2.5,4.3,7.1,11.3],atk:[1.0,1.6,2.4,3.3,4.4],step:0.03,xpC:3}; // the study's §11 Curve Spec
 
@@ -130,21 +133,23 @@ function model(S,ref){
   for(var c=0;c<5;c++){
     var xm=2.4+0.65*c, gm=1+S.goldPer*c; chStart.push(t);
     for(var w=0;w<6;w++){
-      var hm=S.hp[c]*(1+S.step*w), am=S.atk[c]*(1+S.step*w), Ls=L, wx, wg, bossS=0;
+      var hm=S.hp[c]*(1+S.step*w), am=S.atk[c]*(1+S.step*w), Ls=L, wx, wg, bossS=0, mobs;
       if(w<5){
         var r=w===0?ones(OP[c]):R[c], k=cnt(c,w);
         wx=k*avgOf(r,function(m){return XP[m];})*xm; wg=k*avgOf(r,function(m){return gold1(XP[m]);})*gm;
         if(w===2||w===4){var e=EL[c][w===2?0:1];wx+=e*xm;wg+=gold1(e)*gm;}
-        t+=SPAN[w]+GAP;
+        mobs=k+(w===2||w===4?1:0); t+=SPAN[w]+S.gap;
       }else{
-        bossS=BOSS_S[c]*hpf*(ref?ref.rows[c*6+5].dmgRaw/dmg(Ls):1);
-        var nadds=(3+c)*Math.max(0,Math.floor((bossS-6)/5+1));
+        // boss time is a fixed assumption per chapter, as in notes/curves_model.py. It does not shrink with hero damage
+        // n heroes share a boss with hpf times the HP. Adds stay on the solo clock, so per-hero XP equals solo
+        bossS=BOSS_S[c]*hpf/n;
+        var nadds=(3+c)*Math.max(0,Math.floor((BOSS_S[c]-6)/5+1));
         wx=BO[c][1]*xm+nadds*avgOf(R[c],function(m){return XP[m];})*xm;
         wg=gold1(BO[c][1])*gm+nadds*avgOf(R[c],function(m){return gold1(XP[m]);})*gm;
-        lossAt.push(t+bossS/2); t+=bossS;
+        mobs=1+nadds; lossAt.push(t+bossS/2); t+=bossS;
       }
       addxp(wx); gold+=wg;
-      rows.push({c:c,w:w,hm:hm,am:am,Ls:Ls,Le:L,dmgRaw:dmg(Ls),ratio:dmg(Ls)/32/hm,gold:gold*share,hits:hearthHP/(n*am*HIT),bossS:bossS});
+      rows.push({c:c,w:w,hm:hm,am:am,Ls:Ls,Le:L,dmgRaw:dmg(Ls),ratio:dmg(Ls)/32/hm,gold:gold*share,hits:hearthHP*(1+S.hearthCh*c)/(n*am*HIT),bossS:bossS,mobs:mobs});
     }
     if(c<4)t+=CAMP;
   }
@@ -170,11 +175,14 @@ var KN=[
  {g:"Co-op",items:[
   {k:"players",lab:"Players",min:1,max:3,st:1,name:"Players 1 to 3, one corridor each",at:"bot flag --players"},
   {k:"hearth",lab:"Hearth HP",min:2000,max:20000,st:100,name:"HEARTH_HP",at:"scripts/game/sim.gd:23"},
+  {k:"hearthCh",lab:"Per chapter",min:0,max:1,st:0.05,name:"Hearth per chapter, flat today. Report §11 proposes +50%",at:"scripts/game/sim.gd:23",pct:1,plus:1},
   {k:"hearthPer",lab:"Per player",min:0,max:1.5,st:0.05,name:"Hearth per extra player",at:"scripts/game/sim.gd:91",pct:1,plus:1},
   {k:"bossPer",lab:"Boss HP",min:0,max:1.5,st:0.05,name:"Boss HP per extra player",at:"scripts/game/sim.gd:189",pct:1,plus:1}]},
  {g:"Economy",items:[
   {k:"goldPer",lab:"Gold / ch",min:0,max:1.5,st:0.05,name:"Gold per chapter",at:"scripts/game/sim.gd:277",pct:1,plus:1},
   {k:"townMult",lab:"Town cost",min:1,max:2.5,st:0.05,name:"Town cost x 1.7^level",at:"scripts/data/town_defs.gd:14-16",f:2,x:1}]},
+ {g:"Pacing",items:[
+  {k:"gap",lab:"Wave gap",min:8,max:30,st:1,name:"waveGapS",at:"Dota_2.json:110",f:0,s:1}]},
  {g:"Death and loss",items:[
   {k:"respBase",lab:"Respawn",min:0,max:20,st:0.5,name:"heroRespawnS",at:"Dota_2.json:112",f:1,s:1},
   {k:"respStep",lab:"Per ch",min:0,max:5,st:0.25,name:"Respawn + 1.5 s x chapter",at:"scripts/game/sim.gd:378",f:2,s:1},
@@ -183,11 +191,17 @@ var KN=[
 var KEY="hg-curve-lab-v1";
 function clone(o){return JSON.parse(JSON.stringify(o));}
 var S=clone(BASE);
-try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){for(var k in BASE){if(saved[k]!==undefined&&typeof saved[k]===typeof BASE[k]&&(!Array.isArray(BASE[k])||(Array.isArray(saved[k])&&saved[k].length===5)))S[k]=saved[k];}}}catch(e){}
+// a saved value is used only when it has the knob's type, and numbers are clamped to the slider range. Anything else keeps the build value
+var RNG={};KN.forEach(function(g){g.items.forEach(function(it){RNG[it.k]=it;});});
+function okNum(v,it){if(typeof v!=="number"||!isFinite(v))return null;v=Math.min(it.max,Math.max(it.min,v));return it.st>=1?Math.round(v):v;}
+try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){for(var k in BASE){var it=RNG[k],sv=saved[k];if(sv===undefined||!it)continue;
+  if(it.chk){if(typeof sv==="boolean")S[k]=sv;}
+  else if(it.arr){if(Array.isArray(sv)&&sv.length===5){var arr=sv.map(function(v){return okNum(v,it);});if(arr.every(function(v){return v!==null;}))S[k]=arr;}}
+  else{var nv=okNum(sv,it);if(nv!==null)S[k]=nv;}}}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 function fmtVal(it,v){
-  if(it.pct)return (it.plus?"+":"")+Math.round(v*100)+"%";
+  if(it.pct)return (it.plus?"+":"")+(it.st<0.01?(v*100).toFixed(1):Math.round(v*100))+"%"; // a 0.005 step needs one decimal
   var s=it.f!=null?v.toFixed(it.f):(it.st<1?v.toFixed(2):String(Math.round(v)));
   if(it.x)s="x"+s; if(it.s)s+=" s";
   if(it.k==="hearth")s=Math.round(v).toLocaleString("en-US");
@@ -223,11 +237,13 @@ function buildKnobs(){
     });
   });
   box.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){
-    var p=b.dataset.preset==="pro"?PROPOSED:BASE;S.hp=p.hp.slice();S.atk=p.atk.slice();S.step=p.step;S.xpC=p.xpC;save();sync(true);render();});});
+    var p=b.dataset.preset==="pro"?PROPOSED:BASE;S.hp=p.hp.slice();S.atk=p.atk.slice();S.step=p.step;S.xpC=p.xpC;save();sync(true);render();
+    var n=offBase().length;setStatus(p===BASE&&n?"Mob scaling and the XP curve are back to b509a56. "+n+" other knob"+(n>1?"s":"")+" still differ"+(n>1?"":"s")+". Reset clears them.":"");});});
   document.getElementById("reset").addEventListener("click",function(){S=clone(BASE);save();sync(true);render();setStatus("Reset to b509a56 values.");});
   document.getElementById("copy").addEventListener("click",copy);
 }
 function same(a,b){return Math.abs(a-b)<1e-9;}
+function offBase(){var out=[];for(var k in BASE){if(k==="players")continue;var a=S[k],b=BASE[k];if(Array.isArray(b)?!b.every(function(v,i){return same(v,a[i]);}):typeof b==="number"?!same(a,b):a!==b)out.push(k);}return out;}
 function sync(setInputs){
   inputs.forEach(function(o){
     var it=o.it,el=o.el,v;
@@ -240,7 +256,8 @@ function sync(setInputs){
     el.parentNode.title=same(v,b)?"Current build value":"Changed. Current build: "+fmtVal(it,b);
   });
   var isP=function(p){return p.hp.every(function(v,i){return same(v,S.hp[i]);})&&p.atk.every(function(v,i){return same(v,S.atk[i]);})&&same(p.step,S.step)&&same(p.xpC,S.xpC);};
-  document.querySelector('[data-preset="cur"]').classList.toggle("on",isP(BASE));
+  // Current means the whole build: every tuning knob at its b509a56 value. Players is a scenario, not a constant
+  document.querySelector('[data-preset="cur"]').classList.toggle("on",offBase().length===0);
   document.querySelector('[data-preset="pro"]').classList.toggle("on",isP(PROPOSED));
 }
 
@@ -256,7 +273,9 @@ function settingsText(){
   "const XP_PER_LEVEL := "+Math.round(S.xpB),
   "const XP_PER_LEVEL_SQ := "+gf(S.xpC),
   "const HEARTH_HP := "+Math.round(S.hearth)+"  # sim.gd:23",
+  "const HEARTH_PER_CHAPTER := "+gf(S.hearthCh)+"  # proposal, report §11",
   "const HEARTH_PER_PLAYER := "+gf(S.hearthPer)+"  # sim.gd:91",
+  "const WAVE_GAP_S := "+gf(S.gap)+"  # Dota_2.json:110 waveGapS",
   "const BOSS_HP_PER_PLAYER := "+gf(S.bossPer)+"  # sim.gd:189",
   "const GOLD_PER_CHAPTER := "+gf(S.goldPer)+"  # sim.gd:277",
   "const TOWN_COST_MULT := "+gf(S.townMult)+"  # town_defs.gd:14-16",
@@ -308,8 +327,11 @@ function pct(x){return (x>0?"+":"")+Math.round(x*100)+"%";}
 function render(){
   var M=model(S,REF),G=model(Object.assign(clone(BASE),{players:S.players}),REF);
   var r=M.rows,g=G.rows,col=function(rows,k){return rows.map(function(x){return x[k];});};
-  chart("c-ratio",{label:"Power ratio per wave",series:[{v:col(g,"ratio"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"ratio"),c:"#ffc870",w:2.4,dots:1,tip:function(v){return v.toFixed(2);}}],ref:1});
+  // target from report §11: each chapter starts at 0.92 and reaches 1.15 times that at the boss
+  var tgt=[];for(var q=0;q<30;q++)tgt.push(0.92*(1+0.15*(q%6)/5));
+  chart("c-ratio",{label:"Power ratio per wave",series:[{v:tgt,c:"#7fd6a0",dash:"2 4",w:1.4,brk:1},{v:col(g,"ratio"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"ratio"),c:"#ffc870",w:2.4,dots:1,tip:function(v){return v.toFixed(2);}}],ref:1});
   chart("c-hearth",{label:"Hearth hits per corridor",series:[{v:col(g,"hits"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"hits"),c:"#ffc870",w:2.4,dots:1}],y0:0});
+  chart("c-mobs",{label:"Mobs per wave",series:[{v:col(r,"mobs"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"mobs").map(function(v){return v*S.players;}),c:"#ffc870",w:2.4,dots:1}],y0:0,h:document.getElementById("c-mobs").clientWidth<520?180:210});
   chart("c-level",{label:"Hero level per wave",series:[{v:col(g,"Ls"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"Ls"),c:"#ffc870",w:2.4,dots:1}],y0:0,h:document.getElementById("c-level").clientWidth<520?180:210});
   chart("c-gold",{label:"Cumulative gold vs Town cost",series:[{v:col(g,"gold"),c:"#8ea8ff",dash:"6 4",w:1.6},{v:col(r,"gold"),c:"#ffc870",w:2.4}],y0:0,hl:[{y:M.town1,c:"#7fd6a0",t:"L1 "+Math.round(M.town1).toLocaleString("en-US")},{y:M.town5,c:"#ff8f7a",t:"L5 "+Math.round(M.town5).toLocaleString("en-US")}]});
   document.getElementById("gold-cap").textContent="Cumulative gold"+(S.players>1?" for the team of "+S.players+", assuming even kills (killer gets all, others 30%)":" for one hero")+". The Town is shared. Costs are base x Town cost^level.";

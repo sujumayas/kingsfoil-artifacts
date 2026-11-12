@@ -59,7 +59,7 @@ code{font:13px "IBM Plex Mono",monospace;color:var(--warm)}
   <div class="controls">
     <div class="group"><h3>Season & wind</h3>
       <div class="btns" id="sbtns"><button data-s="0">🌸 Spring</button><button data-s="1" class="on">☀ Summer</button><button data-s="2">🍂 Autumn</button><button data-s="3">❄ Winter</button><button id="auto">Auto year</button></div>
-      <label>Wind <input id="wind" type="range" min="0" max="100" value="45"></label>
+      <label>Wind <input id="wind" type="range" min="0" max="100" value="45"><span id="windv">45%</span></label>
     </div>
     <div class="group"><h3>When you walk behind a tree</h3>
       <div class="btns" id="obtns"><button data-o="dither" class="on">Dither fade</button><button data-o="cutaway">Cutaway circle</button><button data-o="silhouette">X-ray silhouette</button><button data-o="none">Nothing</button></div>
@@ -123,18 +123,20 @@ const SI={};SPECIES.forEach((s,i)=>SI[s.n]=i);
 // ---------- procedural sprite generation ----------
 function canvasFrom(px,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');const id=g.createImageData(w,h);new Uint32Array(id.data.buffer).set(px);g.putImageData(id,0,0);return c;}
 function genSprite(sp,seed,size,season){
-  const rng=mul32(seed),pal=sp.leaf[season],B=sp.bark;let w,h,px,ax,cb,cw;const S=(x,y,c)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<w&&y<h)px[y*w+x]=c;};const G=(x,y)=>(x>=0&&y>=0&&x<w&&y<h)?px[y*w+x]:0;
-  const branches=(x,y,a,len,d,col)=>{for(let s=0;s<len;s++){x+=Math.cos(a);y+=Math.sin(a);S(x,y,col[d>2?1:2]);if(d>3)S(x+1,y,col[2]);}if(d<=0){S(x,y-1,col[1]);return;}const n=rng()<.3?3:2;for(let k=0;k<n;k++)branches(x,y,a+(k-(n-1)/2)*(.55+rng()*.3),len*(.62+rng()*.18),d-1,col);};
+  const rng=mul32(seed),pal=sp.leaf[season],B=sp.bark;let w,h,px,ax,cb,cw;const S=(x,y,c)=>{x=Math.floor(x);y=Math.floor(y);if(x>=0&&y>=0&&x<w&&y<h)px[y*w+x]=c;};const G=(x,y)=>(x>=0&&y>=0&&x<w&&y<h)?px[y*w+x]:0;
+  const branches=(x,y,a,len,d,col,fan=1)=>{for(let s=0;s<len;s++){x+=Math.cos(a);y+=Math.sin(a);S(x,y,col[d>1?1:2]);if(d>1)S(x+1,y,col[2]);}if(d<=0){S(x,y-1,col[1]);return;}const n=rng()<.45?3:2;for(let k=0;k<n;k++)branches(x,y,a+(k-(n-1)/2)*(.55+rng()*.3)*fan,len*(.62+rng()*.18),d-1,col,fan);};
   if(sp.kind==='broad'||sp.kind==='bush'||sp.kind==='acacia'||sp.kind==='dead'){
     const R=Math.round((sp.R[0]+(sp.R[1]-sp.R[0])*rng())*size),flat=sp.kind==='acacia',bush=sp.kind==='bush';
     const tr=bush?0:Math.round((sp.tr[0]+(sp.tr[1]-sp.tr[0])*rng())*size);const ry=flat?R*.42:R*.85;
     w=Math.round(2*R*(flat?1.35:1)+5);h=Math.round(ry*2+tr+3);px=new Uint32Array(w*h);ax=(w/2)|0;const base=h-1,cx=ax,cy=Math.round(ry)+1;
     cb=Math.min(h,Math.round(cy+ry));cw=Math.round(R*(flat?1.35:1));
-    if(!bush){const tw=Math.max(2,Math.round(R/4))+(sp.big?1:0),top=pal?cy+Math.round(ry*.35):cy-1;
+    // a bare tree forks low and only 3 levels deep, so its few long branches read at this size and stay inside the sprite
+    const bareTy=cy+Math.round(ry*(sp.kind==='dead'?.1:.45));
+    if(!bush){const tw=Math.max(2,Math.round(R/4))+(sp.big?1:0),top=pal?cy+Math.round(ry*.35):bareTy;
       for(let y=top;y<=base;y++){const flare=y>=base-1?(base-y===0?2:1):0;for(let dx=-((tw/2)|0)-flare;dx<tw-((tw/2)|0)+flare;dx++){const x=cx+dx;const rel=(dx+((tw/2)|0))/Math.max(1,tw-1);let c=rel<.34?B[0]:rel>.7?B[2]:B[1];
         if(sp.birch){c=B[0];if(rel>.7)c=B[1];if(hash2(x+seed,y>>1)<.22&&((y+x)&1))c=B[2];}else if(hash2(x*5+seed,y)<.12)c=B[2];S(x,y,c);}}
       if(flat){const fy=cy+2;for(let k=-1;k<=1;k+=2)for(let s=0;s<R*.7;s++)S(cx+k*s,top-s*.55,B[1]);}}
-    if(!pal){if(sp.kind!=='bush'){const ty=bush?base:cy+Math.round(ry*.2);branches(cx,ty,-Math.PI/2,bush?R*.5:R*(sp.kind==='dead'?.75:.55),bush?2:(sp.kind==='dead'?3:4),B);if(sp.kind==='dead'){for(let y=0;y<4;y++)S(cx,cy-ry*.8+y,0);}}
+    if(!pal){if(sp.kind!=='bush'){const dead=sp.kind==='dead';branches(cx,bareTy,-Math.PI/2,(bareTy-2)/(dead?2:2.2),2,B,dead?1.3:1.7);}
       if(bush)for(let k=-1;k<=1;k+=2){branches(cx+k,base,-Math.PI/2+k*.45,R*.5,1,B);} }
     else{const n=flat?7:(5+((R/3)|0)),cl=[[cx,cy,R*(flat?.55:.62)]];
       for(let k=0;k<n;k++){const a=rng()*6.283,d=Math.sqrt(rng())*R*(flat?1:.55);cl.push([cx+Math.cos(a)*d*(flat?1.25:1),cy+Math.sin(a)*d*(flat?.28:.72),R*(flat?.38:.42+rng()*.2)]);}
@@ -206,10 +208,12 @@ trees.forEach((t,i)=>grid[clamp((t.y/GS)|0,0,GCH-1)*GCW+clamp((t.x/GS)|0,0,GCW-1
 const DG=16,DW=WW/DG,DH=WH/DG,DEN=new Float32Array(DW*DH);for(const t of trees){if(t.u)continue;const k=((t.y/DG)|0)*DW+((t.x/DG)|0);if(k>=0&&k<DEN.length)DEN[k]+=.34;}
 {const tmp=DEN.slice();for(let y=1;y<DH-1;y++)for(let x=1;x<DW-1;x++){const i=y*DW+x;DEN[i]=Math.min(1,(tmp[i]*4+tmp[i-1]+tmp[i+1]+tmp[i-DW]+tmp[i+DW])/8);}}
 
-// ---------- ground (re-baked once per season) ----------
-const ground=document.createElement('canvas');ground.width=WW;ground.height=WH;const gctx=ground.getContext('2d');
+// ---------- ground: one canvas per season, baked once and kept ----------
+// the season on screen is baked on first use. The other three are baked in the first seconds after load, one per timer tick
+const GCACHE=[null,null,null,null];let ground=null;
+function useGround(s){const G=GCACHE[s]||genGround(s);ground=G.c;miniImg=G.mini;}
 const CM=[[128,150,110],[196,178,98],[70,118,92],[64,146,60]];
-function genGround(s){const id=gctx.createImageData(WW,WH),px=new Uint32Array(id.data.buffer);
+function genGround(s){const gc=document.createElement('canvas');gc.width=WW;gc.height=WH;const gctx=gc.getContext('2d');const id=gctx.createImageData(WW,WH),px=new Uint32Array(id.data.buffer);
   for(let y=0;y<WH;y++){const fy=Math.min(CH-1.001,y/CG),y0=fy|0,ty=fy-y0,pxp=pathX(y);
     for(let x=0;x<WW;x++){const fx=Math.min(CW-1.001,x/CG),x0=fx|0,tx=fx-x0,i0=y0*CW+x0;
       const T=(BT[i0]*(1-tx)+BT[i0+1]*tx)*(1-ty)+(BT[i0+CW]*(1-tx)+BT[i0+CW+1]*tx)*ty,M=(BM[i0]*(1-tx)+BM[i0+1]*tx)*(1-ty)+(BM[i0+CW]*(1-tx)+BM[i0+CW+1]*tx)*ty;
@@ -227,7 +231,7 @@ function genGround(s){const id=gctx.createImageData(WW,WH),px=new Uint32Array(id
   // minimap
   const mid=mctx.createImageData(CW,CH),mp=new Uint32Array(mid.data.buffer);for(let i=0;i<CW*CH;i++){let c=U(BIOMES[BB[i]].col);if(s===3&&BT[i]<.62)c=U('#cfd8e8');mp[i]=c;}
   for(const t of trees){if(t.u)continue;const i=((t.y/CG)|0)*CW+((t.x/CG)|0);const c=mp[i];mp[i]=(255<<24)|((((c>>16)&255)*.6)<<16)|((((c>>8)&255)*.6)<<8)|((c&255)*.6);}
-  for(let y=0;y<CH;y++){const x=(pathX(y*CG)/CG)|0;mp[y*CW+x]=U('#a0835e');}miniImg=mid;}
+  for(let y=0;y<CH;y++){const x=(pathX(y*CG)/CG)|0;mp[y*CW+x]=U('#a0835e');}return GCACHE[s]={c:gc,mini:mid};}
 let miniImg=null;
 
 // ---------- player sprites (normal / shade / silhouette) ----------
@@ -243,29 +247,34 @@ const PSPR={};for(const dir of ['down','up','left','right'])for(let f=0;f<3;f++)
 let season=1,auto=false,wind=.45,occ='dither',layers={shadows:true,dapple:true,birds:true,grid:false},time=0,frameMs=0,lastGroundSeason=-1;
 const player={x:pathX(520),y:520,dir:'down',anim:0,moving:false,tx:null,ty:null};let camX=0,camY=0;
 const sIdx=t=>{const s=season-t.off;return ((Math.floor(s+.5)%4)+4)%4;};
-const swayOf=t=>{const sp=SPECIES[t.sp];const g=vnoise((t.x+t.y*.35)/80-time*wind*1.3,t.y/120)-.35;return wind*sp.flex*(.5*Math.sin(time*1.7+t.ph)+1.2*g)+t.shake*Math.sin(time*30)*2.6;};
+const swayOf=t=>{const sp=SPECIES[t.sp];const g=vnoise((t.x+t.y*.35)/80-gust,t.y/120)-.35;return wind*sp.flex*(.5*Math.sin(time*1.7+t.ph)+1.2*g)+t.shake*Math.sin(time*30)*2.6;};
 const keys={};const parts=[],litter=[];
+const shaking=new Set(); // trees with shake > 0. They decay here whether or not they are on screen
 function nearby(x,y,r,cb){const x0=clamp(((x-r)/GS)|0,0,GCW-1),x1=clamp(((x+r)/GS)|0,0,GCW-1),y0=clamp(((y-r)/GS)|0,0,GCH-1),y1=clamp(((y+r+48)/GS)|0,0,GCH-1);
   for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx])cb(trees[i],i);}
 function trunkR(t){const sp=SPECIES[t.sp];if(t.u)return 0;return sp.kind==='broad'?(sp.big?4:3):2;}
 function blocked(x,y){if(x<4||y<14||x>WW-4||y>WH-2)return true;let b=false;nearby(x,y,8,t=>{const r=trunkR(t);if(!r)return;const dx=x-t.x,dy=(y-t.y)*1.7;if(dx*dx+dy*dy<(r+2)*(r+2))b=true;});return b;}
 
 // ---------- birds ----------
-const birds=[];const BIRDCOL=()=>{const b=biomeAt(player.x,player.y),s=Math.floor(season+.5)%4;if(s===3)return ['#24232b','#3e3d48'];if(b===5)return rnd()<.5?['#d8402a','#2e8a3a']:['#2e8a3a','#f2c14e'];if(s===0&&rnd()<.4)return ['#3a6ac8','#e8a060'];return ['#7a5a3a','#d8c8a8'];};
+// a bird's colours follow the biome it sits in and the season. recolour() runs at spawn, on a hop, on landing and on a relocation,
+// so a flock turns over a bird at a time within about 3 s of a season change or as the birds follow the player into another biome
+const birds=[];const BIRDCOL=(x,y)=>{const b=biomeAt(x,y),s=Math.floor(season+.5)%4;if(s===3)return ['#24232b','#3e3d48'];if(b===5)return rnd()<.5?['#d8402a','#2e8a3a']:['#2e8a3a','#f2c14e'];if(s===0&&rnd()<.4)return ['#3a6ac8','#e8a060'];return ['#7a5a3a','#d8c8a8'];};
+function recolour(b){const k=(Math.floor(season+.5)%4)*8+biomeAt(b.x,b.y);if(b.key!==k){b.key=k;b.col=BIRDCOL(b.x,b.y);}}
 function perchSpot(t){const S=SPR[t.sp][t.v][sIdx(t)];return [t.x+(rnd()-.5)*S.cw*1.1,t.y-S.h+3+rnd()*4];}
 function randomTreeNear(x,y,minD,maxD){let best=null,tries=0;while(tries++<40){const a=rnd()*6.283,d=minD+rnd()*(maxD-minD);let c=null;nearby(x+Math.cos(a)*d,y+Math.sin(a)*d,10,t=>{if(!c&&!t.u&&SPR[t.sp][t.v][sIdx(t)].leafy!==undefined)c=t;});if(c){best=c;break;}}return best;}
-function spawnBirds(){birds.length=0;for(let k=0;k<28;k++){const t=randomTreeNear(player.x,player.y,40,220);if(!t)continue;const [bx,by]=perchSpot(t);const col=BIRDCOL();birds.push({x:bx,y:t.y,px:bx,py:by,z:t.y-by,vx:0,vy:0,state:'perch',tree:t,col,flap:rnd()*6,timer:0,hop:0});}}
-function updateBirds(dt){const fly=birds.filter(b=>b.state!=='perch');
+function spawnBirds(){birds.length=0;for(let k=0;k<28;k++){const t=randomTreeNear(player.x,player.y,40,220);if(!t)continue;const [bx,by]=perchSpot(t);const b={x:bx,y:t.y,px:bx,py:by,z:t.y-by,vx:0,vy:0,state:'perch',tree:t,col:null,key:-1,flap:rnd()*6,timer:0,hop:0};recolour(b);birds.push(b);}}
+const fly=[];
+function updateBirds(dt){fly.length=0;for(const b of birds)if(b.state!=='perch')fly.push(b);
   for(const b of birds){b.flap+=dt*14;
-    if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){b.hop=.6+rnd()*2.5;b.px+=(rnd()<.5?-1:1);}
+    if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){recolour(b);b.hop=.6+rnd()*2.5;const lim=SPR[b.tree.sp][b.tree.v][sIdx(b.tree)].cw*.55;b.px=clamp(b.px+(rnd()<.5?-1:1),b.tree.x-lim,b.tree.x+lim);} // hops stay on the crown
       if(dx*dx+dy*dy<30*30||b.tree.shake>.3){b.state='fly';const L=Math.hypot(dx,dy)||1;b.vx=dx/L*45+(rnd()-.5)*20;b.vy=dy/L*35;b.z=b.tree.y-b.py;b.timer=6+rnd()*10;}
-      else if(Math.hypot(dx,dy)>420){const t=randomTreeNear(player.x,player.y,180,260);if(t){const [bx,by]=perchSpot(t);b.tree=t;b.x=bx;b.y=t.y;b.px=bx;b.py=by;}}continue;}
+      else if(Math.hypot(dx,dy)>420){const t=randomTreeNear(player.x,player.y,180,260);if(t){const [bx,by]=perchSpot(t);b.tree=t;b.x=bx;b.y=t.y;b.px=bx;b.py=by;recolour(b);}}continue;}
     if(b.state==='fly'){let sx=0,sy=0,ax=0,ay=0,cx=0,cy=0,n=0;for(const o of fly){if(o===b)continue;const dx=o.x-b.x,dy=o.y-b.y,d2=dx*dx+dy*dy;if(d2<64){sx-=dx;sy-=dy;}if(d2<1600){ax+=o.vx;ay+=o.vy;cx+=o.x;cy+=o.y;n++;}}
       const tx=player.x+Math.cos(time*.21+b.flap*.0)*90,ty=player.y-20+Math.sin(time*.17)*60;let fx=sx*1.6+(tx-b.x)*.12,fy=sy*1.6+(ty-b.y)*.12;if(n){fx+=(ax/n-b.vx)*.5+(cx/n-b.x)*.35;fy+=(ay/n-b.vy)*.5+(cy/n-b.y)*.35;}
       b.vx+=fx*dt*2;b.vy+=fy*dt*2;const sp=Math.hypot(b.vx,b.vy),cl=clamp(sp,30,52);b.vx*=cl/(sp||1);b.vy*=cl/(sp||1);b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=(36+Math.sin(b.flap*.2)*4-b.z)*dt;
       b.timer-=dt;if(b.timer<=0){const t=randomTreeNear(player.x,player.y,70,180);if(t){b.tree=t;const [bx,by]=perchSpot(t);b.px=bx;b.py=by;b.state='land';}else b.timer=3;}
       if(Math.hypot(b.x-player.x,b.y-player.y)>380){b.x=player.x+(rnd()<.5?-1:1)*200;b.y=player.y+(rnd()-.5)*120;}}
-    else if(b.state==='land'){const dx=b.px-b.x,dy=b.tree.y-b.y,L=Math.hypot(dx,dy);const tz=b.tree.y-b.py;if(L<2&&Math.abs(b.z-tz)<2){b.state='perch';b.x=b.px;b.y=b.tree.y;continue;}
+    else if(b.state==='land'){const dx=b.px-b.x,dy=b.tree.y-b.y,L=Math.hypot(dx,dy);const tz=b.tree.y-b.py;if(L<2&&Math.abs(b.z-tz)<2){b.state='perch';b.x=b.px;b.y=b.tree.y;recolour(b);continue;}
       const sp=Math.min(40,L*2+8);b.vx=dx/(L||1)*sp;b.vy=dy/(L||1)*sp;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=(tz-b.z)*Math.min(1,dt*2.5);
       const ddx=b.x-player.x,ddy=b.y-player.y;if(ddx*ddx+ddy*ddy<900){b.state='fly';b.timer=5;}}}}
 const BF=[["#...#",".#.#.","..#.."],[".....","##.##","..#.."]];
@@ -273,18 +282,21 @@ function drawBirdFlying(b){const fr=(Math.sin(b.flap)>0)?0:1,x=Math.round(b.x-ca
 function drawBirdPerch(b){const x=Math.round(b.px-camX+(b.tree.sw||0)),y=Math.round(b.py-camY+(b.hop<.15?-1:0));ctx.fillStyle=b.col[0];ctx.fillRect(x,y,2,2);ctx.fillRect(x-1,y+1,1,1);ctx.fillStyle=b.col[1];ctx.fillRect(x+2,y,1,1);ctx.fillRect(x,y+1,1,1);}
 
 // ---------- update ----------
-function update(dt){time+=dt;if(auto){season=(season+dt*.025)%4;}
-  const gs=Math.floor(season+.5)%4;if(gs!==lastGroundSeason){lastGroundSeason=gs;genGround(gs);drawAtlas(gs);document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===gs));}
+// gust: how far the gust field has travelled. Integrated, so a wind change alters its speed and not its position
+let gust=0;
+function update(dt){time+=dt;gust+=wind*1.3*dt;if(auto){season=(season+dt*.025)%4;}
+  const gs=Math.floor(season+.5)%4;if(gs!==lastGroundSeason){lastGroundSeason=gs;useGround(gs);drawAtlas(gs);document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===gs));}
   let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.arrowright||keys.d)ix++;if(keys.arrowup||keys.w)iy--;if(keys.arrowdown||keys.s)iy++;
   if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<1.5)player.tx=null;else{ix=dx/L;iy=dy/L;}}
-  let slow=1;nearby(player.x,player.y,8,t=>{if(!t.u)return;const dx=player.x-t.x,dy=(player.y-t.y)*1.6;if(dx*dx+dy*dy<40){slow=.7;if(player.moving){t.shake=Math.max(t.shake,.55);if(rnd()<dt*6)leafBurst(t,1);}}});
+  let slow=1;nearby(player.x,player.y,8,t=>{if(!t.u)return;const dx=player.x-t.x,dy=(player.y-t.y)*1.6;if(dx*dx+dy*dy<40){slow=.7;if(player.moving){t.shake=Math.max(t.shake,.55);shaking.add(t);if(rnd()<dt*6)leafBurst(t,1);}}});
   const L=Math.hypot(ix,iy)||1,sp=42*slow;const nx=player.x+ix/L*sp*dt,ny=player.y+iy/L*sp*dt;let mx=0,my=0;if(!blocked(nx,player.y)){mx=nx-player.x;player.x=nx;}if(!blocked(player.x,ny)){my=ny-player.y;player.y=ny;}
   player.moving=Math.abs(mx)+Math.abs(my)>.001;if(player.tx!==null&&!player.moving)player.tx=null;if(player.moving){player.anim+=dt*8;if(Math.abs(ix)>Math.abs(iy))player.dir=ix>0?'right':'left';else player.dir=iy>0?'down':'up';}else player.anim=0;
   camX=clamp(Math.round(player.x-VW/2),0,WW-VW);camY=clamp(Math.round(player.y-VH/2-8),0,WH-VH);
   // seasonal particles from visible trees
   const s=Math.floor(season+.5)%4;
-  visible.forEach(t=>{t.shake*=Math.pow(.25,dt);const sp=SPECIES[t.sp],k=sIdx(t);if(t.u)return;if(k===2&&sp.dec&&rnd()<dt*.18)leafBurst(t,1);else if(k===0&&sp.blossom&&rnd()<dt*.35)leafBurst(t,1);});
-  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=(p.vx+wind*14+Math.sin(time*3+p.ph)*6)*dt;p.z-=p.vz*dt;if(p.z<=0||p.life<=0){if(p.z<=0&&p.kind==='leaf'){litter.push([p.x|0,p.y|0,p.col]);if(litter.length>500)litter.shift();}parts.splice(i,1);}}
+  for(const t of shaking){t.shake*=Math.pow(.25,dt);if(t.shake<.01){t.shake=0;shaking.delete(t);}}
+  visible.forEach(t=>{const sp=SPECIES[t.sp],k=sIdx(t);if(t.u)return;if(k===2&&sp.dec&&rnd()<dt*.18)leafBurst(t,1);else if(k===0&&sp.blossom&&rnd()<dt*.35)leafBurst(t,1);});
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=(p.vx+wind*14+Math.sin(time*3+p.ph)*6)*dt;p.z-=p.vz*dt;if(p.z<=0||p.life<=0){if(p.z<=0&&p.kind==='leaf'){litter.push([p.x|0,p.y|0,p.col]);if(litter.length>500)litter.shift();}parts[i]=parts[parts.length-1];parts.pop();}}
   if(s===3&&snowFlakes.length<90)snowFlakes.push([rnd()*VW,rnd()*VH,rnd()]);
   if(layers.birds)updateBirds(dt);}
 function leafBurst(t,n){const S=SPR[t.sp][t.v][sIdx(t)],sp=SPECIES[t.sp],k=sIdx(t),pal=sp.leaf[k];if(!pal)return;const col=pal[(rnd()*3)|0];
@@ -293,11 +305,13 @@ const snowFlakes=[];
 
 // ---------- render ----------
 let visible=[],drawnCount=0;
-const u32hex=c=>'#'+[(c&255),(c>>8)&255,(c>>16)&255].map(v=>v.toString(16).padStart(2,'0')).join('');
+// rows above cb sway. The lowest 2 rows never do, so a fern keeps its foot on the ground
+const cbOf=(t,S)=>Math.min(S.cb,S.h-2),byY=(a,b)=>a.y-b.y;
+const HEXC=new Map(),u32hex=c=>{let s=HEXC.get(c);if(!s){s='#'+[(c&255),(c>>8)&255,(c>>16)&255].map(v=>v.toString(16).padStart(2,'0')).join('');HEXC.set(c,s);}return s;}; // one string per colour, not one per pixel per frame
 function render(){const t0=performance.now();
   ctx.globalAlpha=1;ctx.drawImage(ground,camX,camY,VW,VH,0,0,VW,VH);
-  visible=[];const x0=clamp(((camX-40)/GS)|0,0,GCW-1),x1=clamp(((camX+VW+40)/GS)|0,0,GCW-1),y0=clamp(((camY-8)/GS)|0,0,GCH-1),y1=clamp(((camY+VH+80)/GS)|0,0,GCH-1);
-  for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx]){const t=trees[i];const S=SPR[t.sp][t.v][sIdx(t)];if(t.x+S.w<camX||t.x-S.w>camX+VW||t.y-S.h>camY+VH||t.y<camY-4)continue;visible.push(t);}
+  visible.length=0;const x0=clamp(((camX-40)/GS)|0,0,GCW-1),x1=clamp(((camX+VW+40)/GS)|0,0,GCW-1),y0=clamp(((camY-8)/GS)|0,0,GCH-1),y1=clamp(((camY+VH+80)/GS)|0,0,GCH-1);
+  for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx]){const t=trees[i];const S=SPR[t.sp][t.v][sIdx(t)];if(t.x+S.w<camX||t.x-S.w>camX+VW||t.y-S.h>camY+VH||t.y<camY-14)continue;visible.push(t);} // 14 px above the top edge: a shadow reaches that far below its tree
   // litter
   for(const [x,y,c] of litter){const sx=x-camX,sy=y-camY;if(sx<0||sy<0||sx>=VW||sy>=VH)continue;ctx.fillStyle=u32hex(c);ctx.fillRect(sx,sy,1,1);}
   // shadows + sunflecks
@@ -308,23 +322,28 @@ function render(){const t0=performance.now();
         if(layers.dapple&&rx>5){ctx.globalAlpha=.32;ctx.fillStyle='#fbefb0';const sw=t.sw||0;for(let k=0;k<3;k++){const a=hash2(t.x+k*31,t.y)*6.28,d=hash2(t.y+k,t.x)*.75;const fx=Math.round(cxs+Math.cos(a)*d*rx+sw*.6+Math.sin(time*1.3+k+t.ph)*.8-camX),fy=Math.round(cys+Math.sin(a)*d*ry-camY);ctx.fillRect(fx,fy,2,1);}}}}
     ctx.globalAlpha=.28;ctx.fillStyle='#0d1a10';if(layers.birds)for(const b of birds){if(b.state==='perch')continue;ctx.fillRect(Math.round(b.x-camX-1),Math.round(b.y-camY),3,1);}ctx.globalAlpha=1;}
   // y-sorted draw: trees, bushes, player
-  const pRect=[player.x-3,player.y-11,player.x+3,player.y];let occluded=false;const items=visible.map(t=>[t.y,t]);items.push([player.y+.5,null]);items.sort((a,b)=>a[0]-b[0]);
-  for(const [,t] of items){if(!t){drawPlayer(inShade);continue;}const S=SPR[t.sp][t.v][sIdx(t)];const sw=swayOf(t);t.sw=sw;const X=Math.round(t.x-S.ax-camX),Y=Math.round(t.y-S.h+1-camY);
+  const pRect=[player.x-3,player.y-11,player.x+3,player.y];let occluded=false,pDone=false;visible.sort(byY);
+  for(const t of visible){if(!pDone&&t.y>player.y+.5){drawPlayer(inShade);pDone=true;}const S=SPR[t.sp][t.v][sIdx(t)];const sw=swayOf(t);t.sw=sw;const X=Math.round(t.x-S.ax-camX),Y=Math.round(t.y-S.h+1-camY);
     const front=!t.u&&t.y>player.y&&pRect[2]>t.x-S.cw-1&&pRect[0]<t.x+S.cw+1&&pRect[3]>t.y-S.h+1&&pRect[1]<t.y-S.h+1+S.cb;if(front)occluded=true;
-    const src=front&&occ==='dither'?S.f:S.c,cb=S.cb,b1=Math.round(cb*.35),b2=Math.round(cb*.7);const bands=[[0,b1,Math.round(sw*2.2)],[b1,b2,Math.round(sw*1.4)],[b2,cb,Math.round(sw*.7)]];
+    const src=front&&occ==='dither'?S.f:S.c,cb=cbOf(t,S),b1=Math.round(cb*.35),b2=Math.round(cb*.7);
     if(front&&occ==='cutaway'){ctx.save();ctx.beginPath();ctx.rect(X-8,Y,S.w+16,cb);ctx.arc(player.x-camX,player.y-6-camY,13,0,6.283);ctx.clip('evenodd');}
-    for(const [a,b,o] of bands)if(b>a)ctx.drawImage(src,0,a,S.w,b-a,X+o,Y+a,S.w,b-a);if(front&&occ==='cutaway')ctx.restore();
+    // three sway bands, top moves most
+    if(b1>0)ctx.drawImage(src,0,0,S.w,b1,X+Math.round(sw*2.2),Y,S.w,b1);if(b2>b1)ctx.drawImage(src,0,b1,S.w,b2-b1,X+Math.round(sw*1.4),Y+b1,S.w,b2-b1);if(cb>b2)ctx.drawImage(src,0,b2,S.w,cb-b2,X+Math.round(sw*.7),Y+b2,S.w,cb-b2);
+    if(front&&occ==='cutaway')ctx.restore();
     if(cb<S.h)ctx.drawImage(S.c,0,cb,S.w,S.h-cb,X,Y+cb,S.w,S.h-cb);
     if(layers.birds)for(const b of birds)if(b.state==='perch'&&b.tree===t)drawBirdPerch(b);}
+  if(!pDone)drawPlayer(inShade);
   drawnCount=visible.length;
   if(layers.birds){ctx.globalAlpha=1;for(const b of birds)if(b.state!=='perch')drawBirdFlying(b);}
   for(const p of parts){ctx.fillStyle=u32hex(p.col);ctx.fillRect(Math.round(p.x-camX),Math.round(p.y-p.z-camY),1,1);}
-  if(Math.floor(season+.5)%4===3){ctx.fillStyle='#f4f8ff';for(const f of snowFlakes){f[1]+=.25+f[2]*.35;f[0]+=wind*.5+Math.sin(time+f[2]*9)*.2;if(f[1]>VH){f[1]=0;f[0]=rnd()*VW;}if(f[0]>VW)f[0]-=VW;ctx.fillRect(f[0]|0,f[1]|0,f[2]>.7?2:1,1);}}
+  if(Math.floor(season+.5)%4===3){ctx.fillStyle='#f4f8ff';for(const f of snowFlakes){f[1]+=.25+f[2]*.35;f[0]+=wind*.5+Math.sin(time+f[2]*9)*.2;if(f[1]>VH){f[1]=0;f[0]=rnd()*VW;}if(f[0]>VW)f[0]-=VW;
+      // snow only falls where the ground takes snow: the same T < 0.62 test as genGround
+      if(BT[clamp(((camY+f[1])/CG)|0,0,CH-1)*CW+clamp(((camX+f[0])/CG)|0,0,CW-1)]<.62)ctx.fillRect(f[0]|0,f[1]|0,f[2]>.7?2:1,1);}}
   if(occluded&&occ==='silhouette'){ctx.globalAlpha=.75;ctx.drawImage(PSPR[player.dir+frameOf()+'2'],Math.round(player.x-3-camX),Math.round(player.y-11-camY));ctx.globalAlpha=1;}
   if(layers.grid){ctx.globalAlpha=.6;ctx.strokeStyle='#ffd27a';ctx.lineWidth=1;for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)ctx.strokeRect(gx*GS-camX+.5,gy*GS-camY+.5,GS,GS);ctx.globalAlpha=1;}
   frameMs=frameMs*.9+(performance.now()-t0)*.1;
   // minimap overlay
-  if(miniImg){mctx.putImageData(miniImg,0,0);mctx.strokeStyle='#ffffff';mctx.strokeRect(camX/CG+.5,camY/CG+.5,VW/CG,VH/CG);mctx.fillStyle='#ff4040';mctx.fillRect((player.x/CG|0)-1,(player.y/CG|0)-1,3,3);}}
+  if(miniImg){mctx.putImageData(miniImg,0,0);mctx.strokeStyle='#ffffff';mctx.strokeRect(Math.round(camX/CG)+.5,Math.round(camY/CG)+.5,VW/CG-1,Math.round(VH/CG)-1);mctx.fillStyle='#ff4040';mctx.fillRect((player.x/CG|0)-1,(player.y/CG|0)-1,3,3);}}
 const frameOf=()=>player.moving?[0,1,0,2][(player.anim|0)%4]:0;
 function drawPlayer(shade){ctx.drawImage(PSPR[player.dir+frameOf()+(shade?'1':'0')],Math.round(player.x-3-camX),Math.round(player.y-11-camY));}
 
@@ -335,17 +354,17 @@ function drawAtlas(s){let x=4,y=4,rowH=0,maxW=0;const pos=[];for(const sp of SPR
   document.getElementById('atlasinfo').textContent=`${SPR.length*NV} sprites (12 species × 6 variants) drawn procedurally at load and reused by ${nTrees} trees + ${trees.length-nTrees} bushes/ferns`;}
 
 // ---------- loop & UI ----------
-let last=performance.now();
+let last=performance.now(),hudN=0,hudS='';const hudEl=document.getElementById('hud');
 // frame gate: nothing runs while the canvas is off-screen
 let onScreen=true;
 if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;}).observe(cv);
 function skipFrame(){return !onScreen;}
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();
-  if((time*10|0)%3===0){const b=BIOMES[biomeAt(player.x,player.y)];const sn=['Spring','Summer','Autumn','Winter'][Math.floor(season+.5)%4];
-    document.getElementById('hud').textContent=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;}}
+  if(hudN++%12===0){const b=BIOMES[biomeAt(player.x,player.y)];const sn=['Spring','Summer','Autumn','Winter'][Math.floor(season+.5)%4];
+    const hs=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;if(hs!==hudS)hudEl.textContent=hudS=hs;}}
 document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.onclick=()=>{season=+b.dataset.s;auto=false;document.getElementById('auto').classList.remove('on');});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
-const wEl=document.getElementById('wind');wEl.oninput=()=>wind=wEl.value/100;
+const wEl=document.getElementById('wind');wEl.oninput=()=>{wind=wEl.value/100;document.getElementById('windv').textContent=wEl.value+'%';};
 document.querySelectorAll('#obtns [data-o]').forEach(b=>b.onclick=()=>{occ=b.dataset.o;document.querySelectorAll('#obtns [data-o]').forEach(x=>x.classList.toggle('on',x===b));});
 document.querySelectorAll('#lbtns [data-l]').forEach(b=>b.onclick=()=>{layers[b.dataset.l]=!layers[b.dataset.l];b.classList.toggle('on',layers[b.dataset.l]);});
 // biome jump points + legend
@@ -360,10 +379,15 @@ let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEven
 const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
 addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}
-  if(k==='e'){let best=null,bd=26*26;nearby(player.x,player.y,26,t=>{if(t.u)return;const dx=t.x-player.x,dy=t.y-player.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=t;}});if(best){best.shake=1;leafBurst(best,10);}}});
+  if(k==='e'){let best=null,bd=26*26;nearby(player.x,player.y,26,t=>{if(t.u)return;const dx=t.x-player.x,dy=t.y-player.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=t;}});if(best){best.shake=1;shaking.add(best);leafBurst(best,10);}}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens.
+// The stage shares a grid row with the minimap, so its room is the first grid track, not main
+function fit(){const st=cv.parentElement;st.style.width='';const w=parseFloat(getComputedStyle(st.parentElement).gridTemplateColumns)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 spawnBirds();requestAnimationFrame(loop);
+{let k=0;const bake=()=>{while(k<4&&GCACHE[k])k++;if(k<4){genGround(k);setTimeout(bake,250);}};setTimeout(bake,400);}
 })();
 </script>
 <script src="nav.js" defer></script>

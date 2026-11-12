@@ -144,7 +144,7 @@ const barrel={x:116,y:68,fill:.15};for(let y=68;y<=80;y++)for(let x=116;x<=124;x
 // market stall with awning
 for(let y=34;y<=52;y++)for(let x=148;x<=206;x++){const scal=y>=50&&((x-148)%6<3?y>50:y>51);if(scal&&y>=50)continue;const st=((x-148)/6|0)%2;put(x,y,CLOTH,y>=49?CL[2]:(st?CL[1]:CL[0]),58,y<=48&&y>=40,0);}
 for(const px of [149,205])for(let y=50;y<=58;y++)put(px,y,SOLID,WD[2],58,y>=57,12);
-for(let x=152;x<=202;x++)for(let y=53;y<=55;y++){const i=y*W+x;SHL[i]*=.15;}for(let x=148;x<=206;x++)for(let y=56;y<=60;y++)SHL[y*W+x]*=Math.min(1,.2+(y-56)*.2);
+for(let x=150;x<=204;x++)for(let y=53;y<=55;y++){const i=y*W+x;SHL[i]*=.04;}for(let x=148;x<=206;x++)for(let y=56;y<=60;y++)SHL[y*W+x]*=Math.min(1,.2+(y-56)*.2);
 // fountain
 const FX=180,FY=96;for(let y=FY-15;y<=FY+15;y++)for(let x=FX-17;x<=FX+17;x++){const r=Math.hypot(x-FX,(y-FY)*1.15);const i=y*W+x;
   if(r<12.5){S[i]=WATER;B[i]=r<6?WA[0]:WA[1];Cm[i]=1;O[i]=-1;}else if(r<15.5){put(x,y,r<14?STONE:SOLID,r<14?CO[3]:SW[1],FY+12,true,4);}}
@@ -170,21 +170,29 @@ function computeExposure(w){const dir=Math.sign(w),mag=Math.abs(w);for(let y=0;y
   if((S[i]<=SAND||S[i]===WOOD)&&mag>.15){for(let d=1;d<=26;d++){const sx=x-dir*d;if(sx<0||sx>=W)break;const h=WOB[y*W+sx];if(h>0){const L=h*.9*mag+1.5;if(d<L){const f=d/L;e*=.08+.92*f*f;}break;}}}EXP[i]=e;}}
 for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){let h=0;for(let k=0;k<4;k++){const i=(cy*2+(k>>1))*W+cx*2+(k&1);const s=S[i];h+=(s===STONE||s===ROOF||s===WOOD||s===METAL||s===SOLID)?1:s===WATER?.8:s===DIRT?.4:.15;}HARD[cy*GW+cx]=h/4;}
 
+// spray mist source: the hard-surface mask blurred twice so the haze has no rectangle edges, times a drifting noise so it comes in wisps
+const HARDS=new Float32Array(GW*GH),MNZ=new Float32Array(GW*GH),MTH=new Float32Array(NP);let mistOff=0;
+{let a=Float32Array.from(HARD),b=new Float32Array(GW*GH);for(let p=0;p<2;p++){for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){let s=0,n=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=GW||Y>=GH)continue;s+=a[Y*GW+X];n++;}b[y*GW+x]=s/n;}const q=a;a=b;b=q;}HARDS.set(a);
+  for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const u=x/GW,n=vnoise(x/11,y/8+50)*(1-u)+vnoise((x-GW)/11,y/8+50)*u;MNZ[y*GW+x]=Math.max(0,n-.25)*2.4;}
+  for(let i=0;i<NP;i++)MTH[i]=2+BY[i]*.5+HS[i]*8;}
+
 // ---------- state ----------
 const LEVELS={sun:0,overcast:0,drizzle:.12,light:.3,moderate:.5,heavy:.75,storm:1};
 let lastBolt=-9,weather='overcast',auto=true,I=0,targetI=0,wind=.3,windT=.3,speed=1,paused=false,view='normal',frameN=0,simMs=0,t=0,roof=0,awn=0,flash=0,shake=0,thunderT=-1,boltT=0,bolt=null,lastRain=-999;
 const CYCLE=[['overcast',8],['drizzle',14],['light',14],['moderate',14],['heavy',14],['storm',22],['heavy',10],['light',10],['drizzle',8],['sun',34]];let cyc=0,wTimer=8;
 const player={x:140,y:112,dir:'down',anim:0,dist:0,foot:0,moving:false,tx:null,ty:null,wet:0,shoe:0,umb:false,drip:0};
-const vill={x:72,y:96,dir:'down',anim:0,dist:0,foot:0,wp:0,wait:1,moving:false,wet:0,shoe:0};const VWP=[[72,96],[110,102],[150,112],[214,74],[150,112],[110,102],[68,150]];
+const vill={x:72,y:96,dir:'down',anim:0,dist:0,foot:0,wp:0,wait:1,moving:false,wet:0,shoe:0};const VWP=[[72,96],[110,102],[150,113],[200,113],[214,74],[200,113],[150,113],[110,102],[68,150]]; // the plaza legs pass south of the fountain
 const frogs=[];const parts=[];
 const MAXD=1600;const D={x:new Float32Array(MAXD),y:new Float32Array(MAXD),z:new Float32Array(MAXD),l:new Uint8Array(MAXD),on:new Uint8Array(MAXD)};let nDrops=0;
-function curtain(x,y){return .45+.75*vnoise((x-wind*t*42)/46,y/38+t*.04);}
+// curOff is the wind integrated over time, so a wind change bends the curtains' path and does not move them
+let curOff=0;function curtain(x,y){return .45+.75*vnoise((x-curOff)/46,y/38+t*.04);}
 function spawnDrop(k){let x,y,tries=0;do{x=rnd()*(W+80)-40;y=rnd()*(H+90);tries++;}while(rnd()>curtain(x,y)*.8&&tries<4);
   D.x[k]=x;D.y[k]=y;D.z[k]=40+rnd()*60;const r=rnd();D.l[k]=r<.5?0:r<.85?1:2;D.on[k]=1;}
 
 // ---------- rain impact ----------
 function wetHit(i,amt){if(WET[i]<255)WET[i]=Math.min(255,WET[i]+amt);const s=S[i];if(s<=WOOD)WAT[i]+=RIN[s]*amt/26;}
-function impact(x,y,layer){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return;const i=y*W+x,s=S[i];
+// drip: a drop that fell from an eave, the awning or a tree. A sky drop aimed at sheltered ground was caught by the cover above it
+function impact(x,y,layer,drip){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return;const i=y*W+x,s=S[i];if(!drip&&s<=WOOD&&rnd()>EXP[i])return;
   if(player.umb&&Math.abs(x-player.x)<6&&Math.abs(y-player.y)<4){parts.push({k:'spl',x:x,y:player.y,z:15,vx:(rnd()-.5)*30,vy:0,vz:20,life:.25});return;}
   if(fire.on&&Math.hypot(x-fire.x,y-fire.y)<7){if(rnd()<.5)parts.push({k:'steam',x,y,z:3,vx:wind*6,vy:0,vz:10,life:.9});fire.F-=.004;return;}
   if(s===WATER||WAT[i]>.12){R0[i]-=layer===2?3:1.6;}
@@ -196,7 +204,7 @@ function impact(x,y,layer){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return;const i=
 // ---------- sim step (fixed 60 Hz) ----------
 function simStep(sunny){
   // background rain hits (most of the wetting comes from these "virtual drops")
-  const n=(I*1500)|0;for(let k=0;k<n;k++){const i=(rnd()*NP)|0;const x=i%W,y=(i/W)|0;if(rnd()<EXP[i]*Math.min(1.3,curtain(x,y))){if(player.umb&&Math.abs(x-player.x)<6&&Math.abs(y-player.y)<4)continue;
+  const n=I>.02?(I*1500)|0:0;for(let k=0;k<n;k++){const i=(rnd()*NP)|0;const x=i%W,y=(i/W)|0;if(rnd()<EXP[i]*Math.min(1.3,curtain(x,y))){if(player.umb&&Math.abs(x-player.x)<6&&Math.abs(y-player.y)<4)continue;
     if(S[i]===WATER||WAT[i]>.12){if(rnd()<.35)R0[i]-=.9;}wetHit(i,(8+28*I)|0);if(S[i]===ROOF)roof=Math.min(1,roof+.00002);}}
   // walls catch splash-back at their feet in heavy rain
   if(I>.5)for(let k=0;k<60;k++){const x=26+((rnd()*87)|0),y=78+((rnd()*3)|0);WET[y*W+x]=Math.min(255,WET[y*W+x]+20);}
@@ -227,9 +235,10 @@ function simStep(sunny){
   // barrel fills from the sky, overflows into the dirt
   barrel.fill=Math.min(1.05,barrel.fill+I*.00006);if(sunny)barrel.fill=Math.max(0,barrel.fill-.000004);if(barrel.fill>1){barrel.fill=1;WAT[81*W+120]+=.05;}
   // mist: spray haze from heavy rain on hard surfaces + evaporation mist when the sun returns
-  if(frameN%10===0)for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const i=cy*2*W+cx*2;CWET[cy*GW+cx]=(WET[i]+WET[i+1]+WET[i+W]+WET[i+W+1])/1020;}
-  const spray=Math.max(0,I-.45)*Math.max(0,I-.45)*.05,evap=sunny?.0045:0;
-  for(let c=0;c<GW*GH;c++)MI[c]+=spray*HARD[c]+evap*CWET[c]*CWET[c];
+  if(frameN%10===0)for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const i=cy*2*W+cx*2;CWET[cy*GW+cx]=((S[i]===WATER?0:WET[i])+(S[i+1]===WATER?0:WET[i+1])+(S[i+W]===WATER?0:WET[i+W])+(S[i+W+1]===WATER?0:WET[i+W+1]))/1020;} // open water is not drying ground
+  const spray=Math.max(0,I-.45)*.03,evap=sunny?.0045:0;mistOff+=wind*.25;const mo=((mistOff|0)%GW+GW)%GW;
+  if(spray>0)for(let cy=0;cy<GH;cy++){const r=cy*GW;for(let cx=0;cx<GW;cx++){let k=cx+mo;if(k>=GW)k-=GW;MI[r+cx]+=spray*HARDS[r+cx]*MNZ[r+k];}}
+  if(evap>0)for(let c=0;c<GW*GH;c++)MI[c]+=evap*CWET[c]*CWET[c];
   const wx=wind*.25;for(let y=1;y<GH-1;y++)for(let x=1;x<GW-1;x++){const c=y*GW+x;const src=sunny?MI[c+GW]*.25+MI[c]*.75:MI[c];const sx=wx>0?MI[c-1]:MI[c+1];
     MI2[c]=((src*(1-Math.abs(wx))+sx*Math.abs(wx))*4+MI[c-1]+MI[c+1]+MI[c-GW]+MI[c+GW])/8*.985;}
   const tm=MI;MI=MI2;MI2=tm;for(let x=0;x<GW;x++){MI[x]=0;MI[(GH-1)*GW+x]=0;}for(let y=0;y<GH;y++){MI[y*GW]=0;MI[y*GW+GW-1]=0;}
@@ -259,7 +268,12 @@ function updateChars(dt){let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.ar
   // villager: heads for the awning when the rain gets heavy
   const shelter=I>.42;let tx,ty;if(shelter){tx=176;ty=55;}else{[tx,ty]=VWP[vill.wp];}
   const dx=tx-vill.x,dy=ty-vill.y,l=Math.hypot(dx,dy);if(vill.wait>0&&!shelter){vill.wait-=dt;vill.moving=false;vill.anim=0;}
-  else if(l<1.5){vill.moving=false;vill.anim=0;if(!shelter){vill.wp=(vill.wp+1)%VWP.length;vill.wait=1+rnd()*3;}else vill.dir='down';}else move(vill,dx/l*(shelter?26:16),dy/l*(shelter?26:16),dt);soak(vill,dt,false);
+  else if(l<1.5){vill.moving=false;vill.anim=0;if(!shelter){vill.wp=(vill.wp+1)%VWP.length;vill.wait=1+rnd()*3;}else vill.dir='down';}else{const sp=shelter?26:16;let ux=dx/l,uy=dy/l;
+    // blocked on the straight line (the run to the awning can cross the fountain): walk sideways for 0.9 s, on the free side
+    if(vill.av>0){vill.av-=dt;const s=vill.avs,qx=-uy*s,qy=ux*s;ux=qx*.9+ux*.25;uy=qy*.9+uy*.25;}
+    const ox=vill.x,oy=vill.y;move(vill,ux*sp,uy*sp,dt);
+    if(!(vill.av>0)&&Math.hypot(vill.x-ox,vill.y-oy)<sp*dt*.3){const free=s=>!blocked(vill.x-dy/l*s*6,vill.y+dx/l*s*6);vill.avs=free(1)===free(-1)?(vill.avs||1):free(1)?1:-1;vill.av=.9;}}
+  soak(vill,dt,false);
   // frogs come out near the pond when it rains
   const want=I>.25?3:(I>.02?1:0);if(frogs.length<want&&rnd()<dt*.5){frogs.push({x:214+rnd()*20,y:126+rnd()*20,t:1,hop:0});}
   if(frogs.length>want&&weather==='sun'&&rnd()<dt*.08)frogs.shift();
@@ -277,13 +291,13 @@ function updateStorm(dt){flash=Math.max(0,flash-dt);boltT=Math.max(0,boltT-dt);i
     for(let k=0;k<10;k++)parts.push({k:'spark',x:tx,y:ty,z:2,vx:(rnd()-.5)*80,vy:(rnd()-.5)*40,vz:20+rnd()*30,life:.35});}}
 
 // ---------- particles & drops ----------
-function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.life-=dt;if(p.life<=0){parts.splice(k,1);continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
-  if(p.k==='spl'||p.k==='mud'||p.k==='spark'){p.vz-=150*dt;if(p.z<0){parts.splice(k,1);continue;}}
-  else if(p.k==='drip'){p.vz-=200*dt;if(p.z<=0){impact(p.x,p.y,1);const i=(p.y|0)*W+(p.x|0);if(i>0&&i<NP){WAT[i]+=.03;if(S[i]===WATER||WAT[i]>.12)R0[i]-=1.5;else if(rnd()<.5)parts.push({k:'spl',x:p.x,y:p.y,z:0,vx:(rnd()-.5)*20,vy:0,vz:14,life:.2});}parts.splice(k,1);continue;}}
+function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.life-=dt;if(p.life<=0){parts[k]=parts[parts.length-1];parts.pop();continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
+  if(p.k==='spl'||p.k==='mud'||p.k==='spark'){p.vz-=150*dt;if(p.z<0){parts[k]=parts[parts.length-1];parts.pop();continue;}}
+  else if(p.k==='drip'){p.vz-=200*dt;if(p.z<=0){impact(p.x,p.y,1,true);const i=(p.y|0)*W+(p.x|0);if(i>0&&i<NP){WAT[i]+=.03;if(S[i]===WATER||WAT[i]>.12)R0[i]-=1.5;else if(rnd()<.5)parts.push({k:'spl',x:p.x,y:p.y,z:0,vx:(rnd()-.5)*20,vy:0,vz:14,life:.2});}parts[k]=parts[parts.length-1];parts.pop();continue;}}
   else if(p.k==='flame'){p.vx+=wind*10*dt;}}}
-function updateDrops(dt){const want=Math.min(MAXD,Math.round(I>0?60+1300*Math.pow(I,1.25):0));
+function updateDrops(dt){const want=Math.min(MAXD,Math.round(I>.02?60+1300*Math.pow(I,1.25):0));
   for(let k=0;k<MAXD;k++){if(!D.on[k]){if(k<want&&rnd()<dt*4)spawnDrop(k);continue;}
-    const l=D.l[k],vz=[110,170,240][l]*(.55+.45*I);D.z[k]-=vz*dt;D.x[k]+=wind*vz*.55*dt;
+    const l=D.l[k],vz=[110,170,240][l]*(.55+.45*I);D.z[k]-=vz*dt; // x is the ground point. The slant comes from the height when drawing
     if(D.z[k]<=0){impact(D.x[k],D.y[k],l);if(k<want)spawnDrop(k);else D.on[k]=0;}}}
 
 // ---------- render ----------
@@ -327,19 +341,19 @@ function render(){buildPalette();const sunny=weather==='sun',slot=(frameN>>3)*26
   // lightning bolt
   if(boltT>0&&bolt){for(const [a,b,c,d] of bolt){line(a+1,b,c+1,d,BOLT[1]);}for(const [a,b,c,d] of bolt)line(a,b,c,d,BOLT[0]);}
   // mist veil
-  for(let y=0;y<H;y++){const gr=(y>>1)*GW;for(let x=0;x<W;x++){const m=MI[gr+(x>>1)];if(m<.03)continue;const i=y*W+x;if(m*12>BY[i]+2&&IDX[i]<N*2)IDX[i]=(IDX[i]%N)+2*N;if(m>.75&&BY[i]<(m-.75)*40)IDX[i]=MIST;}}
+  for(let y=0;y<H;y++){const gr=(y>>1)*GW;for(let x=0;x<W;x++){const m=MI[gr+(x>>1)];if(m<.03)continue;const i=y*W+x;if(m*12>MTH[i]&&IDX[i]<N*2)IDX[i]=(IDX[i]%N)+2*N;if(m>.75&&BY[i]<(m-.75)*40)IDX[i]=MIST;}}
   // palette pass (+ dithered firelight)
   const fl=fire.on?fire.F*(.85+.15*Math.sin(frameN*.4)):0;
   if(view==='normal'){for(let i=0;i<NP;i++){const idx=IDX[i];out32[i]=(fl>0&&FIREL[i]*fl*22>BY[i]+3)?palFire[idx]:pal[idx];}}
   else{for(let i=0;i<NP;i++){let v=-1;const s=S[i];if(view==='wet')v=WET[i]/255;else if(view==='water')v=s===WATER?-1:Math.min(1,WAT[i]*3);else if(view==='ripple')v=(s===WATER||WAT[i]>.12)?.5+R0[i]*.15:-1;else if(view==='exp')v=EXP[i];else v=MI[((i/W|0)>>1)*GW+((i%W)>>1)]*1.2;
     out32[i]=(v<0||SPR[i])?pal[IDX[i]]:HEAT[Math.max(0,Math.min(255,(v*255)|0))];}}
-  ctx.putImageData(img,0,0);cv.style.transform=shake>0?`translate(${(rnd()-.5)*4*shake/.45}px,${(rnd()-.5)*3*shake/.45}px)`:'';}
+  ctx.putImageData(img,0,0);cv.style.transform=shake>0&&!paused?`translate(${(rnd()-.5)*4*shake/.45}px,${(rnd()-.5)*3*shake/.45}px)`:'';}
 const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const q=i/255;HEAT[i]=pack(q<.5?14+q*2*20:34+(q-.5)*2*200,q<.5?20+q*2*120:140+(q-.5)*2*110,q<.5?40+q*2*160:200+(q-.5)*2*50);}
 
 // ---------- loop & UI ----------
 const hud=document.getElementById('hud'),windEl=document.getElementById('wind'),intEl=document.getElementById('inten'),calmEl=document.getElementById('calm');
 function setWeather(w){weather=w;targetI=LEVELS[w];document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.classList.toggle('on',b.dataset.w===w));}
-let last=performance.now(),acc=0,manualI=false;
+let last=performance.now(),acc=0,manualI=false,effK=1,hudN=0;const intvEl=document.getElementById('intv');
 // frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
 // enough to redraw the scene and refresh the HUD
 let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
@@ -348,14 +362,18 @@ for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyu
 function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){t+=dt;if(auto){wTimer-=dt;if(wTimer<=0){cyc=(cyc+1)%CYCLE.length;setWeather(CYCLE[cyc][0]);wTimer=CYCLE[cyc][1];}
-      if(rnd()<dt*.12)windT=(rnd()*2-1)*(.25+I*.75);wind+=(windT-wind)*Math.min(1,dt*.5);windEl.value=Math.round(wind*100);}else wind=windEl.value/100;
+      if(rnd()<dt*.12)windT=(rnd()*2-1)*(.25+I*.75);wind+=(windT-wind)*Math.min(1,dt*.5);windEl.value=Math.round(wind*100);}else wind=windEl.value/100;curOff+=wind*42*dt;
     if(!manualI){I+=(targetI-I)*Math.min(1,dt*.35);intEl.value=Math.round(I*100);}else I=intEl.value/100;
-    if(I>.02)lastRain=t;document.getElementById('intv').textContent=Math.round(I*100)+'%';
+    if(I>.02)lastRain=t;
     const wb=Math.round(wind*3);if(wb!==windBucket){windBucket=wb;computeExposure(wb/3);}
-    const t0=performance.now();acc+=dt*60*speed;let n=0;while(acc>=1&&n<16){simStep(weather==='sun');acc--;n++;}if(acc>4)acc=0;simMs=simMs*.9+(performance.now()-t0)*.1;
+    const t0=performance.now();acc+=dt*60*speed;let n=0;while(acc>=1&&n<16&&(n<1||performance.now()-t0<7)){simStep(weather==='sun');acc--;n++;}if(acc>4)acc=0;
+    // steps run against steps asked for. Under 1 means the 7 ms budget cut the speed
+    effK+=((n/Math.max(1,Math.round(dt*60*speed)))-effK)*.1;simMs=simMs*.9+(performance.now()-t0)*.1;
     updateDrops(dt);updateChars(dt);updateFire(dt);updateStorm(dt);updateParts(dt);frameN++;}
-  render();if(frameN%8===0){const names={sun:'Sun',overcast:'Overcast',drizzle:'Drizzle',light:'Light rain',moderate:'Moderate rain',heavy:'Heavy rain',storm:'Thunderstorm'};
-    hud.textContent=`${names[weather]} · ${Math.round(I*100)}% · wind ${wind<-.1?'←':wind>.1?'→':'·'}${Math.abs(wind).toFixed(1)} · barrel ${Math.round(barrel.fill*100)}% · fire ${fire.on?'lit':'out'} · you ${Math.round(player.wet*100)}% wet · sim ${simMs.toFixed(2)} ms`;}}
+  else{if(manualI)I=intEl.value/100;if(!auto)wind=windEl.value/100;} // sliders moved while paused show at once
+  const iv=Math.round(I*100)+'%';if(intvEl.textContent!==iv)intvEl.textContent=iv;
+  render();if(hudN++%8===0){const names={sun:'Sun',overcast:'Overcast',drizzle:'Drizzle',light:'Light rain',moderate:'Moderate rain',heavy:'Heavy rain',storm:'Thunderstorm'};
+    hud.textContent=`${names[weather]} · ${Math.round(I*100)}% · wind ${wind<-.1?'←':wind>.1?'→':'·'}${Math.abs(wind).toFixed(1)} · barrel ${Math.round(barrel.fill*100)}% · fire ${fire.on?'lit':'out'} · you ${Math.round(player.wet*100)}% wet · sim ${simMs.toFixed(2)} ms${effK<.85&&!paused?` · over budget, running ${(speed*effK).toFixed(1)}× of ${speed}×`:''}`;}}
 document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.onclick=()=>{auto=false;manualI=false;document.getElementById('auto').classList.remove('on');setWeather(b.dataset.w);});
 document.getElementById('auto').onclick=e=>{auto=!auto;manualI=false;e.target.classList.toggle('on',auto);};
 intEl.oninput=()=>{manualI=true;auto=false;document.getElementById('auto').classList.remove('on');weather=intEl.value>=85?'storm':intEl.value>=65?'heavy':intEl.value>=40?'moderate':intEl.value>=20?'light':intEl.value>=3?'drizzle':'overcast';document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.classList.toggle('on',b.dataset.w===weather));};

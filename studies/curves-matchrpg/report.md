@@ -478,7 +478,7 @@ guard:      first run keeps ACCEL × 0.6; tier clock unchanged
 
 *Cost and knobs.* S. `SCROLL_ACCEL` (`scripts/runner/runner.gd:68`), `BASE_SCROLL` (`:67`), `MAX_SCROLL` (`:69`), `FIRST_RUN_ACCEL` (`:200`).
 
-*In MatchRPG.* Raise `SCROLL_ACCEL` from 0.15 to 0.22. On the measured pauses this puts the scroll at 0.34 of range at the world 1 boss, 0.81 at the world 2 boss and at full speed by the world 3 boss [I, model]. A new player at the Ogre King barely notices; a regular in world 2 feels the climb. Ship it as a switchback (F2) and stop if world 2's dark share passes 35%.
+*In MatchRPG.* Raise `SCROLL_ACCEL` from 0.15 to 0.22. On the measured pauses this puts the scroll at 0.35 of range at the world 1 boss, 0.82 at the world 2 boss and at full speed by the world 3 boss [I, model]. A new player at the Ogre King barely notices; a regular in world 2 feels the climb. Ship it as a switchback (F2) and stop if world 2's dark share passes 35%.
 
 *Ratings 1–5 (author judgement):* Fun impact 4 · Evidence 3 · Cheapness 5 · Fit 5 · Testability 4
 
@@ -940,7 +940,7 @@ Proposed [I, model]:
     lap 1 lift       = × 1.5 in worlds 1-3 of an endless run
     wall bands       : elite 80-90%, boss 65-75%, boss fight 20-40 s
 
-In the model the proposal puts the scroll at 0.34 of its range at the world 1 boss, 0.81 at the world 2 boss and at full speed by the world 3 boss [I, model]. Lost-fight XP at 1.0 adds 14 XP to an Ogre King death and 25 to an Old Mossback death [I, model]. Trust the bot over the model where they disagree.
+In the model the proposal puts the scroll at 0.35 of its range at the world 1 boss, 0.82 at the world 2 boss and at full speed by the world 3 boss [I, model]. Lost-fight XP at 1.0 adds 14 XP to an Ogre King death and 25 to an Old Mossback death [I, model]. Trust the bot over the model where they disagree.
 
 | Knob | Where | Now | Proposed | Range | Moves |
 |---|---|---|---|---|---|

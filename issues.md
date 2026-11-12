@@ -583,154 +583,391 @@ How to use this file:
 
 ## vfx-fog
 
-- [ ] **108.** `P4` Alpha blend mode paints full-brightness fog over explored ground that should be dimmed
+- [x] **108.** `P4` Alpha blend mode paints full-brightness fog over explored ground that should be dimmed
   (`:361`, `:390`).
-- [ ] **109.** `P4` Lamp halos and fog holes are centred at `L.y-9` for every lamp kind (`:343`, `:277`). The cave
+  Done: the alpha resolve blends fog into the lit colour, then applies the explored dim. Mean luminance of
+  explored, unseen ground under thick fog at noon: 167.4 before against 96.6 in palette steps, 103.1 after.
+  Visible ground stays at 170.
+- [x] **109.** `P4` Lamp halos and fog holes are centred at `L.y-9` for every lamp kind (`:343`, `:277`). The cave
   torch halo sits 3 px above its flame and the tower beacon halo is off the canvas.
-- [ ] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees
+  Done: `lampY` gives the flame row per kind. Cave torch halo centre went from 3.4 px above the flame to on
+  it. The beacon halo went from 2 px at the canvas edge to 29 px around the flame.
+- [x] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees
   (`:293`, `:199`, `:372`).
-- [ ] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
+  Done: a per-pixel block mask covers the house footprints and the cliff faces off the path. Each object
+  pixel stores its base row, and a sprite pixel behind an object with a lower base draws as a checker
+  silhouette, for the traveller and the creatures. Walking north into a house stops at its front wall (y
+  92.3, was 12.5). Walking off the upland stops at the ridge (y 39.5, was 178.8). Both paths still reach the
+  tower and the town. Behind a pine the sprite draws 69 of 85 pixels.
+- [x] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
   cast uses `P.y-2` (`:300`, `:290`).
-- [ ] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
-- [ ] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
-- [ ] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
-- [ ] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
+  Done: the cast used `P.y-2`, the trigger `P.y`. Walking north for 200 frames gave 13 frames with a stale
+  field of view, now 0.
+- [x] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
+  Done: the sun strength caps the shadow dither density, full above 0.5. Sweeping dusk under Overcast in
+  0.24 s steps, the largest change in shadowed pixels was 43,932 (all of them at once) and is now 2,978, one
+  Bayer level.
+- [x] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
+  Done: confirmed first: a walled stream cell showed 905 sparkle pixels over 60 frames, now 0.
+- [x] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
+  Done: confirmed first: with Reduce motion on, the front moved from x -80 to 35 in 10 s. Now the front
+  counts as arrived, and the left, middle and right columns of the field rise together over about 2 s. Card
+  9 says so.
+- [x] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
+  Done: confirmed by reading. The 57,600-entry array and the Float32Array are allocated once. `drawView`
+  median went from 0.29 to 0.24 ms.
 
 ## vfx-acid
 
-- [ ] **116.** `P1` Crash. Killing a small slime with the sword writes NaN into the acid buffer. The HUD reads
+- [x] **116.** `P1` Crash. Killing a small slime with the sword writes NaN into the acid buffer. The HUD reads
   "acid NaN u", and the canvas freezes once an item touches that pixel. `s.mass-=8` (`:270`) goes negative,
   `rad()` takes its square root (`:235`), `spill()` adds NaN (`:186`), and `matIdx` indexes with it (`:193`). The
   starting small slime triggers it every time. Fix: `Math.sqrt(Math.max(0,s.mass))` and clamp `si` in `matIdx`.
-- [ ] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
-- [ ] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
+  Done: `rad()` clamps the mass at 0, the sword and lime clamp it too, and `matIdx` sends a NaN stage to 0.
+  Two sword hits on the starting small slime left 1 NaN pixel and "acid NaN u" in the HUD. Now 0 NaN pixels
+  and "acid 947 u".
+- [x] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
+  Done: no code change beyond #116. On the burst spot `feetA()` was NaN and 1 s of walking moved 0 px. Now
+  it reads 0.27 and the traveller moves 39 px.
+- [x] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
   legs (`:380`). Fix: test row `fl.y+4`.
-- [ ] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
+  Done: the support check reads row `fl.y+4`, the table top. 4 flasks alive after the first frame and after
+  2 s (were 0). A flask still falls when the wood under it is gone, and the sword still breaks one.
+- [x] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
   pause (`:262`, `:277`).
-- [ ] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never
+  Done: `repair()` hides the message. It stayed up after both buttons during the death pause, now it is gone
+  after either.
+- [x] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never
   blurred or decayed (`:224`, `:197`), and reset clears `G` but not `G2`.
-- [ ] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
-- [ ] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
-- [ ] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
+  Done: border cells run the same blur with clean air outside the grid, and `buildRoom` clears `G2`. With
+  the bars gone and the trench flooded at 8x for 20 s, the border peaked at 0.48 against 0.33 inside and
+  kept 0.48 after Reset room. Now the border reads 0.00 and reset leaves 0.
+- [x] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
+  Done: the tool searches up to 16 px for a free pixel. Clicks on the top wall and the left wall spawned
+  slimes that were still inside the wall 5 s later. Now they land at the wall foot and walk off.
+- [x] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
+  Done: `applyTool` clamps the wet bounding box. A pour 30 px above the canvas set `by0` to -34 and the HUD
+  read "acid NaN u". Now `by0` stays 1 and the HUD reads a number.
+- [x] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
   slime cap.
-- [ ] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
+  Done: confirmed first: paused on a frame not divisible by 6, Repair gear left the chest bar at 20%. The
+  HUD now counts drawn frames, so it refreshes twice in the 12 frames after any input. 40 spawn clicks gave
+  42 slimes, now 12.
+- [x] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
+  Done: two causes. Bubble and smoke particles had no cap and were removed with `splice`: a fully flooded
+  room held 14,167 of them. They now stop at 500 and are removed by swap. Sim steps stop once 7 ms of the
+  frame is spent, and the HUD then reads "over budget, running N× of 8×". Whole room flooded at 8x: 160.5 ms
+  per frame at 6x throttle before, 19.1 ms after (running 1×). Unthrottled 25.6 ms before, 8.9 ms after
+  (running 5×).
 
 ## vfx-rain
 
-- [ ] **125.** `P3` The villager gets stuck on the fountain about 15 s after load and never moves again. A
+- [x] **125.** `P3` The villager gets stuck on the fountain about 15 s after load and never moves again. A
   waypoint leg passes through the fountain centre (`:177`, `:249`, `:259`).
-- [ ] **126.** `P4` (partly taste) Storm spray mist buries the plaza, the house and the player under a dense
+  Done: the plaza legs now pass south of the fountain through a new waypoint at (200,113). A blocked
+  villager also sidesteps for 0.9 s on the free side, which covers the run to the awning. Over 150 s of the
+  auto cycle the longest stall while walking was 133.7 s, now 0. Shelter runs from all 9 waypoints arrive in
+  1.6 to 5.8 s.
+- [x] **126.** `P4` (partly taste) Storm spray mist buries the plaza, the house and the player under a dense
   checkerboard with hard rectangular edges (`:230`, `:329`).
-- [ ] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
+  Done: three changes. The spray source is the hard-surface mask blurred twice, so it has no rectangle
+  edges. A noise table that drifts with the wind breaks it into wisps. The veil threshold mixes Bayer with a
+  per-pixel hash, so thin mist is no longer a regular lattice. After 40 s of storm the plaza was 19% tinted
+  and 37% solid mist. Now 13% tinted and 1% solid, and the plaza, the house and the player stay readable.
+- [x] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
   returns to exactly 0 (`:283`, `:345`). Fix: `I>.02`.
-- [ ] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps
+  Done: `I` decays toward 0 and never reaches it (7e-10 after 60 s of sun), so 60 streaks kept falling.
+  Streaks and background hits now need `I>.02`. 60 drops alive before, 0 after.
+- [x] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps
   feeding evaporation mist (`:185`, `:115`, `:229`, `:231`).
-- [ ] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,
+  Done: water pixels never dry, so the pond fed the mist grid for as long as the sun was out. They are left
+  out of the wet-ground average. After 3 min of sun the pond showed 91 lattice pixels with mist at 0.25, now
+  0 and 0.
+- [x] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,
   awning `SHL` at `:146`).
-- [ ] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point
+  Done: two causes. Shelter there was 0.15, above the 0.1 limit under which sheltered ground dries during
+  rain. Drawn drops also wetted the ground they landed on with no shelter test. Shelter under the awning is
+  now 0.04, and a sky drop aimed at sheltered ground is dropped with probability 1 minus exposure. Drips
+  from the eaves, the awning and trees still land. Rows 53 to 55 after 60 s of storm: 95% wet before, 7%
+  after. The drip line in rows 56 and 57 stays wet.
+- [x] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point
   (`:285`) and again from height (`:324`). Fix: delete the line at `:285`.
-- [ ] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
-- [ ] **132.** `P6` Sim speed 8 in a storm costs 82 ms per frame at 6x throttle. The catch-up loop allows 16
+  Done: the wind push on the ground point is gone, the slant comes from height alone. At wind 0.6 a streak
+  travelled at slope 0.66 and was drawn at 0.33. Both are 0.33 now.
+- [x] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
+  Done: the canvas offset is only applied while the sim runs. Paused mid-shake, 30 redraws gave 30 different
+  offsets, now none.
+- [x] **132.** `P6` Sim speed 8 in a storm costs 82 ms per frame at 6x throttle. The catch-up loop allows 16
   steps (`:348`).
-- [ ] **133.** `P4` (suspected) Rain curtains jump when the wind changes, more the longer the page is open
+  Done: sim steps stop once 7 ms of the frame is spent, and the HUD then reads "over budget, running N× of
+  8×". Particles are removed by swap in place of `splice`. Storm at 8x and 6x throttle: 47.5 ms per frame
+  before, 13.6 ms after (running 2.1×). Unthrottled it runs the full 8× in 6.8 ms.
+- [x] **133.** `P4` (suspected) Rain curtains jump when the wind changes, more the longer the page is open
   (`:180`, `wind*t*42`). Fix: integrate an offset.
-- [ ] **134.** `P6` The Intensity readout and HUD do not update while paused.
+  Done: confirmed first: at t = 600 s a wind change of 0.1 moved the curtain noise by 2,520 px, a mean
+  change of 0.15 in curtain density. The offset is now the wind integrated over time, and the same change
+  moves nothing.
+- [x] **134.** `P6` The Intensity readout and HUD do not update while paused.
+  Done: the readout is written every drawn frame, the HUD counts drawn frames, and the Intensity and Wind
+  sliders apply while paused. Paused, moving Intensity to 77 left the readout at 50% and the HUD unchanged.
+  Both now show 77%.
 
 ## vfx-snow
 
-- [ ] **135.** `P3` Footprints appear on the roof, tree canopies and rock tops when the player or fox walks
+- [x] **135.** `P3` Footprints appear on the roof, tree canopies and rock tops when the player or fox walks
   behind them. `stamp()` and `depthAt()` accept any snow-holding pixel (`:222`, `:262`). Fix: require
   `cls(S[i])===1`.
-- [ ] **136.** `P4` Snow on the top and bottom canvas rows never melts (`:243`).
-- [ ] **137.** `P4` Snow shading compares depth across surface boundaries, so the lit flank of every pine gets
+  Done: `stamp()` and its rim spill need `cls(S[i])===1`, and `depthAt()` reads ground depth only. Walking
+  57 px behind the roof left 44 packed pixels on the roof, now 0. A walk on open ground still packs 28
+  pixels.
+- [x] **136.** `P4` Snow on the top and bottom canvas rows never melts (`:243`).
+  Done: the melt pass picked from rows 1 to 178 only. After 30,000 melt steps at 6 °C the top row kept 317
+  snowy ground pixels and the bottom row 320, against 92 and 79 one row in. Now 83 and 82, level with their
+  neighbours.
+- [x] **137.** `P4` Snow shading compares depth across surface boundaries, so the lit flank of every pine gets
   the darkest shadow colour (`:336`). Fix: only use a neighbour of the same class.
-- [ ] **138.** `P3` Manual Heavy snow reaches the depth cap everywhere in under 2 minutes and flattens the scene
+  Done: a neighbour only counts when it has the same surface class. After an instant fill, 112 of 1,635
+  snowy canopy pixels took the two darkest shadow colours, now 0. With the false shadow gone the pines were
+  white on white, so the right flank of a canopy now takes the mid snow tone.
+- [x] **138.** `P3` Manual Heavy snow reaches the depth cap everywhere in under 2 minutes and flattens the scene
   (`:220`, `MAXD` at `:144`).
-- [ ] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
-- [ ] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
-- [ ] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
-- [ ] **142.** `P6` "Add snow" ignores the canopy cap of 14 (`:229`). Shovel never exposes ground.
-- [ ] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
-- [ ] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
-- [ ] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
+  Done: snowfall now stops at a per-pixel limit, 110 units times exposure times a gentle noise, so sheltered
+  ground and lee hollows stay lower for good. Add snow can still go to the cap. Wind transport also treats
+  open ice as exposed, or the pond rim collected bars of snow. Manual Heavy at speed 2: 94% of the ground
+  was at the cap after 2 min, and after 4 min every ground pixel drew the same snow colour (depth sd 0.9).
+  Now 0% at the cap after 8 min, depth sd 9.1, and 9% of the ground in highlight or shade tones. Card 1 says
+  so.
+- [x] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
+  Done: the fence loop runs to x 201, so the post at 200 gets both columns like the other 8.
+- [x] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
+  Done: the 1 px rails no longer hold snow, so the fence reads as wood with snow on the post tops. A rock's
+  snow cap draws a mid-tone rim where it touches the ground. Checked in a zoomed screenshot after an instant
+  fill.
+- [x] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
+  Done: `-bob+(bob?1:0)` was always 0. The term and the variable are gone, the sprite draws at the same rows
+  as before.
+- [x] **142.** `P6` "Add snow" ignores the canopy cap of 14 (`:229`). Shovel never exposes ground.
+  Done: Add snow and the shovel's spill ring use the same cap as snowfall, 14 on a canopy. 20 strokes on a
+  pine took its canopy to 112, now 14. Shovel sets depth to 0 where it left 2, which still drew as snow on
+  low-threshold pixels: 48 of 49 pixels bare before, 49 of 49 after.
+- [x] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
+  Done: built every 6th drawn frame and compared with the last string. 60 writes per 60 frames before, 8
+  after.
+- [x] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
+  Done: sim steps stop once 7 ms of the frame is spent, and the HUD then reads "over budget, running N× of
+  16×". Heavy snow at speed 16 and 6x throttle: 14.7 ms per frame before, 9.5 ms after (running 10×).
+  Unthrottled it runs the full 16× in 2.3 ms.
+- [x] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
   Uint8Array.
+  Done: confirmed first: with the ground near the cap and wind 0.9, 3,000 steps took the maximum depth to
+  204 in a Uint8Array that wraps at 256. The wind pass now needs the target under its cap, 200 on ground and
+  14 on a canopy. Maximum after the same run: 199.
 
 ## vfx-light
 
-- [ ] **146.** `P4` Every object and both characters are in permanent sun shadow. A caster stamps its own base
+- [x] **146.** `P4` Every object and both characters are in permanent sun shadow. A caster stamps its own base
   row (`:217`, shading at `:302`, characters at `:263`).
-- [ ] **147.** `P4` Sunlight snaps off at 18:00 and on at 06:00, moonlight at about 18:23 and 05:37 (`:208`,
+  Done: each shadow pixel records the base row of its caster. An object pixel is shaded only when a shadow
+  from a different base row reaches its base, and a character's own shadow skips its feet row. Light
+  multiplier at noon, against 1.54 on open ground: traveller 0.58 to 1.49, barrel 0.58 to 1.55, rock 0.59 to
+  1.55, obelisk 0.59 to 1.30, trunk 0.58 to 1.55. Standing in the obelisk's shadow at 15:00 the traveller
+  still reads 0.58.
+- [x] **147.** `P4` Sunlight snaps off at 18:00 and on at 06:00, moonlight at about 18:23 and 05:37 (`:208`,
   `:210`). With the default start it happens about 4 s after load. Fix: ramp by elevation.
-- [ ] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
+  Done: the sun colour scales over the first 4 degrees above the horizon, the moon from 2 to 10 degrees. The
+  largest change in sun colour per 0.01 h of clock was 1.58 at 18:00 (all of it at once). Now 0.10.
+- [x] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
   candle (`:184`) sits inside the table occluder (`:138`), and the bed occluder (`:136`) beats the fireplace
   threshold (`:198`).
-- [ ] **149.** `P4` The magic crystal shadows its own glow (`:188`, `:168`). The brazier has the same setup.
-- [ ] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
-- [ ] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
+  Done: the bed and the table are occluders of height 3, down from 6 and 5, so they sit under the 3.6 that
+  blocks a light of height 6. They still stop the traveller. Indoors at 21:00 the candle's shortest ray was
+  2.5 px and the floor beside the table got 0 light. Now 17.5 px and 0.71. The floor beyond the bed gets
+  0.21 from the fireplace, was 0.
+- [x] **149.** `P4` The magic crystal shadows its own glow (`:188`, `:168`). The brazier has the same setup.
+  Done: each of the two lights names the occluder it sits on, and its rays pass through that one. Light 20
+  px above the crystal at night: 0.14 before, 0.95 after, against 1.24 below it. Above the brazier: 0
+  before, 1.46 after.
+- [x] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
+  Done: each of the 7 kinds draws a small sprite on the clicked pixel: standing torch, campfire, candle,
+  hanging lantern, crystal, rune lamp and mushroom. The rune lamp uses `RUNE` and goes grey during its
+  blackouts. Changed pixels around a placed light went from 0 for every kind to between 3 (candle) and 16
+  (lantern).
+- [x] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
   room is near black at noon (`:301`).
-- [ ] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).
-- [ ] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
+  Done: the fireplace shows logs and the candle no flame while their lights are off. Indoor ambient goes
+  from 28% of the sky at night to 75% with the sun 20 degrees up. Floor light multiplier indoors at noon:
+  0.16 before, 0.43 after.
+- [x] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).
+  Done: a wall, window or roof pixel takes the light of the ground 2 px in front of its base. The base row
+  is inside the wall occluder, where each ray stops at a slightly different depth, and that showed as
+  stripes. Jumps in brightness between same-colour neighbours along one row at 23:00: house A wall 11 to 0,
+  house A roof 14 to 0, house B wall 12 to 5, house B roof 4 to 0. The indoor back wall now takes the room's
+  light too.
+- [x] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
   2.48 px (`:217`).
-- [ ] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips
+  Done: a post or fence pixel stamps its shadow in up to 3 sub-steps along the shadow, since one pixel of
+  height covers up to 2.48 px of ground. Samples along the lamp post shadow with no shadow pixel under them:
+  11 of 57 at 17:42 before, 1 of 57 after. At 16:30, 7 before and 2 after. `sunShadows` takes 0.4 ms.
+- [x] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips
   `SUNP.fill(0)` at `:219`.
-- [ ] **155.** `P5` "Your light's rays" view shows stale rays when Light shadows is off (`:284`, `:310`).
-- [ ] **156.** `P4` The carried lantern and torch handle draw through roofs and tree crowns (`:276` to `:278`).
-- [ ] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
-- [ ] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
+  Done: the early return skipped the patch pass and its clear. The patches are light, so they now run
+  whenever the sun or moon is up. With Sun shadows off, the patch mask at 15:00 was the 10:00 one (254
+  pixels, 462 wrong). It now matches the mask with shadows on (314 pixels, 0 wrong).
+- [x] **155.** `P5` "Your light's rays" view shows stale rays when Light shadows is off (`:284`, `:310`).
+  Done: with Light shadows off nothing recast the carried light, so the view kept the rays of the last spot.
+  After a 43 px walk 78 of 256 rays were wrong. The view now casts its own, 0 wrong.
+- [x] **156.** `P4` The carried lantern and torch handle draw through roofs and tree crowns (`:276` to `:278`).
+  Done: their pixels now take the same occlusion test as the character, for the traveller and the lantern-
+  bearer. Behind house B's roof and behind a crown the torch handle drew on top, now it is hidden. In the
+  open the lantern still draws.
+- [x] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
+  Done: confirmed first: at 22:00 the moon shadow points left, so the moon is on the right, and the glint
+  was at x 258, left of the pond centre at 272. The sign is flipped. Measured glint columns: 285 to 287 at
+  22:00, 258 to 259 at 02:00 when the moon has crossed over.
+- [x] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
   cage hole (`:271`). Fireflies drift at about 0.6 px/s and read as static. Noon cobbles clip to white (taste).
+  Done: four small fixes. Each bulb sits 1 px under the wire at mid-span (wire y 155, bulb y 156), where it
+  was 1 px above the wire near a post. The lamp glass moved up 1 px into the cage hole. Fireflies do a
+  random walk at 7.4 px/s mean speed, up from 0.74, and the walk no longer depends on frame rate. Light
+  above 1 keeps 45% of its excess: sunlit cobbles at noon clipped to white on 57% of pixels, now 11%, all of
+  those around the carried torch.
 
 ## vfx-forest
 
-- [ ] **159.** `P4` Winter bare trees are poles with a flat bar on top. Branches overflow the sprite and `y|0`
+- [x] **159.** `P4` Winter bare trees are poles with a flat bar on top. Branches overflow the sprite and `y|0`
   piles them into row 0 (`:136`, `:123`).
-- [ ] **160.** `P6` Each season change freezes the frame for 60 ms, 382 ms at 6x throttle. `genGround` redoes
+  Done: three causes. The bare trunk ran to the top of the sprite, so branches started with no room. The
+  branch tree was 5 levels of 1 to 4 px segments, a blob at this size. `y|0` rounded rows -1 to 0 up into
+  row 0. Now a bare tree forks at 45% of its crown height, 3 levels deep with a wider fan and lengths sized
+  to the space, and `S()` floors. Share of a bare sprite's pixels in row 0: oak 9.4% to 2.4%, maple 12% to
+  1.9%, birch 15% to 3.6%, cherry 14.1% to 3.9%. Checked in a zoomed sheet of all 30 bare sprites.
+- [x] **160.** `P6` Each season change freezes the frame for 60 ms, 382 ms at 6x throttle. `genGround` redoes
   1280 x 960 pixels (`:276`, `:211` to `:229`). Auto year hits it every 40 s. Fix: bake the four grounds once.
-- [ ] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,
+  Done: each season's ground and minimap are baked once and kept. The first one bakes on use, the other
+  three in the first 1.2 s after load. A season switch cost 49 to 62 ms (291 to 381 ms at 6x throttle) every
+  time. After the bake it costs 0.2 to 1 ms (0 to 1.8 ms throttled). Memory cost is 3 more 1280 x 960
+  canvases.
+- [x] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,
   phase is `time*wind`). Fix: accumulate a gust phase.
-- [ ] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
-- [ ] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
+  Done: the gust noise was sampled at `time*wind`, so one slider step moved the field by time times the
+  step. The gust offset is now integrated. Mean change in sway for one slider step of 0.01: 0.016 at 10 s
+  and 0.115 at 10 min before, 0.004 and 0.005 after.
+- [x] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
+  Done: a hop is clamped to 55% of the crown half-width, the same range a bird perches in. After 5 min with
+  nobody near, 16 of 28 birds sat outside their crown, the farthest 3.53 half-widths from the trunk. Now 0,
+  the farthest at 0.55.
+- [x] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
   (`:253`, `:256`, `:351`).
-- [ ] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
+  Done: colour was picked once in `spawnBirds`, from the player's biome. A bird now recolours from its own
+  position when it hops, lands or relocates. After 10 s of winter with no teleport: 0 of 28 crows before, 28
+  of 28 after. After a walk into the rainforest: 0 parrots before, 7 after, the birds that had followed and
+  landed there.
+- [x] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
   `:220`).
-- [ ] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
+  Done: a flake is drawn only where the ground under it takes snow, the same `T < 0.62` test the ground bake
+  uses. Winter flake pixels on screen: taiga 114 before and after, rainforest 114 before and 0 after.
+- [x] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
   visible trees (`:285`). Shadows pop at the top edge (`:299`). The minimap rectangle is antialiased (`:326`).
-- [ ] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
+  Done: all four confirmed first. Ferns swayed over their whole height, so the base row moved up to 1 px:
+  the lowest 2 rows of every sprite now stay put. A shaken tree out of view kept shake 1.0 after 5 s:
+  shaking trees sit in a set and decay anywhere, now 0. Trees were culled 4 px above the top edge while
+  their shadow reached into view, 6 cases on a 200 px walk north: the margin is 14 px, now 0 cases. The
+  minimap box was stroked at fractional positions, 170 blended pixels: it snaps to whole cells, now 0.
+- [x] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
   and particle (`:301`, `:320`). The HUD writes on about 6 of every 18 frames (`:339`).
-- [ ] **167.** `P6` The Wind slider has no value readout.
-- [ ] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
+  Done: confirmed by reading. Per frame the loop built 4 arrays per tree for the sway bands, 1 pair per tree
+  for the y-sort, a hex string per litter pixel and particle, and a filtered bird list. The bands are 3
+  direct draws, the visible list is sorted in place with the player slotted in, colour strings are cached
+  per colour, and the lists are reused. The HUD is built every 12th frame and written when it changed: 60
+  writes per 180 frames before, 15 after. Frame median with 341 sprites drawn: 0.7 to 0.6 ms, 4.4 to 4.0 ms
+  at 6x throttle.
+- [x] **167.** `P6` The Wind slider has no value readout.
+  Done: a readout next to the slider, "45%" at load, updated on input.
+- [x] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
   fixing #5. The stage sits in a `1fr 200px` grid next to the minimap (`:19`), so the shared `fit()` needs the
   grid cell width, not `main`.
+  Done: the forest page has its own `fit()` that reads the first grid track of the row it shares with the
+  minimap. Canvas scale at 1280, 1024, 800 and 390 px wide: 3.10, 2.43, 1.73 and 1.10 before, 3, 2, 1 and 1
+  after.
 
 ## curves-hearthguard
 
-- [ ] **168.** `P5` "Proposed sawtooth" does not reproduce the report. Chapter 4 starts at 0.85, the report says
+- [x] **168.** `P5` "Proposed sawtooth" does not reproduce the report. Chapter 4 starts at 0.85, the report says
   0.92. The lab scales boss time by reference damage over current damage (`:140`), which
   `notes/curves_model.py` does not. Fix: drop the factor, or regenerate the report numbers from the lab.
-- [ ] **169.** `P5` The Players slider changes hero level and run length (25.5 to 36.2 min at 3 players),
+  Done: the factor that scaled boss time by reference damage over current damage is gone, as in
+  `notes/curves_model.py`. All 30 proposal ratios now match report §11 (chapter 4 starts at 0.92, was 0.85,
+  and chapter 3 wave 5 reads 1.07, was 0.99). The 30 current-build ratios still match the §4 table.
+- [x] **169.** `P5` The Players slider changes hero level and run length (25.5 to 36.2 min at 3 players),
   against the caption "Per-hero XP equals solo in co-op" (`:124`, `:140` to `:142`).
-- [ ] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
+  Done: boss time was the solo time times boss HP for the party, as if one hero fought it, and the adds it
+  spawned fed extra XP. Boss time is now divided by the player count, and adds stay on the solo clock. At 3
+  players the hero started chapters 2 to 5 at levels 9, 14, 19 and 25 and the run took 37.1 min. Now levels
+  are 7, 13, 17 and 23 at any player count, and the run takes 25.5, 24.5 and 24.2 min at 1, 2 and 3 players.
+  The caption says what Players changes.
+- [x] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
   (`:190`, `:166`).
-- [ ] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth
+  Done: a percent readout on a step under 0.01 prints one decimal. 0.085, 0.09 and 0.095 read "9%", "9%" and
+  "10%" before, "8.5%", "9.0%" and "9.5%" after. The other percent readouts are unchanged.
+- [x] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth
   term, mob counts, a target line).
-- [ ] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
+  Done: added to the lab, so §12 is true as written. A Wave gap slider for `waveGapS`, 8 to 30 s (12 to 20 s
+  takes the run from 25.5 to 28.8 min). A Hearth per chapter slider, flat today, with the report's +50%
+  taking chapter 5 from 49 to 148 hits. A target sawtooth on the ratio chart, 0.92 at each chapter start and
+  15% higher at the boss. A mob count chart per corridor and for the party. Copy settings writes the 2 new
+  constants.
+- [x] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
   `:242`).
-- [ ] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
+  Done: the highlight compared the 4 values the preset sets. It now compares all of them except Players,
+  which is a scenario and not a constant. With Dmg / lvl at 12% the button stayed lit, now it goes dark. A
+  click on Current with other knobs still changed says how many differ and points at Reset.
+- [x] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
+  Done: the load check took any 5-long array and any value of the right type, so `hp:[null,"x",{},1,2]`
+  threw in the first render and left an empty page. A saved value now needs the knob's type, numbers are
+  clamped to the slider range, and anything else keeps the build value. With a file of 11 bad entries the
+  page had 0 cards and 0 charts, now 6 and 5.
 
 ## curves-matchrpg
 
-- [ ] **174.** `P5` "Endless doubles every" card hardcodes 12 and ignores the Every slider (`:464`). Fix: use
+- [x] **174.** `P5` "Endless doubles every" card hardcodes 12 and ignores the Every slider (`:464`). Fix: use
   `S.every`.
-- [ ] **175.** `P4` Scroll chart labels collide. "p90 369 s" sits on the boss labels on Diamond, unreadable at
+  Done: the card used 12 where the model uses `DEPTH_EVERY`. At Every 6, 12 and 18 it read 73, 73 and 73
+  encounters. Now 37, 73 and 110.
+- [x] **175.** `P4` Scroll chart labels collide. "p90 369 s" sits on the boss labels on Diamond, unreadable at
   390 px, and the "600 s" axis label is cut at the right edge (`:391`, `:367`, `:390`, `:359`).
-- [ ] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
+  Done: the median and p90 labels sit in the chart's top margin, clear of the boss labels, and any axis
+  label that would pass the plot edge is anchored to it. Checked by bounding box on gold and diamond at 1280
+  and 390 px wide: "p90 369 s" overlapped B4 and B5 on diamond and "600 s" was cut at every size. Now no
+  overlap and nothing cut in any of the 6 charts. The same anchor rule fixed "0 s" and "run 1" sitting on
+  the y axis's 0.
+- [x] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
   it by `n mod 12`. Depends on intent.
-- [ ] **177.** `P5` Landing watch text does not match the chart (`:114`).
-- [ ] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
+  Done: report A2 says `n mod 12`, the lab used `n mod DEPTH_EVERY`. Intent settled by the report: the
+  landing is the relief after a wall, and walls are every 12. With Every 8 and Landing 3, encounters 13 to
+  15 stayed at power 1.45 and the dip fell on 9 to 11. Now 13 to 15 drop to 1.0. At Every 12 nothing
+  changes.
+- [x] **177.** `P5` Landing watch text does not match the chart (`:114`).
+  Done: the old text said each elite stops being the first enemy of a new step. In the model and in report
+  A2 the wall keeps its step (encounter 12 at 1.45) and the 3 encounters after it drop back (13 to 15 at
+  1.00, 16 at 1.45). The text now says that.
+- [x] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
   and 0.81 (`:155`).
-- [ ] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
+  Done: the lab computes 0.3546 and 0.8213 from the measured seconds to each boss. The report's 0.34 and
+  0.81 came from scaling the measured shares 0.23 and 0.55 by the accel ratio. The report cites the model,
+  so its 2 sentences (A3 and §11) now read 0.35 and 0.82, and the study page is rebuilt. The lab is
+  unchanged.
+- [x] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
   `:422`). XP_PAST_LEVEL reads "9/24" at the 3/8 stop (`:255`). `REACH` is unused (`:160`).
-- [ ] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
+  Done: four small fixes. The "row 1" label moved to the right end of its line, where no series runs: 6
+  lines crossed it at 390 px and 4 at 1280 px, now 0. The power chart's hollow blue circles get a legend
+  entry, "Elite, current build". XP_PAST_LEVEL prints 24ths in lowest terms: the stops read 1/4, 7/24, 1/3,
+  9/24, 10/24, 11/24, 1/2 and now 1/4, 7/24, 1/3, 3/8, 5/12, 11/24, 1/2. The unused `REACH` table is
+  deleted.
+- [x] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
   would print NaN.
+  Done: confirmed first: a saved `every:0` with 8 other out-of-range values printed "Infinity" 14 times and
+  "0 enc." in the cards. Each saved number is now clamped to its slider's range and whole-step sliders are
+  rounded. The same file gives 0 NaN, 0 Infinity and 7 charts.
 
 ## Not covered by the review
 

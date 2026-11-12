@@ -89,7 +89,7 @@ code{font:13px "IBM Plex Mono",monospace;color:var(--warm)}
   </div>
 
   <div class="explain">
-    <div class="card"><h4>1 · One byte of depth per pixel</h4><p>The ground keeps a snow-depth map (<code>Uint8Array(320*180)</code>). Every frame, snowfall adds 1 unit at about 900 random pixels. Each pick is kept with probability equal to that pixel's <i>exposure</i>, so open ground fills first and sheltered ground fills last.</p></div>
+    <div class="card"><h4>1 · One byte of depth per pixel</h4><p>The ground keeps a snow-depth map (<code>Uint8Array(320*180)</code>). Every frame, snowfall adds 1 unit at about 900 random pixels. Each pick is kept with probability equal to that pixel's <i>exposure</i>, so open ground fills first and sheltered ground fills last. Snowfall stops adding once a pixel holds what its exposure allows, about 110 units in the open, so a long storm keeps its drifts and hollows.</p></div>
     <div class="card"><h4>2 · Dither-threshold coverage</h4><p>Every pixel has a fixed threshold: a 4×4 Bayer value plus noise, plus extra for grass tufts. Snow shows where <code>depth &gt; threshold</code>. Thin snow therefore appears as an ordered dusting, and melt pulls back as dithered patches. No tiles are swapped, so nothing pops.</p></div>
     <div class="card"><h4>3 · Shelter = cheap rays</h4><p>Exposure is baked once per wind bucket. Each ground pixel steps up to 28 pixels upwind; if it meets a tall object, it sits in that object's lee. Just past the lee there is a +12% drift band. Pixels under tree canopies and house eaves get a fixed shelter factor, so bare rings show under the trees.</p></div>
     <div class="card"><h4>4 · Footprints move snow, they don't paint it</h4><p>A boot sets the depth under it to 30% and pushes the rest into the rim, so total snow is conserved. The core is marked <i>packed</i>. New snowfall refills prints and erases the packed mark, which makes old trails soften and fade. Characters also sink into deep snow, and it slows them.</p></div>
@@ -142,7 +142,9 @@ const S=new Uint8Array(NP),B=new Uint8Array(NP),D=new Uint8Array(NP),P=new Uint8
 const E=new Float32Array(NP),SHL=new Float32Array(NP).fill(1),SH=new Uint8Array(NP),Hgt=new Uint8Array(NP),O=new Int16Array(NP).fill(-1);
 const WOB=new Uint8Array(NP),Cm=new Uint8Array(NP),thr=new Float32Array(NP),Lm=new Float32Array(NP),IDX=new Uint8Array(NP),SPR=new Uint8Array(NP);
 const holds=s=>s<SOLID, cls=s=>s<=ICE?1:s;
-const MAXD=200;
+const MAXD=200,SOFT=110;
+// how much snow a pixel can hold from snowfall: SOFT x exposure x a gentle noise, so a long storm settles into hummocks and keeps its hollows
+const LIMN=new Float32Array(NP);for(let y=0;y<H;y++)for(let x=0;x<W;x++)LIMN[y*W+x]=.8+.4*vnoise(x/9+30,y/7+11);
 
 // ground
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
@@ -175,9 +177,9 @@ for(const [tx,ty] of TREES){
   for(const [cy,r,h] of [[ty-5,11,10],[ty-12,8,8],[ty-18,5,7]])for(let k=0;k<=h;k++){const hw=Math.round(r*(1-k/h));for(let x=tx-hw;x<=tx+hw;x++){
     const b=k===0?CAN_D:(x<tx?CAN_A:(x===tx&&hash2(x,cy-k)<.5?CAN_A:CAN_B));put(x,cy-k,k===0?SOLID:CANOPY,b,26,ty,false);thr[(cy-k)*W+x]=3+vnoise(x/2.2,(cy-k)/1.6)*9+bay(x,cy-k)*.35+(x>tx+hw-2?3:0);}}
   for(let y=ty-2;y<=ty+1;y++)for(let x=tx-6;x<=tx+6;x++)if(x>=0&&x<W&&y<H)WOB[y*W+x]=Math.max(WOB[y*W+x],20);}
-// fence
-for(let x=120;x<=200;x++)for(let y=102;y<=110;y++){const post=(x-120)%10<2;let s=SOLID,b=FEN_D;
-  if(post){b=x%2?FEN_D:FEN_A;if(y===102)s=FENCETOP;}else if(y===104||y===107){b=FEN_A;s=FENCETOP;}else continue;put(x,y,s,b,8,110,y>=108);}
+// fence. The rails are 1 px, so they stay wood. Only the post tops carry snow
+for(let x=120;x<=201;x++)for(let y=102;y<=110;y++){const post=(x-120)%10<2;let s=SOLID,b=FEN_D;
+  if(post){b=x%2?FEN_D:FEN_A;if(y===102)s=FENCETOP;}else if(y===104||y===107)b=FEN_A;else continue;put(x,y,s,b,8,110,y>=108);}
 // rocks
 for(const [cx,cy] of [[212,96],[95,160],[268,110],[20,80],[180,150]])for(let y=cy-5;y<=cy+4;y++)for(let x=cx-8;x<=cx+8;x++){const dx=(x-cx)/7.5,dy=(y-cy)/4.5;if(dx*dx+dy*dy<1){
   put(x,y,y<=cy?ROCKTOP:SOLID,y<=cy?(x>cx+2?ROCK_B:ROCK_A):ROCK_C,6,cy+4,true);}}
@@ -218,18 +220,19 @@ function spawnFlake(f,k,top){f.x[k]=rnd()*(W+60)-30;f.y[k]=rnd()*(H+70);f.z[k]=t
 FL.forEach(f=>{for(let k=0;k<f.x.length;k++){spawnFlake(f,k,false);f.on[k]=1;}});
 
 // ---------- snow ops ----------
-function deposit(i,a){const s=S[i];if(!holds(s))return;if(Wt[i]>90&&rnd()<.6){Wt[i]-=3;return;}D[i]=Math.min(s===CANOPY?14:MAXD,D[i]+a);if(P[i])P[i]=P[i]>14?P[i]-14:0;}
+function deposit(i,a){const s=S[i];if(!holds(s))return;if(Wt[i]>90&&rnd()<.6){Wt[i]-=3;return;}const lim=s===CANOPY?14:Math.min(MAXD,(SOFT*E[i]*LIMN[i]+6)|0);if(D[i]>=lim)return;D[i]=Math.min(lim,D[i]+a);if(P[i])P[i]=P[i]>14?P[i]-14:0;}
 function stamp(x,y,w,h,keep,packV,spillAhead){x|=0;y|=0;let spill=0;
-  for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const px=x+xx,py=y+yy;if(px<1||py<1||px>=W-1||py>=H-1)continue;const i=py*W+px;if(!holds(S[i]))continue;
+  for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const px=x+xx,py=y+yy;if(px<1||py<1||px>=W-1||py>=H-1)continue;const i=py*W+px;if(cls(S[i])!==1)continue; // feet only touch ground, path and ice, never a roof or canopy drawn in front
     const nd=(D[i]*keep)|0;spill+=D[i]-nd;D[i]=nd;if(nd>0||D[i]===0)P[i]=Math.max(P[i],packV);}
   if(spill<=0)return;const per=Math.max(1,(spill/6)|0);
   for(let k=0;k<6&&spill>0;k++){const a=rnd()*6.283,r=Math.max(w,h)*.5+1.2;const px=Math.round(x+w/2-.5+Math.cos(a)*r),py=Math.round(y+h/2-.5+Math.sin(a)*r*.7);
-    if(px<0||py<0||px>=W||py>=H)continue;const i=py*W+px;if(holds(S[i])&&P[i]<200){D[i]=Math.min(MAXD,D[i]+per);spill-=per;}}}
+    if(px<0||py<0||px>=W||py>=H)continue;const i=py*W+px;if(cls(S[i])===1&&P[i]<200){D[i]=Math.min(MAXD,D[i]+per);spill-=per;}}}
+const capOf=s=>s===CANOPY?14:MAXD;
 function brush(cx,cy,r,mode){const r2=r*r;let col=0;
   for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=x-cx,dy=y-cy;if(dx*dx+dy*dy>r2)continue;const i=y*W+x;if(!holds(S[i]))continue;
-    if(mode==='snow')D[i]=Math.min(MAXD,D[i]+5);else{if(D[i]>2){col+=D[i]-2;D[i]=2;}P[i]=170;}}
+    if(mode==='snow')D[i]=Math.min(capOf(S[i]),D[i]+5);else{col+=D[i];D[i]=0;P[i]=0;}}
   if(mode==='shovel'&&col>0){const per=Math.max(1,(col/40)|0);for(let k=0;k<40;k++){const a=rnd()*6.283,rr=r+1+rnd()*3;const x=Math.round(cx+Math.cos(a)*rr),y=Math.round(cy+Math.sin(a)*rr);
-    if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(holds(S[i]))D[i]=Math.min(MAXD,D[i]+per);}}}
+    if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(holds(S[i]))D[i]=Math.min(capOf(S[i]),D[i]+per);}}}
 
 function simStep(sunF){
   // 1) snowfall: random picks accepted by exposure
@@ -238,10 +241,10 @@ function simStep(sunF){
   for(let k=0;k<4000;k++){const i=W+1+ri(NP-2*W-2);const s=S[i];if(!holds(s))continue;const r=ri(4),j=r===0?i+1:r===1?i-1:r===2?i+W:i-W;
     if(s===CANOPY||!holds(S[j])||cls(S[j])!==cls(s))continue;if(D[i]>D[j]+3){D[i]--;D[j]++;}}
   // 3) wind transport: snow creeps downwind, stops against obstacles
-  const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind),n=(1400*wm)|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(D[i]<4||E[i]<.75||P[i]>100)continue;const j=i+dir;
-    if(holds(S[j])&&cls(S[j])===cls(S[i])&&D[j]<=D[i]+2){D[i]--;D[j]++;}}}
+  const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind),n=(1400*wm)|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(D[i]<4||E[i]<.75*BASEE[S[i]]||P[i]>100)continue;const j=i+dir; // open ice counts as exposed, or snow blown onto the pond would pile up at its rim
+    if(holds(S[j])&&cls(S[j])===cls(S[i])&&D[j]<=D[i]+2&&D[j]<capOf(S[j])){D[i]--;D[j]++;}}}
   // 4) melt: temperature * sun * shade * packed * open-edge count
-  if(temp>0){const n=(1500*Math.min(temp,6)/4*(.35+.65*sunF))|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(!D[i])continue;
+  if(temp>0){const n=(1500*Math.min(temp,6)/4*(.35+.65*sunF))|0;for(let k=0;k<n;k++){const i=ri(NP);if(!D[i])continue; // every row melts. A neighbour read past the canvas is undefined and counts as snow
     let rate=(SH[i]&&sunF>.4?.25:1)*(P[i]>100?.5:1);const s=S[i];if(s===ROOF||s===ROCKTOP)rate*=1.4;if(s===CANOPY)rate*=2.2;if(s===ICE)rate*=1.3;
     let c=0;if(D[i-1]<3)c++;if(D[i+1]<3)c++;if(D[i-W]<3)c++;if(D[i+W]<3)c++;rate*=.35+c*.5;
     if(rnd()<rate){D[i]--;if(cls(s)===1)Wt[i]=Math.min(255,Wt[i]+5);if(!D[i])P[i]=0;}}}
@@ -260,7 +263,7 @@ const VMAP={h:V_HAT,H:V_HATB,s:SKIN,e:EYE,y:V_SCARF,c:V_COAT,C:CAN_B,l:LEG,b:BOO
 const FOXT=[[".....od","fooooo.",".oooo..",".d..d.."],[".....od","fooooo.",".oooo..","..d.d.."]];
 const FMAP={o:FOX,d:FOX_D,f:FOX_W};
 function blocked(x,y){x|=0;y|=0;for(let xx=x-2;xx<=x+2;xx++){if(xx<0||xx>=W||y<4||y>=H)return true;if(Cm[y*W+xx]||Cm[(y-1)*W+xx])return true;}return false;}
-function depthAt(x,y){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return 0;const i=y*W+x;return (D[i]+D[i-1]+D[i+1])/3;}
+function depthAt(x,y){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return 0;const i=y*W+x,g=j=>cls(S[j])===1?D[j]:0;return (g(i)+g(i-1)+g(i+1))/3;}
 function stepFeet(c,dx,dy,big){c.dist+=Math.hypot(dx,dy);const stride=big?4:5;if(c.dist<stride)return;c.dist=0;c.foot^=1;
   const side=c.foot?1:-1,horiz=Math.abs(dx)>Math.abs(dy);
   const fx=c.x+(horiz?0:side*1.5)-1,fy=c.y+(horiz?side*.8:0)-1;stamp(fx,fy,2,2,.3,255);
@@ -322,8 +325,8 @@ function drawTpl(rows,map,x0,y0,flip,feetY){const h=rows.length,w=rows[0].length
   for(let c=0;c<w;c++){const ch=row[flip?w-1-c:c];if(ch==='.')continue;const x=x0+c;if(x<0||x>=W)continue;const i=y*W+x;if(O[i]>feetY)continue;IDX[i]=map[ch];SPR[i]=1;}}}
 function drawChar(c,map){const x=Math.round(c.x),y=Math.round(c.y);const fr=c.moving?[0,1,0,2][(c.anim|0)%4]:0;
   let body,legs,flip=false;if(c.dir==='down'){body=PL_FRONT;legs=LEGS_F[fr];}else if(c.dir==='up'){body=PL_BACK;legs=LEGS_F[fr];}else{body=PL_SIDE;legs=LEGS_S[fr];flip=c.dir==='left';}
-  const rows=body.concat(legs),sink=Math.min(4,(depthAt(c.x,c.y)/22)|0),bob=c.moving&&fr?1:0,vis=rows.slice(0,rows.length-sink);
-  const top=y-rows.length+1+sink-bob+(bob?1:0);
+  const rows=body.concat(legs),sink=Math.min(4,(depthAt(c.x,c.y)/22)|0),vis=rows.slice(0,rows.length-sink);
+  const top=y-rows.length+1+sink;
   // contact shadow
   for(let xx=-2;xx<=2;xx++){const px=x+xx,py=y+1;if(px>=0&&px<W&&py<H){const i=py*W+px;if(O[i]<=y&&IDX[i]<N)IDX[i]+=N;}}
   drawTpl(vis,map,x-3,top,flip,y);
@@ -334,9 +337,12 @@ function render(){
   for(let y=0;y<H;y++){const row=y*W;for(let x=0;x<W;x++){const i=row+x,s=S[i];let idx;
     if(s>=SOLID)idx=B[i];
     else{const d=D[i];
-      if(d>thr[i]){const l=x>0&&holds(S[i-1])?D[i-1]:d,r=x<W-1&&holds(S[i+1])?D[i+1]:d,u=y>0&&holds(S[i-W])?D[i-W]:d,dn=y<H-1&&holds(S[i+W])?D[i+W]:d;
+      if(d>thr[i]){const k=cls(s),l=x>0&&cls(S[i-1])===k?D[i-1]:d,r=x<W-1&&cls(S[i+1])===k?D[i+1]:d,u=y>0&&cls(S[i-W])===k?D[i-W]:d,dn=y<H-1&&cls(S[i+W])===k?D[i+W]:d;
         const sl=(r-l)+(dn-u);
         if(P[i]>110)idx=sl<-5?SN_PSH:SN_PACK;else if(d<thr[i]+4)idx=SN_BASE;else idx=sl>6?SN_HI:sl>=-6?SN_BASE:sl>=-13?SN_MID:sl>=-22?SN_SH:SN_DEEP;
+        if(s===CANOPY&&B[i]===CAN_B)idx=SN_MID;
+        // a rock's snow cap gets a mid-tone rim where it meets the ground, or it melts into the ground snow
+        else if(s===ROCKTOP&&S[i+W]===ROCKTOP&&(S[i-W]<=ICE||S[i-1]<=ICE||S[i+1]<=ICE))idx=SN_MID; // the shaded right flank of a pine keeps a mid tone, so the tree reads against the ground
         if(sparkOn&&sl>=0&&((Math.imul(i^slot,2246822519)>>>23)===0))idx=SPARK;
         if(shadowOn&&SH[i])idx+=N;}
       else{idx=B[i];let v=0;if(shadowOn&&SH[i])v=1;if(Wt[i]>50)v+=2;idx+=v*N;}}
@@ -358,15 +364,16 @@ function render(){
   else{for(let i=0;i<NP;i++){const s=S[i];let v=-1;if(holds(s)&&!SPR[i]){v=view==='depth'?D[i]/120:view==='exposure'?E[i]/1.3:view==='shadow'?SH[i]:view==='packed'?P[i]/255:Wt[i]/255;}
     if(v<0){const c=pal[IDX[i]];out32[i]=SPR[i]?c:(255<<24)|((((c>>16)&255)*.35)<<16)|((((c>>8)&255)*.35)<<8)|((c&255)*.35);}else out32[i]=HEAT[Math.max(0,Math.min(255,(v*255)|0))];}}
   ctx.putImageData(img,0,0);
+  if(hudN++%6)return; // the HUD text is built on every 6th drawn frame and written only when it changed
   const hh=String((clock/60)|0).padStart(2,'0'),mm=String((clock%60)|0).padStart(2,'0');
   const wname={heavy:'Heavy snow',light:'Light snow',overcast:'Overcast',sunny:'Sunny'}[weather];
-  hud.textContent=`${hh}:${mm} · ${wname} · ${temp.toFixed(1)}°C · wind ${wind<-.15?'←':wind>.15?'→':'·'} ${Math.abs(wind).toFixed(1)} · sim ${simMs.toFixed(2)} ms`;
+  const hs=`${hh}:${mm} · ${wname} · ${temp.toFixed(1)}°C · wind ${wind<-.15?'←':wind>.15?'→':'·'} ${Math.abs(wind).toFixed(1)} · sim ${simMs.toFixed(2)} ms${effK<.85&&!paused?` · over budget, running ${(speed*effK).toFixed(1)}× of ${speed}×`:''}`;if(hs!==hudS)hud.textContent=hudS=hs;
 }
 const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255;const r=t<.5?20+t*2*40:60+(t-.5)*2*195,g=t<.5?24+t*2*150:174+(t-.5)*2*81,b=t<.5?60+t*2*170:230+(t-.5)*2*25;HEAT[i]=pack(r,g,b);}
 
 // ---------- loop & UI ----------
 const hud=document.getElementById('hud'),windEl=document.getElementById('wind');
-let last=performance.now(),simAcc=0;
+let last=performance.now(),simAcc=0,hudN=0,hudS='',effK=1;
 // frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
 // enough to redraw the scene and refresh the HUD
 let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
@@ -376,7 +383,9 @@ function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;
 function frame(now){requestAnimationFrame(frame);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){const gm=dt*2*speed;clock=(clock+gm)%1440;updateWeather(gm,dt);
     const t0=performance.now();const sunF=weather==='sunny'?daylight(clock):weather==='overcast'?.15:0;
-    simAcc+=dt*60*speed;let n=0;while(simAcc>=1&&n<32){simStep(sunF);simAcc--;n++;}if(simAcc>4)simAcc=0;simMs=simMs*.9+(performance.now()-t0)*.1;
+    simAcc+=dt*60*speed;let n=0;while(simAcc>=1&&n<32&&(n<1||performance.now()-t0<7)){simStep(sunF);simAcc--;n++;}if(simAcc>4)simAcc=0;
+    // steps run against steps asked for. Under 1 means the 7 ms budget cut the speed
+    effK+=((n/Math.max(1,Math.round(dt*60*speed)))-effK)*.1;simMs=simMs*.9+(performance.now()-t0)*.1;
     updateEntities(dt);updateFlakes(dt);frameN++;}
   render();}
 document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.onclick=()=>{auto=false;document.getElementById('auto').classList.remove('on');setWeather(b.dataset.w);});
