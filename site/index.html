@@ -119,8 +119,7 @@ footer a{color:var(--hero)}
   <div class="status" aria-live="polite"><span id="count"></span><span class="active-tags" id="active"></span><button type="button" id="clear" hidden>Clear all</button></div>
 </div></div>
 <main class="wrap" id="lib">
-  <p class="start" id="start"><span class="k">★ Start here</span><span class="why"><b>Tiny VFX algorithms #1 Snow.</b> New here? The Tiny VFX series is the core of the library. Every study comes with a playable sandbox. Start with #1 Snow.</span>
-    <span class="actions"><a class="btn" href="vfx-snow-topdown-pixel.html">Read →</a><a class="btn play" href="vfx-snow-sandbox.html">▶ Play</a></span></p>
+  
   <p class="empty">No studies match. Maybe that is the next study to write. <button type="button" class="tog" id="clear2">Clear filters</button></p>
   <div class="shelves"><section class="shelf" id="series-vfx" data-series="vfx" style="--n:5">
   <header class="shelf-h"><div><h2>Tiny VFX algorithms</h2><p class="sub">Top-down pixel art, one concept per study. Old-school, super-efficient effects in the spirit of the DOOM fire. Each study has a playable sandbox.</p></div><p class="count">9 studies · 9 playable</p></header>
@@ -285,7 +284,7 @@ function matches(el,words){for(const f in sel){if(!sel[f].size)continue;let ok=f
 function apply(push=true){const words=q.value.toLowerCase().split(/\s+/).filter(Boolean);const active=Object.values(sel).some(s=>s.size)||words.length>0;
   let n=0;for(const c of cards){const m=matches(c,words);c.hidden=!m;if(m)n++;}
   document.querySelectorAll('.shelf').forEach(s=>{s.hidden=!s.querySelector('.card:not([hidden])');});
-  document.getElementById('start').hidden=active;
+  const st=document.getElementById('start');if(st)st.hidden=active;
   const ser=sel.series&&sel.series.size?[...sel.series][0]:'';const only=!words.length&&Object.keys(sel).every(f=>f==='series'||!sel[f].size);
   let u=0;up.querySelectorAll('li').forEach(li=>{li.hidden=!only||(ser&&li.dataset.series!==ser);if(!li.hidden)u++;});up.hidden=!u;
   lib.classList.toggle('noresults',n===0);lib.classList.toggle('one',!!ser);

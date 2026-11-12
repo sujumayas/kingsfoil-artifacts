@@ -227,7 +227,7 @@ function matches(el,words){for(const f in sel){if(!sel[f].size)continue;let ok=f
 function apply(push=true){const words=q.value.toLowerCase().split(/\s+/).filter(Boolean);const active=Object.values(sel).some(s=>s.size)||words.length>0;
   let n=0;for(const c of cards){const m=matches(c,words);c.hidden=!m;if(m)n++;}
   document.querySelectorAll('.shelf').forEach(s=>{s.hidden=!s.querySelector('.card:not([hidden])');});
-  document.getElementById('start').hidden=active;
+  const st=document.getElementById('start');if(st)st.hidden=active;
   const ser=sel.series&&sel.series.size?[...sel.series][0]:'';const only=!words.length&&Object.keys(sel).every(f=>f==='series'||!sel[f].size);
   let u=0;up.querySelectorAll('li').forEach(li=>{li.hidden=!only||(ser&&li.dataset.series!==ser);if(!li.hidden)u++;});up.hidden=!u;
   lib.classList.toggle('noresults',n===0);lib.classList.toggle('one',!!ser);
@@ -275,6 +275,9 @@ def head(title, desc):
 
 FOOT = f'''<footer><span>Kingsfoil Studios · Research library · updated {cat['updated']}</span><span><a href="index.html">Library</a> · <a href="browse.html">Techniques and all pages</a> · Data: <a href="catalog.json">catalog.json</a> · <a href="taxonomy.json">taxonomy.json</a></span></footer>'''
 start_series = series_title(start["series"]["id"])
+# The banner is off while catalog.json says "start": {"show": false}. Set it to true to bring it back.
+start_html = f'''<p class="start" id="start"><span class="k">★ Start here</span><span class="why"><b>{E(start_series['title'])} #{start['series']['number']} {E(start['short'])}.</b> {E(cat['start']['why'])}</span>
+    <span class="actions"><a class="btn" href="{E(start['path'].lstrip('/'))}">Read →</a><a class="btn play" href="{E(items[start['pair']]['path'].lstrip('/'))}">▶ Play</a></span></p>''' if cat["start"].get("show", True) else ""
 
 page = f'''{head("Kingsfoil Artifacts — game research library", cat['site']['intro'])}
 <body class="no-js">
@@ -298,8 +301,7 @@ page = f'''{head("Kingsfoil Artifacts — game research library", cat['site']['i
   <div class="status" aria-live="polite"><span id="count"></span><span class="active-tags" id="active"></span><button type="button" id="clear" hidden>Clear all</button></div>
 </div></div>
 <main class="wrap" id="lib">
-  <p class="start" id="start"><span class="k">★ Start here</span><span class="why"><b>{E(start_series['title'])} #{start['series']['number']} {E(start['short'])}.</b> {E(cat['start']['why'])}</span>
-    <span class="actions"><a class="btn" href="{E(start['path'].lstrip('/'))}">Read →</a><a class="btn play" href="{E(items[start['pair']]['path'].lstrip('/'))}">▶ Play</a></span></p>
+  {start_html}
   <p class="empty">No studies match. Maybe that is the next study to write. <button type="button" class="tog" id="clear2">Clear filters</button></p>
   <div class="shelves">{''.join(shelves)}</div>
   <section class="sec" id="upcoming"><header class="shelf-h"><div><h2>Coming next</h2></div><p class="count">{n_up} planned</p></header><ul class="next">{upcoming}</ul></section>
