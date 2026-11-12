@@ -626,7 +626,9 @@ How to use this file:
   Done: `rad()` clamps the mass at 0, the sword and lime clamp it too, and `matIdx` sends a NaN stage to 0.
   Two sword hits on the starting small slime left 1 NaN pixel and "acid NaN u" in the HUD. Now 0 NaN pixels
   and "acid 947 u".
-- [ ] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
+- [x] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
+  Done: no code change beyond #116. On the burst spot `feetA()` was NaN and 1 s of walking moved 0 px. Now
+  it reads 0.27 and the traveller moves 39 px.
 - [ ] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
   legs (`:380`). Fix: test row `fl.y+4`.
 - [ ] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
