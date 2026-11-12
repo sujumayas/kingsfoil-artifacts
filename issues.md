@@ -120,8 +120,13 @@ How to use this file:
   passes 2 million px, which is 8 MB. All 2,056 decals compared (64 angles, both shapes, both teams, 4
   fill steps, with and without colour-blind patterns, plus the circles) are pixel-identical to the old
   ones.
-- [ ] **22.** `P6` The HUD total under-reports by about a quarter in heavy mode. It leaves out the x-ray draw and
+- [x] **22.** `P6` The HUD total under-reports by about a quarter in heavy mode. It leaves out the x-ray draw and
   the DOM write.
+  Done: render() times the x-ray overlay and the loop times the readout's own DOM write, averaged over the
+  9 frames in 10 that skip it. Both are in the total, in the readout line and in a seventh row of the cost
+  panel. With 30 allies the x-ray draw is 0.16 ms of 1.37 in Cost view and 0.25 ms of 1.29 in Server
+  truth. The write is 0.01 ms. Style, layout and paint after the write happen outside script and are still
+  not counted.
 
 ## feel-loot-pickup
 

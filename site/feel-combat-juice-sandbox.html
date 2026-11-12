@@ -856,10 +856,10 @@ function drawViews(){
     txt(F2,'LAST 2.4 S   RTT '+LAT+' MS + TICK WAIT',x0,y0+38,P.s2,0);}
   else if(VIEW==='cost'){const col=['rgba(146,207,228,.5)','rgba(244,211,94,.9)','rgba(214,105,138,.9)','rgba(188,214,108,.6)','rgba(255,255,255,.5)'];ctx.lineWidth=1;
     for(let i=0;i<COSTR.length;i+=5){ctx.strokeStyle=col[COSTR[i]];ctx.strokeRect((COSTR[i+1]|0)+.5,(COSTR[i+2]|0)+.5,Math.max(1,COSTR[i+3]|0)-1,Math.max(1,COSTR[i+4]|0)-1);}
-    const items=[['SIM',T.sim,P.wh],['SPRITES',T.spr,P.a3],['EFFECTS',T.fx,P.yl],['TEXT',T.txt,P.pk],['CAMERA',T.cam,P.g4],['UI',T.ui,P.s3]];R(3,104,112,50,'rgba(10,8,18,.88)');
-    items.forEach(([n,v,c],i)=>{const y=106+i*8;txt(F2,n,6,y,c,0);R(42,y,Math.max(1,Math.min(46,v/1*46)),4,'#'+c);txt(F2,v.toFixed(2),92,y,P.wh,0);});}}
+    const items=[['SIM',T.sim,P.wh],['SPRITES',T.spr,P.a3],['EFFECTS',T.fx,P.yl],['TEXT',T.txt,P.pk],['CAMERA',T.cam,P.g4],['UI',T.ui,P.s3],['XRAY+HUD',T.xray+T.hud,P.s1]];R(3,102,112,52,'rgba(10,8,18,.88)');
+    items.forEach(([n,v,c],i)=>{const y=104+i*7;txt(F2,n,6,y,c,0);R(42,y,Math.max(1,Math.min(46,v/1*46)),4,'#'+c);txt(F2,v.toFixed(2),92,y,P.wh,0);});}}
 // ---------- render ----------
-const T={sim:0,spr:0,fx:0,txt:0,cam:0,ui:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};let simMs=0;
+const T={sim:0,spr:0,fx:0,txt:0,cam:0,ui:0,xray:0,hud:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};let simMs=0;
 function camOffset(){const S=TUNING.shake,tr=TRAUMA,amp=S.maxPx*SHK*(RSHAKE?.25:1)*tr*tr;let ox=0,oy=0;if(amp>0&&FX.shake){const t=now/1000*S.noiseHz;ox=(vn(t,0,41)*2-1)*amp;oy=(vn(t,7,43)*2-1)*amp*S.yMul;}
   if(KICKT<S.kickMs){const k=1-KICKT/S.kickMs;ox+=KICKX*k;oy+=KICKY*k;}return [Math.round(ox),Math.round(oy)];}
 function render(){ST.blits=0;ST.glyphs=0;COSTR.length=0;FC++;
@@ -875,8 +875,8 @@ function render(){ST.blits=0;ST.glyphs=0;COSTR.length=0;FC++;
   LAYER=3;drawLights();const t5=performance.now();LAYER=2;if(FX.numbers)drawNums();const t6=performance.now();
   LAYER=3;ctx.setTransform(1,0,0,1,0,0);B(VIG,0,0);if(REDF>0){ctx.globalAlpha=Math.min(1,REDF/200)*(RFLASH?.5:1);B(REDV,0,0);ctx.globalAlpha=1;}const t7=performance.now();
   LAYER=4;drawHUD();const t8=performance.now();
-  ema('sim',simMs);ema('spr',(t1-t0)+(t3-t2));ema('fx',(t2-t1)+(t4-t3));ema('txt',t6-t5);ema('cam',(t5-t4)+(t7-t6));ema('ui',t8-t7);T.total=T.sim+T.spr+T.fx+T.txt+T.cam+T.ui;
-  drawViews();}
+  ema('sim',simMs);ema('spr',(t1-t0)+(t3-t2));ema('fx',(t2-t1)+(t4-t3));ema('txt',t6-t5);ema('cam',(t5-t4)+(t7-t6));ema('ui',t8-t7);
+  drawViews();ema('xray',performance.now()-t8);T.total=T.sim+T.spr+T.fx+T.txt+T.cam+T.ui+T.xray+T.hud;}
 // ---------- simulation step ----------
 function step(dt){now+=dt;if(GSTOP>0)FROZEN.push(now,dt);if(GSTOP>0){GSTOP-=dt;if(GSTOP<=0){GSTOP=0;vnow=now;}}else vnow=now;const dtv=GSTOP>0?0:dt;
   updPlayer(dt,dtv);
@@ -902,8 +902,11 @@ for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyu
 function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
 function loop(ts){requestAnimationFrame(loop);if(skipFrame())return;let dt=ts-last;last=ts;if(dt>100)dt=100;if(dt<0)dt=0;if(slow)dt*=.25;if(paused)dt=0;
   const a=performance.now();if(dt>0)step(dt);simMs=performance.now()-a;render();
-  if(++hudN%10===0){let bytes=0;for(let i=1;i<NET.log.length;i+=2)bytes+=NET.log[i];let fz=0;for(let i=1;i<FROZEN.length;i+=2)fz+=FROZEN[i];const live=VO.filter(v=>!AC||v.end>AC.currentTime).length;
-    $('hud').innerHTML=`${MODE.toUpperCase()} · tick ${TICK} ms · RTT ${LAT} ms · ${{wait:'wait for server',anim:'predict animation',full:'predict animation + effects'}[PRED]} · juice ${Math.round(JUICE*100)}% · ${STOPMODE==='global'?'<span class="warn">global hitstop</span>':'per-entity hitstop'}${paused?' · paused':''}<br>sim ${f2(T.sim)} · sprites + anim ${f2(T.spr)} · effects ${f2(T.fx)} · combat text ${f2(T.txt)} · camera + post ${f2(T.cam)} · UI ${f2(T.ui)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · blits ${ST.blits} · glyphs ${ST.glyphs} · entities ${ENTS.length} · particles ${PART.length} · numbers ${NUMS.length} (merged ${MERGED.length}/s)<br>sounds ${AC?live+' playing':'off until first key or tap'} · dropped ${VDROP} · stolen ${VSTOLE} · server ${NET.log.length/2|0} msg/s · ${(bytes/1024).toFixed(2)} kB/s · phantoms ${NET.phantom} · rejected ${NET.rej}${fz?` · <span class="warn">screen frozen ${Math.min(100,fz/10).toFixed(0)}% of the last second</span>`:''}${VIEW==='server'?svLine():''}`;}}
+  // the readout below is written every 10th frame. Its cost is averaged over all frames, so it shows up in the total it reports
+  const h0=performance.now(),wr=++hudN%10===0;
+  if(wr){let bytes=0;for(let i=1;i<NET.log.length;i+=2)bytes+=NET.log[i];let fz=0;for(let i=1;i<FROZEN.length;i+=2)fz+=FROZEN[i];const live=VO.filter(v=>!AC||v.end>AC.currentTime).length;
+    $('hud').innerHTML=`${MODE.toUpperCase()} · tick ${TICK} ms · RTT ${LAT} ms · ${{wait:'wait for server',anim:'predict animation',full:'predict animation + effects'}[PRED]} · juice ${Math.round(JUICE*100)}% · ${STOPMODE==='global'?'<span class="warn">global hitstop</span>':'per-entity hitstop'}${paused?' · paused':''}<br>sim ${f2(T.sim)} · sprites + anim ${f2(T.spr)} · effects ${f2(T.fx)} · combat text ${f2(T.txt)} · camera + post ${f2(T.cam)} · UI ${f2(T.ui)} · x-ray ${f2(T.xray)} · this readout ${f2(T.hud)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · blits ${ST.blits} · glyphs ${ST.glyphs} · entities ${ENTS.length} · particles ${PART.length} · numbers ${NUMS.length} (merged ${MERGED.length}/s)<br>sounds ${AC?live+' playing':'off until first key or tap'} · dropped ${VDROP} · stolen ${VSTOLE} · server ${NET.log.length/2|0} msg/s · ${(bytes/1024).toFixed(2)} kB/s · phantoms ${NET.phantom} · rejected ${NET.rej}${fz?` · <span class="warn">screen frozen ${Math.min(100,fz/10).toFixed(0)}% of the last second</span>`:''}${VIEW==='server'?svLine():''}`;}
+  ema('hud',wr?performance.now()-h0:0);}
 // ---------- UI wiring ----------
 const mark=(sel,v)=>document.querySelectorAll(sel+' button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v)));
 const group=(sel,fn)=>document.querySelectorAll(sel+' button[data-v]').forEach(b=>b.addEventListener('click',()=>{fn(b.dataset.v);mark(sel,b.dataset.v);}));
