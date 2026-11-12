@@ -406,14 +406,15 @@ function render(){const now=performance.now;let t0=now.call(performance),t;
   if(view!=='normal')drawView();
   ctx.putImageData(img,0,0);}
 const heat=v=>{v=clamp(v,0,1);return pack(v<.5?40+v*2*60:100+(v-.5)*2*155,v<.5?30+v*2*170:200-(v-.5)*2*120,v<.5?90+v*2*20:110-(v-.5)*2*90);};
+const CFL=new Uint8Array(NP),CV=new Float32Array(NP);
 function drawView(){
   if(view==='height'){for(let i=0;i<NP;i++){const h=HM[i],c=CELL[i];let col=WAT[i]?pack(50,90,150):pack(20+h*.75,28+h*.8,40+h*.7);
       if(i>W&&((h/24)|0)!==((HM[i-W]/24)|0))col=pack(240,200,120);if(STAT[c]||WALL[c])col=(col&0xff00ffff)|0x0000d000;out[i]=col|0xff000000;}}
   else if(view==='density'){for(let i=0;i<NP;i++){const x=i%W,y=(i/W)|0,f=(y>>2)*FW+(x>>2),v=FD[f],m=Math.min(255,MB[f]);out[i]=pack(12+v*.75+m*.6,16+v*.85,40+v*.84+m*.5);if(((x&3)===0||(y&3)===0)&&v>4)out[i]=pack(10+v*.6,14+v*.7,34+v*.7);}}
   else if(view==='fow'){for(let i=0;i<NP;i++){const x=i%W,y=(i/W)|0,c=CELL[i],v=VC[c]/255;let col=!EX[c]?pack(6,6,10):pack(40+v*20,56+v*120,90-v*30);if(v>0&&v<1)col=pack(200,180,60);
       if(STAT[c]||WALL[c])col=pack(170,50,50);if(MOP[c])col=pack(160,70,200);if(c===P.cell)col=pack(250,250,250);if((x&7)===0||(y&7)===0)col=pack(((col&255)*.6),((col>>8&255)*.6),((col>>16&255)*.6));out[i]=col;}}
-  else if(view==='cost'){let nF=0,nC=0,nA=0,nW=0;const fl=[];for(let i=0;i<NP;i++){const b=IDX[i];let m=0;if(FV[i]||HZQ[i]){m|=1;nF++;}const bs=b&63;if(OVM[i]){m|=2;nC++;}if(b&LB){m|=4;nA++;}if(b&EXB||bs===UNK){m|=8;nW++;}fl.push(m);}
-    const pF=(T.tex+T.pass)/Math.max(nF,1),pC=T.clouds/NP,pA=(T.atmos)/Math.max(nA,1),pW=T.fow/Math.max(nW,1),pB=T.draw/NP;let mx=1e-9;const v=new Float32Array(NP);
+  else if(view==='cost'){let nF=0,nC=0,nA=0,nW=0;const fl=CFL,v=CV;for(let i=0;i<NP;i++){const b=IDX[i];let m=0;if(FV[i]||HZQ[i]){m|=1;nF++;}const bs=b&63;if(OVM[i]){m|=2;nC++;}if(b&LB){m|=4;nA++;}if(b&EXB||bs===UNK){m|=8;nW++;}fl[i]=m;}
+    const pF=(T.tex+T.pass)/Math.max(nF,1),pC=T.clouds/NP,pA=(T.atmos)/Math.max(nA,1),pW=T.fow/Math.max(nW,1),pB=T.draw/NP;let mx=1e-9;
     for(let i=0;i<NP;i++){const m=fl[i];let s=pB+pC;if(m&1)s+=pF;if(m&4)s+=pA;if(m&8)s+=pW;v[i]=s;if(s>mx)mx=s;}
     for(let i=0;i<NP;i++)out[i]=heat(Math.sqrt(v[i]/mx));costMs={pF,pA,pW,pC};}}
 // ---------- loop and UI ----------

@@ -613,7 +613,9 @@ How to use this file:
   Done: confirmed first: with Reduce motion on, the front moved from x -80 to 35 in 10 s. Now the front
   counts as arrived, and the left, middle and right columns of the field rise together over about 2 s. Card
   9 says so.
-- [ ] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
+- [x] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
+  Done: confirmed by reading. The 57,600-entry array and the Float32Array are allocated once. `drawView`
+  median went from 0.29 to 0.24 ms.
 
 ## vfx-acid
 
