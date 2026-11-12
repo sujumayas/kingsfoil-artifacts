@@ -296,7 +296,8 @@ function step(dt){simT+=dt;
   serverAcc+=dt;if(serverAcc>=2){serverAcc-=2;serverTick();}
   let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
   if(ix||iy)P.hasT=false;else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);if(d<1.2)P.hasT=false;else{ix=dx/d;iy=dy/d;}}
-  const l=Math.hypot(ix,iy);P.mv=l>0;if(P.mv){const s=38*dt/l,nx=P.x+ix*s,ny=P.y+iy*s;if(!blocked(nx,P.y))P.x=nx;if(!blocked(P.x,ny))P.y=ny;P.at+=dt;}
+  // P.mv is true only when the walker covered at least a quarter of the step. A blocked tap-to-walk drops its target
+  const l=Math.hypot(ix,iy);if(!l)P.mv=false;else if(dt>0){const s=38*dt/l,nx=P.x+ix*s,ny=P.y+iy*s,ox=P.x,oy=P.y;if(!blocked(nx,P.y))P.x=nx;if(!blocked(P.x,ny))P.y=ny;P.mv=Math.hypot(P.x-ox,P.y-oy)>38*dt*.25;if(P.mv)P.at+=dt;else P.hasT=false;}
   const pc=CELL[(P.y|0)*W+(P.x|0)];if(pc!==P.cell){P.cell=pc;fovDirty=true;}
   for(const b of beasts){if(!b.tx||Math.hypot(b.tx-b.x,b.ty-b.y)<2){b.tx=b.r[0]+rnd()*(b.r[2]-b.r[0]);b.ty=b.r[1]+rnd()*(b.r[3]-b.r[1]);}
     const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy)||1,nx=b.x+dx/d*10*dt,ny=b.y+dy/d*10*dt;if(!WALL[CELL[(ny|0)*W+(nx|0)]]){b.x=nx;b.y=ny;}else b.tx=0;b.at=(b.at||0)+dt;}

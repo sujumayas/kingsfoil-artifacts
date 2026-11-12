@@ -39,7 +39,7 @@ How to use this file:
   the same `fit()`, and use 1x below 640.
   Done: one `fit()` in 12 sandboxes, including loot pickup, light, rain and snow, which had the same defect.
   Scale is 1x up to a 677 px viewport, 2x from 678 and 3x from 998. Forest is tracked as #181.
-- [ ] **6.** `P2` Tap-to-walk onto a blocked spot makes the character walk in place forever. Grass (`:558`, `:560`),
+- [x] **6.** `P2` Tap-to-walk onto a blocked spot makes the character walk in place forever. Grass (`:558`, `:560`),
   magic (`:575`) and fog (`:298`, suspected). Fix: set the moving flag only when the position changed, and clear
   the walk target when blocked. Acid handles this case correctly.
 - [ ] **7.** `P6` Full render continues while paused and while the canvas is off-screen in every sandbox. Paused

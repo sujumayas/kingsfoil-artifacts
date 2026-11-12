@@ -572,13 +572,14 @@ function glowLayer(){LMR.fill(0);LMG.fill(0);LMB.fill(0);
 // ---------- step ----------
 const A={world:0,cast:0,proj:0,impact:0,aura:0,glow:0,screen:0,clar:0},T={world:0,cast:0,proj:0,impact:0,aura:0,glow:0,screen:0,clar:0,total:0};
 const keys={l:0,r:0,u:0,d:0};
-function walk(e,dx,dy,sp,dt){const l=Math.hypot(dx,dy);if(l<.01){e.mv=false;return;}const nx=e.x+dx/l*sp*dt,ny=e.y+dy/l*sp*dt;let moved=false;
-  if(!blockedPx(nx,e.y)){e.x=nx;moved=true;}if(!blockedPx(e.x,ny)){e.y=ny;moved=true;}e.mv=moved;if(moved){e.wf+=dt;if(Math.abs(dx)>.3)e.face=dx<0?-1:1;}}
+// moved is true only when the entity covered at least a quarter of the step, so a blocked walker stands still and drops its target
+function walk(e,dx,dy,sp,dt){const l=Math.hypot(dx,dy);if(l<.01){e.mv=false;return;}const st=sp*dt;if(!(st>0))return;const nx=e.x+dx/l*st,ny=e.y+dy/l*st,ox=e.x,oy=e.y;
+  if(!blockedPx(nx,e.y))e.x=nx;if(!blockedPx(e.x,ny))e.y=ny;const moved=Math.hypot(e.x-ox,e.y-oy)>st*.25;e.mv=moved;if(moved){e.wf+=dt;if(Math.abs(dx)>.3)e.face=dx<0?-1:1;}}
 function playerAim(){if(aimMode==='target'&&target&&target.act&&!target.dead)return[target.x,target.y-7,target.y];if(!aimSeen){const n=nearestFoe(P);if(n)return[n.x,n.y-7,n.y];}return[aimX,aimY,aimY];}
 function stepActors(dt){
   // player
   for(const e of ents){if(e.castT>0)e.castT-=dt;if(e.cd>0)e.cd-=dt;}
-  if(P.froz<=0){const kx=keys.r-keys.l,ky=keys.d-keys.u,sp=P.haste>0?80:48;if(kx||ky){P.hasT=false;walk(P,kx,ky,sp,dt);}else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y;if(Math.hypot(dx,dy)<1.5){P.hasT=false;P.mv=false;}else{walk(P,dx,dy,sp,dt);if(!P.mv)P.hasT=false;}}else P.mv=false;}else P.mv=false;
+  if(P.froz<=0){const kx=keys.r-keys.l,ky=keys.d-keys.u,sp=P.haste>0?80:48;if(kx||ky){P.hasT=false;walk(P,kx,ky,sp,dt);}else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y;if(Math.hypot(dx,dy)<1.5){P.hasT=false;P.mv=false;}else{walk(P,dx,dy,sp,dt);if(!P.mv&&dt>0)P.hasT=false;}}else P.mv=false;}else P.mv=false;
   if(P.hp<P.mx)P.hp=Math.min(P.mx,P.hp+dt*1.5);
   // healer (party)
   HL.ai-=dt;const hd=Math.hypot(P.x-HL.x,P.y-HL.y);if(hd>52&&HL.froz<=0)walk(HL,P.x-HL.x,P.y-HL.y,34,dt);else HL.mv=false;

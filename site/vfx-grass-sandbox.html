@@ -555,10 +555,11 @@ function lifeUpdate(dt){const ph=phaseOf(tod);if(ph!==lastPhase){if(ph==='dusk')
       if(LA[j])CWC[CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)]]+=12;}}}
 
 // ---------- walkers ----------
-function moveWalker(w,ix,iy,sp,dt){const l=Math.hypot(ix,iy);w.mv=l>0;if(!w.mv)return;const s=sp*dt/l,nx=w.x+ix*s,ny=w.y+iy*s;if(!blockedPx(nx,w.y))w.x=nx;if(!blockedPx(w.x,ny))w.y=ny;w.at+=dt;if(ix)w.face=ix>0?1:-1;}
+// w.mv is true only when the walker covered at least a quarter of the step, so a blocked walker stands still
+function moveWalker(w,ix,iy,sp,dt){const l=Math.hypot(ix,iy);if(!l){w.mv=false;return;}if(!(dt>0))return;const s=sp*dt/l,nx=w.x+ix*s,ny=w.y+iy*s,ox=w.x,oy=w.y;if(!blockedPx(nx,w.y))w.x=nx;if(!blockedPx(w.x,ny))w.y=ny;w.mv=Math.hypot(w.x-ox,w.y-oy)>sp*dt*.25;if(w.mv)w.at+=dt;if(ix)w.face=ix>0?1:-1;}
 function stepWalkers(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
   if(ix||iy)P.hasT=false;else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);if(d<1.2)P.hasT=false;else{ix=dx/d;iy=dy/d;}}
-  const pc=CELL[(P.y|0)*W+(P.x|0)];moveWalker(P,ix,iy,hides(pc)?29:36,dt);if(P.reveal>0)P.reveal-=dt;
+  const pc=CELL[(P.y|0)*W+(P.x|0)];moveWalker(P,ix,iy,hides(pc)?29:36,dt);if(P.hasT&&!P.mv&&dt>0)P.hasT=false;if(P.reveal>0)P.reveal-=dt;
   const pc2=CELL[(P.y|0)*W+(P.x|0)];P.hideT=hides(pc2)&&P.reveal<=0?(P.hideT||0)+dt:0;const vc2=V.x>0?CELL[clamp(V.y|0,0,H-1)*W+clamp(V.x|0,0,W-1)]:-1;V.hideT=vc2>=0&&hides(vc2)?(V.hideT||0)+dt:0;
   // villager
   if(V.wait>0){V.wait-=dt;V.mv=false;}else{const wp=VWP[V.i],dx=wp[0]-V.x,dy=wp[1]-V.y,d=Math.hypot(dx,dy);if(d<1.5){V.wait=wp[2];V.i=(V.i+1)%VWP.length;if(V.i===0){V.x=VWP[0][0];V.y=VWP[0][1];}}else{V.x+=dx/d*24*dt;V.y+=dy/d*24*dt;V.mv=true;V.at+=dt;V.face=dx>0?1:-1;}}
