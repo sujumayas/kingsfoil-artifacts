@@ -914,7 +914,9 @@ function rain(n){const owners=()=>{const r=rnd();if(r<.35)return PL.id;const al=
     later(now+d,T=>svAddGround(s,T,0,1),1);}}
 function clearItems(){for(const it of [...SV.items.values()])if(it.cont==null)svRemove(it,now,'despawn');for(let i=SV.pend.length-1;i>=0;i--)if(SV.pend[i].drop)SV.pend.splice(i,1);}
 function race(){const al=ENTS.filter(e=>e.kind==='ally');let bot=al.find(a=>a.ninja)||al[0];if(!bot){setAllies(1);bot=ENTS.find(e=>e.kind==='ally');}
-  const x=PL.x+16,y=PL.y;const bx=x+16;bot.x=bx;bot.y=y;bot.task=null;bot.think=now+3000;bot.lat=40;
+  // the ring one tile from you and the bot one tile past it, on the first side with open ground for both
+  let rx=16,ry=0;for(const [a,b] of [[16,0],[-16,0],[0,16],[0,-16]])if(!solidAt(PL.x+a,PL.y+b)&&!solidAt(PL.x+2*a,PL.y+2*b)){rx=a;ry=b;break;}
+  const x=PL.x+rx,y=PL.y+ry;const bx=x+rx;bot.x=bx;bot.y=y+ry;bot.task=null;bot.think=now+3000;bot.lat=40;
   const it={id:++SIDN,def:IDX.ring,tier:3,n:1,x,y,sx:x,sy:y,cont:null,order:0,spawnT:now,despawnAt:now+180000,owner:null,ownUntil:now,origOwner:null,pickAt:now};SV.items.set(it.id,it);SV.tc[tileOf(y)*MAPW+tileOf(x)]++;SV.ground++;
   if(repl(x,y,TUNING.bytes.add))downMe(now,0,()=>clSpawn(snapOf(it),0));
   const fire=now+LAT/2+400;clLater(fire,()=>{const ci=CL.items.get(it.id);if(ci)queueAct({k:'take',id:it.id});CL.cdUntil=0;pumpQueue();

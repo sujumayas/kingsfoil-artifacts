@@ -192,8 +192,11 @@ How to use this file:
   screenshot with 40 rain items. The legend box takes its width from the text.
 - [x] **34.** `P5` Server truth panel says "CORPSE 10 S OWNED" (`:827`). TUNING, the spec and card 2 say 15 s.
   Done: the line is built from TUNING.owner.corpseS and reads CORPSE 15 S OWNED.
-- [ ] **35.** `P6` Race demo places the ring and bot with no bounds check (`:906`), off-canvas near the right
+- [x] **35.** `P6` Race demo places the ring and bot with no bounds check (`:906`), off-canvas near the right
   edge.
+  Done: the ring and the bot go on the first side (right, left, down, up) where both spots are open ground.
+  From x 312 the ring was at x 328 and the bot at 344 before. They are at 296 and 280 now, and the race
+  still resolves.
 - [ ] **36.** `P5` "Label filter" buttons do nothing in the default preset, and the Alt path ignores the filter
   (`:756`).
 - [ ] **37.** `P6` Loot window title is cut to 9 characters, "GOBLIN CH" (`:800`).
