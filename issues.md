@@ -368,8 +368,12 @@ How to use this file:
 - [x] **72.** `P6` Haste button stays lit after the timer runs out (`:703`).
   Done: the aura update syncs the button when the player's haste ends, and clamps the timer at 0 (it stopped
   at -0.017 before). Button lit after expiry: yes before, no after.
-- [ ] **73.** `P5` HUD "evicted" also counts refused spawns, and "particles refused" counts overwritten live
+- [x] **73.** `P5` HUD "evicted" also counts refused spawns, and "particles refused" counts overwritten live
   particles (`:261`, `:274`).
+  Done: four counters now: evicted, refused, particles refused, overwritten. A spawn that loses at a full
+  cap counted as 1 evicted before, now 0 evicted and 1 refused. Ten particles written over live ones in a
+  full range counted as 10 refused before, now 10 overwritten. A real eviction still counts 1 evicted, and
+  10 particles over the cap still count 10 refused.
 - [ ] **74.** `P6` `lightQ` calls for level up (`:704`) and heal (`:368`) are cleared before render, so those
   lights never show.
 - [ ] **75.** `P6` Colour-blind mode leaves hostile impact particles and damage numbers in the element colour

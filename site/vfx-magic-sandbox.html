@@ -242,7 +242,7 @@ const SCH=[];function after(s,fn){SCH.push({t:simT+s,fn});}
 
 // ---------- layer 9: clarity manager ----------
 const POL=[{},{},{},{}],TPRI=[0,4,7,7,6,5,5,3,2,0,0,9],TIERPRI=[4,2,1,3],TC=[0,0,0,0];
-let pressure=0,evicted=0,evictSec=0,evictRate=0,partDrop=0;
+let pressure=0,evicted=0,refused=0,evictSec=0,evictRate=0,partDrop=0,partOver=0;
 function setPolicy(){for(let t=0;t<4;t++){const p=POL[t];p.pm=1;p.op=16;p.red=0;p.light=1;p.trail=1;p.decal=1;p.screen=1;p.mini=0;}
   if(!mgr)return;POL[0].op=Math.round(opOwn*.16);POL[3].op=Math.round(opMon*.16);POL[1].pm=.7;POL[1].screen=0;const o=POL[2];o.screen=0;o.op=Math.round(opOth*.16);
   if(others==='reduced'){o.pm=.5;o.red=1;o.light=0;o.decal=0;}else if(others==='minimal'){o.pm=0;o.light=0;o.decal=0;o.trail=0;o.mini=1;}
@@ -258,7 +258,7 @@ function spawn(ty,tier,el,dur){const t0=now();let f=null,ok=true;if(cbOn&&tier==
   else{const cap=mgr?PRM.cap.fx:HARD_FX;
     if(liveFx>=cap){const v=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10+9;let w=null,wv=1e9;
       for(let i=0;i<fxHi;i++){const g=FX[i];if(!g.on)continue;const gv=g.pri+(g.dur>50?9:(1-g.t/g.dur)*9);if(gv<wv){wv=gv;w=g;}}
-      evicted++;evictSec++;if(w&&wv<v)kill(w);else ok=false;}}
+      if(w&&wv<v){kill(w);evicted++;evictSec++;}else{ok=false;refused++;}}}
   if(ok){let i=-1;for(let n=0;n<HARD_FX;n++){const j=(fxCur+n)%HARD_FX;if(!FX[j].on){i=j;break;}}
     if(i>=0){f=FX[i];fxCur=(i+1)%HARD_FX;f.on=1;f.ty=ty;f.tier=tier;f.el=el;f.dur=dur;f.t=0;f.delay=0;f.pri=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10;f.own=f.tg=f.hit=null;f.rel=f.n=f.k=f.main=0;f.a=f.z=f.tick=f.sa=0;f.seed=(rnd()*65535)|0;liveFx++;if(i>=fxHi)fxHi=i+1;}}
   A.clar+=now()-t0;return f;}
@@ -271,7 +271,7 @@ const PS0=[0,1000,3200,7000],PS1=[1000,3200,7000,8000],PCUR=PS0.slice(),PHI=PS0.
 // kinds: 0 spark, 1 rising tongue, 2 gather, 3 bubble, 4 shard, 5 mote, 6 smoke, 7 zap
 function part(L,tier,el,k,x,y,vx,vy,life){if(mgr&&tier===2&&liveP>=PRM.cap.parts){partDrop++;return;}
   const s=PS0[L],e=PS1[L];let i=PCUR[L];for(let n=0;n<6&&PL[i]>0;n++){i++;if(i>=e)i=s;}
-  if(PL[i]<=0)liveP++;else partDrop++;PX[i]=x;PY[i]=y;PVX[i]=vx;PVY[i]=vy;PL[i]=PM[i]=life;PK[i]=k;PE[i]=el;PTR[i]=tier;PCUR[L]=i+1>=e?s:i+1;if(i>=PHI[L])PHI[L]=i+1;}
+  if(PL[i]<=0)liveP++;else partOver++;PX[i]=x;PY[i]=y;PVX[i]=vx;PVY[i]=vy;PL[i]=PM[i]=life;PK[i]=k;PE[i]=el;PTR[i]=tier;PCUR[L]=i+1>=e?s:i+1;if(i>=PHI[L])PHI[L]=i+1;}
 function burst(L,tier,el,k,x,y,n,s0,s1,l0,l1,upv){const v=n*POL[tier].pm*(rm?.5:1);let m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--){const a=rnd()*6.2832,s=s0+rnd()*(s1-s0);part(L,tier,el,k,x,y,Math.cos(a)*s,Math.sin(a)*s*.7-(upv||0),l0+rnd()*(l1-l0));}}
 function runParts(L,dt){const s=PS0[L],e=PHI[L],tv=view==='tiers';let hi=s;
   for(let i=s;i<e;i++){let l=PL[i];if(l<=0)continue;l-=dt;if(l<=0){PL[i]=0;liveP--;continue;}PL[i]=l;hi=i+1;
@@ -698,7 +698,7 @@ function loop(tn){requestAnimationFrame(loop);if(skipFrame())return;let dt=(tn-l
     const over=T.total>16.7,cap=mgr?`cap ${PRM.cap.fx}`:`<span class="warn">no cap</span>`;
     $('hud').innerHTML=`${TODN[tod]} · glow ${glow} · trail ${trail} · ${dirs==='rot'?'run-time rotation':dirs+' directions'} · crowd ${crowdN}, stress ${stress}x · manager ${mgr?'on, others '+others+(pressure>.85?', under pressure':''):'<span class="warn">off</span>'}${paused?' · paused':slow?' · 0.25x':''}<br>`+
     `cast ${f2(T.cast)} · projectiles+trails ${f2(T.proj)} · impacts+areas ${f2(T.impact)} · auras+status ${f2(T.aura)} · glow ${f2(T.glow)} · screen ${f2(T.screen)} · clarity ${f2(T.clar)} · world ${f2(T.world)} ms<br>`+
-    `<b>total ${f2(T.total)} ms</b> <span class="bar"><i class="${over?'hot2':''}" style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · effects ${liveFx} (own ${TC[0]}, party ${TC[1]}, others ${TC[2]}, hostile ${TC[3]}), ${cap} · auras ${au} · particles ${liveP} live of ${NPART} pooled${mgr?', cap '+PRM.cap.parts:''} · evicted ${evicted} (${evictRate}/s), merged ${merged}, particles refused ${partDrop} · opacity own ${mgr?opOwn:100}%, others ${mgr?opOth:100}%, monsters ${mgr?opMon:100}%<br>`+
+    `<b>total ${f2(T.total)} ms</b> <span class="bar"><i class="${over?'hot2':''}" style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · effects ${liveFx} (own ${TC[0]}, party ${TC[1]}, others ${TC[2]}, hostile ${TC[3]}), ${cap} · auras ${au} · particles ${liveP} live of ${NPART} pooled${mgr?', cap '+PRM.cap.parts:''} · evicted ${evicted} (${evictRate}/s), refused ${refused}, merged ${merged}, particles refused ${partDrop}, overwritten ${partOver} · opacity own ${mgr?opOwn:100}%, others ${mgr?opOth:100}%, monsters ${mgr?opMon:100}%<br>`+
     `server ${evRate} events/s, ${byRate} B/s (${byTot} B total, Tibia 12+ sizes: effect 9 B, missile 11 B) · areas ${areaMaskB} B as mask events, ${areaTileB} B if sent per tile · flashes asked ${flashAskR}/s, shown ${flashShowR}/s (limit ${PRM.flashMax}/s), last flash ${flashPx} px (${(flashPx/NP*100).toFixed(0)}% of screen, exempt under ${PRM.flashSmall} px) · overdraw ${fxN} effect px written, ${odPx} px touched, worst pixel ${maxOD}x · lights ${LQN}<br>`+
     `you ${Math.ceil(P.hp)}/100${P.shield>0?', shield '+Math.ceil(P.shield)+' s':''} · target ${target&&target.act&&!target.dead?(target.kind===2?'dummy':'monster')+' #'+target.id:'none'}${note?' · '+note:''}`;}}
 
@@ -732,7 +732,7 @@ document.querySelectorAll('#hot button').forEach(b=>{const si=+b.dataset.s;
   else b.onclick=()=>castPlayer(si);});
 function reset(){seed=1234567;for(const f of FX)f.on=0;liveFx=0;fxHi=0;fxCur=0;FIELD.fill(null);PL.fill(0);liveP=0;for(let L=0;L<4;L++){PCUR[L]=PS0[L];PHI[L]=PS0[L];}for(const d of DEC)d.on=0;for(const d of DN){d.t=0;d.key=null;}SCH.length=0;
   for(const e of ents){e.x=e.hx;e.y=e.hy;e.hp=e.mx;e.dead=0;e.castT=e.cd=e.burn=e.pois=e.froz=e.shock=e.shield=e.shHit=e.flash=e.healT=e.lvlT=e.haste=e.broke=0;e.beamOn=false;e.hasT=false;e.mv=false;e.ai=1+rnd()*3;if(e.kind<2)e.face=1;}
-  $('haste').classList.remove('on');target=DUM[0];targT=0;merged=0;areaMaskB=areaTileB=0;dimT=0;SPT.fill(-9);friend=null;aimMode='target';aimSeen=false;evicted=0;partDrop=0;byTot=0;logN=0;for(const L of LOG){L.t=-9;L.type='';}flashT=borderT=edgeT=0;flashTimes.length=0;demoT=0;demoF=null;note='';simT=0;frame=0;}
+  $('haste').classList.remove('on');target=DUM[0];targT=0;merged=0;areaMaskB=areaTileB=0;dimT=0;SPT.fill(-9);friend=null;aimMode='target';aimSeen=false;evicted=refused=0;partDrop=partOver=0;byTot=0;logN=0;for(const L of LOG){L.t=-9;L.type='';}flashT=borderT=edgeT=0;flashTimes.length=0;demoT=0;demoF=null;note='';simT=0;frame=0;}
 $('reset').onclick=reset;
 function showcase(){reset();setView('normal');setGlow('ramp');setTrail('ribbon');setDirs('8');setTod(1);setOthers('reduced');setOp('own',100);setOp('mon',100);inPhase=false;syPh();sparkFront=false;sySf();dimOn=true;syDim();setCrowd(4);setStress(1);
   residue=true;syRes();aurasOn=true;syAur();scrOn=true;syScr();redFlash=false;syRf();rm=false;syRm();if(cbOn){cbOn=false;buildRamps(false);syCb();}if(!mgr)$('mgr').click();monsOn=false;syMons();paused=false;syPause();slow=false;sySlow();setPolicy();
@@ -767,7 +767,7 @@ addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;keys.beam=0;beamStop(
 // whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
 function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
-window.spellSandbox={T,stats:()=>({liveFx,liveP,evicted,partDrop,fxN,odPx,maxOD,evRate,byRate,TC:TC.slice()})};
+window.spellSandbox={T,stats:()=>({liveFx,liveP,evicted,refused,partDrop,partOver,fxN,odPx,maxOD,evRate,byRate,TC:TC.slice()})};
 reset();requestAnimationFrame(loop);
 })();
 </script>
