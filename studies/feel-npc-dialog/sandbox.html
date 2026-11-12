@@ -870,8 +870,10 @@ function drawBox(){const big=BIG,h=big?68:50,y0=H-h-4,x0=6,w=308,e=ease(D.open);
   if(D.state==='opts')drawOpts(x0+w,y0-1,FR_BOX,8,TH.box);}
 function drawOpts(right,bottom,fr,n,th){const op=D.opts.map(o=>plain(str(o.id))),ow=Math.max(...op.map(o=>textW(F1,o)))+24,oh=op.length*12+12,ox=right-ow,oy=bottom-oh;
   nine(fr,n,ox,oy,ow,oh);op.forEach((t,i)=>{const y=oy+7+i*12,sel=i===D.cursor;if(sel)B(fr===FR_BOX?ARR:ARRK,ox+7+(RM?0:Math.round(Math.sin(simT*8))),y);drawStr(F1,t,ox+15,y,sel?th.key:th.b,th.e,th.ec);HITS.push({x:ox,y:y-2,w:ow,h:12,fn:()=>{D.cursor=i;choose(i);}});});}
+// bubble width for lines l0..l1 of the current text. The last line keeps 9 px clear on its right for the advance arrow
+function convW(l0,l1){let mw=1;for(let l=l0;l<l1;l++)mw=Math.max(mw,D.L.lw[l]||0);return Math.max(mw*D.s+12,(D.L.lw[l1-1]||0)*D.s+15);}
 function drawConv(){const s=D.s,ax=Math.round(D.npc.px)-cam.x+8,ay=Math.round(D.npc.py)-cam.y-5,e=ease(D.open);let w=26,h=17;
-  if(D.gl&&D.state!=='wait'){const l0=D.page*D.lpp,l1=Math.min(D.L.lines,l0+D.lpp);let mw=1;for(let l=l0;l<l1;l++)mw=Math.max(mw,D.L.lw[l]||0);w=mw*s+12;h=(l1-l0)*10*s+8;}
+  if(D.gl&&D.state!=='wait'){const l0=D.page*D.lpp,l1=Math.min(D.L.lines,l0+D.lpp);w=convW(l0,l1);h=(l1-l0)*10*s+8;}
   let x=clamp(Math.round(ax-w/2),2,W-w-2),y=ay-h-4;if(y<2)y=2;
   if(e<1){const ww=Math.max(9,Math.round(w*e)),hh=Math.max(9,Math.round(h*e));nine(BUBF.conv,3,ax-(ww>>1),y+h-hh,ww,hh);return;}
   HITS.push({x,y,w,h,fn:()=>{if(D.state==='type'||D.state==='done')advance();}});

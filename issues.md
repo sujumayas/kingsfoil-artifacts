@@ -248,7 +248,10 @@ How to use this file:
 - [x] **45.** `P4` Letter "j" has a 2 px gap on its left, "cajas" reads "ca jas" (`:124`, glyph `40444444o`).
   Done: glyph is now 80888888g, 2 px wide. The gap between the a and the j stem in "cajas" went from 3 px to
   2 px, the same as any other letter pair with a 1 px side bearing. Checked in a 3x screenshot.
-- [ ] **46.** `P4` Bubble style. The advance arrow covers the last character (`:879`, width at `:872`).
+- [x] **46.** `P4` Bubble style. The advance arrow covers the last character (`:879`, width at `:872`).
+  Done: the bubble is at least 15 px wider than the last line of the page. Over the 112 pages of elder and
+  Mara lines in both languages and both text sizes, the arrow overlapped the last row on 50 before and on 0
+  after.
 - [ ] **47.** `P4` (taste) Bubble style. The choice menu covers the NPC you are talking to (`:881`).
 - [ ] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
 - [ ] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
