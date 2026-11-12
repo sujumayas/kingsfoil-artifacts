@@ -252,7 +252,10 @@ How to use this file:
   Done: the bubble is at least 15 px wider than the last line of the page. Over the 112 pages of elder and
   Mara lines in both languages and both text sizes, the arrow overlapped the last row on 50 before and on 0
   after.
-- [ ] **47.** `P4` (taste) Bubble style. The choice menu covers the NPC you are talking to (`:881`).
+- [x] **47.** `P4` (taste) Bubble style. The choice menu covers the NPC you are talking to (`:881`).
+  Done: the menu opens 12 px to the side of the player, away from the NPC. Tested from every tile you can
+  talk from, for the elder and Mara in both languages. The menu covered the NPC in 14 of 14 positions before
+  and the player in 12. After, it covers neither in all 14 and stays on the canvas.
 - [ ] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
 - [ ] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
 - [ ] **50.** `P3` Crowd "wait your turn" never plays out. `s.heard` is read (`:791`) and never written.

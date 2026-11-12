@@ -882,7 +882,9 @@ function drawConv(){const s=D.s,ax=Math.round(D.npc.px)-cam.x+8,ay=Math.round(D.
   else if(D.gl)drawRich(D.gl,F1,x+6,y+5,s,TH.bub,D.state==='type'?D.rev:1e9,D.page*D.lpp,(D.page+1)*D.lpp,simT,null,HITS);
   if(D.state==='done')B(ARDK,x+w-8,y+h-7+(RM?0:ARB()));
   if(D.state==='opts'){const px=Math.round(PL.px)-cam.x+8,py=Math.round(PL.py)-cam.y-6,op=D.opts.map(o=>plain(str(o.id))),ow=Math.max(...op.map(o=>textW(F1,o)))+20,oh=op.length*11+7;
-    const ox=clamp(px-(ow>>1),2,W-ow-2),oy=Math.max(y+h+4,py-oh-4);nine(BUBF.me,3,ox,oy,ow,oh);
+    // the menu sits beside the player, on the side away from the NPC, so it covers neither of them
+    const nd=Math.round(D.npc.px-PL.px);let side=nd>4?-1:nd<-4?1:px+12+ow<=W-2?1:-1;if(side>0?px+12+ow>W-2:px-12-ow<2)side=-side;
+    const ox=clamp(side>0?px+12:px-12-ow,2,W-ow-2);let oy=py+14-(oh>>1);if(ox<x+w+2&&ox+ow+2>x)oy=Math.max(oy,y+h+4);oy=clamp(oy,2,H-oh-2);nine(BUBF.me,3,ox,oy,ow,oh);
     op.forEach((t,i)=>{const yy=oy+4+i*11,sel=i===D.cursor;if(sel)B(ARRK,ox+5,yy+1);drawStr(F1,t,ox+11,yy,sel?P.r1:P.ink,0,P.ink);HITS.push({x:ox,y:yy-1,w:ow,h:11,fn:()=>{D.cursor=i;choose(i);}});});}}
 function logVisible(){return (D.on&&D.style==='chat')||((!D.on||D.style==='chat')&&(CLUT==='collapse'||CLUT==='prio'||(styleFor(NPCS.sailor)==='chat'&&dist(PL,NPCS.sailor)<=6)));}
 function drawLog(){const x=4,w=212,h=58,y=H-h-4;R(x,y,w,h,'#100c1a');R(x,y,w,1,'#'+P.s0);
