@@ -803,8 +803,11 @@ How to use this file:
   stripes. Jumps in brightness between same-colour neighbours along one row at 23:00: house A wall 11 to 0,
   house A roof 14 to 0, house B wall 12 to 5, house B roof 4 to 0. The indoor back wall now takes the room's
   light too.
-- [ ] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
+- [x] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
   2.48 px (`:217`).
+  Done: a post or fence pixel stamps its shadow in up to 3 sub-steps along the shadow, since one pixel of
+  height covers up to 2.48 px of ground. Samples along the lamp post shadow with no shadow pixel under them:
+  11 of 57 at 17:42 before, 1 of 57 after. At 16:30, 7 before and 2 after. `sunShadows` takes 0.4 ms.
 - [ ] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips
   `SUNP.fill(0)` at `:219`.
 - [ ] **155.** `P5` "Your light's rays" view shows stale rays when Light shadows is off (`:284`, `:310`).
