@@ -241,7 +241,7 @@ function simStep(sunF){
   const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind),n=(1400*wm)|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(D[i]<4||E[i]<.75||P[i]>100)continue;const j=i+dir;
     if(holds(S[j])&&cls(S[j])===cls(S[i])&&D[j]<=D[i]+2){D[i]--;D[j]++;}}}
   // 4) melt: temperature * sun * shade * packed * open-edge count
-  if(temp>0){const n=(1500*Math.min(temp,6)/4*(.35+.65*sunF))|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(!D[i])continue;
+  if(temp>0){const n=(1500*Math.min(temp,6)/4*(.35+.65*sunF))|0;for(let k=0;k<n;k++){const i=ri(NP);if(!D[i])continue; // every row melts. A neighbour read past the canvas is undefined and counts as snow
     let rate=(SH[i]&&sunF>.4?.25:1)*(P[i]>100?.5:1);const s=S[i];if(s===ROOF||s===ROCKTOP)rate*=1.4;if(s===CANOPY)rate*=2.2;if(s===ICE)rate*=1.3;
     let c=0;if(D[i-1]<3)c++;if(D[i+1]<3)c++;if(D[i-W]<3)c++;if(D[i+W]<3)c++;rate*=.35+c*.5;
     if(rnd()<rate){D[i]--;if(cls(s)===1)Wt[i]=Math.min(255,Wt[i]+5);if(!D[i])P[i]=0;}}}
