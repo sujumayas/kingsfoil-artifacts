@@ -999,7 +999,7 @@ function showcase(){reset();setStyle('auto');setView('normal');REN='bit';mark('#
   updSims(0,6);const sp=[[7,7],[19,6],[20,9],[9,11],[18,10],[16,12]];SIMS.slice(0,6).forEach((s,i)=>{put(s,sp[i][0],sp[i][1],i&1?'l':'d');s.ct=9;s.t=9;s.npcCd=60;});
   bubble(VIL[0],'Lovely morning for it.','bark',3).life=12;bubble(SIMS[0],'lf party orc cave','party',1).life=12;bubble(SIMS[1],'selling rope 20gp','say',2).life=12;bubble(VIL[1],'Sit, sit. The bench is free.','bark',3).life=12;
   VIL.forEach(v=>v.lastBark=simT+20);lastBarkAll=simT+20;
-  openDlg(NPCS.elder);D.open=1;SV.sess.me={npc:'elder',node:'elder.offer',wait:null};const txt=str('e1');D.gl=parseRich(txt);relayout();D.cur={id:'e1'};D.expr='happy';hist(npcName(NPCS.elder),txt);
+  openDlg(NPCS.elder);D.open=1;SV.sess.me={npc:'elder',node:'elder.offer',wait:'offer',q:'herbs'};const txt=str('e1');D.gl=parseRich(txt);relayout();D.cur={id:'e1'};D.expr='happy';hist(npcName(NPCS.elder),txt);
   D.rev=D.gl.map(g=>g.ch).join('').indexOf('Asterion')+9;D.state='type';D.hold=9;D.blinkT=3;D.q.push({id:'e2',spk:'Elder',ex:'neutral',args:{}},{id:'e3',spk:'Elder',ex:'sad',args:{}});D.pCmd={n:'offer',a:'herbs'};
   cam.x=clamp(PL.px+8-W/2,0,WW-W);cam.y=clamp(PL.py+8-H/2+24,0,WHH-H);step(0);render(0);}
 function canvasXY(e){const r=cv.getBoundingClientRect();return [clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1)];}

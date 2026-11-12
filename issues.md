@@ -236,8 +236,10 @@ How to use this file:
 
 ## feel-npc-dialog
 
-- [ ] **43.** `P3` Showcase leads to a dialog that hangs on "..." after Accept or Decline. The fake session
+- [x] **43.** `P3` Showcase leads to a dialog that hangs on "..." after Accept or Decline. The fake session
   lacks `wait:'offer'` (`:997`, server check at `:609`).
+  Done: the fake session carries wait:'offer' and q:'herbs'. Accept now sets q1 to 1 and plays the accept
+  line, Decline plays the decline line. Before, both left the box on "..." for good.
 - [ ] **44.** `P3` Toggling Large text or dialog style mid-line blanks the box. `relayout()` keeps the old page
   index (`:704`).
 - [ ] **45.** `P4` Letter "j" has a 2 px gap on its left, "cajas" reads "ca jas" (`:124`, glyph `40444444o`).
