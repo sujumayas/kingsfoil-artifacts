@@ -175,7 +175,7 @@ const LEVELS={sun:0,overcast:0,drizzle:.12,light:.3,moderate:.5,heavy:.75,storm:
 let lastBolt=-9,weather='overcast',auto=true,I=0,targetI=0,wind=.3,windT=.3,speed=1,paused=false,view='normal',frameN=0,simMs=0,t=0,roof=0,awn=0,flash=0,shake=0,thunderT=-1,boltT=0,bolt=null,lastRain=-999;
 const CYCLE=[['overcast',8],['drizzle',14],['light',14],['moderate',14],['heavy',14],['storm',22],['heavy',10],['light',10],['drizzle',8],['sun',34]];let cyc=0,wTimer=8;
 const player={x:140,y:112,dir:'down',anim:0,dist:0,foot:0,moving:false,tx:null,ty:null,wet:0,shoe:0,umb:false,drip:0};
-const vill={x:72,y:96,dir:'down',anim:0,dist:0,foot:0,wp:0,wait:1,moving:false,wet:0,shoe:0};const VWP=[[72,96],[110,102],[150,112],[214,74],[150,112],[110,102],[68,150]];
+const vill={x:72,y:96,dir:'down',anim:0,dist:0,foot:0,wp:0,wait:1,moving:false,wet:0,shoe:0};const VWP=[[72,96],[110,102],[150,113],[200,113],[214,74],[200,113],[150,113],[110,102],[68,150]]; // the plaza legs pass south of the fountain
 const frogs=[];const parts=[];
 const MAXD=1600;const D={x:new Float32Array(MAXD),y:new Float32Array(MAXD),z:new Float32Array(MAXD),l:new Uint8Array(MAXD),on:new Uint8Array(MAXD)};let nDrops=0;
 function curtain(x,y){return .45+.75*vnoise((x-wind*t*42)/46,y/38+t*.04);}
@@ -259,7 +259,12 @@ function updateChars(dt){let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.ar
   // villager: heads for the awning when the rain gets heavy
   const shelter=I>.42;let tx,ty;if(shelter){tx=176;ty=55;}else{[tx,ty]=VWP[vill.wp];}
   const dx=tx-vill.x,dy=ty-vill.y,l=Math.hypot(dx,dy);if(vill.wait>0&&!shelter){vill.wait-=dt;vill.moving=false;vill.anim=0;}
-  else if(l<1.5){vill.moving=false;vill.anim=0;if(!shelter){vill.wp=(vill.wp+1)%VWP.length;vill.wait=1+rnd()*3;}else vill.dir='down';}else move(vill,dx/l*(shelter?26:16),dy/l*(shelter?26:16),dt);soak(vill,dt,false);
+  else if(l<1.5){vill.moving=false;vill.anim=0;if(!shelter){vill.wp=(vill.wp+1)%VWP.length;vill.wait=1+rnd()*3;}else vill.dir='down';}else{const sp=shelter?26:16;let ux=dx/l,uy=dy/l;
+    // blocked on the straight line (the run to the awning can cross the fountain): walk sideways for 0.9 s, on the free side
+    if(vill.av>0){vill.av-=dt;const s=vill.avs,qx=-uy*s,qy=ux*s;ux=qx*.9+ux*.25;uy=qy*.9+uy*.25;}
+    const ox=vill.x,oy=vill.y;move(vill,ux*sp,uy*sp,dt);
+    if(!(vill.av>0)&&Math.hypot(vill.x-ox,vill.y-oy)<sp*dt*.3){const free=s=>!blocked(vill.x-dy/l*s*6,vill.y+dx/l*s*6);vill.avs=free(1)===free(-1)?(vill.avs||1):free(1)?1:-1;vill.av=.9;}}
+  soak(vill,dt,false);
   // frogs come out near the pond when it rains
   const want=I>.25?3:(I>.02?1:0);if(frogs.length<want&&rnd()<dt*.5){frogs.push({x:214+rnd()*20,y:126+rnd()*20,t:1,hop:0});}
   if(frogs.length>want&&weather==='sun'&&rnd()<dt*.08)frogs.shift();

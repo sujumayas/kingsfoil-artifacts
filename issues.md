@@ -662,8 +662,12 @@ How to use this file:
 
 ## vfx-rain
 
-- [ ] **125.** `P3` The villager gets stuck on the fountain about 15 s after load and never moves again. A
+- [x] **125.** `P3` The villager gets stuck on the fountain about 15 s after load and never moves again. A
   waypoint leg passes through the fountain centre (`:177`, `:249`, `:259`).
+  Done: the plaza legs now pass south of the fountain through a new waypoint at (200,113). A blocked
+  villager also sidesteps for 0.9 s on the free side, which covers the run to the awning. Over 150 s of the
+  auto cycle the longest stall while walking was 133.7 s, now 0. Shelter runs from all 9 waypoints arrive in
+  1.6 to 5.8 s.
 - [ ] **126.** `P4` (partly taste) Storm spray mist buries the plaza, the house and the player under a dense
   checkerboard with hard rectangular edges (`:230`, `:329`).
 - [ ] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
