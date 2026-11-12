@@ -212,7 +212,10 @@ How to use this file:
   Done: party loot, pickup mode, tier shapes, magnet radius, label filter and other players' drops now clear
   the highlight, as drop style, effects and juice already did. The last one was not in the review, but
   presets set it too. X-ray view and server tick are not part of a preset and leave it lit.
-- [ ] **39.** `P6` Holding B spawns a boss drop on every key repeat (`:969`).
+- [x] **39.** `P6` Holding B spawns a boss drop on every key repeat (`:969`).
+  Done: the handler returns on key repeats for everything except movement. Holding B through 8 repeats gave
+  9 boss drops before and 1 now. P, M, V, E, R and Space had the same repeat and are covered. Space still
+  stops the page from scrolling while held.
 - [ ] **40.** `P6` Phone control buttons are 30 px tall.
 - [ ] **41.** `P3` (suspected) Lowering the Allied players slider removes live goblins with `gs.pop()` (`:377`),
   leaving stale targets.

@@ -983,7 +983,8 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='alt'){ALTK=true;e.preventDefault();return;}const tg=e.target.tagName;if(tg==='INPUT'&&e.target.type!=='range'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey)return;ensureAudio();if(frozenShow&&(KM[k]||k===' '||k==='e'||k==='r'||k==='b'||k==='escape'))exitShow();const dir=KM[k];
   if(dir){KEYS[dir]=1;e.preventDefault();return;}
-  if(k===' '){attackNear();e.preventDefault();}else if(k==='e')quickLoot();else if(k==='r')lootAll();else if(k==='b'){const [x,y]=freeNear();bossDrop(x,y);}else if(k==='escape')CL.open=null;
+  if(k===' ')e.preventDefault();if(e.repeat)return;// a held key acts once; movement keys are handled above
+  if(k===' ')attackNear();else if(k==='e')quickLoot();else if(k==='r')lootAll();else if(k==='b'){const [x,y]=freeNear();bossDrop(x,y);}else if(k==='escape')CL.open=null;
   else if(k==='v'){const V=['normal','server','owner','cost'];setView(V[(V.indexOf(VIEW)+1)%V.length]);}
   else if(k==='p'){if(frozenShow)exitShow();else paused=!paused;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase(),d=KM[k];if(k==='alt'){ALTK=false;e.preventDefault();}if(d)KEYS[d]=0;});
