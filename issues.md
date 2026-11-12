@@ -136,8 +136,11 @@ How to use this file:
   Done: the second ownership stage of a round robin item is the corpse's last tier, not tiers[1]. A goblin
   corpse still gives the owner 15 s and the helpers until 20 s. A PvP corpse gives the owner 15 s, then the
   priority group until 60 s, which matches the corpse's own timer.
-- [ ] **24.** `P3` "Clear items" cancels every pending respawn, including your own. `SV.pend.length=0` (`:904`)
+- [x] **24.** `P3` "Clear items" cancels every pending respawn, including your own. `SV.pend.length=0` (`:904`)
   wipes the shared server timer list. Fix: tag rain timers and remove only those.
+  Done: timers that add a ground item (rain and spills) carry a drop flag, and Clear items removes only
+  those. A goblin killed before the click respawns 5 s after its death, and 200 rain items still in the air
+  are cancelled.
 - [ ] **25.** `P4` Legendary beam is upside down. Solid at the top, fading to nothing at the item (`:349` to
   `:351`). Fix: `up=y/h`.
 - [ ] **26.** `P4` Spill scatter is lopsided. A third of items land 6 to 9 px too high because of a signed shift

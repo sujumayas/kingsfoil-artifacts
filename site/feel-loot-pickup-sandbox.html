@@ -393,7 +393,7 @@ function upBot(e,b,fn){SV.inbox.push({at:now+e.lat/2,fn,pid:e.id});netLog(b);}
 const rankOf=(pid,T)=>hash(pid,Math.floor(T/TUNING.rankRotateMs),77)%1000;
 const tickOf=at=>Math.ceil(at/TICK)*TICK;
 function downMe(T,b,fn){NET.down.push({at:T+LAT/2,fn});if(b)netLog(b);}
-function later(t,fn){SV.pend.push({t,fn});}
+function later(t,fn,drop){SV.pend.push({t,fn,drop});}
 function clLater(t,fn){CLT.push({t,fn});}
 const players=()=>ENTS.filter(e=>(e.kind==='player'||e.kind==='ally'||e.kind==='pvp')&&!e.sdead);
 // replicate a message to every player within the area of interest; returns whether you are one of them
@@ -471,7 +471,7 @@ function placeItems(corpse,roll,T,delay,boss,contrib){const L=roll.items;
       if(!it.personal&&PARTY!=='rag'){const set=corpse.prio||(rrSet?[rrSet[(SV.rr++)%rrSet.length]]:corpse.ownerSet||partyOf(roll.owner));it.tiers=[[T+(corpse.prio?TUNING.death.priorityS:O.groundS)*1000,set]];it.ownUntil=it.tiers[0][0];if(rrSet)it.owner=set[0];}
       if(corpse.player)it.despawnAt=corpse.rotAt[1];if(corpse.player)it.contents=i.contents;
       it.pickAt=T+delay+ro*stag+TUNING.drop.arcMs+TUNING.drop.pickDelayMs;
-      later(T+delay,()=>{if(SV.corpses.has(corpse.id)||true)svAddGround(it,T+delay,0,1);});});
+      later(T+delay,()=>{if(SV.corpses.has(corpse.id)||true)svAddGround(it,T+delay,0,1);},1);});
     return;}
   for(const i of list){if(corpse.items.length>=24)break;const it=Object.assign({id:++SIDN,def:i.def,tier:i.tier,n:i.n,contents:i.contents,x:corpse.x,y:corpse.y,cont:corpse.id,spawnT:T,despawnAt:corpse.rotAt[2],origOwner:roll.owner,pickAt:T},own);if(rrSet&&!it.personal){it.owner=rrSet[(SV.rr++)%rrSet.length];const lt=corpse.tiers&&corpse.tiers[corpse.tiers.length-1];it.tiers=[[T+O.corpseS*1000,[it.owner]],lt?[lt[0],lt[1]]:[T+O.helperS*1000,[it.owner]]];}SV.items.set(it.id,it);corpse.items.push(it.id);}}
 const score=i=>i.def===0?0.5:ITEMS[i.def].junk?0:i.tier+1;
@@ -905,8 +905,8 @@ function freeNear(){for(let r=2;r<6;r++)for(let i=0;i<12;i++){const a=i/12*Math.
 function rain(n){const owners=()=>{const r=rnd();if(r<.35)return PL.id;const al=ENTS.filter(e=>e.kind==='ally');if(r<.7&&al.length)return al[ri(al.length)].id;return null;};
   for(let i=0;i<n;i++){let tx,ty,g=0;do{tx=ri(MAPW);ty=1+ri(10);}while((solidT(tx,ty)||isPZ(tx,ty))&&g++<20);const it=rollItem([58,26,11,4,1]);if(rnd()<.3){it.def=0;it.tier=0;it.n=1+ri(30);}
     const o=owners();const x=tx*16+3+ri(11),y=ty*16+5+ri(9),d=ri(1500);const s=Object.assign({id:++SIDN,x,y,sx:x,sy:y,cont:null,order:0,spawnT:now,despawnAt:now+180000,owner:o,ownUntil:o==null?now:now+TUNING.owner.groundS*1000,origOwner:o,other:o!==PL.id,rain:1},it);s.pickAt=now+d+TUNING.drop.arcMs*1.4+TUNING.drop.pickDelayMs;
-    later(now+d,T=>svAddGround(s,T,0,1));}}
-function clearItems(){for(const it of [...SV.items.values()])if(it.cont==null)svRemove(it,now,'despawn');SV.pend.length=0;}
+    later(now+d,T=>svAddGround(s,T,0,1),1);}}
+function clearItems(){for(const it of [...SV.items.values()])if(it.cont==null)svRemove(it,now,'despawn');for(let i=SV.pend.length-1;i>=0;i--)if(SV.pend[i].drop)SV.pend.splice(i,1);}
 function race(){const al=ENTS.filter(e=>e.kind==='ally');let bot=al.find(a=>a.ninja)||al[0];if(!bot){setAllies(1);bot=ENTS.find(e=>e.kind==='ally');}
   const x=PL.x+16,y=PL.y;const bx=x+16;bot.x=bx;bot.y=y;bot.task=null;bot.think=now+3000;bot.lat=40;
   const it={id:++SIDN,def:IDX.ring,tier:3,n:1,x,y,sx:x,sy:y,cont:null,order:0,spawnT:now,despawnAt:now+180000,owner:null,ownUntil:now,origOwner:null,pickAt:now};SV.items.set(it.id,it);SV.tc[tileOf(y)*MAPW+tileOf(x)]++;SV.ground++;
