@@ -362,7 +362,9 @@ How to use this file:
   covers the mask. With the mage at 100,100 the circle measured 109 x 56 px centred on 100,99.5 before. Now
   113 x 114 centred on 104,104.5, against a blast of 112 x 112 centred on 103.5,103.5. Reduced and minimal
   tiers keep the small ellipse. Card 3 updated.
-- [ ] **71.** `P6` Beam damage numbers stack into an unreadable column (`:314`, `:600`).
+- [x] **71.** `P6` Beam damage numbers stack into an unreadable column (`:314`, `:600`).
+  Done: a beam tick adds to the live number on its target and restarts the rise. After 1 s of beam on a
+  dummy: three 5s at y 41, 45 and 48 before, one 25 after. Other damage keeps one number per hit.
 - [ ] **72.** `P6` Haste button stays lit after the timer runs out (`:703`).
 - [ ] **73.** `P5` HUD "evicted" also counts refused spawns, and "particles refused" counts overwritten live
   particles (`:261`, `:274`).

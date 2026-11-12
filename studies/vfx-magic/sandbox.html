@@ -310,8 +310,9 @@ function screenLayer(dt){
   if(scrOn&&P.hp<30)edgeTint(10,pack(220,30,40),rm?.45:.3+.3*Math.sin(simT*3.1416));}
 
 // ---------- damage numbers, decals ----------
-const DN=[];for(let i=0;i<24;i++)DN.push({t:0,x:0,y:0,s:'',c:0});let dnN=0;
-function dmgNum(x,y,s,c){const d=DN[dnN++%24];d.t=.7;d.x=x|0;d.y=y|0;d.s=String(s);d.c=c;}
+const DN=[];for(let i=0;i<24;i++)DN.push({t:0,x:0,y:0,s:'',c:0,n:0,key:null});let dnN=0;
+// key: a beam's ticks on one target add up in a single number that restarts its rise, where separate numbers would overlap
+function dmgNum(x,y,s,c,key){let d=null;if(key)for(const q of DN)if(q.t>0&&q.key===key){d=q;break;}if(d){d.n+=s;s=d.n;}else{d=DN[dnN++%24];d.n=+s;}d.key=key||null;d.t=.7;d.x=x|0;d.y=y|0;d.s=String(s);d.c=c;}
 const DEC=[];for(let i=0;i<64;i++)DEC.push({on:0,x:0,y:0,ty:0,t:0,dur:0,seed:0,r:0});let decN=0;
 function decal(ty,x,y,tier){if(!residue||!POL[tier].decal||!ty)return;const d=DEC[decN++&63];d.on=1;d.x=x|0;d.y=y|0;d.ty=ty==='scorch'?0:1;d.t=0;d.dur=d.ty?8:PRM.scorchS;d.seed=(rnd()*999)|0;d.r=5+(rnd()*3|0);}
 function drawDecals(dt){const tq=(simT*8)|0;cOp=16;cTint=0;for(const d of DEC){if(!d.on)continue;d.t+=dt;if(d.t>=d.dur){d.on=0;continue;}if(!residue)continue;const r=d.r,a=d.t/d.dur,fade=a>.8?(a-.8)*5:0;
@@ -334,8 +335,8 @@ const SPELLS=[
 const hand=c=>c.x+c.face*6;
 const EK={burn:0,froz:1,shock:2,pois:3},EKP={burn:1,froz:4,shock:7,pois:3};
 function cond(e,k,dur,tier){if(e.dead)return;if(e[k]<=0){ev('cond','COND #'+e.id+' '+k.toUpperCase()+' ON',e.x,e.y,0,0);if(aurasOn)burst(3,tier,EK[k],EKP[k],e.x,e.y-8,5,10,34,.2,.4,6);}e[k]=Math.max(e[k],dur);e.stTier=e===P?3:tier;}
-function hurt(e,d,el,tier,sx,sy){if(e.dead)return;if(e.shield>0){e.shHit=.24;e.shAng=sx==null?.75:Math.atan2(sy-(e.y-8),sx-e.x)/6.2832;d=Math.ceil(d*.3);}
-  e.hp-=d;e.flash=.09;if(e.kind!==4&&(tier!==2||!mgr||e===P))dmgNum(e.x-3,e.y-24,d,RAMP[el][4]);
+function hurt(e,d,el,tier,sx,sy,sum){if(e.dead)return;if(e.shield>0){e.shHit=.24;e.shAng=sx==null?.75:Math.atan2(sy-(e.y-8),sx-e.x)/6.2832;d=Math.ceil(d*.3);}
+  e.hp-=d;e.flash=.09;if(e.kind!==4&&(tier!==2||!mgr||e===P))dmgNum(e.x-3,e.y-24,d,RAMP[el][4],sum?e:null);
   if(e===P&&d>=5)reqEdge(el);
   if(e.hp<=0){if(e.kind===3){e.dead=1;e.resp=3;burst(2,tier,5,0,e.x,e.y-6,14,20,60,.3,.6,10);if(target===e)target=null;}else{e.hp=e.mx;if(e.kind===2)e.broke=.5;if(e===P)note='you fell and were restored';}}}
 function cast(c,si,tg,px,py,force){const S=SPELLS[si];if(c.dead||c.froz>0||(!force&&(c.cd>0||c.castT>0)))return false;const tier=tierOf(c);
@@ -604,7 +605,7 @@ function stepActors(dt){
     else if(r<88)cast(c,4,tg.kind===4?tg:c,null,null,true);else if(r<93)cast(c,5,c,null,null,true);else if(r<97){if(tg!==c){beamStart(c,tg);after(.8,()=>beamStop(c));}}else cast(c,7,c,null,null,true);}
   // beams: the server ray and its ticks
   for(const c of ents){if(!c.beamOn)continue;if(!c.act||c.dead||c.froz>0){beamStop(c);continue;}const R=beamRay(c);if(!R){beamStop(c);continue;}
-    c.beamT-=dt;if(c.beamT<=0){c.beamT=SPELLS[6].travel.tick;ev('effect','EFFECT '+tl(c.bx,c.by)+' ARCANE TICK',c.bx,c.by,0,0);if(R.e)hurt(R.e,SPELLS[6].impact.dmg,5,c.beamTier);}}
+    c.beamT-=dt;if(c.beamT<=0){c.beamT=SPELLS[6].travel.tick;ev('effect','EFFECT '+tl(c.bx,c.by)+' ARCANE TICK',c.bx,c.by,0,0);if(R.e)hurt(R.e,SPELLS[6].impact.dmg,5,c.beamTier,null,null,true);}}
   // showcase director: keeps one of everything on screen
   if(demoT>0){demoT-=dt;for(const d of DUM)d.hp=d.mx;P.hp=P.mx;P.shield=9;P.castT=.3;HL.froz=0;
     if(!demoF||!demoF.on||demoF.own!==P||demoF.ty!==1||demoF.rel){demoF=spawn(1,0,5,1.6);if(demoF){demoF.own=P;demoF.r=22;demoF.t=.9;}}
@@ -729,7 +730,7 @@ document.querySelectorAll('#hot button').forEach(b=>{const si=+b.dataset.s;
   if(si===6){const stop=()=>{if(!beamBtn)return;beamBtn=false;const w=Math.max(0,600-(now()-beamHold));clearTimeout(beamTmr);beamTmr=setTimeout(()=>{if(!keys.beam&&!beamBtn)beamStop(P);},w);};
     b.addEventListener('pointerdown',e=>{demoStop();clearTimeout(beamTmr);beamBtn=true;beamHold=now();beamStart(P,null);e.preventDefault();});b.addEventListener('pointerup',stop);b.addEventListener('pointerleave',stop);b.addEventListener('pointercancel',stop);b.addEventListener('contextmenu',e=>e.preventDefault());}
   else b.onclick=()=>castPlayer(si);});
-function reset(){seed=1234567;for(const f of FX)f.on=0;liveFx=0;fxHi=0;fxCur=0;FIELD.fill(null);PL.fill(0);liveP=0;for(let L=0;L<4;L++){PCUR[L]=PS0[L];PHI[L]=PS0[L];}for(const d of DEC)d.on=0;for(const d of DN)d.t=0;SCH.length=0;
+function reset(){seed=1234567;for(const f of FX)f.on=0;liveFx=0;fxHi=0;fxCur=0;FIELD.fill(null);PL.fill(0);liveP=0;for(let L=0;L<4;L++){PCUR[L]=PS0[L];PHI[L]=PS0[L];}for(const d of DEC)d.on=0;for(const d of DN){d.t=0;d.key=null;}SCH.length=0;
   for(const e of ents){e.x=e.hx;e.y=e.hy;e.hp=e.mx;e.dead=0;e.castT=e.cd=e.burn=e.pois=e.froz=e.shock=e.shield=e.shHit=e.flash=e.healT=e.lvlT=e.haste=e.broke=0;e.beamOn=false;e.hasT=false;e.mv=false;e.ai=1+rnd()*3;if(e.kind<2)e.face=1;}
   $('haste').classList.remove('on');target=DUM[0];targT=0;merged=0;areaMaskB=areaTileB=0;dimT=0;SPT.fill(-9);friend=null;aimMode='target';aimSeen=false;evicted=0;partDrop=0;byTot=0;logN=0;for(const L of LOG){L.t=-9;L.type='';}flashT=borderT=edgeT=0;flashTimes.length=0;demoT=0;demoF=null;note='';simT=0;frame=0;}
 $('reset').onclick=reset;
