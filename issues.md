@@ -909,8 +909,13 @@ How to use this file:
   (`:190`, `:166`).
   Done: a percent readout on a step under 0.01 prints one decimal. 0.085, 0.09 and 0.095 read "9%", "9%" and
   "10%" before, "8.5%", "9.0%" and "9.5%" after. The other percent readouts are unchanged.
-- [ ] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth
+- [x] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth
   term, mob counts, a target line).
+  Done: added to the lab, so §12 is true as written. A Wave gap slider for `waveGapS`, 8 to 30 s (12 to 20 s
+  takes the run from 25.5 to 28.8 min). A Hearth per chapter slider, flat today, with the report's +50%
+  taking chapter 5 from 49 to 148 hits. A target sawtooth on the ratio chart, 0.92 at each chapter start and
+  15% higher at the boss. A mob count chart per corridor and for the party. Copy settings writes the 2 new
+  constants.
 - [ ] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
   `:242`).
 - [ ] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
