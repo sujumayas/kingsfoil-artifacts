@@ -102,8 +102,11 @@ How to use this file:
   appeared the frame the freeze ended. The clock now waits for the hitstop, and the victim holds its
   struck pose with the hit flash until then. A kill at 100% juice takes 133 ms of freeze, then the 133 ms
   death animation.
-- [ ] **19.** `P6` Debris ground height `gy` is never read (`:598` to `:604`), so chips bounce at chest height.
+- [x] **19.** `P6` Debris ground height `gy` is never read (`:598` to `:604`), so chips bounce at chest height.
   (suspected)
+  Done: confirmed in the code. Every chip stored gy and bounced at z = 0 on its spawn row, 7 px above the
+  feet (10 px on the warden). One chip() helper now puts the ground point at gy and starts the chip gy - y
+  above it. The first frame draws at the same pixel as before.
 - [ ] **20.** `P6` The canvas is never cleared and the background is drawn with the shake offset (`:847`), so the
   uncovered edge strip keeps old pixels. (suspected)
 - [ ] **21.** `P6` Telegraph decal cache holds a 305 x 305 canvas per angle per fill step, cleared only above 900

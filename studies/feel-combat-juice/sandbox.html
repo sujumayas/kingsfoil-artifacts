@@ -608,13 +608,15 @@ function capP(own){if(!CAPS)return true;if(PART.length<TUNING.caps.particles)ret
 function sparks(x,y,ang,n,crit,own){for(let i=0;i<n;i++){if(!capP(own))break;const a=ang+(rnd()-.5)*(crit?2.6:1.7)+(i%3===0?Math.PI:0)*.0,s=80+rnd()*120*(crit?1.4:1);PART.push({k:'spark',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:TUNING.sparks.life*(.6+rnd()*.6),col:rnd()<.5?HX('wh'):HX(crit?'o2':'a3'),own});}
   if(capP(own))PART.push({k:'star',x,y,t:0,life:crit?100:67,own,big:crit});}
 const MAT={gob:['g2','g1','g3'],golem:['s2','s1','s3'],imp:['vi','vi2','dk'],dummy:['sa1','sa0','cr'],player:['r1','r2','k1'],ally:['r1','r2','k1'],pvp:['r1','r2','k1']};
-function debris(x,y,ang,n,vic){const m=MAT[vic.kind]||MAT.gob;for(let i=0;i<n;i++){if(!capP(false))break;const a=ang+(rnd()-.5)*1.8,s=30+rnd()*50;PART.push({k:'chip',x,y,z:0,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.6,vz:60+rnd()*60,t:0,life:TUNING.debris.life*(.7+rnd()*.6),col:HX(m[i%3]),gy:vic.py+rnd()*3-1});}}
-function burst(x,y,n,vic){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=30+rnd()*60;PART.push({k:'chip',x,y,z:0,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.6,vz:50+rnd()*80,t:0,life:600,col:HX((MAT[vic.kind]||MAT.gob)[i%3]),gy:vic.py,own:1});}PART.push({k:'poof',x,y,t:0,life:300,own:1});}
+// a chip starts at height gy - y above its ground point and bounces on the floor at gy, the victim's feet, not at chest height
+function chip(x,y,gy,vx,vy,vz,life,col,own){PART.push({k:'chip',x,y:gy,z:Math.max(0,gy-y),vx,vy,vz,t:0,life,col,own});}
+function debris(x,y,ang,n,vic){const m=MAT[vic.kind]||MAT.gob;for(let i=0;i<n;i++){if(!capP(false))break;const a=ang+(rnd()-.5)*1.8,s=30+rnd()*50;chip(x,y,vic.py+rnd()*3-1,Math.cos(a)*s,Math.sin(a)*s*.6,60+rnd()*60,TUNING.debris.life*(.7+rnd()*.6),HX(m[i%3]));}}
+function burst(x,y,n,vic){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=30+rnd()*60;chip(x,y,vic.py,Math.cos(a)*s,Math.sin(a)*s*.6,50+rnd()*80,600,HX((MAT[vic.kind]||MAT.gob)[i%3]),1);}PART.push({k:'poof',x,y,t:0,life:300,own:1});}
 function puff(x,y){if(capP(true))PART.push({k:'poof',x,y,t:0,life:260,own:1});}
-function splat(x,y){if(!capP(false))return;for(let i=0;i<6;i++)PART.push({k:'chip',x,y:y-2,z:0,vx:(rnd()-.5)*30,vy:(rnd()-.5)*14,vz:20+rnd()*30,t:0,life:420,col:HX(i&1?'r1':'r0'),gy:y+rnd()*2});}
+function splat(x,y){if(!capP(false))return;for(let i=0;i<6;i++)chip(x,y-2,y+rnd()*2,(rnd()-.5)*30,(rnd()-.5)*14,20+rnd()*30,420,HX(i&1?'r1':'r0'));}
 function spawnWhiff(o){PART.push({k:'whiff',x:o.px,y:bodyY(o),t:0,life:260,own:1,s:rnd()<.5?1:-1});addText(o,'WHIFF',P.s2);sfx('whiff',{tag:'own'});}
 function ringFx(x,y,r,col,life){PART.push({k:'ring',x,y,r,t:0,life,col,own:1});}
-function dust(x,y,n){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=20+rnd()*70;PART.push({k:'chip',x:x+Math.cos(a)*6,y:y+Math.sin(a)*4,z:0,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.55,vz:30+rnd()*50,t:0,life:500,col:HX(i%3?'s2':'s1'),gy:y+Math.sin(a)*4,own:1});}}
+function dust(x,y,n){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=20+rnd()*70;chip(x+Math.cos(a)*6,y+Math.sin(a)*4,y+Math.sin(a)*4,Math.cos(a)*s,Math.sin(a)*s*.55,30+rnd()*50,500,HX(i%3?'s2':'s1'),1);}}
 // ---------- combat text (layer 7) ----------
 function numFor(att,vic,info){if(!FX.numbers)return null;const own=att===PL,recv=vic===PL;if(!own&&!recv&&OTHERS==='hidden')return null;return addNum(vic,info.dmg,info.crit&&(own||OTHERS==='full'),own,recv,info.pred);}
 // OTClient rules at sandbox scale: merge per target, per tier (mine, others, taken) and per type within 400 ms; crits never merge;
