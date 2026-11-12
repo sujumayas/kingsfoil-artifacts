@@ -455,8 +455,12 @@ How to use this file:
   Done: while the villager is not sent, its stamps add wear only (server truth) and the rustle is skipped.
   threat() ignores it too, so critters do not flee from it. 0.5 s hidden and not sent: crush up to 1.0, 2
   rustling cells and 8 leaf bits before. All 0 after, with wear still added (76 units).
-- [ ] **90.** `P6` (taste) Winter arrives as scattered single white pixels. Dawn and dusk snow is a flat salmon.
+- [x] **90.** `P6` (taste) Winter arrives as scattered single white pixels. Dawn and dusk snow is a flat salmon.
   Burnt ground is fully covered by snow (`:345`).
+  Done: snow on grass arrives in patches (75% value noise, 25% hash). Isolated snow pixels 30% into the turn:
+  35% of 8,906 before, 13% of 3,108 after. Burnt ground takes less snow: 100% covered before, 34% after.
+  Under a warm sky the snow ramp gets green and blue back, most in the shadow tone. Dusk at 17:45, S0 to
+  S2: (135,113,131) (178,144,153) (206,163,165) before, (135,120,156) (178,152,168) (206,173,175) after.
 
 ## vfx-water
 

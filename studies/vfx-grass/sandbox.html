@@ -162,7 +162,7 @@ const TK=[[0,'night'],[.19,'night'],[.26,'dawn'],[.33,'morn'],[.42,'day'],[.62,'
 function todP(t){let k=0;while(TK[k+1][0]<t)k++;const [t0,a]=TK[k],[t1,b]=TK[k+1],u=sm((t-t0)/(t1-t0)),A=KF[a],B=KF[b],L=(p,q)=>p+(q-p)*u;return {m:A.m.map((v,j)=>L(v,B.m[j])),a:A.a.map((v,j)=>L(v,B.a[j])),l:L(A.l,B.l)};}
 const phaseOf=t=>t<.2||t>=.79?'night':t<.3?'dawn':t<.68?'day':'dusk';
 const pack=(r,g,b)=>(255<<24|clamp(b|0,0,255)<<16|clamp(g|0,0,255)<<8|clamp(r|0,0,255))>>>0;
-const LUT=new Uint32Array(8<<10),LMIX=[0,.2,.36,.54,.24,.46,.8,0];
+const LUT=new Uint32Array(8<<10),LMIX=[0,.2,.36,.54,.24,.46,.8,0],SNG=[40,50,60],SNB=[150,90,60];
 let tod=.56,TP=todP(tod),lutT=-1,lutDirty=true,sFrom=1,sTo=1,sP=1,weather='clear';
 function buildLUT(){const p=TP=todP(tod),wet=weather==='rain',dk=p.l,A=SRGB[sFrom],B=SRGB[sTo];
   for(let s=0;s<8;s++){const u=s/7;for(let b=0;b<128;b++){let r,g,bl;
@@ -171,7 +171,9 @@ function buildLUT(){const p=TP=todP(tod),wet=weather==='rain',dk=p.l,A=SRGB[sFro
       if(wet&&((b>=G0&&b<=L3)||(b>=E0&&b<=E4))){r*=.8;g*=.86;bl*=.86;const gr=(r+g+bl)/3;r+=(r-gr)*.35;g+=(g-gr)*.35;bl+=(bl-gr)*.35;}
       if(b===FF||b===FL||b===F1||b===F2||b===F3||b===EM){}
       else if(b===WN){const l=Math.min(1,dk*1.3);r=86+154*l;g=66+112*l;bl=52+40*l;}
-      else{r=r*p.m[0]+p.a[0];g=g*p.m[1]+p.a[1];bl=bl*p.m[2]+p.a[2];}}
+      else{r=r*p.m[0]+p.a[0];g=g*p.m[1]+p.a[1];bl=bl*p.m[2]+p.a[2];
+        // snow under a warm sky: give back green and blue, most in the shadow tone, so the ramp runs peach to violet
+        if(b>=S0&&b<=S2){const wm=Math.max(0,p.m[0]-p.m[2]),k=b-S0;g+=wm*SNG[k];bl+=wm*SNB[k];}}}
     for(let l=0;l<8;l++){let r2=r,g2=g,b2=bl;const v=LMIX[l]*Math.min(1,dk*1.2);
       if(l>=1&&l<=3){r2+=(255-r2)*v;g2+=(208-g2)*v;b2+=(150-b2)*v;}else if(l===4||l===5){r2+=(214-r2)*v;g2+=(255-g2)*v;b2+=(120-b2)*v;}else if(l===6){r2+=(255-r2)*v;g2+=(170-g2)*v;b2+=(90-b2)*v;}
       LUT[s<<10|l<<7|b]=pack(r2,g2,b2);}}}
@@ -342,7 +344,9 @@ function bakeBlock(c){const x0=(c%GW)*8,y0=((c/GW)|0)*8,y1=Math.min(H,y0+8),snow
       else{if(lvl===3&&reg!==0)gg=reg===2?(h<.3?W2:W1):(h<.25?G3:G2);
         if(wearOn){const w=wearAt(x,y)+(hf(x,y,74)-.5)*46;if(w>PRM.wearDirt+20)gg=h<.25?E3:E4;else if(w>PRM.wearDirt)gg=h<.6?E3:E4;else if(w>PRM.wearWorn+30)gg=h<.55?E3:G4;else if(w>PRM.wearWorn)gg=h<.3?E3:BRT[gg];}
         if(FLOR[i]&&sea<=1&&snow<.3)gg=[FWc,FYc,FPc,FBc][FLOR[i]-1];}
-      if(snow>0){const t=hf(x,y,75);if(t<snow*1.08-.04)gg=SHD[i]?(t<.5?S0:S1):(t<snow*.25?S1:S2);}
+      // snow arrives in patches: value noise sets the order, the hash only frays the edges. Burnt ground keeps
+      // showing through, and a burning cell takes no snow
+      if(snow>0&&burn!==1){const t=vn(x/5,y/4,75)*.75+hf(x,y,75)*.25;if(t<(burn?snow*.45:snow*1.08-.04))gg=SHD[i]?(t<.5?S0:S1):(t<.3||hf(x,y,76)<.05?S1:S2);}
       g=gg;}
     GROUND[i]=g;}
   DIRTY[c]=0;bakeN++;CWC[c]+=64;}
