@@ -284,8 +284,11 @@ How to use this file:
   latency, 3 presses sent 3 requests and the elder said his 3 opening lines 3 times, 9 lines before the
   offer. Now 1 request and 3 lines. The keyword sailor is not gated, saying "hi" twice is chat and has its
   own rate limit.
-- [ ] **55.** `P6` Pause does not pause popups and emotes. They add a fixed 1/60 per frame (`:829`, `:833`, `:892`,
+- [x] **55.** `P6` Pause does not pause popups and emotes. They add a fixed 1/60 per frame (`:829`, `:833`, `:892`,
   `:894`, `:899`, `:908`), so they also run 2x fast at 120 Hz.
+  Done: the six timers add the frame's dt. Paused with the pointer moving for 600 ms, each advanced 0.65 s
+  before and 0 after. Half a second of game time stepped at 1/120 s advanced them 1.0 s before and 0.5 s
+  after.
 - [ ] **56.** `P6` A long word with no spaces overflows the chat log and bubble (`:166` to `:168`).
 - [ ] **57.** `P6` Typed text is parsed as markup. `[wave]` and `[c=key]` typed by the player take effect (`:726`).
 - [ ] **58.** `P6` Spanish accents are missing in capitals and in all small-font text, "MISION", "MANANA"
