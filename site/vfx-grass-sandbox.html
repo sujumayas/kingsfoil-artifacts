@@ -91,7 +91,7 @@ code{font:13px var(--mono);color:var(--cool)}
     <div class="card"><h4>8 · Small life</h4><p>All creatures live in one pooled struct-of-arrays and are culled off screen. Butterflies use Stardew flight: each flap kicks them up and sideways, gravity pulls between flaps, and they rest 200 ms after 4 or 6 flap frames. Ours also land on flowers and flee. Bees hop between flowers about every 2 s. Dragonflies hover, then dart at 10x the speed. Midges are springs pulled toward a centre. Moths orbit the lamp, stall and flip. Rabbits run once a threat is within 5 cells and dive into cover. Frogs leap for 0.8 s into the pond. Critters check for threats every 200 ms, not every frame. Rules from Stardew and Terraria: no butterflies after 15:00 (ours taper), in rain or in a storm, and frogs come out after rain.</p></div>
     <div class="card"><h4>9 · Fireflies</h4><p>The default model is pulse coupling (Nicky Case's shape), not Kuramoto. Each fly's phase rises at 1/period, with the period 5.9 s ± 10% (P. pyralis). At 1 the fly flashes and resets, and every neighbour within 48 px gets <code>phase += phase·0.035</code>. A uniform 48 px grid finds the neighbours, and the work only happens on flash frames. A flash rises in 1 frame and falls over 0.4 s through 4 halo frames, with a J-shaped rise. <b>Synchronous</b> switches to P. carolinus: bursts of 6 flashes 0.5 s apart, then about 9 s of darkness, with the same coupling. The glow is a pre-made halo that raises palette light levels. It is not a per-pixel light. Godot Compatibility allows at most 15 lights per canvas item, so one light per fly is not possible there. Each night rolls a density: heavy about 1 in 9, empty about 1 in 3 (Terraria). Fireflies stay out about 3 h after dusk.</p></div>
     <div class="card"><h4>10 · Seasons, weather, access</h4><p>The season is a palette swap. The grass ramps are anchored on Stardew's hues, spring 119°, summer 89° and fall 16°, with yellower lights and bluer shadows. A per-cell phenology offset makes the field turn over 8 s instead of all at once. Winter adds snow, so only tufts' tips poke through, the pond freezes and the trees go bare. After rain, grass gets darker and more saturated, with glints and road puddles. <b>Reduce motion</b> stops field sway completely, because guidelines flag repeated motion over 25% of the screen. <b>Density</b> thins creatures. Numbers not tied to a source above are illustrative.</p></div>
-    <div class="card"><h4>11 · What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed. Everything writes palette indices into one buffer, and one lookup table turns them into colours. The study's benchmark found this path fastest. For 2,000 tufts, writing pixels straight into one buffer costs 0.051 ms. One Canvas2D <code>drawImage</code> per tuft costs 1.62 ms. Slicing each tuft per row at draw time costs 12 ms, so never do that. An 80 by 45 trail map with 10 walkers costs 0.0023 ms. A random-tick pick costs about 3 ns. Firefly sync at 1,000 flies costs 1.14 ms naive, 0.42 ms with a grid and 0.067 ms with a per-cell mean field. A CPU halo loop beats additive sprites, 0.22 ms against 0.89 ms for 1,000 halos. A full frame should stay near 1 ms even with a 6x CPU throttle. <b>Stress</b> multiplies tufts and creatures up to 8x so you can see where the budget breaks. <b>Cost view</b> colours each 8 px cell by the pixel writes and updates it caused.</p></div>
+    <div class="card"><h4>11 · What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed. Everything writes palette indices into one buffer, and one lookup table turns them into colours. The study's benchmark found this path fastest. For 2,000 tufts, writing pixels straight into one buffer costs 0.051 ms. One Canvas2D <code>drawImage</code> per tuft costs 1.62 ms. Slicing each tuft per row at draw time costs 12 ms, so never do that. An 80 by 45 trail map with 10 walkers costs 0.0023 ms. A random-tick pick costs about 3 ns. Firefly sync at 1,000 flies costs 1.14 ms naive, 0.42 ms with a grid and 0.067 ms with a per-cell mean field. A CPU halo loop beats additive sprites, 0.22 ms against 0.89 ms for 1,000 halos. A full frame at default settings measured about 0.4 ms on a desktop and 2.3 to 2.6 ms with a 6x CPU throttle. The HUD total includes the wind field, the x-ray overlay and the canvas upload. <b>Stress</b> multiplies tufts and creatures up to 8x so you can see where the budget breaks. <b>Cost view</b> colours each 8 px cell by the pixel writes and updates it caused.</p></div>
   </div>
   <p class="keys" style="margin-top:16px">Full research: <a href="vfx-grass-topdown-pixel.html">Top-down pixel grass study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="vfx-light-sandbox.html">Light</a> · <a href="vfx-fire-sandbox.html">Fire</a> · <a href="vfx-water-sandbox.html">Water</a> · <a href="vfx-fog-sandbox.html">Fog</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
 </main>
@@ -353,11 +353,12 @@ const WLA=Int32Array.from(WLST);
 // ---------- wind ----------
 const GENV=new Float32Array(512);{const R=mkR(77);for(let k=0;k<6;k++){const c=R()*512,w=40+R()*70,a=.55+R()*.45;for(let i=0;i<512;i++){let d=Math.abs(i-c);d=Math.min(d,512-d);if(d<w){const u=d/w;GENV[i]+=a*(1-u*u)*(1-u*u);}}}for(let i=0;i<512;i++)GENV[i]=Math.min(1,.15+GENV[i]);}
 let windPre='breeze',windDir=12,windStr=.3,gustSpeed=50,gustAmp=1,gustsOn=true,wcx=1,wcy=0,gustPh=0,envPh=0,step5=false,rm=false;
-function windUpdate(){const tw=step5?Math.floor(simT*5)/5:simT,on=windStr>=PRM.windMin&&!rm,base=on?windStr*1.4:0,ga=on&&gustsOn?windStr*3.2*gustAmp:0,k=6.2832/PRM.gustLen,ph=step5?Math.floor(gustPh/ (gustSpeed/5||1))*(gustSpeed/5||1):gustPh;
+let windMs=0;
+function windUpdate(){const w0=performance.now(),tw=step5?Math.floor(simT*5)/5:simT,on=windStr>=PRM.windMin&&!rm,base=on?windStr*1.4:0,ga=on&&gustsOn?windStr*3.2*gustAmp:0,k=6.2832/PRM.gustLen,ph=step5?Math.floor(gustPh/ (gustSpeed/5||1))*(gustSpeed/5||1):gustPh;
   for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){const t=ty*TW+tx,x=tx*4+2,y=ty*4+2,p=x*wcx+y*wcy;let g=0;
     if(ga>0){const env=GENV[(((p-envPh)*.25)|0)&511];g=env*(.5+.5*Math.cos((p-ph)*k));g*=g;}
     WH[t]=g;WL[t]=base+g*ga;}
-  return tw;}
+  windMs=performance.now()-w0;return tw;}
 
 // ---------- state ----------
 let simT=0,frame=0,tool='walk',view='normal',paused=false,tAuto=true,smooth=false,rmode='tufts',density=1,syncF=false,leak=false,regrowN=12;
@@ -569,7 +570,7 @@ function stepWalkers(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)i
       if(s.t<=0){let bx=s.x,by=s.y,bh=-1;for(let n=0;n<6;n++){const x=260+rnd()*50,y=118+rnd()*50,c=CELL[(y|0)*W+(x|0)];if(HGT[c]>bh){bh=HGT[c];bx=x;by=y;}}s.tx=bx;s.ty=by;s.st=1;}}}}
 
 // ---------- render ----------
-const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};
+const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,present:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};
 let flatN=0,tuftsDrawn=0,settled=0,lifeDrawAcc=0,playerHidden=false,villHidden=false;
 const ip=(x,y,c)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=c;if(smooth)AW[i]=255;}};
 // light levels are not ordered by brightness (1 to 3 lamp, 4 and 5 firefly, 6 fire), so the brighter LMIX wins
@@ -681,17 +682,18 @@ function render(){const now=()=>performance.now();let t0=now(),t;
   if(rmode==='tufts'){let j=0;for(let k=0;k<TN;k++){const ty=TY[k];while(j<EN&&ENY[EO[j]]<ty)drawEnt(EO[j++],false);drawTuft(k);}while(j<EN)drawEnt(EO[j++],false);}
   else{drawField();for(let j=0;j<EN;j++){const e=EO[j],k=ENK[e];let crop=false;if(k===0)crop=hides(pc);else if(k===1)crop=villHidden;else if(k===2||k===5){const yy=ENY[e]|0,xx=k===2?SHEEP[ENJ[e]].x|0:LX[ENJ[e]]|0;crop=hides(CELL[clamp(yy,0,H-1)*W+clamp(xx,0,W-1)]);}drawEnt(e,crop);}}
   if(playerHidden&&rmode==='tufts'){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,0,true);}
-  t=now();ema('tufts',t-t0-lifeDrawAcc);t0=t;
+  t=now();ema('tufts',t-t0-lifeDrawAcc+windMs);t0=t;
   drawFlyers();t=now();ema('lifeD',t-t0+lifeDrawAcc);t0=t;
   const dk=TP.l;if(dk>.35){const r=17*Math.min(1,(dk-.35)*2.2);for(const L of lamps)ring(L.x,L.y-9,r,3);ring(CX0+8,24,7,2);ring(CX0+31,24,7,2);}
   if(!smooth){for(let i=0;i<NP;i++)out[i]=LUT[STGP[i]<<10|IDX[i]];}
   else{for(let i=0;i<NP;i++){const s=STGP[i]<<10,c=LUT[s|IDX[i]],a=AW[i];if(a===255){out[i]=c;continue;}const d=LUT[s|IDX2[i]],ia=255-a;
     out[i]=(255<<24|((((c>>16)&255)*a+((d>>16)&255)*ia)>>8)<<16|((((c>>8)&255)*a+((d>>8)&255)*ia)>>8)<<8|(((c&255)*a+(d&255)*ia)>>8))>>>0;}}
-  t=now();ema('light',t-t0);
+  t=now();ema('light',t-t0);t0=t;
   for(let c=0;c<NC;c++)CWS[c]+=(CWC[c]-CWS[c])*.1;
-  T.total=T.ground+T.tufts+T.inter+T.regrow+T.lifeU+T.lifeD+T.light;
   if(view!=='normal')drawView(pc,vc);
-  ctx.putImageData(img,0,0);}
+  ctx.putImageData(img,0,0);
+  ema('present',now()-t0);
+  T.total=T.ground+T.tufts+T.inter+T.regrow+T.lifeU+T.lifeD+T.light+T.present;}
 const heat=v=>{v=clamp(v,0,1);return pack(v<.5?30+v*2*70:100+(v-.5)*2*155,v<.5?30+v*2*170:200-(v-.5)*2*120,v<.5?80+v*2*30:110-(v-.5)*2*90);};
 const dim=c=>pack((c&255)*.35,((c>>8)&255)*.35,((c>>16)&255)*.35);
 function drawView(pc,vc){
@@ -732,7 +734,7 @@ for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyu
 function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else windUpdate();render();
   secT+=dt;if(secT>=1){secT-=1;netRate=netSec;netSec=0;stampRate=stampSec;stampSec=0;netFlat=flatCellsSec*PRM.netTile;flatCellsSec=0;threatSec=threatChecks;threatChecks=0;}
-  if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`].join(' · ');
+  if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`,`x-ray+present ${f2(T.present)}`].join(' · ');
     const lifeS=[0,1,2,3,4,5,6,7,8,9].map(k=>`${['bfly','bee','dfly','gnat','moth','ffly','rabbit','frog','crick','drift'][k]} ${ALIVE[k]}/${KC[k]}`).join(' ');
     const sea=(sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo])+(sNext>=0?`→${SN[sNext]}`:'');
     $('hud').innerHTML=`${sea} · ${phaseOf(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${windPre} ${Math.round(windStr*100)}% · ${weather==='rain'?'after rain':'clear'} · ${rmode==='tufts'?'per-tuft':'field layer'}, ${smooth?'smooth':'snapped'}${paused?' · paused':''}<br>${L} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · ${rmode==='tufts'?`tufts ${tuftsDrawn}/${TN}, settled ${settled}, flattened ${flatN}`:`field px ${tuftsDrawn}`} · stamps ${stampRate}/s · regrow ${regN} cells/tick (${regChanged} grew) · ground rebakes ${bakeN}<br>net ${netRate} B/s (${netTotal} B total) · trampling 0 B (sending each flatten would be ${netFlat} B/s) · you: ${playerHidden?'hidden, villager gets 0 B':P.reveal>0?'revealed':'in the open'} · villager: ${V.x<0?'away':villHidden?(V.sent?(leak&&!V.adj?'hidden but SENT (leak)':'hidden, seen up close'):'hidden, not sent'):'visible'}<br>${lifeS} · sleeping ${sleeping} · threat checks ${threatSec}/s · fireflies lit ${litN} · night ${nightRollName}`;

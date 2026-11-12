@@ -440,8 +440,12 @@ How to use this file:
 - [x] **86.** `P3` Showcase forces the interaction map on without syncing its button (`:759`).
   Done: showcase() calls the button's sync function. Map off, then Showcase: map on with the button dark
   before, map on with the button lit after.
-- [ ] **87.** `P5` HUD total leaves out `windUpdate`, the x-ray overlay and `putImageData`. Card 11 says "near
+- [x] **87.** `P5` HUD total leaves out `windUpdate`, the x-ray overlay and `putImageData`. Card 11 says "near
   1 ms even with a 6x throttle". Measured default is 2.6 ms at 6x.
+  Done: windUpdate() is timed into "tufts+wind", and a new "x-ray+present" figure covers the overlay and
+  putImageData. Step plus render at 6x throttle, 600 frames: 2.29 ms measured against a HUD total of 2.07
+  before, 2.27 against 2.20 after. With the wind x-ray on: 2.62 against 2.14 before, 2.52 against 2.48
+  after. Card 11 now says about 0.4 ms on a desktop and 2.3 to 2.6 ms at 6x.
 - [ ] **88.** `P5` (suspected) HUD says "you: hidden, villager gets 0 B" even when the villager is adjacent or in
   the same patch (`:673`).
 - [ ] **89.** `P5` A hidden villager is "not sent", yet the client keeps stamping its trail and rustle (`:384`).
