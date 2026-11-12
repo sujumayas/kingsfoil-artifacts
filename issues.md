@@ -765,8 +765,13 @@ How to use this file:
 
 ## vfx-light
 
-- [ ] **146.** `P4` Every object and both characters are in permanent sun shadow. A caster stamps its own base
+- [x] **146.** `P4` Every object and both characters are in permanent sun shadow. A caster stamps its own base
   row (`:217`, shading at `:302`, characters at `:263`).
+  Done: each shadow pixel records the base row of its caster. An object pixel is shaded only when a shadow
+  from a different base row reaches its base, and a character's own shadow skips its feet row. Light
+  multiplier at noon, against 1.54 on open ground: traveller 0.58 to 1.49, barrel 0.58 to 1.55, rock 0.59 to
+  1.55, obelisk 0.59 to 1.30, trunk 0.58 to 1.55. Standing in the obelisk's shadow at 15:00 the traveller
+  still reads 0.58.
 - [ ] **147.** `P4` Sunlight snaps off at 18:00 and on at 06:00, moonlight at about 18:23 and 05:37 (`:208`,
   `:210`). With the default start it happens about 4 s after load. Fix: ramp by elevation.
 - [ ] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
