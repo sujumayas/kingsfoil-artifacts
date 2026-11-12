@@ -357,7 +357,7 @@ const BONES=sprite(["..oo....oo..",".owwo..owSo.","..owwoowSo..","...owwwwo...",
 const PUFF=[0,1,2].map(f=>{const p=PB(9,7),r=[1.6,2.6,3.4][f];p.el(4.5,3.5,r+1,r*.75,(x,y,dx,dy,q)=>q>.6&&f<2?Q.s3:f===2&&hf(x,y,f)<.5?0:Q.s2);return p.cv();});
 const COINI=itemImg('coin1',0);
 // ---------- state ----------
-let now=0,FC=0,paused=false,slow=false,frozenShow=false;
+let now=0,FC=0,paused=false,slow=false,frozenShow=false,SHOWSAVE=null;
 let STYLE='corpse',HYBRID=true,AMULET=false,PARTY='top',MODE='pve',PRED='cosmetic',LAT=TUNING.lat,TICK=TUNING.tick,JUICE=.8,LOD='reduced',FILTER='all';
 let NAIVE=false,NALLY=4,NPVP=2,NINJA=false,CAPS=true,RMOTION=false,CBLIND=true,MAXV=TUNING.audio.voices,ALTK=false,ALTT=false,BLESS=0,SKULL=false,LOWLVL=false,SLOTS=TUNING.bagSlots,MAGT=TUNING.magnet.tiles,DROPDELAY=TUNING.drop.delayMs;
 const FX={arcs:1,bounce:1,glow:1,beams:1,labels:1,sound:1,fly:1,magnet:1,walk:1,chat:1};
@@ -891,7 +891,7 @@ group('#style',v=>{setStyle(v);clearPreset();});group('#party',setParty);group('
 const syncNinja=tog('ninja',()=>NINJA,v=>{NINJA=v;syncPop();});const syncCaps=tog('caps',()=>CAPS,v=>CAPS=v);const syncRm=tog('rmotion',()=>RMOTION,v=>RMOTION=v);const syncCb=tog('cblind',()=>CBLIND,v=>CBLIND=v);const syncNaive=tog('naive',()=>NAIVE,v=>NAIVE=v);
 tog('skull',()=>SKULL,v=>SKULL=v);tog('lowlvl',()=>LOWLVL,v=>LOWLVL=v);const syncAmulet=tog('amulet',()=>AMULET,v=>AMULET=v);const syncHybrid=tog('hybrid',()=>HYBRID,v=>{HYBRID=v;clearPreset();});
 const syncAlt=tog('altb',()=>ALTT,v=>ALTT=v);$('tAlt').addEventListener('click',()=>{ALTT=!ALTT;syncAlt();});
-const syncPause=tog('pause',()=>paused,v=>{paused=v;frozenShow=false;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
+const syncPause=tog('pause',()=>paused,v=>{if(frozenShow)exitShow();else paused=v;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
 const PRESETS={
  tibia:{style:'corpse',j:.3,fx:{arcs:0,bounce:0,glow:0,beams:0,labels:0,fly:0,magnet:0,walk:0},pred:'wait',party:'top',cb:false,delay:TUNING.drop.delayMs},
  arpg:{style:'spill',j:.85,fx:{magnet:0,walk:0,fly:0},pred:'wait',party:'top',cb:false,delay:TUNING.drop.classicDelayMs},
@@ -925,7 +925,10 @@ function reset(){ENTS.length=0;PART.length=0;FLY.length=0;POPS.length=0;CHAT.len
   Object.assign(NET,{acc:0,rej:{taken:0,notyours:0,far:0,full:0,early:0},pred:0,predRej:0,merged:0,evicted:0});CL.items.clear();CL.corpses.clear();CL.q.length=0;CL.open=null;CL.intent=null;CL.sbag={slots:0,gold:0};CL.pendSlots=CL.pendGold=0;MOVE=null;ATK=null;
   resetEquip();PL=mkEnt('player',150,100,{team:'me',sheet:SPR.player,name:'YOU',hp:300,mhp:300});syncPop();SV.next=Math.ceil(now/TICK)*TICK;paused=false;frozenShow=false;syncPause();
   chat('WELCOME. KILL A GOBLIN, OR PRESS B FOR A BOSS DROP.',P.s2);}
-function showcase(){rs=0x2545f491;preset('asterion');setJuice(100);setMode('pve');setAllies(3);setNinja(false);setView('normal');setLat(0);setTick(100);paused=false;slow=false;syncSlow();ALTT=false;syncAlt();reset();
+// leaving the showcase frame: put back what it changed only to stage the picture (latency 0, juice 100%, Alt labels), then rebuild the world
+function leaveShow(){if(!frozenShow)return false;frozenShow=false;paused=false;const s=SHOWSAVE;SHOWSAVE=null;if(s){setLat(s.lat);setJuice(Math.round(PRESETS.asterion.j*100));ALTT=s.alt;syncAlt();}return true;}
+function exitShow(){if(leaveShow())reset();}
+function showcase(){leaveShow();SHOWSAVE={lat:LAT,alt:ALTT};rs=0x2545f491;preset('asterion');setJuice(100);setMode('pve');setAllies(3);setNinja(false);setView('normal');setLat(0);setTick(100);paused=false;slow=false;syncSlow();ALTT=false;syncAlt();reset();
   const al=ENTS.filter(e=>e.kind==='ally');for(const g of ENTS.filter(e=>e.team==='mob')){g.x=250+ri(60);g.y=130+ri(40);if(solidAt(g.x,g.y)){g.x=280;g.y=150;}}
   PL.x=112;PL.y=120;PL.dir='r';for(const a of al){a.think=now+1e9;a.task=null;}al[0].x=236;al[0].y=56;al[0].dir='l';al[1].x=188;al[1].y=150;al[1].dir='u';al[2].x=60;al[2].y=40;
   // another player's spilled drop: a stranger's, so it shows landed and dimmed
@@ -950,7 +953,7 @@ $('rain200').addEventListener('click',()=>rain(200));$('rain1000').addEventListe
 $('race').addEventListener('click',()=>{ensureAudio();race();});$('empty').addEventListener('click',()=>{PL.bag.list.length=0;CL.sbag.slots=0;CL.pendSlots=0;});
 $('die').addEventListener('click',()=>{ensureAudio();const k=ENTS.filter(e=>e.kind==='pvp'&&!e.sdead).sort((a,b)=>Math.hypot(a.x-PL.x,a.y-PL.y)-Math.hypot(b.x-PL.x,b.y-PL.y))[0];svPlayerDie(now,MODE==='pvp'?k||null:null);});
 document.querySelector('button[data-demo="showcase"]').addEventListener('click',showcase);
-$('reset').addEventListener('click',reset);
+$('reset').addEventListener('click',()=>{leaveShow();reset();});
 // ---------- input ----------
 function canvasXY(cx,cy){const r=cv.getBoundingClientRect();return [(cx-r.left)/r.width*W,(cy-r.top)/r.height*H];}
 function itemAt(x,y){for(let j=PLACED.length-5;j>=0;j-=5){if(x>=PLACED[j]&&x<PLACED[j]+PLACED[j+2]&&y>=PLACED[j+1]&&y<PLACED[j+1]+PLACED[j+3]+2){const ci=CL.items.get(PLACED[j+4]);if(ci)return ci;}}
@@ -960,7 +963,7 @@ function foeAt(x,y){let b=null,bd=11;for(const e of ENTS){if(e.sdead||e.dead||(e
 function lootAll(){ensureAudio();if(CL.open)queueAct({k:'all',cid:CL.open.cid});else queueAct({k:'all'});}
 function quickLoot(){ensureAudio();queueAct({k:'quick'});}
 function attackNear(){let b=null,bd=26;for(const e of ENTS){if(e.sdead||(e.team!=='mob'&&e.team!=='foe'))continue;const d=Math.hypot(e.x-PL.x,e.y-PL.y);if(d<bd){bd=d;b=e;}}if(b)ATK=b;}
-cv.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();const [x,y]=canvasXY(e.clientX,e.clientY);if(frozenShow){paused=false;frozenShow=false;syncPause();}if(PL.sdead)return;
+cv.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();const [x,y]=canvasXY(e.clientX,e.clientY);if(frozenShow){exitShow();return;}if(PL.sdead)return;
   if(CL.open){const W0=254,Y0=46,o=CL.open,rows=Math.max(1,Math.ceil(Math.max(o.items.length,4)/4));if(x>=W0&&x<W0+62&&y>=Y0&&y<Y0+13+rows*SLOT+2){if(y<Y0+10){if(x>=W0+54)CL.open=null;else if(x>=W0+40)lootAll();return;}
       for(let i=0;i<o.items.length;i++){const [cx,cy]=slotXY(i);if(Math.abs(x-cx)<=6&&Math.abs(y-cy)<=6){const s=o.items[i];if(!s.pred&&!s.pend)queueAct({k:'take',id:s.id});return;}}return;}}
   const it=itemAt(x,y);if(it){MOVE=null;ATK=null;CL.intent={k:'item',id:it.id,next:0};return;}
@@ -970,14 +973,14 @@ cv.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();const [x,
 // loot bag style: walking onto a bag opens it
 function autoBag(){if(STYLE!=='bag'||PL.sdead||CL.open)return;for(const c of CL.corpses.values()){if(!c.isBag||now<c.t0)continue;if(Math.hypot(c.x-PL.x,c.y-PL.y)<8&&!c.autoT){c.autoT=now;queueAct({k:'open',cid:c.id});}else if(Math.hypot(c.x-PL.x,c.y-PL.y)>14)c.autoT=0;}}
 setInterval(()=>{if(!paused)autoBag();},100);
-$('tLoot').addEventListener('click',lootAll);$('tQuick').addEventListener('click',quickLoot);$('tAtk').addEventListener('click',()=>{ensureAudio();attackNear();});
+$('touch').addEventListener('click',e=>{if(!e.target.closest('#tAlt'))exitShow();},true);$('tLoot').addEventListener('click',lootAll);$('tQuick').addEventListener('click',quickLoot);$('tAtk').addEventListener('click',()=>{ensureAudio();attackNear();});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='alt'){ALTK=true;e.preventDefault();return;}const tg=e.target.tagName;if(tg==='INPUT'&&e.target.type!=='range'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey)return;ensureAudio();const dir=KM[k];
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='alt'){ALTK=true;e.preventDefault();return;}const tg=e.target.tagName;if(tg==='INPUT'&&e.target.type!=='range'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey)return;ensureAudio();if(frozenShow&&(KM[k]||k===' '||k==='e'||k==='r'||k==='b'||k==='escape'))exitShow();const dir=KM[k];
   if(dir){KEYS[dir]=1;e.preventDefault();return;}
   if(k===' '){attackNear();e.preventDefault();}else if(k==='e')quickLoot();else if(k==='r')lootAll();else if(k==='b'){const [x,y]=freeNear();bossDrop(x,y);}else if(k==='escape')CL.open=null;
   else if(k==='v'){const V=['normal','server','owner','cost'];setView(V[(V.indexOf(VIEW)+1)%V.length]);}
-  else if(k==='p'){paused=!paused;frozenShow=false;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
+  else if(k==='p'){if(frozenShow)exitShow();else paused=!paused;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase(),d=KM[k];if(k==='alt'){ALTK=false;e.preventDefault();}if(d)KEYS[d]=0;});
 addEventListener('blur',()=>{KEYS.l=KEYS.r=KEYS.u=KEYS.d=0;ALTK=false;});
 // whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens

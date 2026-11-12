@@ -166,8 +166,14 @@ How to use this file:
   Done: svKill skips its 5 s monster respawn for PvP enemies. The 6 s respawn in hitEnt, which places them
   on the right side of the map, is the only one left. Traced one kill before and after. It came back at 4.9
   s and jumped at 5.9 s before, and comes back once at 5.9 s now.
-- [ ] **30.** `P3` After Showcase the allies never move (`:921`, `think=now+1e9`) and a staged gold pile stays as
+- [x] **30.** `P3` After Showcase the allies never move (`:921`, `think=now+1e9`) and a staged gold pile stays as
   a permanent ghost (`:925`, `:934`). Latency, Juice and "Alt: all labels" also stay changed after Reset.
+  Done: leaving the frame restores latency and Alt labels to their values before Showcase, sets juice to the
+  Asterion preset's 80% and calls reset(). Pause, P, Reset, a click on the canvas, the touch buttons except
+  Alt, and the movement, Space, E, R, B and Esc keys leave it. V and M do not, so the x-ray views can still
+  inspect the frame. Checked four exits with latency set to 200 ms beforehand. Each came back to 200 ms, 80%
+  and labels off, all 3 allies moved, and no staged item was left. The other showcase settings (Asterion
+  preset, PvE, 3 allies, tick 100) stay, as after any preset.
 - [ ] **31.** `P3` A pickup in flight when you die stays pending forever (`:488` returns before the reply).
 - [ ] **32.** `P3` Reduce motion or Arcs off makes fresh drops reject as "early", then hop and shake. The client
   `landT` (`:594`, `:657`) disagrees with the server `pickAt` (`:473`). Fix: gate on `ci.pickAt`.
