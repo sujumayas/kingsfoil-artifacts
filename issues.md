@@ -898,8 +898,13 @@ How to use this file:
   Done: the factor that scaled boss time by reference damage over current damage is gone, as in
   `notes/curves_model.py`. All 30 proposal ratios now match report §11 (chapter 4 starts at 0.92, was 0.85,
   and chapter 3 wave 5 reads 1.07, was 0.99). The 30 current-build ratios still match the §4 table.
-- [ ] **169.** `P5` The Players slider changes hero level and run length (25.5 to 36.2 min at 3 players),
+- [x] **169.** `P5` The Players slider changes hero level and run length (25.5 to 36.2 min at 3 players),
   against the caption "Per-hero XP equals solo in co-op" (`:124`, `:140` to `:142`).
+  Done: boss time was the solo time times boss HP for the party, as if one hero fought it, and the adds it
+  spawned fed extra XP. Boss time is now divided by the player count, and adds stay on the solo clock. At 3
+  players the hero started chapters 2 to 5 at levels 9, 14, 19 and 25 and the run took 37.1 min. Now levels
+  are 7, 13, 17 and 23 at any player count, and the run takes 25.5, 24.5 and 24.2 min at 1, 2 and 3 players.
+  The caption says what Players changes.
 - [ ] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
   (`:190`, `:166`).
 - [ ] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth

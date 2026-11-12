@@ -91,7 +91,7 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 <h2>Hero level and gold</h2>
 <div class="legend"><span><i style="border-color:var(--warm)"></i>Your knobs</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span></div>
 <div class="chart" id="c-level"></div>
-<p class="cap">Hero level at wave start. Per-hero XP equals solo in co-op because each corridor feeds the pool.</p>
+<p class="cap">Hero level at wave start. Per-hero XP equals solo in co-op because each corridor feeds the pool, so Players does not move this line. Players changes boss time: the solo time x boss HP for the party / players.</p>
 <div class="legend" style="margin-top:12px"><span><i style="border-color:var(--warm)"></i>Gold earned</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i style="border-color:var(--green)"></i>All 9 Town at level 1</span><span><i style="border-color:var(--red)"></i>All 9 at level 5</span></div>
 <div class="chart" id="c-gold"></div>
 <p class="cap" id="gold-cap">Cumulative gold. Co-op shows team gold, assuming even kills (killer gets all, others 30%).</p>
@@ -138,8 +138,9 @@ function model(S,ref){
         t+=SPAN[w]+GAP;
       }else{
         // boss time is a fixed assumption per chapter, as in notes/curves_model.py. It does not shrink with hero damage
-        bossS=BOSS_S[c]*hpf;
-        var nadds=(3+c)*Math.max(0,Math.floor((bossS-6)/5+1));
+        // n heroes share a boss with hpf times the HP. Adds stay on the solo clock, so per-hero XP equals solo
+        bossS=BOSS_S[c]*hpf/n;
+        var nadds=(3+c)*Math.max(0,Math.floor((BOSS_S[c]-6)/5+1));
         wx=BO[c][1]*xm+nadds*avgOf(R[c],function(m){return XP[m];})*xm;
         wg=gold1(BO[c][1])*gm+nadds*avgOf(R[c],function(m){return gold1(XP[m]);})*gm;
         lossAt.push(t+bossS/2); t+=bossS;
