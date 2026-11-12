@@ -752,7 +752,7 @@ function setWeather(v){weather=v;mark('#wx button[data-x]','x',v);lutDirty=true;
 group('#tools button','t',setTool);group('#views button','v',setView);group('#rmode button','r',setRmode);group('#smode button','s',setSmooth);group('#wpre button','w',setWindPre);group('#seas button','s',v=>setSeason(v,false));group('#wx button[data-x]','x',setWeather);
 document.querySelectorAll('#life button').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;KON[k]^=1;b.classList.toggle('on',!!KON[k]);if(!KON[k]){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}});
 const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',get());b.onclick=()=>{set(!get());sy();};sy();return sy;};
-tog('inter',()=>interOn,v=>{interOn=v;if(!v){CRU.fill(0);PSH.fill(0);}});const syncWear=tog('wear',()=>wearOn,v=>{wearOn=v;for(let c=0;c<NC;c++)markBlock(c);fieldDirty=true;});
+const syncInter=tog('inter',()=>interOn,v=>{interOn=v;if(!v){CRU.fill(0);PSH.fill(0);}});const syncWear=tog('wear',()=>wearOn,v=>{wearOn=v;for(let c=0;c<NC;c++)markBlock(c);fieldDirty=true;});
 tog('step5',()=>step5,v=>step5=v);tog('gusts',()=>gustsOn,v=>gustsOn=v);const syncSync=tog('sync',()=>syncF,v=>{syncF=v;const s=KS[5];for(let j=s;j<s+KC[5];j++){LT2[j]=-1;LT[j]=rnd();LC[j]=6;}});
 const syncRm=tog('rm',()=>rm,v=>rm=v);tog('leak',()=>leak,v=>leak=v);const syncPause=tog('pause',()=>paused,v=>paused=v);const syncAuto=tog('tauto',()=>tAuto,v=>tAuto=v);
 const syncTime=()=>{$('tod').value=Math.round(tod*1000)%1000;$('todl').textContent=hh(tod);};
@@ -770,7 +770,7 @@ function reset(){HGT.fill(0);HL.fill(3);for(let c=0;c<NC;c++)if(FUEL[CT[c]]){HGT
   nightRoll=1;nightRollName='normal';lastPhase=phaseOf(tod);patchDirty=true;fieldDirty=true;TKEY.fill(-1);bakeAll();windUpdate();buildLUT();for(let k=0;k<TN;k++)tuftState(k);prefill();}
 $('reset').onclick=reset;
 document.querySelector('button[data-demo="showcase"]').onclick=showcase;
-function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal');paused=false;syncPause();rm=false;syncRm();interOn=true;wearOn=true;syncWear();
+function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal');paused=false;syncPause();rm=false;syncRm();interOn=true;syncInter();wearOn=true;syncWear();
   for(let k=0;k<KD.length;k++)KON[k]=1;document.querySelectorAll('#life button').forEach(b=>b.classList.add('on'));
   syncF=false;syncSync();setWindPre('gusty');windStr=.42;$('wstr').value=42;$('wstrl').textContent='42%';setDir(12);
   // late afternoon turning to dusk, a heavy firefly night

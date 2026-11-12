@@ -437,7 +437,9 @@ How to use this file:
   not the brighter mix (`:574`, `:681`).
   Done: setL and ring() compare LMIX, so the brighter mix wins. A lit firefly at the lamp head at night: 33 of
   81 lamp-lit pixels got darker before, 0 after.
-- [ ] **86.** `P3` Showcase forces the interaction map on without syncing its button (`:759`).
+- [x] **86.** `P3` Showcase forces the interaction map on without syncing its button (`:759`).
+  Done: showcase() calls the button's sync function. Map off, then Showcase: map on with the button dark
+  before, map on with the button lit after.
 - [ ] **87.** `P5` HUD total leaves out `windUpdate`, the x-ray overlay and `putImageData`. Card 11 says "near
   1 ms even with a 6x throttle". Measured default is 2.6 ms at 6x.
 - [ ] **88.** `P5` (suspected) HUD says "you: hidden, villager gets 0 B" even when the villager is adjacent or in
