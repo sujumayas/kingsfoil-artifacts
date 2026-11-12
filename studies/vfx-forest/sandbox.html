@@ -263,7 +263,8 @@ function recolour(b){const k=(Math.floor(season+.5)%4)*8+biomeAt(b.x,b.y);if(b.k
 function perchSpot(t){const S=SPR[t.sp][t.v][sIdx(t)];return [t.x+(rnd()-.5)*S.cw*1.1,t.y-S.h+3+rnd()*4];}
 function randomTreeNear(x,y,minD,maxD){let best=null,tries=0;while(tries++<40){const a=rnd()*6.283,d=minD+rnd()*(maxD-minD);let c=null;nearby(x+Math.cos(a)*d,y+Math.sin(a)*d,10,t=>{if(!c&&!t.u&&SPR[t.sp][t.v][sIdx(t)].leafy!==undefined)c=t;});if(c){best=c;break;}}return best;}
 function spawnBirds(){birds.length=0;for(let k=0;k<28;k++){const t=randomTreeNear(player.x,player.y,40,220);if(!t)continue;const [bx,by]=perchSpot(t);const b={x:bx,y:t.y,px:bx,py:by,z:t.y-by,vx:0,vy:0,state:'perch',tree:t,col:null,key:-1,flap:rnd()*6,timer:0,hop:0};recolour(b);birds.push(b);}}
-function updateBirds(dt){const fly=birds.filter(b=>b.state!=='perch');
+const fly=[];
+function updateBirds(dt){fly.length=0;for(const b of birds)if(b.state!=='perch')fly.push(b);
   for(const b of birds){b.flap+=dt*14;
     if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){recolour(b);b.hop=.6+rnd()*2.5;const lim=SPR[b.tree.sp][b.tree.v][sIdx(b.tree)].cw*.55;b.px=clamp(b.px+(rnd()<.5?-1:1),b.tree.x-lim,b.tree.x+lim);} // hops stay on the crown
       if(dx*dx+dy*dy<30*30||b.tree.shake>.3){b.state='fly';const L=Math.hypot(dx,dy)||1;b.vx=dx/L*45+(rnd()-.5)*20;b.vy=dy/L*35;b.z=b.tree.y-b.py;b.timer=6+rnd()*10;}
@@ -295,7 +296,7 @@ function update(dt){time+=dt;gust+=wind*1.3*dt;if(auto){season=(season+dt*.025)%
   const s=Math.floor(season+.5)%4;
   for(const t of shaking){t.shake*=Math.pow(.25,dt);if(t.shake<.01){t.shake=0;shaking.delete(t);}}
   visible.forEach(t=>{const sp=SPECIES[t.sp],k=sIdx(t);if(t.u)return;if(k===2&&sp.dec&&rnd()<dt*.18)leafBurst(t,1);else if(k===0&&sp.blossom&&rnd()<dt*.35)leafBurst(t,1);});
-  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=(p.vx+wind*14+Math.sin(time*3+p.ph)*6)*dt;p.z-=p.vz*dt;if(p.z<=0||p.life<=0){if(p.z<=0&&p.kind==='leaf'){litter.push([p.x|0,p.y|0,p.col]);if(litter.length>500)litter.shift();}parts.splice(i,1);}}
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.x+=(p.vx+wind*14+Math.sin(time*3+p.ph)*6)*dt;p.z-=p.vz*dt;if(p.z<=0||p.life<=0){if(p.z<=0&&p.kind==='leaf'){litter.push([p.x|0,p.y|0,p.col]);if(litter.length>500)litter.shift();}parts[i]=parts[parts.length-1];parts.pop();}}
   if(s===3&&snowFlakes.length<90)snowFlakes.push([rnd()*VW,rnd()*VH,rnd()]);
   if(layers.birds)updateBirds(dt);}
 function leafBurst(t,n){const S=SPR[t.sp][t.v][sIdx(t)],sp=SPECIES[t.sp],k=sIdx(t),pal=sp.leaf[k];if(!pal)return;const col=pal[(rnd()*3)|0];
@@ -305,11 +306,11 @@ const snowFlakes=[];
 // ---------- render ----------
 let visible=[],drawnCount=0;
 // rows above cb sway. The lowest 2 rows never do, so a fern keeps its foot on the ground
-const cbOf=(t,S)=>Math.min(S.cb,S.h-2);
-const u32hex=c=>'#'+[(c&255),(c>>8)&255,(c>>16)&255].map(v=>v.toString(16).padStart(2,'0')).join('');
+const cbOf=(t,S)=>Math.min(S.cb,S.h-2),byY=(a,b)=>a.y-b.y;
+const HEXC=new Map(),u32hex=c=>{let s=HEXC.get(c);if(!s){s='#'+[(c&255),(c>>8)&255,(c>>16)&255].map(v=>v.toString(16).padStart(2,'0')).join('');HEXC.set(c,s);}return s;}; // one string per colour, not one per pixel per frame
 function render(){const t0=performance.now();
   ctx.globalAlpha=1;ctx.drawImage(ground,camX,camY,VW,VH,0,0,VW,VH);
-  visible=[];const x0=clamp(((camX-40)/GS)|0,0,GCW-1),x1=clamp(((camX+VW+40)/GS)|0,0,GCW-1),y0=clamp(((camY-8)/GS)|0,0,GCH-1),y1=clamp(((camY+VH+80)/GS)|0,0,GCH-1);
+  visible.length=0;const x0=clamp(((camX-40)/GS)|0,0,GCW-1),x1=clamp(((camX+VW+40)/GS)|0,0,GCW-1),y0=clamp(((camY-8)/GS)|0,0,GCH-1),y1=clamp(((camY+VH+80)/GS)|0,0,GCH-1);
   for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)for(const i of grid[gy*GCW+gx]){const t=trees[i];const S=SPR[t.sp][t.v][sIdx(t)];if(t.x+S.w<camX||t.x-S.w>camX+VW||t.y-S.h>camY+VH||t.y<camY-14)continue;visible.push(t);} // 14 px above the top edge: a shadow reaches that far below its tree
   // litter
   for(const [x,y,c] of litter){const sx=x-camX,sy=y-camY;if(sx<0||sy<0||sx>=VW||sy>=VH)continue;ctx.fillStyle=u32hex(c);ctx.fillRect(sx,sy,1,1);}
@@ -321,14 +322,17 @@ function render(){const t0=performance.now();
         if(layers.dapple&&rx>5){ctx.globalAlpha=.32;ctx.fillStyle='#fbefb0';const sw=t.sw||0;for(let k=0;k<3;k++){const a=hash2(t.x+k*31,t.y)*6.28,d=hash2(t.y+k,t.x)*.75;const fx=Math.round(cxs+Math.cos(a)*d*rx+sw*.6+Math.sin(time*1.3+k+t.ph)*.8-camX),fy=Math.round(cys+Math.sin(a)*d*ry-camY);ctx.fillRect(fx,fy,2,1);}}}}
     ctx.globalAlpha=.28;ctx.fillStyle='#0d1a10';if(layers.birds)for(const b of birds){if(b.state==='perch')continue;ctx.fillRect(Math.round(b.x-camX-1),Math.round(b.y-camY),3,1);}ctx.globalAlpha=1;}
   // y-sorted draw: trees, bushes, player
-  const pRect=[player.x-3,player.y-11,player.x+3,player.y];let occluded=false;const items=visible.map(t=>[t.y,t]);items.push([player.y+.5,null]);items.sort((a,b)=>a[0]-b[0]);
-  for(const [,t] of items){if(!t){drawPlayer(inShade);continue;}const S=SPR[t.sp][t.v][sIdx(t)];const sw=swayOf(t);t.sw=sw;const X=Math.round(t.x-S.ax-camX),Y=Math.round(t.y-S.h+1-camY);
+  const pRect=[player.x-3,player.y-11,player.x+3,player.y];let occluded=false,pDone=false;visible.sort(byY);
+  for(const t of visible){if(!pDone&&t.y>player.y+.5){drawPlayer(inShade);pDone=true;}const S=SPR[t.sp][t.v][sIdx(t)];const sw=swayOf(t);t.sw=sw;const X=Math.round(t.x-S.ax-camX),Y=Math.round(t.y-S.h+1-camY);
     const front=!t.u&&t.y>player.y&&pRect[2]>t.x-S.cw-1&&pRect[0]<t.x+S.cw+1&&pRect[3]>t.y-S.h+1&&pRect[1]<t.y-S.h+1+S.cb;if(front)occluded=true;
-    const src=front&&occ==='dither'?S.f:S.c,cb=cbOf(t,S),b1=Math.round(cb*.35),b2=Math.round(cb*.7);const bands=[[0,b1,Math.round(sw*2.2)],[b1,b2,Math.round(sw*1.4)],[b2,cb,Math.round(sw*.7)]];
+    const src=front&&occ==='dither'?S.f:S.c,cb=cbOf(t,S),b1=Math.round(cb*.35),b2=Math.round(cb*.7);
     if(front&&occ==='cutaway'){ctx.save();ctx.beginPath();ctx.rect(X-8,Y,S.w+16,cb);ctx.arc(player.x-camX,player.y-6-camY,13,0,6.283);ctx.clip('evenodd');}
-    for(const [a,b,o] of bands)if(b>a)ctx.drawImage(src,0,a,S.w,b-a,X+o,Y+a,S.w,b-a);if(front&&occ==='cutaway')ctx.restore();
+    // three sway bands, top moves most
+    if(b1>0)ctx.drawImage(src,0,0,S.w,b1,X+Math.round(sw*2.2),Y,S.w,b1);if(b2>b1)ctx.drawImage(src,0,b1,S.w,b2-b1,X+Math.round(sw*1.4),Y+b1,S.w,b2-b1);if(cb>b2)ctx.drawImage(src,0,b2,S.w,cb-b2,X+Math.round(sw*.7),Y+b2,S.w,cb-b2);
+    if(front&&occ==='cutaway')ctx.restore();
     if(cb<S.h)ctx.drawImage(S.c,0,cb,S.w,S.h-cb,X,Y+cb,S.w,S.h-cb);
     if(layers.birds)for(const b of birds)if(b.state==='perch'&&b.tree===t)drawBirdPerch(b);}
+  if(!pDone)drawPlayer(inShade);
   drawnCount=visible.length;
   if(layers.birds){ctx.globalAlpha=1;for(const b of birds)if(b.state!=='perch')drawBirdFlying(b);}
   for(const p of parts){ctx.fillStyle=u32hex(p.col);ctx.fillRect(Math.round(p.x-camX),Math.round(p.y-p.z-camY),1,1);}
@@ -350,14 +354,14 @@ function drawAtlas(s){let x=4,y=4,rowH=0,maxW=0;const pos=[];for(const sp of SPR
   document.getElementById('atlasinfo').textContent=`${SPR.length*NV} sprites (12 species × 6 variants) drawn procedurally at load and reused by ${nTrees} trees + ${trees.length-nTrees} bushes/ferns`;}
 
 // ---------- loop & UI ----------
-let last=performance.now();
+let last=performance.now(),hudN=0,hudS='';const hudEl=document.getElementById('hud');
 // frame gate: nothing runs while the canvas is off-screen
 let onScreen=true;
 if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;}).observe(cv);
 function skipFrame(){return !onScreen;}
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();
-  if((time*10|0)%3===0){const b=BIOMES[biomeAt(player.x,player.y)];const sn=['Spring','Summer','Autumn','Winter'][Math.floor(season+.5)%4];
-    document.getElementById('hud').textContent=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;}}
+  if(hudN++%12===0){const b=BIOMES[biomeAt(player.x,player.y)];const sn=['Spring','Summer','Autumn','Winter'][Math.floor(season+.5)%4];
+    const hs=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;if(hs!==hudS)hudEl.textContent=hudS=hs;}}
 document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.onclick=()=>{season=+b.dataset.s;auto=false;document.getElementById('auto').classList.remove('on');});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
 const wEl=document.getElementById('wind');wEl.oninput=()=>wind=wEl.value/100;

@@ -873,8 +873,14 @@ How to use this file:
   shaking trees sit in a set and decay anywhere, now 0. Trees were culled 4 px above the top edge while
   their shadow reached into view, 6 cases on a 200 px walk north: the margin is 14 px, now 0 cases. The
   minimap box was stroked at fractional positions, 170 blended pixels: it snaps to whole cells, now 0.
-- [ ] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
+- [x] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
   and particle (`:301`, `:320`). The HUD writes on about 6 of every 18 frames (`:339`).
+  Done: confirmed by reading. Per frame the loop built 4 arrays per tree for the sway bands, 1 pair per tree
+  for the y-sort, a hex string per litter pixel and particle, and a filtered bird list. The bands are 3
+  direct draws, the visible list is sorted in place with the player slotted in, colour strings are cached
+  per colour, and the lists are reused. The HUD is built every 12th frame and written when it changed: 60
+  writes per 180 frames before, 15 after. Frame median with 341 sprites drawn: 0.7 to 0.6 ms, 4.4 to 4.0 ms
+  at 6x throttle.
 - [ ] **167.** `P6` The Wind slider has no value readout.
 - [ ] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
   fixing #5. The stage sits in a `1fr 200px` grid next to the minimap (`:19`), so the shared `fit()` needs the
