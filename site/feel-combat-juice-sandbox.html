@@ -16,7 +16,7 @@ main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
 .stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair;touch-action:none}
 .hud{font:11.5px/1.45 var(--mono);background:#08090e;padding:5px 9px;pointer-events:none;color:#eeeef4;border-top:1px solid var(--line);overflow-wrap:anywhere}
-.hud b{color:var(--lamp);font-weight:600}.hud .off{color:#6c7184}.hud .warn{color:#ff8a6a}
+.hud b{color:var(--lamp);font-weight:600}.hud .off{color:#6c7184}.hud .warn{color:#ff8a6a}.hud .sv{color:#5ff7f7}.hud .cl{color:#efef00}
 .bar{display:inline-block;width:80px;height:7px;background:#2a3040;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#86d49a}
 .touch{display:none;gap:6px;margin-top:8px;flex-wrap:wrap;touch-action:none;user-select:none;-webkit-user-select:none}
 .touch button{flex:1 1 0;min-width:44px;height:52px;padding:2px;font:600 13px var(--mono);touch-action:none}
@@ -105,7 +105,7 @@ code{font:13px var(--mono);color:var(--cool)}
     </div>
     <div class="group"><h3>X-ray view</h3>
       <div class="btns" id="views"><button data-v="normal" class="on">Normal</button><button data-v="server">Server truth</button><button data-v="timeline">Timeline</button><button data-v="cost">Cost view</button></div>
-      <p class="keys">Server truth draws ghosts at server positions, hit circles and the server panel. Timeline shows your presses, predicted events and server confirms on one clock.</p>
+      <p class="keys">Server truth draws ghosts at server positions and their hit circles, and adds the server's counters to the readout under the arena. Timeline shows your presses, predicted events and server confirms on one clock.</p>
     </div>
     <div class="group"><h3>Simulation</h3>
       <div class="btns"><button id="pause"><kbd>P</kbd>Pause</button><button id="slow"><kbd>M</kbd>Slow 0.25x</button><button id="reset">Reset</button><button data-demo="showcase">Showcase</button></div>
@@ -838,21 +838,20 @@ function drawViews(){
   if(VIEW==='server'){for(const e of ENTS){if(e.sdead)continue;const S=e.sheet,img=S[e.dir]?S[e.dir][0]:S.d[0];ctx.globalAlpha=.45;B(tintOf(img,'#5ff7f7'),Math.round(e.x)-S.w/2,Math.round(e.y)-S.h+1);ctx.globalAlpha=1;
       for(let q=0;q<Math.PI*2;q+=.5)R(e.x+Math.cos(q)*e.r,e.y-6+Math.sin(q)*e.r,1,1,HX('cy'));const dx=e.x-e.px,dy=e.y-e.py,d=Math.hypot(dx,dy);for(let i=0;i<d;i+=2)R(e.px+dx/d*i,e.py+dy/d*i,1,1,HX('py'));}
     for(const p of SPROJ){if(p.homing||now<p.t0||p.fin)continue;const k=(now-p.t0)/1000*p.speed;R(p.x0+p.dx*k-1,p.y0+p.dy*k-1,3,3,HX('cy'));}
-    const L=['SERVER  AUTHORITATIVE','TICK '+TICK+' MS  #'+SV.ticks,'INBOX '+SV.inbox.length+'  PENDING '+SV.pend.length,'IN FLIGHT  UP '+NET.up.length+'  DOWN '+NET.down.length,'ACCEPTED '+NET.acc+'  REJECTED '+NET.rej,LAGC?'LAG COMP  REWIND '+Math.round(REWIND())+' MS':'NO REWIND  FAVOURS TARGET','HIT CHECKS '+CHK.length+'/S','PHANTOMS '+NET.phantom+'  GHOST FX '+NET.ghostfx,'CYAN  SERVER   YOU  CLIENT'];
-    R(3,32,118,L.length*7+5,'rgba(8,12,20,.86)');L.forEach((t,i)=>txt(F2,t,6,35+i*7,i?P.s3:P.cy,0));}
+}
   else if(VIEW==='timeline'){const x0=40,w=272,y0=32,span=2400,X=t=>x0+(t-(now-span))/span*w;R(3,y0,314,46,'rgba(8,10,18,.88)');
-    for(let t=SV.next-TICK;t>now-span;t-=TICK){if(TICK<100&&((t/TICK)|0)%2)continue;R(X(t),y0+2,1,42,'rgba(255,255,255,.12)');}
-    ['INPUT','PREDICT','SERVER'].forEach((s,i)=>{txt(F2,s,6,y0+5+i*14,[P.s3,P.yl,P.g4][i],0);R(x0,y0+8+i*14,w,1,'rgba(255,255,255,.08)');});
+    for(let t=SV.next-TICK;t>now-span;t-=TICK){if(TICK<100&&((t/TICK)|0)%2)continue;R(X(t),y0+2,1,34,'rgba(255,255,255,.12)');}
+    ['INPUT','PREDICT','SERVER'].forEach((s,i)=>{txt(F2,s,6,y0+5+i*12,[P.s3,P.yl,P.g4][i],0);R(x0,y0+8+i*12,w,1,'rgba(255,255,255,.08)');});
     const fires={};for(const e of TL)if(e.kind==='fire'||e.kind==='auto')fires[e.seq]=e;
-    for(const e of TL){if(e.t<now-span)continue;const x=Math.round(X(e.t)),y=y0+8+e.lane*14;
-      if(e.kind==='hit'&&fires[e.seq]){const fx=X(fires[e.seq].t);for(let xx=fx;xx<x;xx+=3)R(xx,y0+8+((xx-fx)/(x-fx||1))*28,1,1,'rgba(188,214,108,.5)');}
+    for(const e of TL){if(e.t<now-span)continue;const x=Math.round(X(e.t)),y=y0+8+e.lane*12;
+      if(e.kind==='hit'&&fires[e.seq]){const fx=X(fires[e.seq].t);for(let xx=fx;xx<x;xx+=3)R(xx,y0+8+((xx-fx)/(x-fx||1))*24,1,1,'rgba(188,214,108,.5)');}
       const c={press:'s3',fire:'o2',auto:'s1',queue:'yl',drop:'r2',pred:'yl',ack:'a3',hit:'g4',rej:'r2'}[e.kind]||'wh';
       if(e.kind==='drop'||e.kind==='rej'){R(x-1,y-2,1,1,HX(c));R(x+1,y-2,1,1,HX(c));R(x,y-1,1,1,HX(c));R(x-1,y,1,1,HX(c));R(x+1,y,1,1,HX(c));}else R(x,y-3,e.kind==='hit'||e.kind==='fire'?2:1,6,HX(c));}
     txt(F2,'LAST 2.4 S   RTT '+LAT+' MS + TICK WAIT',x0,y0+38,P.s2,0);}
   else if(VIEW==='cost'){const col=['rgba(146,207,228,.5)','rgba(244,211,94,.9)','rgba(214,105,138,.9)','rgba(188,214,108,.6)','rgba(255,255,255,.5)'];ctx.lineWidth=1;
     for(let i=0;i<COSTR.length;i+=5){ctx.strokeStyle=col[COSTR[i]];ctx.strokeRect((COSTR[i+1]|0)+.5,(COSTR[i+2]|0)+.5,Math.max(1,COSTR[i+3]|0)-1,Math.max(1,COSTR[i+4]|0)-1);}
     const items=[['SIM',T.sim,P.wh],['SPRITES',T.spr,P.a3],['EFFECTS',T.fx,P.yl],['TEXT',T.txt,P.pk],['CAMERA',T.cam,P.g4],['UI',T.ui,P.s3]];R(3,104,112,50,'rgba(10,8,18,.88)');
-    items.forEach(([n,v,c],i)=>{const y=107+i*7.5;txt(F2,n,6,y,c,0);R(42,y,Math.max(1,Math.min(46,v/1*46)),4,'#'+c);txt(F2,v.toFixed(2),92,y,P.wh,0);});}}
+    items.forEach(([n,v,c],i)=>{const y=106+i*8;txt(F2,n,6,y,c,0);R(42,y,Math.max(1,Math.min(46,v/1*46)),4,'#'+c);txt(F2,v.toFixed(2),92,y,P.wh,0);});}}
 // ---------- render ----------
 const T={sim:0,spr:0,fx:0,txt:0,cam:0,ui:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};let simMs=0;
 function camOffset(){const S=TUNING.shake,tr=TRAUMA,amp=S.maxPx*SHK*(RSHAKE?.25:1)*tr*tr;let ox=0,oy=0;if(amp>0&&FX.shake){const t=now/1000*S.noiseHz;ox=(vn(t,0,41)*2-1)*amp;oy=(vn(t,7,43)*2-1)*amp*S.yMul;}
@@ -885,6 +884,8 @@ function step(dt){now+=dt;if(GSTOP>0)FROZEN.push(now,dt);if(GSTOP>0){GSTOP-=dt;i
   if(NET.checks){CHK.push(now);NET.checks=0;}while(CHK.length&&CHK[0]<c)CHK.shift();}
 // ---------- loop and DOM HUD ----------
 let last=performance.now(),hudN=0;const f2=v=>v.toFixed(2);
+// server truth counters go in the readout under the canvas, so no panel covers the ghosts they describe
+const svLine=()=>`<br><span class="sv">server truth</span> · tick ${SV.ticks} · inbox ${SV.inbox.length} · pending ${SV.pend.length} · in flight ${NET.up.length} up, ${NET.down.length} down · accepted ${NET.acc} · ${LAGC?`lag compensation rewinds ${Math.round(REWIND())} ms`:'no rewind, which favours the target'} · hit checks ${CHK.length}/s · ghost effects ${NET.ghostfx} · <span class="sv">cyan ghosts and circles</span> are server positions and hitboxes, <span class="cl">yellow lines</span> join them to what you see`;
 // frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
 // enough to redraw the scene and refresh the HUD
 let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
@@ -894,7 +895,7 @@ function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;
 function loop(ts){requestAnimationFrame(loop);if(skipFrame())return;let dt=ts-last;last=ts;if(dt>100)dt=100;if(dt<0)dt=0;if(slow)dt*=.25;if(paused)dt=0;
   const a=performance.now();if(dt>0)step(dt);simMs=performance.now()-a;render();
   if(++hudN%10===0){let bytes=0;for(let i=1;i<NET.log.length;i+=2)bytes+=NET.log[i];let fz=0;for(let i=1;i<FROZEN.length;i+=2)fz+=FROZEN[i];const live=VO.filter(v=>!AC||v.end>AC.currentTime).length;
-    $('hud').innerHTML=`${MODE.toUpperCase()} · tick ${TICK} ms · RTT ${LAT} ms · ${{wait:'wait for server',anim:'predict animation',full:'predict animation + effects'}[PRED]} · juice ${Math.round(JUICE*100)}% · ${STOPMODE==='global'?'<span class="warn">global hitstop</span>':'per-entity hitstop'}${paused?' · paused':''}<br>sim ${f2(T.sim)} · sprites + anim ${f2(T.spr)} · effects ${f2(T.fx)} · combat text ${f2(T.txt)} · camera + post ${f2(T.cam)} · UI ${f2(T.ui)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · blits ${ST.blits} · glyphs ${ST.glyphs} · entities ${ENTS.length} · particles ${PART.length} · numbers ${NUMS.length} (merged ${MERGED.length}/s)<br>sounds ${AC?live+' playing':'off until first key or tap'} · dropped ${VDROP} · stolen ${VSTOLE} · server ${NET.log.length/2|0} msg/s · ${(bytes/1024).toFixed(2)} kB/s · phantoms ${NET.phantom} · rejected ${NET.rej}${fz?` · <span class="warn">screen frozen ${Math.min(100,fz/10).toFixed(0)}% of the last second</span>`:''}`;}}
+    $('hud').innerHTML=`${MODE.toUpperCase()} · tick ${TICK} ms · RTT ${LAT} ms · ${{wait:'wait for server',anim:'predict animation',full:'predict animation + effects'}[PRED]} · juice ${Math.round(JUICE*100)}% · ${STOPMODE==='global'?'<span class="warn">global hitstop</span>':'per-entity hitstop'}${paused?' · paused':''}<br>sim ${f2(T.sim)} · sprites + anim ${f2(T.spr)} · effects ${f2(T.fx)} · combat text ${f2(T.txt)} · camera + post ${f2(T.cam)} · UI ${f2(T.ui)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · blits ${ST.blits} · glyphs ${ST.glyphs} · entities ${ENTS.length} · particles ${PART.length} · numbers ${NUMS.length} (merged ${MERGED.length}/s)<br>sounds ${AC?live+' playing':'off until first key or tap'} · dropped ${VDROP} · stolen ${VSTOLE} · server ${NET.log.length/2|0} msg/s · ${(bytes/1024).toFixed(2)} kB/s · phantoms ${NET.phantom} · rejected ${NET.rej}${fz?` · <span class="warn">screen frozen ${Math.min(100,fz/10).toFixed(0)}% of the last second</span>`:''}${VIEW==='server'?svLine():''}`;}}
 // ---------- UI wiring ----------
 const mark=(sel,v)=>document.querySelectorAll(sel+' button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v)));
 const group=(sel,fn)=>document.querySelectorAll(sel+' button[data-v]').forEach(b=>b.addEventListener('click',()=>{fn(b.dataset.v);mark(sel,b.dataset.v);}));

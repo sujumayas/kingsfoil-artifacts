@@ -83,8 +83,12 @@ How to use this file:
   of a wall over 90 s, 4 seeds: 81% to 22% with 4 allies, 65% to 24% with 12, 63% to 32% with 30. An even
   spread would give about 31%. Goblin kills per minute did not drop: 11 before and 14 after with 4
   allies, 33 and 37 with 12.
-- [ ] **15.** `P4` X-ray panels cover what they explain. The server panel hides the dummy and a pillar. The
+- [x] **15.** `P4` X-ray panels cover what they explain. The server panel hides the dummy and a pillar. The
   timeline caption sits on the server lane (`:837`). Cost view rows alternate 7 and 8 px (`:841`).
+  Done: the server panel left the canvas. Its counters are an extra line in the readout under the arena
+  while Server truth is on, with the cyan and yellow legend. Timeline lanes are 12 px apart, so the
+  caption sits below the server lane. Cost rows are 8 px apart. The cost panel still covers the lower left
+  pillar. It is the only legend for the outline colours, so it stays.
 - [ ] **16.** `P5` "HIT CHECKS n/S" counts frames with a check, so it tops out at 60 (`:871`). (suspected)
 - [ ] **17.** `P5` Card 6 says the warden slam adds 0.6 trauma. The code passes .5 (`:685`) and
   `TUNING.shake.slam` is unused. (suspected)
