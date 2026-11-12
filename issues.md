@@ -55,10 +55,13 @@ How to use this file:
 
 ## feel-combat-juice
 
-- [ ] **9.** `P3` Showcase leaves a broken world. After unpausing, a prop lance hangs in mid-air until Reset
+- [x] **9.** `P3` Showcase leaves a broken world. After unpausing, a prop lance hangs in mid-air until Reset
   (`:916`, `speed:0,range:999`), and every mob and ally has `cd=now+99999` so nobody attacks for about 100 s
   (`:910` to `:912`). Movement and skill keys do not leave the frozen frame (`:932` vs `:945`). Fix: call `reset()`
   when leaving `frozenShow`, and clear it on any keydown.
+  Done: leaving the frame calls reset(). Pause, P, a click on the canvas, a touch skill button, and the
+  movement, skill, Tab, Esc and Space keys all leave it. V and M do not, so the x-ray views can still
+  inspect the frame. Showcase settings (juice 100%, 5 allies) stay, as after any preset.
 - [ ] **10.** `P4` Cleave smear and sword arc point in only 4 directions while the hit cone is free-aim (`:284` to
   `:287`, `:706`, `:736`). Card 4 says they rotate freely. Fix: bake the smear for 8 or 16 angles, or change the
   card.

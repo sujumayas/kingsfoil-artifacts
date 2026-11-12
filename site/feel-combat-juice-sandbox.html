@@ -895,7 +895,7 @@ const setMode=v=>{MODE=v;mark('#mode',v);setTarget(null);syncPop();},setView=v=>
 group('#stopmode',setStop);group('#flashst',setFlashSt);group('#nstyle',setNstyle);group('#others',setOthers);group('#death',setDeath);group('#lod',setLod);group('#pred',setPred);group('#autospd',setAuto);group('#tick',setTick);group('#mode',setMode);group('#views',setView);
 group('#tmode',v=>TMODE=v);group('#cmode',v=>CMODE=v);group('#pvpkb',v=>PVPKB=v);group('#apri',v=>AUTOPRI=v);
 const syncAutoB=tog('autob',()=>AUTO_ON,v=>{AUTO_ON=v;$('autob').lastChild.textContent=v?'Auto on':'Auto off';});tog('pnum',()=>PNUM,v=>PNUM=v);const syncLagc=tog('lagc',()=>LAGC,v=>LAGC=v);tog('caps',()=>CAPS,v=>CAPS=v);tog('rflash',()=>RFLASH,v=>RFLASH=v);tog('rshake',()=>RSHAKE,v=>RSHAKE=v);tog('cblind',()=>CBLIND,v=>CBLIND=v);tog('pvpfirst',()=>PVPFIRST,v=>PVPFIRST=v);
-const syncPause=tog('pause',()=>paused,v=>{paused=v;frozenShow=false;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
+const syncPause=tog('pause',()=>paused,v=>{if(frozenShow)leaveShow();else paused=v;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
 const PRESETS={
  none:{j:0,fx:{},ns:'rise',death:'instant',auto:TUNING.autoSlow,q:TUNING.queueWin,gcd:TUNING.gcd,grp:false,tibia:false,others:'dim',lod:'reduced'},
  tibia:{j:.35,fx:{hitstop:0,flash:0,kb:0,shake:0,smear:0},ns:'rise',death:'instant',auto:TUNING.autoSlow,q:0,gcd:TUNING.gcd,grp:true,tibia:true,others:'full',lod:'full'},
@@ -909,6 +909,8 @@ $('juice').addEventListener('input',()=>document.querySelectorAll('#presets butt
 function reset(){ENTS.length=0;CPROJ.length=0;CTELE.length=0;PART.length=0;NUMS.length=0;CORPSES.length=0;TL.length=0;TOASTS.length=0;SPROJ.length=0;TELE.length=0;SV.inbox.length=0;SV.pend.length=0;NET.up.length=0;NET.down.length=0;
   Object.assign(NET,{rej:0,acc:0,phantom:0,ghostfx:0});for(const k in PIMP)delete PIMP[k];for(const k in WAITING)delete WAITING[k];for(const k in CCD)delete CCD[k];
   TARGET=null;QUEUE=null;AIM=null;MOVE=null;CGCD=0;SV.gcdEnd=0;SV.cd={};TRAUMA=0;GSTOP=0;REDF=0;VDROP=0;VSTOLE=0;vnow=now;SV.next=Math.ceil(now/TICK)*TICK;paused=false;frozenShow=false;syncPause();mkPlayer();syncPop();}
+// the showcase frame is staged: a prop lance, parked cooldowns, a fake cast. Leaving it rebuilds the world so play resumes clean
+function leaveShow(){if(frozenShow)reset();}
 function place(e,x,y,dir){e.x=x;e.y=y;e.px=x;e.py=y;fillH(e,x,y);if(dir)e.dir=dir;}
 function showcase(){rs=0x2545f491;preset('asterion');setJuice(100);setMode('pve');setAllies(5);setView('normal');setOthers('dim');setPred('anim');setLat(120);setTick(100);setShk(100);paused=false;slow=false;syncSlow();reset();
   const G=ENTS.find(e=>e.kind==='golem'),I=ENTS.find(e=>e.kind==='imp'),gs=ENTS.filter(e=>e.kind==='gob'),al=ENTS.filter(e=>e.kind==='ally');
@@ -934,26 +936,27 @@ function skillUp(i){if(AIM&&AIM.i===i&&!AIM.normal&&!AIM.touch){press(i,{x:MX,y:
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){const [x,y]=canvasXY(e.clientX,e.clientY);MX=x;MY=y;}});
 cv.addEventListener('contextmenu',e=>{e.preventDefault();if(AIM)AIM=null;});
 cv.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();const [x,y]=canvasXY(e.clientX,e.clientY);MX=x;MY=y;if(e.button===2){AIM=null;return;}
-  if(frozenShow){paused=false;frozenShow=false;syncPause();}
+  leaveShow();
   if(AIM&&!AIM.touch){press(AIM.i,{x,y});AIM=null;return;}
   const f=foeAt(x,y);if(f&&(TMODE==='click'||TMODE==='soft')){if(TARGET===f&&dpx(PL,f)>24)MOVE={x:f.px,y:f.py,e:f};else setTarget(f);return;}
   MOVE={x,y};});
 // touch skill buttons: tap fires at the auto pick, drag aims (joystick from the button), drag back to the centre cancels
 document.querySelectorAll('#touch button[data-sk]').forEach(b=>{const i=+b.dataset.sk;
-  b.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();b.setPointerCapture(e.pointerId);const sk=SK[i];if(!sk.aim){press(i);return;}AIM={i,touch:true,sx:e.clientX,sy:e.clientY,moved:false,cancel:false};const q=quickPt(sk);MX=q.x;MY=q.y;});
+  b.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();b.setPointerCapture(e.pointerId);leaveShow();const sk=SK[i];if(!sk.aim){press(i);return;}AIM={i,touch:true,sx:e.clientX,sy:e.clientY,moved:false,cancel:false};const q=quickPt(sk);MX=q.x;MY=q.y;});
   b.addEventListener('pointermove',e=>{if(!AIM||AIM.i!==i||!AIM.touch)return;const dx=e.clientX-AIM.sx,dy=e.clientY-AIM.sy,d=Math.hypot(dx,dy);if(d>14){AIM.moved=true;AIM.cancel=false;const sk=SK[i],k=(sk.range||60)/70;MX=PL.px+dx*k;MY=PL.py-7+dy*k;}else if(AIM.moved){AIM.cancel=true;}});
   const end=e=>{if(!AIM||AIM.i!==i||!AIM.touch)return;const a=AIM;AIM=null;if(a.cancel){toast('CANCELLED',P.s2);return;}press(i,a.moved?{x:MX,y:MY}:quickPt(SK[i]));};
   b.addEventListener('pointerup',end);b.addEventListener('pointercancel',()=>{AIM=null;});});
-$('tAuto').addEventListener('click',()=>{AUTO_ON=!AUTO_ON;syncAutoB();$('autob').lastChild.textContent=AUTO_ON?'Auto on':'Auto off';});$('tTab').addEventListener('click',()=>{ensureAudio();cycleTarget();});
+$('tAuto').addEventListener('click',()=>{AUTO_ON=!AUTO_ON;syncAutoB();$('autob').lastChild.textContent=AUTO_ON?'Auto on':'Auto off';});$('tTab').addEventListener('click',()=>{ensureAudio();leaveShow();cycleTarget();});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'&&e.target.type!=='range'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;ensureAudio();const k=e.key.toLowerCase(),dir=KM[k];
+  if(frozenShow&&(dir||(k>='1'&&k<='6')||k==='tab'||k==='escape'||k===' '||k==='p')){leaveShow();if(k==='p'){e.preventDefault();return;}} // V and M keep the frame, so the x-ray views can inspect it
   if(dir){KEYS[dir]=1;e.preventDefault();return;}
   if(k>='1'&&k<='6'){if(!e.repeat)skillDown(+k-1);e.preventDefault();return;}
   if(k==='tab'){cycleTarget();e.preventDefault();}else if(k==='escape'){if(AIM)AIM=null;else setTarget(null);}
   else if(k===' '){AUTO_ON=!AUTO_ON;syncAutoB();$('autob').lastChild.textContent=AUTO_ON?'Auto on':'Auto off';e.preventDefault();}
   else if(k==='v'){const V=['normal','server','timeline','cost'];setView(V[(V.indexOf(VIEW)+1)%V.length]);}
-  else if(k==='p'){paused=!paused;frozenShow=false;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
+  else if(k==='p'){paused=!paused;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase(),d=KM[k];if(d)KEYS[d]=0;if(k>='1'&&k<='6')skillUp(+k-1);});
 addEventListener('blur',()=>{KEYS.l=KEYS.r=KEYS.u=KEYS.d=0;});
 // whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
