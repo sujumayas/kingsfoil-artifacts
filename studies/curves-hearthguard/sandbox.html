@@ -189,7 +189,7 @@ try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof sav
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 function fmtVal(it,v){
-  if(it.pct)return (it.plus?"+":"")+Math.round(v*100)+"%";
+  if(it.pct)return (it.plus?"+":"")+(it.st<0.01?(v*100).toFixed(1):Math.round(v*100))+"%"; // a 0.005 step needs one decimal
   var s=it.f!=null?v.toFixed(it.f):(it.st<1?v.toFixed(2):String(Math.round(v)));
   if(it.x)s="x"+s; if(it.s)s+=" s";
   if(it.k==="hearth")s=Math.round(v).toLocaleString("en-US");

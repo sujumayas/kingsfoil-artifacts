@@ -905,8 +905,10 @@ How to use this file:
   players the hero started chapters 2 to 5 at levels 9, 14, 19 and 25 and the run took 37.1 min. Now levels
   are 7, 13, 17 and 23 at any player count, and the run takes 25.5, 24.5 and 24.2 min at 1, 2 and 3 players.
   The caption says what Players changes.
-- [ ] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
+- [x] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
   (`:190`, `:166`).
+  Done: a percent readout on a step under 0.01 prints one decimal. 0.085, 0.09 and 0.095 read "9%", "9%" and
+  "10%" before, "8.5%", "9.0%" and "9.5%" after. The other percent readouts are unchanged.
 - [ ] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth
   term, mob counts, a target line).
 - [ ] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
