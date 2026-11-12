@@ -185,8 +185,11 @@ How to use this file:
   the local landing plus 400 ms. The 60 ms head start on click pickup is gone, so an early reject can no
   longer happen for the player. Boss drop at your feet with Reduce motion on, then with Arcs off: one item
   shook on an early reject in each run before, none after.
-- [ ] **33.** `P5` Ownership view never shows the yellow public countdown. `TUNING.owner.groundPublicS` does not
+- [x] **33.** `P5` Ownership view never shows the yellow public countdown. `TUNING.owner.groundPublicS` does not
   exist (`:831`). The legend text also overflows its box (`:832`).
+  Done: the public pie divides by the item's own public span, despawnAt minus ownUntil, which is 120 s for a
+  spill and 180 s for rain. Public items showed an empty black pie before and a yellow one now, checked in a
+  screenshot with 40 rain items. The legend box takes its width from the text.
 - [ ] **34.** `P5` Server truth panel says "CORPSE 10 S OWNED" (`:827`). TUNING, the spec and card 2 say 15 s.
 - [ ] **35.** `P6` Race demo places the ring and bot with no bounds check (`:906`), off-canvas near the right
   edge.
