@@ -411,8 +411,11 @@ How to use this file:
   take-off. 10 butterflies for 20 s: height range 3 to 4 px, 0.1 up-kicks per second and the same wing
   frame held for 2.4 to 6.7 s before. Range 12 px, 2.9 kicks per second and 0.2 s at most (the rest)
   after. They still perch, 33% of the time against 42%.
-- [ ] **80.** `P3` "One field layer" goes stale after Reset, for as long as the sim ran before it. `fieldBakeT`
+- [x] **80.** `P3` "One field layer" goes stale after Reset, for as long as the sim ran before it. `fieldBakeT`
   is not reset (`:656`, `:755`). Cuts made while paused in this mode do not show either.
+  Done: Reset clears fieldBakeT, and a dirty field rebakes at once while paused. After a 30 s run and Reset the
+  field stayed stale for 30.3 s before, 0 s after. A cut while paused: not shown before, shown after
+  (34,481 to 34,409 field pixels).
 - [ ] **81.** `P4` The hidden traveller in wheat is a headless dithered torso, and the overlay draws over trees
   and sheep in front (`:678`, mask at `:575`).
 - [ ] **82.** `P4` (taste) Field-layer mode crops 6 of 11 sprite rows, leaving a floating head (`:613`, `:614`).

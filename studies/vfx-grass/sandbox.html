@@ -654,7 +654,7 @@ function bakeField(){FC.fill(0);const list=[];
     for(let p=s;p<e;p++){if(-SPY[p]<sr)continue;const x=TX[k]+SPX[p]*fl,y=TY[k]+SPY[p];if(x<0||x>=W||y<0)continue;const i=y*W+x;FC[i]=SPC[p];FR[i]=Math.min(255,(-SPY[p]/hm*255)|0);FS[i]=STF[t]*100;}}
   for(let i=0;i<NP;i++)if(FC[i])list.push(i);FPIX=Int32Array.from(list);fieldDirty=false;fieldBakeT=simT;}
 const SB=new Float32Array(NTR),KEEP=new Uint8Array(NTR);
-function drawField(){if(fieldDirty&&simT-fieldBakeT>.25)bakeField();
+function drawField(){if(fieldDirty&&(paused||simT-fieldBakeT>.25))bakeField();
   for(let t=0;t<NTR;t++){const I=Math.min(1,CRU[t]),w=WL[t];SB[t]=(w+(w>0?(.25+windStr*.5)*sinT(t*7+oscT1):0))*Math.max(PRM.spring,1-I)*wcx+TDX[t]/64*(I*2+PSH[t]*PRM.pushPx);KEEP[t]=255-I*130;}
   const n=FPIX.length,hiOn=windStr>0;for(let m=0;m<n;m++){const i=FPIX[m],t=TRP[i],r=FR[i];if(r>KEEP[t])continue;const y=(i/W)|0,x=i-y*W+Math.round(SB[t]*FS[i]*.01*POW[r>>4]);if(x<0||x>=W)continue;let c=FC[i];if(hiOn&&r>128&&WH[t]>.5&&windStr>=.2)c=BRT[c];IDX[y*W+x]=c;}
   tuftsDrawn=n;}
@@ -758,7 +758,7 @@ function reset(){HGT.fill(0);HL.fill(3);for(let c=0;c<NC;c++)if(FUEL[CT[c]]){HGT
   for(let k=0;k<KD.length;k++){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}
   lamps=LAMP0.map(([x,y])=>({x,y}));Object.assign(P,{x:186,y:146,lx:186,ly:146,hasT:false,mv:false,reveal:0,face:1});Object.assign(V,{x:-12,y:95,i:0,wait:4,mv:false,sent:false,lx:-12,ly:95});
   SHEEP[0].x=276;SHEEP[0].y=132;SHEEP[1].x=298;SHEEP[1].y=156;SHEEP.forEach(s=>{s.st=0;s.t=rnd()*3;});
-  netTotal=0;netSec=0;fx=[];simT=0;gustPh=0;tAuto=true;syncAuto();tod=.56;syncTime();setWindPre('breeze');setDir(12);setWeather('clear');setSeason(1,true);
+  netTotal=0;netSec=0;fx=[];simT=0;fieldBakeT=-9;gustPh=0;tAuto=true;syncAuto();tod=.56;syncTime();setWindPre('breeze');setDir(12);setWeather('clear');setSeason(1,true);
   nightRoll=1;nightRollName='normal';lastPhase=phaseOf(tod);patchDirty=true;fieldDirty=true;TKEY.fill(-1);bakeAll();windUpdate();buildLUT();for(let k=0;k<TN;k++)tuftState(k);prefill();}
 $('reset').onclick=reset;
 document.querySelector('button[data-demo="showcase"]').onclick=showcase;
