@@ -683,8 +683,13 @@ How to use this file:
   Done: water pixels never dry, so the pond fed the mist grid for as long as the sun was out. They are left
   out of the wet-ground average. After 3 min of sun the pond showed 91 lattice pixels with mist at 0.25, now
   0 and 0.
-- [ ] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,
+- [x] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,
   awning `SHL` at `:146`).
+  Done: two causes. Shelter there was 0.15, above the 0.1 limit under which sheltered ground dries during
+  rain. Drawn drops also wetted the ground they landed on with no shelter test. Shelter under the awning is
+  now 0.04, and a sky drop aimed at sheltered ground is dropped with probability 1 minus exposure. Drips
+  from the eaves, the awning and trees still land. Rows 53 to 55 after 60 s of storm: 95% wet before, 7%
+  after. The drip line in rows 56 and 57 stays wet.
 - [ ] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point
   (`:285`) and again from height (`:324`). Fix: delete the line at `:285`.
 - [ ] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
