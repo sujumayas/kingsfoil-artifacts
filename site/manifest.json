@@ -2,7 +2,7 @@
  {
   "path": "/index.html",
   "title": "Kingsfoil Artifacts",
-  "description": "Library homepage generated from catalog.json: series shelves, search, facet filters, technique atlas.",
+  "description": "Library homepage generated from catalog.json: series tabs, search, project filter, one shelf per series.",
   "date": "2026-11-11"
  },
  {
@@ -315,6 +315,30 @@
   "path": "/vfx-grass-sandbox.html",
   "title": "Top-down pixel grass Sandbox (playable)",
   "description": "Playable companion to the study.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/browse.html",
+  "title": "Techniques and all pages",
+  "description": "Technique atlas and the sortable list of every page, generated from catalog.json.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/nav.json",
+  "title": "Navigation data",
+  "description": "Per-page series, previous/next and study/sandbox links, generated from catalog.json and read by nav.js.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/nav.js",
+  "title": "Shared top bar",
+  "description": "Adds the site bar (home, series, previous/next, study/sandbox switch) and the end-of-study links to every page.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/favicon.svg",
+  "title": "Favicon",
+  "description": "The Kingsfoil mark for the browser tab. Linked by index.html and browse.html, added to every other page by nav.js.",
   "date": "2026-11-11"
  }
 ]

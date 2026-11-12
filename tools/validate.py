@@ -7,8 +7,9 @@
   python tools/validate.py --since=REF  browser pass only for site/*.html pages changed since REF (CI uses the PR base)
 
 Checks
-  1. catalog.json / taxonomy.json valid, index.html + manifest.json up to date   (tools/build_index.py --check)
-  2. every study folder matches the catalog (ids, pages, reports, sandboxes); every study follows its format (formats.yaml)
+  1. catalog.json / taxonomy.json valid; index.html, browse.html, nav.json, manifest.json up to date   (tools/build_index.py --check)
+  2. every study folder matches the catalog (ids, pages, reports, sandboxes); every page loads the shared site bar (nav.js);
+     every study follows its format (formats.yaml)
   3. manifest.json lists exactly the files in site/
   4. every local link and image in every page resolves
   5. no external images (img/video/audio/source/CSS url) — pages must be self-contained
@@ -63,6 +64,11 @@ for i in cat["items"]:
 for i in cat["items"]:
     if i["type"] == "sandbox" and i.get("pair") in items and i.get("series") != items[i["pair"]].get("series"):
         fail(f"sandbox '{i['id']}': series must match its study '{i['pair']}'")
+for i in cat["items"]:
+    pg = SITE / i["path"].lstrip("/")
+    if pg.exists() and studykit.NAV_TAG not in pg.read_text():
+        fail(f"{i['id']}: {pg.name} does not load the shared site bar. Add {studykit.NAV_TAG} before </body>"
+             + (" in the sandbox source" if i["type"] == "sandbox" else " (recipe pages get it from `python -m studykit build`)"))
 print(f"{len(studies)} studies checked")
 
 # 2b ───────────────────────────────────────────

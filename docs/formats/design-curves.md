@@ -11,7 +11,8 @@ what worked before, and judged by taste. The method below replaces the generic a
 ## Pages
 
 - Study page `{id}.html`, built by `build.py` from `report.md`, `figs*.html` and `demos*.js`.
-- Curve lab `{id}-lab.html`, optional: a single hand-written file (`sandbox.html`), no external assets. It
+- Curve lab `{id}-lab.html`, optional: a single hand-written file (`sandbox.html`), no external assets
+  (the one exception is the shared top bar: keep `<script src="nav.js" defer></script>` before `</body>`). It
   plots the study's Curve Spec (§11) with sliders for the tuning knobs, so the team can tune by feel before
   touching the game. Thumbnail: `thumb: from: page` or `from: sandbox` with the lab's main canvas.
 

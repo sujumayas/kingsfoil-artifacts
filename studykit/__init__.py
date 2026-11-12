@@ -119,6 +119,22 @@ class Study:
         raise ValueError(style)
 
 
+NAV_TAG = '<script src="nav.js" defer></script>'
+
+
+def add_site_nav(path: pathlib.Path) -> bool:
+    """Make sure a page loads the shared site bar (site/nav.js): one script tag before </body>.
+    Recipe pages get it from `studykit build`; sandbox sources and static pages carry the tag themselves."""
+    text = path.read_text()
+    if NAV_TAG in text:
+        return False
+    head, sep, tail = text.rpartition("</body>")
+    if not sep:
+        raise ValueError(f"{path}: no </body> to put the site bar before")
+    path.write_text(head + NAV_TAG + "\n" + sep + tail)
+    return True
+
+
 def load(study_id: str) -> Study:
     d = STUDIES / study_id
     cfg = yaml.safe_load((d / "study.yaml").read_text())

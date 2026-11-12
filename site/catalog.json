@@ -6,8 +6,9 @@
   "intro": "Research studies and playable prototypes for Kingsfoil Studios' games: Asterion Online (a Tibia-like MMORPG), a Hero Defense RTS and more."
  },
  "start": {
+  "show": false,
   "id": "vfx-snow",
-  "why": "New here? The Tiny VFX series is the core of the library. Its eight studies each come with a playable sandbox. Start with #1 Snow."
+  "why": "New here? The Tiny VFX series is the core of the library. Every study comes with a playable sandbox. Start with #1 Snow."
  },
  "series": [
   {
@@ -337,7 +338,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "trees"
@@ -402,7 +403,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "light"
@@ -761,7 +762,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "trees"
@@ -819,7 +820,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "light"
@@ -1114,7 +1115,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "fire"
@@ -1179,7 +1180,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "fire"
@@ -1237,7 +1238,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "water"
@@ -1303,7 +1304,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "water"
@@ -1362,7 +1363,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "fog"
@@ -1428,7 +1429,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "fog"
@@ -1856,7 +1857,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "grass"
@@ -1922,7 +1923,7 @@
      "asterion-online"
     ],
     "domain": [
-     "rendering"
+     "vfx"
     ],
     "concept": [
      "grass"
