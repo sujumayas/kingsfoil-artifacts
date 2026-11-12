@@ -808,7 +808,8 @@ function drawHUD(){
   if(JUICE<=0){const s='JUICE 0%';txt(F2,s,317-textW(F2,s),18,P.s2,2,P.ink);}
   const x0=106,y0=162;
   for(let i=0;i<6;i++){const sk=SK[i],x=x0+i*18;R(x,y0,17,17,HX('ink'));R(x+1,y0+1,15,15,HX('dk'));B(ICON[i],x+2,y0+2);
-    let rem=0,tot=1;const cdr=sk.cd?(CCD[sk.k]||0)-now:0,gr=sk.gcd?CGCD-now:0;if(cdr>gr){rem=cdr;tot=sk.cd;}else if(gr>0){rem=gr;tot=GCDLEN;}
+    let rem=0,tot=1;const cdr=sk.cd?(CCD[sk.k]||0)-now:0,grp=GRP&&sk.grp?(CCD['g_'+sk.grp]||0)-now:0,gr=sk.gcd?CGCD-now:0; // the sweep shows whichever lock ends last: own cooldown, spell group or global
+    if(gr>rem){rem=gr;tot=GCDLEN;}if(grp>rem){rem=grp;tot=TUNING.groups[sk.grp];}if(cdr>rem){rem=cdr;tot=sk.cd;}
     if(rem>0)B(SWEEP[Math.max(0,Math.min(15,Math.floor((1-rem/tot)*16)))],x+1,y0+1);
     if(sk.tgt&&TARGET&&dpx(PL,TARGET)>sk.range+TARGET.r+4){ctx.globalAlpha=.35;R(x+1,y0+1,15,15,HX('r1'));ctx.globalAlpha=1;}
     if(QUEUE&&QUEUE.i===i&&(FC>>2)&1)sqFrame(x-1,y0-1,19,19,HX('yl'));else if(AIM&&AIM.i===i)sqFrame(x-1,y0-1,19,19,HX('wh'));

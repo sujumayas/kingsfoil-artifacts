@@ -72,7 +72,7 @@ How to use this file:
   decal and hitbox are round (`:436`, `:520`). Fix: drop the factor.
 - [x] **12.** `P3` WHIFF shows and sounds twice on a near miss with prediction on (`:678` and `:433`). Fix: skip
   `clWhiff` for own projectiles when `PRED!=='wait'`.
-- [ ] **13.** `P5` Tibia classic preset. The hotbar shows skills ready while the 2 s group cooldown still blocks
+- [x] **13.** `P5` Tibia classic preset. The hotbar shows skills ready while the 2 s group cooldown still blocks
   them. `:807` ignores `CCD['g_'+sk.grp]`.
 - [ ] **14.** `P4` (taste) The brawl jams against the back wall and right edge within 10 s. Goblins spawn on the
   edge strips (`:366`, `:406`) and ally slot radius exceeds the goblin stand-off (`:451`, `:454`).
