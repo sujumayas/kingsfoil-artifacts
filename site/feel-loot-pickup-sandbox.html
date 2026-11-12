@@ -473,7 +473,7 @@ function placeItems(corpse,roll,T,delay,boss,contrib){const L=roll.items;
       it.pickAt=T+delay+ro*stag+TUNING.drop.arcMs+TUNING.drop.pickDelayMs;
       later(T+delay,()=>{if(SV.corpses.has(corpse.id)||true)svAddGround(it,T+delay,0,1);});});
     return;}
-  for(const i of list){if(corpse.items.length>=24)break;const it=Object.assign({id:++SIDN,def:i.def,tier:i.tier,n:i.n,contents:i.contents,x:corpse.x,y:corpse.y,cont:corpse.id,spawnT:T,despawnAt:corpse.rotAt[2],origOwner:roll.owner,pickAt:T},own);if(rrSet&&!it.personal){it.owner=rrSet[(SV.rr++)%rrSet.length];it.tiers=[[T+O.corpseS*1000,[it.owner]],[T+O.helperS*1000,corpse.tiers?corpse.tiers[1][1]:[it.owner]]];}SV.items.set(it.id,it);corpse.items.push(it.id);}}
+  for(const i of list){if(corpse.items.length>=24)break;const it=Object.assign({id:++SIDN,def:i.def,tier:i.tier,n:i.n,contents:i.contents,x:corpse.x,y:corpse.y,cont:corpse.id,spawnT:T,despawnAt:corpse.rotAt[2],origOwner:roll.owner,pickAt:T},own);if(rrSet&&!it.personal){it.owner=rrSet[(SV.rr++)%rrSet.length];const lt=corpse.tiers&&corpse.tiers[corpse.tiers.length-1];it.tiers=[[T+O.corpseS*1000,[it.owner]],lt?[lt[0],lt[1]]:[T+O.helperS*1000,[it.owner]]];}SV.items.set(it.id,it);corpse.items.push(it.id);}}
 const score=i=>i.def===0?0.5:ITEMS[i.def].junk?0:i.tier+1;
 function bagAdd(p,i){if(ITEMS[i.def].gold){p.bag.gold+=i.n;return true;}if(p===PL){if(ITEMS[i.def].k==='pack'){if(PL.bag.list.length+i.contents.length>SLOTS)return false;for(const c of i.contents)PL.bag.list.push(c);return true;}if(PL.bag.list.length>=SLOTS)return false;}p.bag.list.push({def:i.def,tier:i.tier,n:i.n});return true;}
 // ---------- server: pickup actions (one logic thread; each tick runs its requests in the rotating rank) ----------

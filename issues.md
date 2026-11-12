@@ -130,9 +130,12 @@ How to use this file:
 
 ## feel-loot-pickup
 
-- [ ] **23.** `P1` Crash. PvP plus Round robin plus a container corpse style (the "Tibia classic" preset, or
+- [x] **23.** `P1` Crash. PvP plus Round robin plus a container corpse style (the "Tibia classic" preset, or
   "Bosses and deaths spill" off) freezes the sandbox about 5 s in. `corpse.tiers[1]` is undefined for a PvP
   kill (`:476`, tiers replaced at `:437`). Fix: `corpse.tiers&&corpse.tiers[1]?corpse.tiers[1][1]:[it.owner]`.
+  Done: the second ownership stage of a round robin item is the corpse's last tier, not tiers[1]. A goblin
+  corpse still gives the owner 15 s and the helpers until 20 s. A PvP corpse gives the owner 15 s, then the
+  priority group until 60 s, which matches the corpse's own timer.
 - [ ] **24.** `P3` "Clear items" cancels every pending respawn, including your own. `SV.pend.length=0` (`:904`)
   wipes the shared server timer list. Fix: tag rain timers and remove only those.
 - [ ] **25.** `P4` Legendary beam is upside down. Solid at the top, fading to nothing at the item (`:349` to
