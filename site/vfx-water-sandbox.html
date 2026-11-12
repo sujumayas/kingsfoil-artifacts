@@ -41,7 +41,7 @@ code{font:13px var(--mono);color:var(--cool)}
 </header>
 <main>
   <div class="stage"><canvas id="c" width="320" height="180" aria-label="Water simulation"></canvas><div class="hud" id="hud">loading</div></div>
-  <p class="keys">Walk with the arrows or WASD, or tap where the walker should go. Pick a tool and click the water. Keys: <b>1-5</b> tools, <b>T</b> tide auto, <b>V</b> next view, <b>Space</b> pause. The tide runs on a 2 minute clock (illustrative) and only its byte goes over the wire. With the rod, click the water to cast and click again when the bobber dips.</p>
+  <p class="keys">Walk with the arrows or WASD, or tap where the walker should go. Walk into the sea or the river to wade, and keep going to swim. <b>Deep water blocks</b> turns deep water into a wall, the Tibia rule. Pick a tool and click the water. Keys: <b>1-5</b> tools, <b>T</b> tide auto, <b>V</b> next view, <b>Space</b> pause. The tide runs on a 2 minute clock (illustrative) and only its byte goes over the wire. With the rod, click the water to cast and click again when the bobber dips.</p>
   <div class="controls">
     <div class="group"><h3>Tools</h3>
       <div class="btns" id="tools"><button data-t="walk" class="on"><kbd>1</kbd>Walk</button><button data-t="stone"><kbd>2</kbd>Stone</button><button data-t="log"><kbd>3</kbd>Log</button><button data-t="rod"><kbd>4</kbd>Fishing rod</button><button data-t="boat"><kbd>5</kbd>Boat</button></div>
@@ -51,7 +51,7 @@ code{font:13px var(--mono);color:var(--cool)}
       <div class="btns" style="margin-top:6px"><button id="sync">Sync tile phase</button><button id="caust" class="on">Caustics</button><button id="refl" class="on">Reflections</button></div>
     </div>
     <div class="group"><h3>Rules and light</h3>
-      <div class="btns"><button id="deep" class="on">Deep water blocks</button><button id="hf">Pond heightfield</button></div>
+      <div class="btns"><button id="deep" title="Tibia rule: deep water is a wall. Off: the walker swims.">Deep water blocks</button><button id="hf">Pond heightfield</button></div>
       <div class="btns" id="light" style="margin-top:6px"><button data-l="day" class="on">Day</button><button data-l="dusk">Dusk</button><button data-l="night">Night</button></div>
     </div>
     <div class="group"><h3>Tide</h3>
@@ -297,7 +297,7 @@ function splash(x,y,size){const pond=inPondHF(x,y);if(pond)hfPoke(x,y,size*1.6);
 
 // ---------- entities ----------
 const wk={x:250,y:96,dir:0,mv:false,at:0,st:'land',stepT:0,wakeT:0,tx:0,ty:0,hasT:false};
-const keys={l:0,r:0,u:0,d:0};let deepBlocks=true;
+const keys={l:0,r:0,u:0,d:0};let deepBlocks=false;
 const terr=(x,y)=>{const X=x|0,Y=y|0;if(X<2||Y<12||X>=W-2||Y>=H)return 'block';const i=Y*W+X;if(DECK[i])return 'land';if(BLOCK[i]||BODY[i]===4)return 'block';if(!WATER[i])return 'land';const k=KIND[CELL[i]];return (k===2||k===3||k===5)?'deep':'wade';};
 function updWalker(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
   if(ix||iy)wk.hasT=false;else if(wk.hasT){const dx=wk.tx-wk.x,dy=wk.ty-wk.y,d=Math.hypot(dx,dy);if(d<1.2)wk.hasT=false;else{ix=dx/d;iy=dy/d;}}
@@ -305,9 +305,14 @@ function updWalker(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy-
   const m=Math.hypot(ix,iy);let vx=0,vy=0;
   if(m>0){ix/=m;iy/=m;const sp=42*(wk.st==='wade'?.6:wk.st==='swim'?.45:1);vx=ix*sp;vy=iy*sp;wk.dir=Math.abs(ix)>Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);}
   if(wk.st!=='land'){const i=(wk.y|0)*W+(wk.x|0),k=wk.st==='swim'?.8:.45;vx+=PFX[i]*k;vy+=PFY[i]*k;}
-  const ok=(x,y)=>{const t=terr(x,y);return !(t==='block'||(t==='deep'&&deepBlocks&&wk.st!=='swim'));};
+  // deep water rule: deep water is a wall. A walker the tide lifted into deep water may only move to cells that are no
+  // farther from the shore, so it can get out and never gets locked in
+  const sd0=SD[CELL[(wk.y|0)*W+(wk.x|0)]];
+  const ok=(x,y)=>{const t=terr(x,y);return !(t==='block'||(t==='deep'&&deepBlocks&&(wk.st!=='swim'||SD[CELL[(y|0)*W+(x|0)]]>sd0)));};
   const ox=wk.x,oy=wk.y,nx=wk.x+vx*dt,ny=wk.y+vy*dt;
-  if(ok(nx,ny)){wk.x=nx;wk.y=ny;}else if(ok(nx,wk.y))wk.x=nx;else if(ok(wk.x,ny))wk.y=ny;else if(wk.hasT){wk.hasT=false;if(deepBlocks&&terr(nx,ny)==='deep')msg('Deep water blocks the way (Tibia rule). Toggle it to swim.');}
+  if(ok(nx,ny)){wk.x=nx;wk.y=ny;}else if(ok(nx,wk.y))wk.x=nx;else if(ok(wk.x,ny))wk.y=ny;else wk.hasT=false;
+  // say why when the deep water rule refused the move, for key input as well as a tap target
+  if(m>0&&deepBlocks&&!ok(nx,ny)&&terr(nx,ny)==='deep')msg(wk.st==='swim'?'Deep water blocks is on: you can only swim back to shore. Turn it off to swim out.':'Deep water blocks is on (Tibia rule). Turn it off to swim.');
   wk.mv=m>0;if(wk.mv)wk.at+=dt;
   const rvx=dt?(wk.x-ox)/dt:0,rvy=dt?(wk.y-oy)/dt:0,sp=Math.hypot(rvx,rvy);
   if(wk.st!=='land'&&sp>3){wk.stepT+=dt;wk.wakeT+=dt;const pond=inPondHF(wk.x,wk.y);

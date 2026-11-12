@@ -504,6 +504,17 @@ How to use this file:
   Done: `walkSpr()` looked the sprite up with `'durl'[wk.dir]`, while `wk.dir` is 0 down, 1 up, 2 left,
   3 right. The string is now `'dulr'`. Sprite used for left, right, up and down: r, l, u, d before and
   l, r, u, d after. The fishing line already read 2 as left.
+- [x] **183.** `P3` (found by the owner in review of PR #13) Walking into the sea stops at an unseen
+  wall and nothing says why. "Deep water blocks" is on at load, its message only shows for a tap
+  target, and a walker the rising tide lifts into deep water can then swim anywhere, so the rule looks
+  random.
+  Done: "Deep water blocks" is off at load, so walking into the sea wades and then swims. The text
+  under the canvas says so and names the rule. With the rule on, the HUD message also shows for key
+  input (0 of 600 frames before, 538 or more after, walking south, east and south-east at tide 128). A
+  walker in deep water with the rule on may only move to cells no farther from shore: after a tide lift
+  at shore distance 4, pushing out to sea for 10 s reached distance 7 before and stays at 4 after, and
+  the walk back to land still works. Default walk into the sea at tides 40, 128 and 220: never swam
+  before, swims within 43 to 92 frames after.
 
 ## vfx-fire
 
