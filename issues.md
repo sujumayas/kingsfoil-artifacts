@@ -207,8 +207,11 @@ How to use this file:
   Done: the name is drawn in full. When it is wider than the 38 px left of ALL, the title bar grows to the
   left by the difference, 9 px for GOBLIN CHIEF. The slots, ALL and X stay where they were, so the click
   targets did not move. Checked in a screenshot.
-- [ ] **38.** `P6` Preset button stays highlighted after changing party mode, pickup mode, tiers, magnet radius
+- [x] **38.** `P6` Preset button stays highlighted after changing party mode, pickup mode, tiers, magnet radius
   or filter (`:878` to `:883`).
+  Done: party loot, pickup mode, tier shapes, magnet radius, label filter and other players' drops now clear
+  the highlight, as drop style, effects and juice already did. The last one was not in the review, but
+  presets set it too. X-ray view and server tick are not part of a preset and leave it lit.
 - [ ] **39.** `P6` Holding B spawns a boss drop on every key repeat (`:969`).
 - [ ] **40.** `P6` Phone control buttons are 30 px tall.
 - [ ] **41.** `P3` (suspected) Lowering the Allied players slider removes live goblins with `gs.pop()` (`:377`),

@@ -890,8 +890,8 @@ const fxSync=()=>document.querySelectorAll('#fx button').forEach(b=>b.classList.
 document.querySelectorAll('#fx button').forEach(b=>b.addEventListener('click',()=>{FX[b.dataset.f]=FX[b.dataset.f]?0:1;fxSync();clearPreset();}));
 const setStyle=v=>{STYLE=v;mark('#style',v);CL.open=null;},setParty=v=>{PARTY=v;mark('#party',v);},setLod=v=>{LOD=v;mark('#lod',v);},setPred=v=>{PRED=v;mark('#pred',v);},setTick=v=>{TICK=+v;SV.next=Math.ceil(now/TICK)*TICK;mark('#tick',v);},setFilter=v=>{FILTER=v;mark('#filter',v);};
 const setMode=v=>{MODE=v;mark('#mode',v);syncPop();},setView=v=>{VIEW=v;mark('#views',v);};
-group('#style',v=>{setStyle(v);clearPreset();});group('#party',setParty);group('#lod',setLod);group('#pred',setPred);group('#tick',setTick);group('#mode',setMode);group('#views',setView);group('#filter',setFilter);
-const syncNinja=tog('ninja',()=>NINJA,v=>{NINJA=v;syncPop();});const syncCaps=tog('caps',()=>CAPS,v=>CAPS=v);const syncRm=tog('rmotion',()=>RMOTION,v=>RMOTION=v);const syncCb=tog('cblind',()=>CBLIND,v=>CBLIND=v);const syncNaive=tog('naive',()=>NAIVE,v=>NAIVE=v);
+group('#style',v=>{setStyle(v);clearPreset();});group('#party',v=>{setParty(v);clearPreset();});group('#lod',v=>{setLod(v);clearPreset();});group('#pred',v=>{setPred(v);clearPreset();});group('#tick',setTick);group('#mode',setMode);group('#views',setView);group('#filter',v=>{setFilter(v);clearPreset();});
+const syncNinja=tog('ninja',()=>NINJA,v=>{NINJA=v;syncPop();});const syncCaps=tog('caps',()=>CAPS,v=>CAPS=v);const syncRm=tog('rmotion',()=>RMOTION,v=>RMOTION=v);const syncCb=tog('cblind',()=>CBLIND,v=>{CBLIND=v;clearPreset();});const syncNaive=tog('naive',()=>NAIVE,v=>NAIVE=v);
 tog('skull',()=>SKULL,v=>SKULL=v);tog('lowlvl',()=>LOWLVL,v=>LOWLVL=v);const syncAmulet=tog('amulet',()=>AMULET,v=>AMULET=v);const syncHybrid=tog('hybrid',()=>HYBRID,v=>{HYBRID=v;clearPreset();});
 const syncAlt=tog('altb',()=>ALTT,v=>ALTT=v);$('tAlt').addEventListener('click',()=>{ALTT=!ALTT;syncAlt();});
 const syncPause=tog('pause',()=>paused,v=>{if(frozenShow)exitShow();else paused=v;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
@@ -904,7 +904,7 @@ function preset(k){const p=PRESETS[k];for(const f in FX)FX[f]=p.fx[f]===0?0:1;fx
   document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.p===k));}
 function clearPreset(){document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));}
 document.querySelectorAll('#presets button').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.p)));
-$('juice').addEventListener('input',clearPreset);
+$('juice').addEventListener('input',clearPreset);$('mag').addEventListener('input',clearPreset);
 // ---------- stress, boss, race, reset ----------
 function bossDrop(x,y){const b=mkEnt('boss',x,y,{team:'mob',sheet:SPR.golem,name:'STONE WARDEN',hp:1,mhp:1});b.taken=new Map();b.heal=new Map();b.dmg.set(PL.id,900);b.taken.set(PL.id,300);b.heal.set(PL.id,100);b.first=PL.id;for(const a of ENTS)if(a.kind==='ally'){b.dmg.set(a.id,100+ri(300));b.taken.set(a.id,ri(400));b.heal.set(a.id,ri(300));}
   ENTS.splice(ENTS.indexOf(b),1);svKill(b,now,true);for(const a of ENTS)if(a.kind==='ally')a.gather={x,y,until:now+8000};}
