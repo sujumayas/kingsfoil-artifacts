@@ -427,7 +427,7 @@ function render(){
     if(a<=2){for(let dy=-11;dy<=11;dy++)for(let dx=-11;dx<=11;dx++)if(dx*dx+dy*dy<=121)putE(e.x+dx,e.y-2+dy,WHITE);continue;}
     if(a<9){const R=9-a*.5;for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const r=(dx*dx+dy*dy)/(R*R);if(r>1)continue;putE(e.x+dx,e.y-2+dy,r<.25?PYEL:r<.6?YEL:ORA);}}
     const R=4+a*.75,col=a<6?WHITE:a<11?PYEL:a<16?ORA:a<21?RED:DRED;
-    for(let k=0;k<64;k++){const an=k/64*6.283,x=e.x+Math.cos(an)*R,y=e.y-2+Math.sin(an)*R*.6;if(a>18&&(BY[((y|0)&3)*4+((x|0)&3)]>=(26-a)*2))continue;putE(x,y,col);}}
+    for(let k=0;k<64;k++){const an=k/64*6.283,x=e.x+Math.cos(an)*R,y=e.y-2+Math.sin(an)*R*.6;if(a>18&&(BAY[((y|0)&3)*4+((x|0)&3)]>=(26-a)*2))continue;putE(x,y,col);}}
   // rain
   if(rain){const sl=windX*windV*.05;for(let k=0;k<150;k++){const sp=200+hf(k,3,99)*90,y=(hf(k,2,99)*(H+10)+t*sp)%(H+10)-5,x=((hf(k,1,99)*W+t*sp*sl)%W+W)%W;for(let q=0;q<3;q++)putL(x+sl*q,y+q,q===2?WHITE:S1);}}
   // damage numbers

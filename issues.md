@@ -542,7 +542,10 @@ How to use this file:
   them. Test: burn each of the 38 ground cells of row 22 alone and count heat pixels above it after 40
   buffer steps. Cells with no flame: 20 before, 0 after. Mean heat pixels: 28.8 before, 122.3 after
   (row 21 has 97.8).
-- [ ] **104.** `P4` Explosion ring fades in vertical stripes. It reads `BY` where it should read `BAY` (`:418`).
+- [x] **104.** `P4` Explosion ring fades in vertical stripes. It reads `BY` where it should read `BAY` (`:418`).
+  Done: the ring fade reads `BAY[]`. Ring pixels at explosion age 20, 22 and 24: 64, 29 and 28 before,
+  with columns x mod 4 = 1 and 3 empty from age 22 on. After: 48, 29 and 13, spread over all four
+  columns at age 22 and thinned in rows and columns alike at age 24.
 - [ ] **105.** `P6` Light from the burning sheep and the fireball hops 8 px, one cell at a time (`:350`).
 - [ ] **106.** `P6` Fuel view calls `px('...')` three times per pixel (`:443`), 17.4 ms median at 6x. Hoist the
   constants.
