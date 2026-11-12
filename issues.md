@@ -583,8 +583,11 @@ How to use this file:
 
 ## vfx-fog
 
-- [ ] **108.** `P4` Alpha blend mode paints full-brightness fog over explored ground that should be dimmed
+- [x] **108.** `P4` Alpha blend mode paints full-brightness fog over explored ground that should be dimmed
   (`:361`, `:390`).
+  Done: the alpha resolve blends fog into the lit colour, then applies the explored dim. Mean luminance of
+  explored, unseen ground under thick fog at noon: 167.4 before against 96.6 in palette steps, 103.1 after.
+  Visible ground stays at 170.
 - [ ] **109.** `P4` Lamp halos and fog holes are centred at `L.y-9` for every lamp kind (`:343`, `:277`). The cave
   torch halo sits 3 px above its flame and the tower beacon halo is off the canvas.
 - [ ] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees

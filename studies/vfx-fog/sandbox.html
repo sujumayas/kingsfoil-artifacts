@@ -388,7 +388,11 @@ function render(){const now=performance.now;let t0=now.call(performance),t;
   atmosPass();t=now.call(performance);let dAt=t-t0;t0=t;
   fowPass();t=now.call(performance);const dFow=t-t0;t0=t;
   if(mode!=='alpha'){for(let i=0;i<NP;i++)out[i]=LUT[IDX[i]];}
-  else{const f=TP.f,fr=f[0]|0,fg=f[1]|0,fb=f[2]|0;for(let i=0;i<NP;i++){const c=LUT[IDX[i]],a=AL[i];if(!a){out[i]=c;continue;}const r=c&255,g=(c>>8)&255,b=(c>>16)&255;out[i]=(255<<24|(b+((fb-b)*a>>8))<<16|(g+((fg-g)*a>>8))<<8|(r+((fr-r)*a>>8)))>>>0;}}
+  else{const f=TP.f,fr=f[0]|0,fg=f[1]|0,fb=f[2]|0;for(let i=0;i<NP;i++){const ix=IDX[i],a=AL[i];if(!a){out[i]=LUT[ix];continue;}
+      // blend the fog into the lit colour first, then dim explored ground the way the palette table does
+      const c=LUT[ix&~EXB];let r=c&255,g=(c>>8)&255,b=(c>>16)&255;r+=(fr-r)*a>>8;g+=(fg-g)*a>>8;b+=(fb-b)*a>>8;
+      if(ix&EXB){const gr=r*.3+g*.59+b*.11;r=(r+(gr-r)*.7)*.52+10;g=(g+(gr-g)*.7)*.52+12;b=(b+(gr-b)*.7)*.56+22;}
+      out[i]=(255<<24|b<<16|g<<8|r)>>>0;}}
   t=now.call(performance);const dRes=t-t0;t0=t;
   if(rays==='blur'){radialBlur();t=now.call(performance);dAt+=t-t0;t0=t;}
   ema('draw',dDraw+dDr2+dRes);ema('tex',dTex);ema('pass',dPass);ema('clouds',dCl);ema('atmos',dAt);ema('fow',dFow);ema('field',fieldMsAcc);fieldMsAcc=0;
