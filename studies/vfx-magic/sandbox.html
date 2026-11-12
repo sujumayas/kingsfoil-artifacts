@@ -283,7 +283,7 @@ function runParts(L,dt){const s=PS0[L],e=PHI[L],tv=view==='tiers';let hi=s;
     else if(k===4){x+=PVX[i]*dt;y+=PVY[i]*dt;c=u>.6?rp[5]:u>.3?rp[4]:rp[3];fp((x|0)-Math.sign(PVX[i]|0),(y|0)-Math.sign(PVY[i]|0),u>.5?rp[3]:rp[2]);}
     else if(k===5){x+=PVX[i]*dt;y+=PVY[i]*dt;const X=x|0,Y=y|0;if((((l*10)|0)+i&3)===0&&u>.2){fp(X-1,Y,rp[4]);fp(X+1,Y,rp[4]);fp(X,Y-1,rp[4]);fp(X,Y+1,rp[4]);c=rp[5];}else c=u>.3?rp[4]:rp[3];}
     else if(k===6){x+=PVX[i]*dt;y+=PVY[i]*dt*u;if(u<.4)cOp=Math.min(cOp,8);c=SMK[(u*3.99)|0];}
-    else{x+=(rnd()-.5)*4;y+=(rnd()-.5)*4;c=((l*30)|0)&1?rp[5]:rp[3];}
+    else{for(let n=((l+dt)*60|0)-(l*60|0);n>0;n--){x+=(rnd()-.5)*4;y+=(rnd()-.5)*4;}c=((l*30)|0)&1?rp[5]:rp[3];} // one hop per 1/60 s of its own life, none while paused
     PX[i]=x;PY[i]=y;fp(x|0,y|0,c);}
   PHI[L]=hi;cOp=16;cTint=0;}
 

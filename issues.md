@@ -342,7 +342,10 @@ How to use this file:
 - [x] **65.** `P4` Holding Beam while paused draws it to the top-left corner (`:396`, `:483`).
   Done: the aim and ray code is now beamRay(), called by the step and once by beamStart. Beam started while
   paused with a dummy targeted at 200,67: end point 0,0 before, 196,67 after.
-- [ ] **66.** `P4` Shock particles keep jittering while paused and at full speed in slow motion (`:286`).
+- [x] **66.** `P4` Shock particles keep jittering while paused and at full speed in slow motion (`:286`).
+  Done: a zap particle hops once per 1/60 s of its own life. Hops in 30 paused frames: 30 before, 0 after.
+  Per real second in Slow motion: 60 before, 15 after. Per sim second at 120 Hz: 120 before, 61 after. 60 Hz
+  is unchanged at 60.
 - [ ] **67.** `P3` Each tap of Beam while paused stacks another beam effect (`:396`, `:413`).
 - [ ] **68.** `P3` The Beam button drops the beam while held if you tap, then press again within 600 ms. A stale
   timer fires (`:717`).
