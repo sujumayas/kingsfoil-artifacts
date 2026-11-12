@@ -16,7 +16,7 @@ How to use this file:
 
 ## Shared across sandboxes
 
-- [ ] **1.** `P1` feel-combat-juice. Cooldown sweep crash. `SWEEP[Math.min(15,Math.floor((1-rem/tot)*16))]` (`:808`)
+- [x] **1.** `P1` feel-combat-juice. Cooldown sweep crash. `SWEEP[Math.min(15,Math.floor((1-rem/tot)*16))]` (`:808`)
   gets index -1 when `(now+cd)-now` rounds above `cd`. It happens when a cast and the next render share the same
   clock value: a queued cast fired inside `step()` (`:866`), or any cast while paused. The rounding only occurs
   when `now+cd` crosses a power of two, so the risky moments are just before 4.1 s, 8.2 s, 16.4 s, 32.8 s and
