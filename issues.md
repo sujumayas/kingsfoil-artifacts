@@ -68,7 +68,7 @@ How to use this file:
   Done: the swing and its smear follow the action's aim in 16 steps of 22.5°. Smears are baked on first
   use and cached, 96 small canvases at most. The lance throw pose uses the exact aim angle. Card 4 now
   says 16 steps.
-- [ ] **11.** `P4` Quake aim indicator and range ring are squashed by `*.75` (`:759`, impact ring `:771`). The
+- [x] **11.** `P4` Quake aim indicator and range ring are squashed by `*.75` (`:759`, impact ring `:771`). The
   decal and hitbox are round (`:436`, `:520`). Fix: drop the factor.
 - [ ] **12.** `P3` WHIFF shows and sounds twice on a near miss with prediction on (`:678` and `:433`). Fix: skip
   `clWhiff` for own projectiles when `PRED!=='wait'`.
