@@ -666,7 +666,7 @@ const actDur=a=>a.wind+(a.active||0)+(a.rec||0);
 const phase=a=>a.t<a.wind?'wind':a.t<a.wind+(a.active||0)?'active':a.t<actDur(a)?'rec':'done';
 function tryMove(e,nx,ny){if(!solidAt(nx,e.py))e.px=nx;if(!solidAt(e.px,ny))e.py=ny;}
 function updPlayer(dt,dtv){const s=dt/1000;
-  if(PL.dead){if(PL.dieT>=0&&PL.dieT<999)PL.dieT+=dtv;return;}
+  if(PL.dead){if(PL.stop<=0&&PL.dieT>=0&&PL.dieT<999)PL.dieT+=dtv;return;}
   if(PL.push){const p=PL.push;p.t+=dt;const k=Math.min(1,p.t/p.dur),tx=p.dx*k,ty=p.dy*k;tryMove(PL,PL.px+tx-p.ax,PL.py+ty-p.ay);p.ax=tx;p.ay=ty;if(k>=1)PL.push=null;}
   let moving=false;
   if(PL.roll){const r=PL.roll;if(GSTOP<=0){const st=Math.min(dt,r.dur-r.t),v=TUNING.roll.dist/TUNING.roll.ms;tryMove(PL,PL.px+r.dx*v*st,PL.py+r.dy*v*st*.8);r.t+=dt;if((r.t/40|0)!==(r.lt|0)){r.lt=r.t/40|0;PART.push({k:'after',x:PL.px,y:PL.py,img:frameOf(PL),t:0,life:180,own:1});}}moving=true;if(r.t>=r.dur)PL.roll=null;}
@@ -701,7 +701,7 @@ function updEnts(dt,dtv){const tv=vnow-DLY();nearPlayers=0;
     const st=e.stop>0;if(st)e.stop-=dt;
     if(e!==PL){if(!st&&!e.dead){hsampA(e.H,tv,TMP2);const mv=Math.hypot(TMP2.x-e.px,TMP2.y-e.py);e.walking=mv>.04;if(e.walking){if(!e.act||phase(e.act)==='done')e.dir=dirOf(Math.atan2(TMP2.y-e.py,TMP2.x-e.px));e.walk+=dtv;}e.px=TMP2.x;e.py=TMP2.y;}
       if(e.act&&!st){e.act.t+=dtv;if(phase(e.act)==='done')e.act=null;}
-      if(e.dead&&e.dieT>=0&&e.dieT<999){e.dieT+=dtv;if(e.dieT>=TUNING.anim.corpseAt){e.dieT=999;corpse(e);if(JUICE>0)PART.push({k:'poof',x:e.px,y:bodyY(e),t:0,life:300,own:1});}}}
+      if(e.dead&&!st&&e.dieT>=0&&e.dieT<999){e.dieT+=dtv;if(e.dieT>=TUNING.anim.corpseAt){e.dieT=999;corpse(e);if(JUICE>0)PART.push({k:'poof',x:e.px,y:bodyY(e),t:0,life:300,own:1});}}}
     if(e===PL&&PL.dead&&PL.dieT>=TUNING.anim.corpseAt&&PL.dieT<999){PL.dieT=999;corpse(PL);}
     if(e.flash>0)e.flash-=dt;if(!st)e.kbt+=dtv;if(e.sq>0&&!st)e.sq-=dtv;if(e.react>0)e.react-=dtv;if(e.cast&&now>e.cast.t0+e.cast.dur)e.cast=null;}
   for(let i=CORPSES.length-1;i>=0;i--){CORPSES[i].t+=dtv;if(CORPSES[i].t>TUNING.corpseMs)CORPSES.splice(i,1);}}
@@ -738,7 +738,7 @@ let FC=0;
 function drawEnt(e){if(e.dead&&e.dieT>=999)return;const S=e.sheet,img=frameOf(e),[ox,oy]=entOffset(e),x=Math.round(e.px)-S.w/2+ox,y=Math.round(e.py)-S.h+1+oy;
   const alpha=e.kind==='ally'&&LOD==='minimal'?.6:1;if(alpha<1)ctx.globalAlpha=alpha;
   B(e.kind==='golem'?SHADOW.l:SHADOW.s,Math.round(e.px)-(e.kind==='golem'?10:6),Math.round(e.py)-2);
-  const sqk=e.sq>0&&JUICE>0?(e.sq>45&&JUICE>=.5?2:1):0;const dying=e.dead&&e.dieT>=0;
+  const sqk=e.sq>0&&JUICE>0?(e.sq>45&&JUICE>=.5?2:1):0;const dying=e.dead&&e.dieT>=0&&e.stop<=0; // a killing blow holds the struck pose for its hitstop, then the death animation starts
   const pv=PIV[e.dir]||PIV.d,wx=Math.round(e.px)+pv[0]+ox,wy=Math.round(e.py)+pv[1]+oy+sqk,wa=weaponAng(e);
   if(e.dir==='u'&&!dying)drawWeapon(e,wx,wy,wa);
   if(dying){const A=TUNING.anim;if(e.dieT<A.deathFlash)B(flashImg(img,'#ffffff'),x,y);else{const k=Math.min(1,(e.dieT-A.deathFlash)/(A.corpseAt-A.deathFlash)),w=Math.round(S.w*(1+.2*k)),h=Math.round(S.h*(1-.2*k));ctx.globalAlpha=alpha*(1-.6*k);Bs(img,0,0,S.w,S.h,Math.round(e.px)-w/2,Math.round(e.py)-h+1,w,h);ctx.globalAlpha=alpha;}}

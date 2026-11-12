@@ -96,8 +96,12 @@ How to use this file:
   `TUNING.shake.slam` is unused. (suspected)
   Done: confirmed in the code. The slam now reads TUNING.shake.slam, which is 0.6 as in the report and
   card 6.
-- [ ] **18.** `P5` Card 5 promises an 8-frame freeze on a kill, but the death flash and squash keep running
+- [x] **18.** `P5` Card 5 promises an 8-frame freeze on a kill, but the death flash and squash keep running
   during the victim's hitstop (`:691`). (suspected)
+  Done: confirmed by tracing the timers. The death clock ran through the victim's hitstop, so the corpse
+  appeared the frame the freeze ended. The clock now waits for the hitstop, and the victim holds its
+  struck pose with the hit flash until then. A kill at 100% juice takes 133 ms of freeze, then the 133 ms
+  death animation.
 - [ ] **19.** `P6` Debris ground height `gy` is never read (`:598` to `:604`), so chips bounce at chest height.
   (suspected)
 - [ ] **20.** `P6` The canvas is never cleared and the background is drawn with the shake offset (`:847`), so the
