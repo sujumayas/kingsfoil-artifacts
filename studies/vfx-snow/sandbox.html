@@ -324,8 +324,8 @@ function drawTpl(rows,map,x0,y0,flip,feetY){const h=rows.length,w=rows[0].length
   for(let c=0;c<w;c++){const ch=row[flip?w-1-c:c];if(ch==='.')continue;const x=x0+c;if(x<0||x>=W)continue;const i=y*W+x;if(O[i]>feetY)continue;IDX[i]=map[ch];SPR[i]=1;}}}
 function drawChar(c,map){const x=Math.round(c.x),y=Math.round(c.y);const fr=c.moving?[0,1,0,2][(c.anim|0)%4]:0;
   let body,legs,flip=false;if(c.dir==='down'){body=PL_FRONT;legs=LEGS_F[fr];}else if(c.dir==='up'){body=PL_BACK;legs=LEGS_F[fr];}else{body=PL_SIDE;legs=LEGS_S[fr];flip=c.dir==='left';}
-  const rows=body.concat(legs),sink=Math.min(4,(depthAt(c.x,c.y)/22)|0),bob=c.moving&&fr?1:0,vis=rows.slice(0,rows.length-sink);
-  const top=y-rows.length+1+sink-bob+(bob?1:0);
+  const rows=body.concat(legs),sink=Math.min(4,(depthAt(c.x,c.y)/22)|0),vis=rows.slice(0,rows.length-sink);
+  const top=y-rows.length+1+sink;
   // contact shadow
   for(let xx=-2;xx<=2;xx++){const px=x+xx,py=y+1;if(px>=0&&px<W&&py<H){const i=py*W+px;if(O[i]<=y&&IDX[i]<N)IDX[i]+=N;}}
   drawTpl(vis,map,x-3,top,flip,y);

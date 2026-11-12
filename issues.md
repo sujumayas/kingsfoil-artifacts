@@ -743,7 +743,9 @@ How to use this file:
   Done: the 1 px rails no longer hold snow, so the fence reads as wood with snow on the post tops. A rock's
   snow cap draws a mid-tone rim where it touches the ground. Checked in a zoomed screenshot after an instant
   fill.
-- [ ] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
+- [x] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
+  Done: `-bob+(bob?1:0)` was always 0. The term and the variable are gone, the sprite draws at the same rows
+  as before.
 - [ ] **142.** `P6` "Add snow" ignores the canopy cap of 14 (`:229`). Shovel never exposes ground.
 - [ ] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
 - [ ] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
