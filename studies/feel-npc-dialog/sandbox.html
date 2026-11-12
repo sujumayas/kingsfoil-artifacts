@@ -152,7 +152,8 @@ function drawCh(F,ch,x,y,s,fg,eff,ec){if(ch===' ')return;ST.glyphs++;ST.blits++;
 const PUN_L=10,PUN_S=5; // punctuation pauses in glyph-times
 function parseRich(src){const out=[];let cc=null,fx=0,spd=1,k0=-1,ex=null,pend=0;
   for(let i=0;i<src.length;){
-    if(src[i]==='['){const m=src.slice(i).match(/^\[(\/?)(c|wave|shake|p|spd|e)(?:=([\w.]+))?\]/);
+    if(src[i]==='['&&src[i+1]==='[')i++; // [[ is a literal bracket, see esc()
+    else if(src[i]==='['){const m=src.slice(i).match(/^\[(\/?)(c|wave|shake|p|spd|e)(?:=([\w.]+))?\]/);
       if(m){i+=m[0].length;const cl=m[1]==='/',t=m[2],v=m[3];
         if(t==='c'){if(cl){if(cc==='key'&&k0>=0){const w=out.slice(k0).map(g=>g.ch).join('').toLowerCase();for(let j=k0;j<out.length;j++)out[j].kw=w;}cc=null;k0=-1;}else{cc=v;k0=out.length;}}
         else if(t==='wave')fx=cl?0:1;else if(t==='shake')fx=cl?0:2;
@@ -576,7 +577,9 @@ const LID={};Object.keys(EN).forEach((k,i)=>LID[k]=i);
 let LANG='en';
 const str=id=>(LANG==='es'&&ES[id])||EN[id]||id;
 const fmt=(s,a)=>s.replace(/\{(\w+)\}/g,(_,k)=>a&&a[k]!=null?a[k]:'?');
-const plain=s=>s.replace(/\[[^\]]*\]/g,'');
+const plain=s=>s.replace(/\[\[|\[[^\]]*\]/g,m=>m==='[['?'[':'');
+// text typed by a player is shown as typed: every [ is doubled so parseRich never reads it as a tag
+const esc=s=>s.replace(/\[/g,'[[');
 const EXPAND=(()=>{let a=0,b=0;for(const k in ES){a+=plain(EN[k]||'').length;b+=plain(ES[k]).length;}return Math.round((b/a-1)*100);})();
 const utf8=s=>new TextEncoder().encode(s).length;
 // ---------- server: authoritative sessions, quest vars, NPC focus. Only intents go up, line ids come down ----------
@@ -731,8 +734,8 @@ function talk(n){if(D.on||TRADE.on||CARD.on)return;PL.d=dirTo(PL,n);n.face=PL;if
   intent(PL,{t:'talk',npc:n.id});if(OPTIM)openDlg(n);}
 function playerSay(text){text=text.trim().slice(0,48);if(!text)return;
   if(!limiter(PL,dist(PL,NPCS.sailor)<=3||(D.on&&D.state==='opts')?'npc':'chat')){logAdd('',LANG==='es'?'Hablas demasiado rápido.':'You are talking too fast.','sys');pop(PL.px+8,PL.py-8,'!',P.r3);sfx('deny');return;}
-  bubble(PL,text,'me',0);logAdd(PL.name,text,'me');
-  if(D.on&&D.state==='opts'){const i=D.opts.findIndex(o=>plain(str(o.id)).toLowerCase()===text.toLowerCase());if(i>=0){D.opts=null;D.state='wait';hist(PL.name,text);intent(PL,{t:'opt',n:i});return;}if(/^(bye|adi[oó]s)$/i.test(text)){leaveDlg();return;}}
+  bubble(PL,esc(text),'me',0);logAdd(PL.name,esc(text),'me');
+  if(D.on&&D.state==='opts'){const i=D.opts.findIndex(o=>plain(str(o.id)).toLowerCase()===text.toLowerCase());if(i>=0){D.opts=null;D.state='wait';hist(PL.name,esc(text));intent(PL,{t:'opt',n:i});return;}if(/^(bye|adi[oó]s)$/i.test(text)){leaveDlg();return;}}
   if(dist(PL,NPCS.sailor)<=3){const e=kwFind(text);intent(PL,{t:'kw',text});if(!D.on&&e&&e.k[0]==='hi'&&(OPTIM||styleFor(NPCS.sailor)==='chat'))openDlg(NPCS.sailor);NPCS.sailor.face=PL;}
   else netSend('up',3+utf8(text),()=>{},PL);}
 function onKw(kw){if(D.on&&D.state==='opts'){const i=D.opts.findIndex(o=>plain(str(o.id)).toLowerCase()===kw);if(i>=0){choose(i);return;}}playerSay(kw);}

@@ -293,7 +293,10 @@ How to use this file:
   Done: layout() breaks at the glyph that crosses the limit when the line has no space. 48 W's made a bubble
   287 px wide against a limit of 84, and a log line of about 290 px against 204. Now the bubble is 83 px on
   4 lines and the log line 203 px.
-- [ ] **57.** `P6` Typed text is parsed as markup. `[wave]` and `[c=key]` typed by the player take effect (`:726`).
+- [x] **57.** `P6` Typed text is parsed as markup. `[wave]` and `[c=key]` typed by the player take effect (`:726`).
+  Done: esc() doubles every [ in typed text and parseRich reads [[ as a literal bracket. "[wave]hi[/wave]
+  [c=key]job[/c] [shake]x" showed as "hi job x" with 3 animated glyphs and 3 keyword links. Now it shows as
+  typed with none. The server still gets the raw text.
 - [ ] **58.** `P6` Spanish accents are missing in capitals and in all small-font text, "MISION", "MANANA"
   (`:124`, `:125`, `:131`).
 - [ ] **59.** `P4` (taste) Canvas fillText comparison mode places vector glyphs at bitmap advances, so words
