@@ -227,11 +227,12 @@ function stamp(x,y,w,h,keep,packV,spillAhead){x|=0;y|=0;let spill=0;
   if(spill<=0)return;const per=Math.max(1,(spill/6)|0);
   for(let k=0;k<6&&spill>0;k++){const a=rnd()*6.283,r=Math.max(w,h)*.5+1.2;const px=Math.round(x+w/2-.5+Math.cos(a)*r),py=Math.round(y+h/2-.5+Math.sin(a)*r*.7);
     if(px<0||py<0||px>=W||py>=H)continue;const i=py*W+px;if(cls(S[i])===1&&P[i]<200){D[i]=Math.min(MAXD,D[i]+per);spill-=per;}}}
+const capOf=s=>s===CANOPY?14:MAXD;
 function brush(cx,cy,r,mode){const r2=r*r;let col=0;
   for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=x-cx,dy=y-cy;if(dx*dx+dy*dy>r2)continue;const i=y*W+x;if(!holds(S[i]))continue;
-    if(mode==='snow')D[i]=Math.min(MAXD,D[i]+5);else{if(D[i]>2){col+=D[i]-2;D[i]=2;}P[i]=170;}}
+    if(mode==='snow')D[i]=Math.min(capOf(S[i]),D[i]+5);else{col+=D[i];D[i]=0;P[i]=0;}}
   if(mode==='shovel'&&col>0){const per=Math.max(1,(col/40)|0);for(let k=0;k<40;k++){const a=rnd()*6.283,rr=r+1+rnd()*3;const x=Math.round(cx+Math.cos(a)*rr),y=Math.round(cy+Math.sin(a)*rr);
-    if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(holds(S[i]))D[i]=Math.min(MAXD,D[i]+per);}}}
+    if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(holds(S[i]))D[i]=Math.min(capOf(S[i]),D[i]+per);}}}
 
 function simStep(sunF){
   // 1) snowfall: random picks accepted by exposure
