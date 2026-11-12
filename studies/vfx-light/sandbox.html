@@ -326,7 +326,7 @@ function render(){const t0=performance.now();const M=roofOff?MIN:MOUT;const S=sk
     if(mode==='colormap'){const lum=.3*lr+.55*lg+.15*lb;const lev=clamp(Math.floor(lum*11+BY[i]/16),0,15);out32[i]=CMAP[idx*16+lev];continue;}
     if(mode==='banded'){const B=BY[i]/16;lr=Math.floor(lr*6+B)/6;lg=Math.floor(lg*6+B)/6;lb=Math.floor(lb*6+B)/6;}
     r*=lr;g*=lg;b*=lb;out32[i]=(255<<24)|(clamp(b|0,0,255)<<16)|(clamp(g|0,0,255)<<8)|clamp(r|0,0,255);}
-  if(view==='rays'&&carried&&carried.T.sh){const lx=carried.x,ly=carried.y;for(let a=0;a<256;a+=2){const an=a/256*2*Math.PI,d=carried.dist[a];for(let s=0;s<d;s+=2){const px=(lx+Math.cos(an)*s)|0,py=(ly+Math.sin(an)*s)|0;if(px>=0&&py>=0&&px<W&&py<H)out32[py*W+px]=(255<<24)|(80<<16)|(220<<8)|255;}}}
+  if(view==='rays'&&carried&&carried.T.sh){if(!opts.shadows)castRays(carried);const lx=carried.x,ly=carried.y;for(let a=0;a<256;a+=2){const an=a/256*2*Math.PI,d=carried.dist[a];for(let s=0;s<d;s+=2){const px=(lx+Math.cos(an)*s)|0,py=(ly+Math.sin(an)*s)|0;if(px>=0&&py>=0&&px<W&&py<H)out32[py*W+px]=(255<<24)|(80<<16)|(220<<8)|255;}}}
   ctx.putImageData(img,0,0);ms=ms*.9+(performance.now()-t0)*.1;}
 
 // ---------- loop & UI ----------
