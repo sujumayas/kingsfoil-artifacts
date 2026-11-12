@@ -89,7 +89,9 @@ How to use this file:
   while Server truth is on, with the cyan and yellow legend. Timeline lanes are 12 px apart, so the
   caption sits below the server lane. Cost rows are 8 px apart. The cost panel still covers the lower left
   pillar. It is the only legend for the outline colours, so it stays.
-- [ ] **16.** `P5` "HIT CHECKS n/S" counts frames with a check, so it tops out at 60 (`:871`). (suspected)
+- [x] **16.** `P5` "HIT CHECKS n/S" counts frames with a check, so it tops out at 60 (`:871`). (suspected)
+  Done: confirmed in the code. The log stored one entry per frame that had a check. It now stores the
+  count, and the readout sums the last second. One lance in flight reads 140 to 220 checks/s.
 - [ ] **17.** `P5` Card 6 says the warden slam adds 0.6 trauma. The code passes .5 (`:685`) and
   `TUNING.shake.slam` is unused. (suspected)
 - [ ] **18.** `P5` Card 5 promises an 8-frame freeze on a kill, but the death flash and squash keep running
