@@ -619,10 +619,13 @@ How to use this file:
 
 ## vfx-acid
 
-- [ ] **116.** `P1` Crash. Killing a small slime with the sword writes NaN into the acid buffer. The HUD reads
+- [x] **116.** `P1` Crash. Killing a small slime with the sword writes NaN into the acid buffer. The HUD reads
   "acid NaN u", and the canvas freezes once an item touches that pixel. `s.mass-=8` (`:270`) goes negative,
   `rad()` takes its square root (`:235`), `spill()` adds NaN (`:186`), and `matIdx` indexes with it (`:193`). The
   starting small slime triggers it every time. Fix: `Math.sqrt(Math.max(0,s.mass))` and clamp `si` in `matIdx`.
+  Done: `rad()` clamps the mass at 0, the sword and lime clamp it too, and `matIdx` sends a NaN stage to 0.
+  Two sword hits on the starting small slime left 1 NaN pixel and "acid NaN u" in the HUD. Now 0 NaN pixels
+  and "acid 947 u".
 - [ ] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
 - [ ] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
   legs (`:380`). Fix: test row `fl.y+4`.

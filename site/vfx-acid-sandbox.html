@@ -188,7 +188,7 @@ function spill(cx,cy,r,amt){for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x+
 
 // ---------- materials: stage colour ----------
 function matIdx(m,role,q,i){if(m===M_GOLD)return GOLD[role];const T=STG[m];
-  let si=Math.floor((1-q)*3.3+(BY[i]-7.5)/16*.9);si=si<0?0:si>3?3:si;
+  let si=Math.floor((1-q)*3.3+(BY[i]-7.5)/16*.9);si=si>0?(si>3?3:si):0; // NaN lands on 0
   if(q<.15&&HS[i]<(.15-q)*7)return -1;
   if(m===M_IRON){if(si===1&&HS[i]<.3)return IRON_PIT;if(si===2&&HS[i]<.45)return IRON_SALT;}
   return T[si][role];}
@@ -233,7 +233,7 @@ function simStep(){
 
 // ---------- slimes ----------
 function newSlime(x,y,mass){return {x,y,mass,ph:rnd()*6,vx:0,vy:0,tx:x,ty:y,t:0,dir:1,blink:0,hurt:0};}
-const rad=s=>2.5+Math.sqrt(s.mass)*1.25;
+const rad=s=>2.5+Math.sqrt(Math.max(0,s.mass))*1.25;
 function burst(s){const r=rad(s)*1.5;spill(s.x|0,(s.y-2)|0,r|0,.5+s.mass*.025);for(let k=0;k<10;k++){const a=rnd()*6.28;parts.push({k:'drop',x:s.x,y:s.y,z:4,vx:Math.cos(a)*40,vy:Math.sin(a)*24,vz:30+rnd()*30,life:2});}}
 function split(s){const m=s.mass/2;s.mass=m;const a=rnd()*6.28;const n=newSlime(s.x+Math.cos(a)*4,s.y+Math.sin(a)*3,m);n.vx=Math.cos(a)*40;n.vy=Math.sin(a)*30;s.vx=-n.vx;s.vy=-n.vy;slimes.push(n);}
 function slimeBlocked(x,y){x|=0;y|=0;if(x<2||y<2||x>=W-2||y>=H-2)return true;const i=y*W+x;return M[i]===M_WALL||(SOL[i]&&M[i]!==M_WOOD);}
@@ -268,7 +268,7 @@ function blocked(x,y){x|=0;y|=0;for(let xx=x-2;xx<=x+2;xx++){if(xx<0||xx>=W||y<2
 function feetA(){const i=(player.y|0)*W+(player.x|0);return (A[i]+A[i-1]+A[i+1])/3;}
 function attack(){if(player.dead||player.cool>0)return;player.cool=.32;player.swing=.18;const sw=player.eq.sword;if(sw.q<=0)return;
   const f={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]}[player.dir];const hx=player.x+f[0]*9,hy=player.y-4+f[1]*7;
-  for(const s of slimes.slice()){if(Math.hypot(s.x-hx,s.y-3-hy)<rad(s)+6){s.mass-=8;s.hurt=.15;sw.q=Math.max(0,sw.q-.06);s.vx+=f[0]*90;s.vy+=f[1]*70;
+  for(const s of slimes.slice()){if(Math.hypot(s.x-hx,s.y-3-hy)<rad(s)+6){s.mass=Math.max(0,s.mass-8);s.hurt=.15;sw.q=Math.max(0,sw.q-.06);s.vx+=f[0]*90;s.vy+=f[1]*70;
     for(let k=0;k<5;k++)parts.push({k:'drop',x:s.x,y:s.y,z:5,vx:f[0]*40+(rnd()-.5)*50,vy:f[1]*30+(rnd()-.5)*30,vz:25+rnd()*20,life:2});
     if(s.mass<5){burst(s);slimes.splice(slimes.indexOf(s),1);}else if(s.mass>=12&&slimes.length<10)split(s);}}
   for(const fl of flasks)if(fl.alive&&Math.hypot(fl.x+2-hx,fl.y+3-hy)<9)breakFlask(fl);}
@@ -395,7 +395,7 @@ function applyTool(x,y){if(tool==='acid'){for(let yy=y-3;yy<=y+3;yy++)for(let xx
     bx0=Math.min(bx0,x-4);bx1=Math.max(bx1,x+4);by0=Math.min(by0,y-4);by1=Math.max(by1,y+4);}
   else if(tool==='lime'){for(let yy=y-7;yy<=y+7;yy++)for(let xx=x-7;xx<=x+7;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;if((xx-x)**2+(yy-y)**2>49)continue;const i=yy*W+xx;
       if(A[i]>0){SALTB[i]=Math.min(255,SALTB[i]+A[i]*200+40);gasAdd(i,A[i]*.08);if(rnd()<.05)parts.push({k:'smoke',x:xx,y:yy,z:0,vx:0,vy:0,vz:8,life:.8});A[i]=0;}}
-    for(const s of slimes)if(Math.hypot(s.x-x,s.y-y)<rad(s)+7){s.mass-=.6;s.hurt=.1;}}}
+    for(const s of slimes)if(Math.hypot(s.x-x,s.y-y)<rad(s)+7){s.mass=Math.max(0,s.mass-.6);s.hurt=.1;}}}
 const toCell=e=>{const r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*W),Math.floor((e.clientY-r.top)/r.height*H)];};
 cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=toCell(e);lastPt=[x,y];
   if(tool==='walk'){player.tx=x;player.ty=y;const near=slimes.some(s=>Math.hypot(s.x-x,s.y-y)<rad(s)+4&&Math.hypot(s.x-player.x,s.y-player.y)<22);if(near){player.tx=null;const dx=x-player.x,dy=y-player.y;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');attack();}}
