@@ -834,8 +834,13 @@ How to use this file:
 
 ## vfx-forest
 
-- [ ] **159.** `P4` Winter bare trees are poles with a flat bar on top. Branches overflow the sprite and `y|0`
+- [x] **159.** `P4` Winter bare trees are poles with a flat bar on top. Branches overflow the sprite and `y|0`
   piles them into row 0 (`:136`, `:123`).
+  Done: three causes. The bare trunk ran to the top of the sprite, so branches started with no room. The
+  branch tree was 5 levels of 1 to 4 px segments, a blob at this size. `y|0` rounded rows -1 to 0 up into
+  row 0. Now a bare tree forks at 45% of its crown height, 3 levels deep with a wider fan and lengths sized
+  to the space, and `S()` floors. Share of a bare sprite's pixels in row 0: oak 9.4% to 2.4%, maple 12% to
+  1.9%, birch 15% to 3.6%, cherry 14.1% to 3.9%. Checked in a zoomed sheet of all 30 bare sprites.
 - [ ] **160.** `P6` Each season change freezes the frame for 60 ms, 382 ms at 6x throttle. `genGround` redoes
   1280 x 960 pixels (`:276`, `:211` to `:229`). Auto year hits it every 40 s. Fix: bake the four grounds once.
 - [ ] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,

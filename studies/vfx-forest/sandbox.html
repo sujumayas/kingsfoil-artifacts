@@ -123,18 +123,20 @@ const SI={};SPECIES.forEach((s,i)=>SI[s.n]=i);
 // ---------- procedural sprite generation ----------
 function canvasFrom(px,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');const id=g.createImageData(w,h);new Uint32Array(id.data.buffer).set(px);g.putImageData(id,0,0);return c;}
 function genSprite(sp,seed,size,season){
-  const rng=mul32(seed),pal=sp.leaf[season],B=sp.bark;let w,h,px,ax,cb,cw;const S=(x,y,c)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<w&&y<h)px[y*w+x]=c;};const G=(x,y)=>(x>=0&&y>=0&&x<w&&y<h)?px[y*w+x]:0;
-  const branches=(x,y,a,len,d,col)=>{for(let s=0;s<len;s++){x+=Math.cos(a);y+=Math.sin(a);S(x,y,col[d>2?1:2]);if(d>3)S(x+1,y,col[2]);}if(d<=0){S(x,y-1,col[1]);return;}const n=rng()<.3?3:2;for(let k=0;k<n;k++)branches(x,y,a+(k-(n-1)/2)*(.55+rng()*.3),len*(.62+rng()*.18),d-1,col);};
+  const rng=mul32(seed),pal=sp.leaf[season],B=sp.bark;let w,h,px,ax,cb,cw;const S=(x,y,c)=>{x=Math.floor(x);y=Math.floor(y);if(x>=0&&y>=0&&x<w&&y<h)px[y*w+x]=c;};const G=(x,y)=>(x>=0&&y>=0&&x<w&&y<h)?px[y*w+x]:0;
+  const branches=(x,y,a,len,d,col,fan=1)=>{for(let s=0;s<len;s++){x+=Math.cos(a);y+=Math.sin(a);S(x,y,col[d>1?1:2]);if(d>1)S(x+1,y,col[2]);}if(d<=0){S(x,y-1,col[1]);return;}const n=rng()<.45?3:2;for(let k=0;k<n;k++)branches(x,y,a+(k-(n-1)/2)*(.55+rng()*.3)*fan,len*(.62+rng()*.18),d-1,col,fan);};
   if(sp.kind==='broad'||sp.kind==='bush'||sp.kind==='acacia'||sp.kind==='dead'){
     const R=Math.round((sp.R[0]+(sp.R[1]-sp.R[0])*rng())*size),flat=sp.kind==='acacia',bush=sp.kind==='bush';
     const tr=bush?0:Math.round((sp.tr[0]+(sp.tr[1]-sp.tr[0])*rng())*size);const ry=flat?R*.42:R*.85;
     w=Math.round(2*R*(flat?1.35:1)+5);h=Math.round(ry*2+tr+3);px=new Uint32Array(w*h);ax=(w/2)|0;const base=h-1,cx=ax,cy=Math.round(ry)+1;
     cb=Math.min(h,Math.round(cy+ry));cw=Math.round(R*(flat?1.35:1));
-    if(!bush){const tw=Math.max(2,Math.round(R/4))+(sp.big?1:0),top=pal?cy+Math.round(ry*.35):cy-1;
+    // a bare tree forks low and only 3 levels deep, so its few long branches read at this size and stay inside the sprite
+    const bareTy=cy+Math.round(ry*(sp.kind==='dead'?.1:.45));
+    if(!bush){const tw=Math.max(2,Math.round(R/4))+(sp.big?1:0),top=pal?cy+Math.round(ry*.35):bareTy;
       for(let y=top;y<=base;y++){const flare=y>=base-1?(base-y===0?2:1):0;for(let dx=-((tw/2)|0)-flare;dx<tw-((tw/2)|0)+flare;dx++){const x=cx+dx;const rel=(dx+((tw/2)|0))/Math.max(1,tw-1);let c=rel<.34?B[0]:rel>.7?B[2]:B[1];
         if(sp.birch){c=B[0];if(rel>.7)c=B[1];if(hash2(x+seed,y>>1)<.22&&((y+x)&1))c=B[2];}else if(hash2(x*5+seed,y)<.12)c=B[2];S(x,y,c);}}
       if(flat){const fy=cy+2;for(let k=-1;k<=1;k+=2)for(let s=0;s<R*.7;s++)S(cx+k*s,top-s*.55,B[1]);}}
-    if(!pal){if(sp.kind!=='bush'){const ty=bush?base:cy+Math.round(ry*.2);branches(cx,ty,-Math.PI/2,bush?R*.5:R*(sp.kind==='dead'?.75:.55),bush?2:(sp.kind==='dead'?3:4),B);if(sp.kind==='dead'){for(let y=0;y<4;y++)S(cx,cy-ry*.8+y,0);}}
+    if(!pal){if(sp.kind!=='bush'){const dead=sp.kind==='dead';branches(cx,bareTy,-Math.PI/2,(bareTy-2)/(dead?2:2.2),2,B,dead?1.3:1.7);}
       if(bush)for(let k=-1;k<=1;k+=2){branches(cx+k,base,-Math.PI/2+k*.45,R*.5,1,B);} }
     else{const n=flat?7:(5+((R/3)|0)),cl=[[cx,cy,R*(flat?.55:.62)]];
       for(let k=0;k<n;k++){const a=rng()*6.283,d=Math.sqrt(rng())*R*(flat?1:.55);cl.push([cx+Math.cos(a)*d*(flat?1.25:1),cy+Math.sin(a)*d*(flat?.28:.72),R*(flat?.38:.42+rng()*.2)]);}
