@@ -546,7 +546,12 @@ How to use this file:
   Done: the ring fade reads `BAY[]`. Ring pixels at explosion age 20, 22 and 24: 64, 29 and 28 before,
   with columns x mod 4 = 1 and 3 empty from age 22 on. After: 48, 29 and 13, spread over all four
   columns at age 22 and thinned in rows and columns alike at age 24.
-- [ ] **105.** `P6` Light from the burning sheep and the fireball hops 8 px, one cell at a time (`:350`).
+- [x] **105.** `P6` Light from the burning sheep and the fireball hops 8 px, one cell at a time (`:350`).
+  Done: `glowAt()` splits the glow of the sheep, the fireball and the explosion over the 4 nearest
+  cells. Test: move the source 1 px at a time and track the centre of its blurred glow. Before, the
+  centre stood still for 7 steps and jumped 8 px on the 8th. After, it moves 1 px per px (0.25 px per
+  quarter px for the sheep). Largest change of the light on a fixed pixel per 1 px of fireball travel:
+  0.045 before, 0.006 after.
 - [ ] **106.** `P6` Fuel view calls `px('...')` three times per pixel (`:443`), 17.4 ms median at 6x. Hoist the
   constants.
 - [ ] **107.** `P6` `Math.exp` runs for each of 57,600 pixels every frame, also when idle or paused (`:364`).
