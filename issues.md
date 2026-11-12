@@ -349,8 +349,10 @@ How to use this file:
 - [x] **67.** `P3` Each tap of Beam while paused stacks another beam effect (`:396`, `:413`).
   Done: beamStop kills the caster's beam effect itself. Six taps of Beam while paused: 6 live beam effects
   before, 1 after.
-- [ ] **68.** `P3` The Beam button drops the beam while held if you tap, then press again within 600 ms. A stale
+- [x] **68.** `P3` The Beam button drops the beam while held if you tap, then press again within 600 ms. A stale
   timer fires (`:717`).
+  Done: the button tracks its held state and clears the pending timer on press. Tap, press again after 300
+  ms and hold: the beam was off 500 ms later before, and stays on now. It still stops after release.
 - [ ] **69.** `P4` Residue toggle leaves scorch and frost decals for up to 12 s (`:317` has no `residue` check).
 - [ ] **70.** `P4` (taste) Meteor rune circle is a 108 x 54 ellipse centred on the mage. The blast is 112 x 112
   centred on the tile (`:448`, `:372`).
