@@ -592,8 +592,13 @@ How to use this file:
   torch halo sits 3 px above its flame and the tower beacon halo is off the canvas.
   Done: `lampY` gives the flame row per kind. Cave torch halo centre went from 3.4 px above the flame to on
   it. The beacon halo went from 2 px at the canvas edge to 29 px around the flame.
-- [ ] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees
+- [x] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees
   (`:293`, `:199`, `:372`).
+  Done: a per-pixel block mask covers the house footprints and the cliff faces off the path. Each object
+  pixel stores its base row, and a sprite pixel behind an object with a lower base draws as a checker
+  silhouette, for the traveller and the creatures. Walking north into a house stops at its front wall (y
+  92.3, was 12.5). Walking off the upland stops at the ridge (y 39.5, was 178.8). Both paths still reach the
+  tower and the town. Behind a pine the sprite draws 69 of 85 pixels.
 - [ ] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
   cast uses `P.y-2` (`:300`, `:290`).
 - [ ] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
