@@ -289,7 +289,10 @@ How to use this file:
   Done: the six timers add the frame's dt. Paused with the pointer moving for 600 ms, each advanced 0.65 s
   before and 0 after. Half a second of game time stepped at 1/120 s advanced them 1.0 s before and 0.5 s
   after.
-- [ ] **56.** `P6` A long word with no spaces overflows the chat log and bubble (`:166` to `:168`).
+- [x] **56.** `P6` A long word with no spaces overflows the chat log and bubble (`:166` to `:168`).
+  Done: layout() breaks at the glyph that crosses the limit when the line has no space. 48 W's made a bubble
+  287 px wide against a limit of 84, and a log line of about 290 px against 204. Now the bubble is 83 px on
+  4 lines and the log line 203 px.
 - [ ] **57.** `P6` Typed text is parsed as markup. `[wave]` and `[c=key]` typed by the player take effect (`:726`).
 - [ ] **58.** `P6` Spanish accents are missing in capitals and in all small-font text, "MISION", "MANANA"
   (`:124`, `:125`, `:131`).

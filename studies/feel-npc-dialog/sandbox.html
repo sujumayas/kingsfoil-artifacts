@@ -165,7 +165,8 @@ function parseRich(src){const out=[];let cc=null,fx=0,spd=1,k0=-1,ex=null,pend=0
   return out;}
 function layout(gl,F,maxW){let x=0,line=0,ls=0,sp=-1;
   for(let i=0;i<gl.length;i++){const g=gl[i];g.x=x;g.line=line;g.y=line*F.lh;if(g.ch===' ')sp=i;x+=adv(F,g.ch);
-    if(x-1>maxW&&sp>ls){line++;let nx=0;for(let j=sp+1;j<=i;j++){gl[j].x=nx;gl[j].line=line;gl[j].y=line*F.lh;nx+=adv(F,gl[j].ch);}x=nx;ls=sp+1;sp=-1;}}
+    if(x-1>maxW&&sp>ls){line++;let nx=0;for(let j=sp+1;j<=i;j++){gl[j].x=nx;gl[j].line=line;gl[j].y=line*F.lh;nx+=adv(F,gl[j].ch);}x=nx;ls=sp+1;sp=-1;}
+    else if(x-1>maxW&&i>ls){line++;g.x=0;g.line=line;g.y=line*F.lh;x=adv(F,g.ch);ls=i;sp=-1;}} // a word wider than the line breaks mid-word
   const lw=[];for(const g of gl){if(g.ch===' ')continue;lw[g.line]=Math.max(lw[g.line]||0,g.x+adv(F,g.ch)-1);}
   return {lines:line+1,w:Math.max(1,...lw.map(v=>v||0)),lw};}
 const TH={box:{b:P.wh,e:1,ec:P.ink,key:P.o2,num:P.g4,warn:P.r3,name:P.a3,grey:P.s2},
