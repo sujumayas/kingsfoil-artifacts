@@ -367,13 +367,13 @@ function render(){
   if(hudN++%6)return; // the HUD text is built on every 6th drawn frame and written only when it changed
   const hh=String((clock/60)|0).padStart(2,'0'),mm=String((clock%60)|0).padStart(2,'0');
   const wname={heavy:'Heavy snow',light:'Light snow',overcast:'Overcast',sunny:'Sunny'}[weather];
-  const hs=`${hh}:${mm} · ${wname} · ${temp.toFixed(1)}°C · wind ${wind<-.15?'←':wind>.15?'→':'·'} ${Math.abs(wind).toFixed(1)} · sim ${simMs.toFixed(2)} ms`;if(hs!==hudS)hud.textContent=hudS=hs;
+  const hs=`${hh}:${mm} · ${wname} · ${temp.toFixed(1)}°C · wind ${wind<-.15?'←':wind>.15?'→':'·'} ${Math.abs(wind).toFixed(1)} · sim ${simMs.toFixed(2)} ms${effK<.85&&!paused?` · over budget, running ${(speed*effK).toFixed(1)}× of ${speed}×`:''}`;if(hs!==hudS)hud.textContent=hudS=hs;
 }
 const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255;const r=t<.5?20+t*2*40:60+(t-.5)*2*195,g=t<.5?24+t*2*150:174+(t-.5)*2*81,b=t<.5?60+t*2*170:230+(t-.5)*2*25;HEAT[i]=pack(r,g,b);}
 
 // ---------- loop & UI ----------
 const hud=document.getElementById('hud'),windEl=document.getElementById('wind');
-let last=performance.now(),simAcc=0,hudN=0,hudS='';
+let last=performance.now(),simAcc=0,hudN=0,hudS='',effK=1;
 // frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
 // enough to redraw the scene and refresh the HUD
 let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
@@ -383,7 +383,9 @@ function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;
 function frame(now){requestAnimationFrame(frame);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){const gm=dt*2*speed;clock=(clock+gm)%1440;updateWeather(gm,dt);
     const t0=performance.now();const sunF=weather==='sunny'?daylight(clock):weather==='overcast'?.15:0;
-    simAcc+=dt*60*speed;let n=0;while(simAcc>=1&&n<32){simStep(sunF);simAcc--;n++;}if(simAcc>4)simAcc=0;simMs=simMs*.9+(performance.now()-t0)*.1;
+    simAcc+=dt*60*speed;let n=0;while(simAcc>=1&&n<32&&(n<1||performance.now()-t0<7)){simStep(sunF);simAcc--;n++;}if(simAcc>4)simAcc=0;
+    // steps run against steps asked for. Under 1 means the 7 ms budget cut the speed
+    effK+=((n/Math.max(1,Math.round(dt*60*speed)))-effK)*.1;simMs=simMs*.9+(performance.now()-t0)*.1;
     updateEntities(dt);updateFlakes(dt);frameN++;}
   render();}
 document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.onclick=()=>{auto=false;document.getElementById('auto').classList.remove('on');setWeather(b.dataset.w);});

@@ -753,7 +753,10 @@ How to use this file:
 - [x] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
   Done: built every 6th drawn frame and compared with the last string. 60 writes per 60 frames before, 8
   after.
-- [ ] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
+- [x] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
+  Done: sim steps stop once 7 ms of the frame is spent, and the HUD then reads "over budget, running N× of
+  16×". Heavy snow at speed 16 and 6x throttle: 14.7 ms per frame before, 9.5 ms after (running 10×).
+  Unthrottled it runs the full 16× in 2.3 ms.
 - [ ] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
   Uint8Array.
 
