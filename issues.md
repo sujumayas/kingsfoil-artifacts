@@ -179,8 +179,12 @@ How to use this file:
   item's prediction mark, so the late rollback cannot take the pending count below 0. Died one frame after a
   grab in three cases. Cosmetic: the dots clear. Full prediction: the item comes back. Loot all with 9
   predicted items: all 9 come back. All three were stuck before.
-- [ ] **32.** `P3` Reduce motion or Arcs off makes fresh drops reject as "early", then hop and shake. The client
+- [x] **32.** `P3` Reduce motion or Arcs off makes fresh drops reject as "early", then hop and shake. The client
   `landT` (`:594`, `:657`) disagrees with the server `pickAt` (`:473`). Fix: gate on `ci.pickAt`.
+  Done: click pickup, Loot all prediction and the magnet all wait for the later of the server's pickAt and
+  the local landing plus 400 ms. The 60 ms head start on click pickup is gone, so an early reject can no
+  longer happen for the player. Boss drop at your feet with Reduce motion on, then with Arcs off: one item
+  shook on an early reject in each run before, none after.
 - [ ] **33.** `P5` Ownership view never shows the yellow public countdown. `TUNING.owner.groundPublicS` does not
   exist (`:831`). The legend text also overflows its box (`:832`).
 - [ ] **34.** `P5` Server truth panel says "CORPSE 10 S OWNED" (`:827`). TUNING, the spec and card 2 say 15 s.

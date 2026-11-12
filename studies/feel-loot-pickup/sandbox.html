@@ -568,7 +568,7 @@ function updPlayer(dt){if(PL.dead||PL.sdead){PL.walking=false;return;}let dx=KEY
   if(dx||dy){MOVE=null;CL.intent=null;CL.search=null;ATK=null;const d=Math.hypot(dx,dy),s=TUNING.moveSpd*dt/1000;tryMove(PL,PL.x+dx/d*s,PL.y+dy/d*s);PL.walking=true;PL.walk+=dt;PL.dir=dx?(dx>0?'r':'l'):(dy>0?'d':'u');}
   else if(ATK){const e=ATK;if(e.sdead||e.dead){ATK=null;}else if(moveTo(PL,e.x,e.y,TUNING.moveSpd,dt,TUNING.atk.range-4)){PL.walking=false;PL.dir=Math.abs(e.x-PL.x)>Math.abs(e.y-PL.y)?(e.x>PL.x?'r':'l'):(e.y>PL.y?'d':'u');if(now>=PL.atkT){PL.atkT=now+TUNING.atk.ms;hitEnt(PL,e,rr(TUNING.atk.dmg));}}}
   else if(CL.intent){const I=CL.intent,tg=I.k==='item'?CL.items.get(I.id):CL.corpses.get(I.id);if(!tg||(I.k==='item'&&(tg.pred||tg.pend))){CL.intent=null;PL.walking=false;}
-    else{const reach=cheb(PL.x,PL.y,tg.x,tg.y)<=TUNING.reach;if(reach&&now>=I.next){I.next=now+TUNING.retryMs;if(I.k==='item'){if(now>=tg.landT+TUNING.drop.pickDelayMs-60){queueAct({k:'take',id:tg.id});CL.intent=null;}}else if(tg.prio&&now>=tg.prioUntil&&!tg.prio.includes(PL.id)&&!(I.search&&now-I.search>=TUNING.death.channelMs)){if(!I.search||(PL.hitT||0)>I.search){I.search=now;CL.search={cid:tg.id,t:now};}I.next=0;}else if(I.search){PL.looterUntil=now+TUNING.death.looterNameS*1000;queueAct({k:'open',cid:tg.id});CL.intent=null;CL.search=null;}else{queueAct({k:'open',cid:tg.id});CL.intent=null;CL.search=null;}PL.walking=false;}
+    else{const reach=cheb(PL.x,PL.y,tg.x,tg.y)<=TUNING.reach;if(reach&&now>=I.next){I.next=now+TUNING.retryMs;if(I.k==='item'){if(now>=pickT(tg)){queueAct({k:'take',id:tg.id});CL.intent=null;}}else if(tg.prio&&now>=tg.prioUntil&&!tg.prio.includes(PL.id)&&!(I.search&&now-I.search>=TUNING.death.channelMs)){if(!I.search||(PL.hitT||0)>I.search){I.search=now;CL.search={cid:tg.id,t:now};}I.next=0;}else if(I.search){PL.looterUntil=now+TUNING.death.looterNameS*1000;queueAct({k:'open',cid:tg.id});CL.intent=null;CL.search=null;}else{queueAct({k:'open',cid:tg.id});CL.intent=null;CL.search=null;}PL.walking=false;}
       else if(!reach)moveTo(PL,tg.x,tg.y,TUNING.moveSpd,dt,2);else PL.walking=false;}}
   else if(MOVE){if(moveTo(PL,MOVE.x,MOVE.y,TUNING.moveSpd,dt,1))MOVE=null;}else PL.walking=false;
   if(CL.open){const c=CL.corpses.get(CL.open.cid);if(!c||cheb(PL.x,PL.y,c.x,c.y)>TUNING.reach)CL.open=null;}}
@@ -580,7 +580,7 @@ function sendAct(a){a.seq=++SEQ;
   // wait: dots until the answer; cosmetic: a tick and a small hop, the item stays until PICK_OK; full prediction: it leaves at once and may pop back
   if(a.k==='take'){const ci=CL.items.get(a.id);if(ci){ci.mag=!!a.magnet;if(PRED==='predict'){ci.pred=true;NET.pred++;predictAdd(ci);if(a.magnet&&FX.magnet)startPull(ci);else startFly(ci.dx,ci.dy,ci,true);}else{ci.pend=true;if(PRED==='cosmetic'){ci.cos=true;if(!a.magnet){ci.hop=now;ci.hopPx=TUNING.cosmetic.hopPx;sfx('tick',{tag:'own'});}}}}
     else if(CL.open){const s=CL.open.items.find(x=>x.id===a.id);if(s){if(PRED==='predict'){s.pred=true;NET.pred++;predictAdd(s);const p=slotXY(CL.open.items.indexOf(s));startFly(p[0]+1,p[1]+6,s,true);}else{s.pend=true;if(PRED==='cosmetic'){s.cos=true;s.hop=now;sfx('tick',{tag:'own'});}}}}}
-  if(a.k==='all'&&PRED==='predict'){let n=0;const list=CL.open?CL.open.items.filter(s=>!s.pred&&!s.pend&&canLoot(PL.id,s,now)):[...CL.items.values()].filter(ci=>ci.landed&&!ci.pred&&!ci.pend&&cheb(PL.x,PL.y,ci.x,ci.y)<=1&&canLoot(PL.id,ci,now)&&now>=ci.landT+TUNING.drop.pickDelayMs);
+  if(a.k==='all'&&PRED==='predict'){let n=0;const list=CL.open?CL.open.items.filter(s=>!s.pred&&!s.pend&&canLoot(PL.id,s,now)):[...CL.items.values()].filter(ci=>ci.landed&&!ci.pred&&!ci.pend&&cheb(PL.x,PL.y,ci.x,ci.y)<=1&&canLoot(PL.id,ci,now)&&now>=pickT(ci));
     for(const s of list){if(n>=TUNING.lootAll.maxItems)break;n++;s.pred=true;NET.pred++;predictAdd(s);if(CL.open){const p=slotXY(CL.open.items.indexOf(s));startFly(p[0]+1,p[1]+6,s,true,n*40);}else startFly(s.dx,s.dy,s,true,n*40);}PREDALL.set(a.seq,list.slice(0,n));}
   upMe(TUNING.bytes.req,T=>svAction(PL,a,T));}
 function predictAdd(s){if(ITEMS[s.def].gold)CL.pendGold+=s.n;else CL.pendSlots+=ITEMS[s.def].k==='pack'?s.n:1;s.predAdded=1;}
@@ -589,6 +589,8 @@ function predictUndo(s){if(!s.predAdded)return;s.predAdded=0;if(ITEMS[s.def].gol
 // who a drop belongs to, seen from this client: own, party, public or other (strangers)
 function relOf(o){if(o.owner===PL.id)return 'own';if(o.tiers&&o.tiers[0][1].includes(PL.id)&&o.owner==null)return 'own';if(o.owner==='party'||(o.owner!=null&&inParty(o.owner)&&inParty(PL.id)))return 'party';if(o.owner==null)return 'public';return 'other';}
 // crowd tiers: strangers' drops follow the LOD setting; reduced = no arc, no glow, legendary beam 2 s, no labels, no sound
+// when the client may ask for an item: the server's pickAt, and never before it has landed here for 400 ms
+const pickT=ci=>Math.max(ci.pickAt||0,ci.landT+TUNING.drop.pickDelayMs);
 const lodOK=(ci,f)=>ci.rel!=='other'||LOD==='full'||(f==='beam2'&&LOD==='reduced');
 function clSpawn(s,reveal){if(CL.items.has(s.id))return;const rel=relOf(s),other=rel==='other',lodo=other?LOD:'full';
   const arcs=FX.arcs&&JUICE>0&&!RMOTION&&(!other||LOD==='full')&&s.sx!=null&&reveal;
@@ -641,7 +643,7 @@ function arrive(s){BUMP=TUNING.bagBump.ms;const gold=ITEMS[s.def].gold;POPS.push
   if(gold){if(now-STREAK.last>TUNING.audio.streakResetMs)STREAK.n=0;STREAK.n=Math.min(TUNING.audio.streakMax,STREAK.n+1);/* +1 semitone per pickup within 1.2 s, cap 8 */STREAK.last=now;sfx('coin',{tag:'own',n:s.n,streak:STREAK.n});}else sfx('pick',{tag:'own',tier:s.tier});}
 function updPickup(dt){
   // magnet and walk-over: only items you own, only gold
-  if(!PL.dead&&!PL.sdead){const mr=MAGT*16;/* magnet: 1 tile, gold only, owner only, 400 ms after landing, never in PvP combat */for(const ci of CL.items.values()){if(!ci.landed||ci.pred||ci.pend||ci.req||ci.def!==0||ci.dead)continue;if(now<ci.landT+TUNING.drop.pickDelayMs)continue;
+  if(!PL.dead&&!PL.sdead){const mr=MAGT*16;/* magnet: 1 tile, gold only, owner only, 400 ms after landing, never in PvP combat */for(const ci of CL.items.values()){if(!ci.landed||ci.pred||ci.pend||ci.req||ci.def!==0||ci.dead)continue;if(now<pickT(ci))continue;
       const d=Math.max(Math.abs(ci.x-PL.x),Math.abs(ci.y-PL.y));const mine=ci.owner===PL.id||(ci.owner==='party'&&inParty(PL.id))||(ci.personal&&ci.owner===PL.id);
       if(FX.walk&&d<=TUNING.walkOverPx&&canLoot(PL.id,ci,now)){ci.req=true;queueAct({k:'take',id:ci.id,magnet:1});}
       else if(FX.magnet&&mine&&d<=mr&&canLoot(PL.id,ci,now)&&!(MODE==='pvp'&&now-(PL.combatT||-1e9)<TUNING.magnet.combatMs)){ci.req=true;queueAct({k:'take',id:ci.id,magnet:1});}}}
