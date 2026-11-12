@@ -290,7 +290,7 @@ function cast(cx,cy,row,st,en,xx,xy,yx,yy){if(st<en)return;let ns=0;
       if(bl){if(op){ns=rsl;continue;}bl=false;st=ns;}
       else if(op&&j<RAD){bl=true;cast(cx,cy,j+1,st,ls,xx,xy,yx,yy);ns=rsl;}}
     if(bl)break;}}
-function fov(){const t0=performance.now();VT.fill(0);const cx=clamp(P.x>>3,0,GW-1),cy=clamp((P.y-2)>>3,0,GH-1);VT[cy*GW+cx]=1;
+function fov(){const t0=performance.now();VT.fill(0);const cx=clamp(P.x>>3,0,GW-1),cy=clamp(P.y>>3,0,GH-1);VT[cy*GW+cx]=1;
   for(let o=0;o<8;o++)cast(cx,cy,1,1,0,OCT[0][o],OCT[1][o],OCT[2][o],OCT[3][o]);
   for(let c=0;c<NC;c++)if(VT[c]&&!EX[c]){EX[c]=1;revealed++;}fovN++;fovDirty=false;fovMs=performance.now()-t0;}
 const blocked=(x,y)=>{if(x<3||x>W-4||y<12||y>H-1)return true;const c=CELL[(y|0)*W+(x|0)];return STAT[c]||WALL[c]||BLK[(y|0)*W+(x|0)];};

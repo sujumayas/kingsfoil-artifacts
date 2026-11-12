@@ -599,8 +599,10 @@ How to use this file:
   silhouette, for the traveller and the creatures. Walking north into a house stops at its front wall (y
   92.3, was 12.5). Walking off the upland stops at the ridge (y 39.5, was 178.8). Both paths still reach the
   tower and the town. Behind a pine the sprite draws 69 of 85 pixels.
-- [ ] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
+- [x] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
   cast uses `P.y-2` (`:300`, `:290`).
+  Done: the cast used `P.y-2`, the trigger `P.y`. Walking north for 200 frames gave 13 frames with a stale
+  field of view, now 0.
 - [ ] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
 - [ ] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
 - [ ] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
