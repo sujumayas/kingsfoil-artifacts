@@ -47,9 +47,11 @@ How to use this file:
   Done: a frame gate at the top of each loop skips step and render while the canvas is off-screen. While
   paused, only the 12 frames after an input or resize run. Forest and light have no pause, so they only get
   the off-screen half.
-- [ ] **8.** `P6` At 390 px the HUD covers the canvas. Rain (top 38 px), light (top quarter), forest (top third),
+- [x] **8.** `P6` At 390 px the HUD covers the canvas. Rain (top 38 px), light (top quarter), forest (top third),
   acid (43%, `:21`). On desktop the fog HUD covers the tower and its beacon (taste). Fix: fog's
   `@media (max-width:640px){.hud{position:static}}` rule everywhere, and move the fog HUD below the canvas.
+  Done: the rule is in every sandbox with an overlay HUD, at `max-width:677px` to match the 1x canvas range
+  from #5. The fog HUD sits below the canvas at every width.
 
 ## feel-combat-juice
 

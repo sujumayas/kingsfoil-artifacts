@@ -19,6 +19,7 @@ main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
 .stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(8,12,6,.75);padding:5px 8px;border-radius:4px;pointer-events:none;color:#eef6e4;max-width:calc(100% - 16px)}
+@media (max-width:677px){.hud{position:static;max-width:none;border-radius:0;background:#080c06;font-size:11px;padding:6px 8px}}
 .bars{display:grid;grid-template-columns:auto 90px;gap:2px 8px;align-items:center;margin-top:4px}
 .bar{height:6px;background:#2a3324;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acid)}
 .bar.hp i{background:#ff6b5e}

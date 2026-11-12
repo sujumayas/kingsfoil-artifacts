@@ -22,6 +22,7 @@ main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
 canvas.px{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
 #c{aspect-ratio:16/9;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(6,10,6,.72);padding:4px 8px;border-radius:4px;pointer-events:none;color:#eef6e6;max-width:calc(100% - 16px)}
+@media (max-width:677px){.hud{position:static;max-width:none;border-radius:0;background:#060a06;font-size:11px;padding:6px 8px}}
 .side{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px}
 .side h3,.group h3{margin:0 0 8px;font:600 12px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
 .legend{font-size:12px;color:var(--mute);margin-top:6px;display:grid;grid-template-columns:auto 1fr;gap:2px 6px;align-items:center}
