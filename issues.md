@@ -477,8 +477,10 @@ How to use this file:
   bed that the high tide covers. The flow view skips cells that are dry at the current tide. Sea flow
   cells: 61 with 22 pointing upstream before, 35 with 0 upstream after. Arrows drawn on dry cells at tide
   0, 128 and 255: 35, 26 and 14 before, none after.
-- [ ] **93.** `P4` Palette-cycle highlights drift out to sea while the swash comes in (`:134`, `:143`). Fix:
+- [x] **93.** `P4` Palette-cycle highlights drift out to sea while the swash comes in (`:134`, `:143`). Fix:
   `ramp[(k+step)&3]`.
+  Done: `ramp[(k+step)&3]`. Highlight stripe per cycle step, where a higher stripe is further out to sea:
+  3, 0, 1, 2 before, 3, 2, 1, 0 after.
 - [ ] **94.** `P3` The boat strands on sand at low tide and cannot be moved (`:315`).
 - [ ] **95.** `P4` (taste) Pond heightfield shows large light and dark rectangles. The slope thresholds are
   tiny next to the poke size (`:373`, `:287`).

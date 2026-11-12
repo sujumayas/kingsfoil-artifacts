@@ -131,7 +131,7 @@ const tf=(i,r,g,b)=>{
   else if(light==='night'){const w=WATERI[i];r=r*(w?.22:.3)+6;g=g*(w?.3:.38)+10;b=b*(w?.46:.55)+(w?24:30);}
   return (255<<24|clamp(b|0,0,255)<<16|clamp(g|0,0,255)<<8|clamp(r|0,0,255))>>>0;};
 function buildLUT(step){for(let i=0;i<NBASE;i++)LUTC[i]=tf(i,PR[i],PG[i],PB[i]);
-  for(let g=0;g<8;g++){const ramp=[GBASE[g],GBASE[g],GMID[g],GHI[g]];for(let k=0;k<4;k++){const s=ramp[(k-step+4000)&3];LUTC[64+g*4+k]=tf(s,PR[s],PG[s],PB[s]);}}}
+  for(let g=0;g<8;g++){const ramp=[GBASE[g],GBASE[g],GMID[g],GHI[g]];for(let k=0;k<4;k++){const s=ramp[(k+step)&3];LUTC[64+g*4+k]=tf(s,PR[s],PG[s],PB[s]);}}}
 
 // ---------- textures ----------
 const TEX=new Float32Array(4096);{let mn=9,mx=-9;for(let y=0;y<64;y++)for(let x=0;x<64;x++){const v=pvn(x/5.333,y/5.333,12,5)*.55+pvn(x/2.667,y/2.667,24,6)*.45;TEX[y*64+x]=v;if(v<mn)mn=v;if(v>mx)mx=v;}for(let k=0;k<4096;k++)TEX[k]=(TEX[k]-mn)/(mx-mn);}
