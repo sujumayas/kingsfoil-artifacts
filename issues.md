@@ -513,7 +513,13 @@ How to use this file:
   that lie over another cell: 6,151 on trees and 1,350 on houses. Ignite clicks on them that hit the
   object: 0 before, all 7,501 after. A click on a crown at (8,0) lit the grass cell north of the tree
   before and lights the tree after.
-- [ ] **99.** `P4` Ground flames draw on top of houses and trees that stand in front of them (`:402` to `:404`).
+- [x] **99.** `P4` Ground flames draw on top of houses and trees that stand in front of them (`:402` to `:404`).
+  Done: the object pass stores the depth row of each drawn object pixel in `OCC[]` (a house counts as
+  its front row). Each flame carries the row of its source cell and skips pixels where a deeper object
+  stands. The DOOM buffer carries the depth in `DZ[]` next to the heat. Test: burn each of the 59
+  ground cells that lie directly north of a tree or house, one at a time. Flame pixels drawn over
+  objects in front: 2,664 before and 0 after with sprites, 3,232 before and 0 after with DOOM. Flame
+  pixels elsewhere are unchanged (474 and 11,638).
 - [ ] **100.** `P3` Budget cap makes fire spread only north-west. The 3 ignitions per tick go to the lowest cell
   indices (`:236`). Fix: sort candidates by a hash.
 - [ ] **101.** `P4` "Active cells" view flashes every cell that ever ignited. `FLASH` only decays inside the

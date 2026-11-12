@@ -109,10 +109,11 @@ const GRASS=0,DRY=1,TREE=2,WOOD=3,STONE=4,WATER=5,LAVA=6,OILM=7,ASH=8;
 const NONE=0,IGN=1,BURN=2,EMB=3,ASHS=4;
 const IGN16=[9830,26214,14418,19661,0,0,0,65535,0],FUELT=[8,5,28,44,0,0,0,10,0],EMBT=[5,3,14,26,1,1,1,3,1],BASEM=[40,8,60,24,0,0,0,0,0];
 const U8=()=>new Uint8Array(NC);
-const MAT=U8(),OMAT=U8(),FUEL=U8(),FUEL0=U8(),MOIST=U8(),STA=U8(),HEAT=U8(),TIM=U8(),AGE=U8(),OBJ=U8(),OOBJ=U8(),OIL=U8(),DEAD=U8(),FLD=U8(),FLT=U8(),STEAM=U8(),COOL=U8(),FLASH=U8(),PEND=U8(),PROG=U8(),EPR=U8(),HZ=U8();
+const MAT=U8(),OMAT=U8(),FUEL=U8(),FUEL0=U8(),MOIST=U8(),STA=U8(),HEAT=U8(),TIM=U8(),AGE=U8(),OBJ=U8(),OOBJ=U8(),OIL=U8(),DEAD=U8(),FLD=U8(),FLT=U8(),STEAM=U8(),COOL=U8(),FLASH=U8(),PEND=U8(),PROG=U8(),EPR=U8(),HZ=U8(),DEP=U8();
 const GL=new Float32Array(NC),GT=new Float32Array(NC);
 const GP=new Uint32Array(NP),GC=new Uint32Array(NP),GA=new Uint32Array(NP),OP=new Uint32Array(NP),OC=new Uint32Array(NP),OA=new Uint32Array(NP);
-const OWN=new Int16Array(NP),PK=new Uint8Array(NP),HP=new Uint8Array(NP),OILP=new Uint8Array(NP),WINM=new Uint8Array(NP);
+// OCC: per pixel, depth row + 1 of the object drawn there this frame, 0 for ground. DEP: depth row per cell, a house counts as its front row
+const OCC=new Uint8Array(NP),OWN=new Int16Array(NP),PK=new Uint8Array(NP),HP=new Uint8Array(NP),OILP=new Uint8Array(NP),WINM=new Uint8Array(NP);
 const LR=new Float32Array(NP),LG=new Float32Array(NP),LB=new Float32Array(NP);
 const HOUSES=[[2,6,4,4],[9,5,5,5],[16,6,4,4],[15,15,4,3]];
 const CHIM={x:0,y:0,cell:0},LAVAC=[],CAMP={x:68,y:141,c:17*GW+8},TORCHES=[[60,86],[116,86],[172,86]],MAGE={x:210,y:127};
@@ -127,8 +128,8 @@ const dryF=(x,y)=>vn(x/42,y/30,seed)*.75+vn(x/10,y/10,seed+5)*.25;
 function build(){
   OWN.fill(-1);OP.fill(0);OC.fill(0);OA.fill(0);PK.fill(0);WINM.fill(0);LAVAC.length=0;
   for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const c=cy*GW+cx;let m=dryF(cx*8+4,cy*8+4)>.56?DRY:GRASS;
-    if(isRoad(cx,cy)||rimCell(cx,cy)||c===CAMP.c)m=STONE;if(lavaCell(cx,cy)){m=LAVA;LAVAC.push(c);}if(pondV(cx*8+4,cy*8+4)<1)m=WATER;OMAT[c]=m;OOBJ[c]=0;}
-  for(const [hx,hy,hw,hh] of HOUSES)for(let y=hy;y<hy+hh;y++)for(let x=hx;x<hx+hw;x++){OMAT[y*GW+x]=WOOD;OOBJ[y*GW+x]=2;}
+    if(isRoad(cx,cy)||rimCell(cx,cy)||c===CAMP.c)m=STONE;if(lavaCell(cx,cy)){m=LAVA;LAVAC.push(c);}if(pondV(cx*8+4,cy*8+4)<1)m=WATER;OMAT[c]=m;OOBJ[c]=0;DEP[c]=cy;}
+  for(const [hx,hy,hw,hh] of HOUSES)for(let y=hy;y<hy+hh;y++)for(let x=hx;x<hx+hw;x++){OMAT[y*GW+x]=WOOD;OOBJ[y*GW+x]=2;DEP[y*GW+x]=hy+hh-1;}
   const trees=[];
   for(let cy=1;cy<=10;cy++)for(let cx=28;cx<GW;cx++){const c=cy*GW+cx;if(OMAT[c]<=DRY&&hf(cx,cy,seed+11)<.55)trees.push([cx,cy]);}
   for(const [cx,cy] of [[1,1],[6,2],[15,1],[21,3],[24,7],[1,20],[12,21],[20,21],[0,14],[27,19],[8,3],[27,14]])if(OMAT[cy*GW+cx]<=DRY)trees.push([cx,cy]);
@@ -253,7 +254,7 @@ function spawn(x,y,vx,vy,life,type){for(let k=0;k<PN;k++){const j=(pHead+k)&255;
 const FW=80,FH=45,FN=FW*FH;let SM=new Float32Array(FN),SO=new Float32Array(FN),SS=new Float32Array(FN),SM2=new Float32Array(FN),SO2=new Float32Array(FN),SS2=new Float32Array(FN);
 function addSmoke(x,y,a,kind){const fx=clamp((x/4)|0,0,FW-1),fy=clamp((y/4)|0,0,FH-1),k=fy*FW+fx;const A=kind===0?SM:kind===1?SO:SS;A[k]=Math.min(5,A[k]+a);}
 const puffs=[];let puffT=0,proj=null;const expl=[];let shake=0,frameN=0,tSec=0,castT=0;
-const DB=new Uint8Array(NP),DEC=[0,1,1,2,2,1,3,2];
+const DB=new Uint8Array(NP),DZ=new Uint8Array(NP),DEC=[0,1,1,2,2,1,3,2];
 // flame sprites: 4 sizes x 4 frames, tones 1..4 = deep red, orange, yellow, near-white
 const FS=[[3,5],[5,8],[7,11],[9,15],[11,19]],SPR=[],TONE=[0,DRED,ORA,YEL,PYEL,WHITE];
 for(let s=0;s<5;s++){SPR[s]=[];const [w,h]=FS[s];for(let f=0;f<4;f++){const a=new Uint8Array(w*h),cx=(w-1)/2,tip=h*(.84+.16*Math.sin(f*Math.PI/2+.6));
@@ -261,23 +262,24 @@ for(let s=0;s<5;s++){SPR[s]=[];const [w,h]=FS[s];for(let f=0;f<4;f++){const a=ne
     for(let x=0;x<w;x++){const d=Math.abs(x-cx-sx)/hw;if(d>=1)continue;const q=1-d-v*.55+(v<.3?.14:0);a[y*w+x]=q>.8&&s>=3?5:q>.56?4:q>.3?3:q>.07?2:1;}}
   if(f&1){const ty=Math.round(h-1-tip-1-(f>>1)),tx=Math.round(cx+Math.sin(3.4+f*Math.PI/2)*w*.2);if(ty>=0&&tx>=0&&tx<w){a[ty*w+tx]=s>1?2:1;if(s>2&&ty>0)a[(ty-1)*w+tx]=1;}}
   SPR[s].push(a);}}
+// cb(x, y, size, key, depth row). Torch, campfire and sheep flames pass 99: their props draw over everything too
 function flames(cb){
-  for(const c of active){const s=STA[c];if(s===EMB)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,h=hash(c,0,0,seed)&255,j=(h&3)-1;
+  for(const c of active){const s=STA[c];if(s===EMB)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,h=hash(c,0,0,seed)&255,j=(h&3)-1,d=DEP[c];
     const f=FUEL0[c]?FUEL[c]/FUEL0[c]:0,big=s===BURN&&f>.12;
-    if(OBJ[c]===2&&!DEAD[c]){cb(bx+j,by-6-((h>>2)&3),big?(f>.45&&(h&16)?4:3):2,c);if(big&&(h&32))cb(bx-3+((h>>4)&1)*6,by-2,1,c+700);}
-    else if(OBJ[c]===1&&!DEAD[c]){cb(bx+j,by-8,big?2:1,c);if(big)cb(bx-3,by-3,1,c+999);}
-    else if(s===IGN)cb(bx+j,by-1,1,c);
-    else{cb(bx-2+j,by-1,big&&MAT[c]!==GRASS?2:1,c);if(big)cb(bx+2,by-3-(h&1),1,c+500);}}
-  for(const c of fieldList){const st=FLD[c];if(!st)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7;cb(bx,by,st,c+2000);if(st>1)cb(bx-3+(c&1)*6,by-2,1,c+3000);}
-  for(const [x,y] of TORCHES)cb(x,y-7,0,x);
-  cb(CAMP.x,CAMP.y+1,2,7);cb(CAMP.x-2,CAMP.y+1,1,8);
-  if(sheep.stacks>0&&!sheep.dead)cb(Math.round(sheep.x)-sheep.dir,Math.round(sheep.y)-5,sheep.stacks>4?2:1,9);
+    if(OBJ[c]===2&&!DEAD[c]){cb(bx+j,by-6-((h>>2)&3),big?(f>.45&&(h&16)?4:3):2,c,d);if(big&&(h&32))cb(bx-3+((h>>4)&1)*6,by-2,1,c+700,d);}
+    else if(OBJ[c]===1&&!DEAD[c]){cb(bx+j,by-8,big?2:1,c,d);if(big)cb(bx-3,by-3,1,c+999,d);}
+    else if(s===IGN)cb(bx+j,by-1,1,c,d);
+    else{cb(bx-2+j,by-1,big&&MAT[c]!==GRASS?2:1,c,d);if(big)cb(bx+2,by-3-(h&1),1,c+500,d);}}
+  for(const c of fieldList){const st=FLD[c];if(!st)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,d=DEP[c];cb(bx,by,st,c+2000,d);if(st>1)cb(bx-3+(c&1)*6,by-2,1,c+3000,d);}
+  for(const [x,y] of TORCHES)cb(x,y-7,0,x,99);
+  cb(CAMP.x,CAMP.y+1,2,7,99);cb(CAMP.x-2,CAMP.y+1,1,8,99);
+  if(sheep.stacks>0&&!sheep.dead)cb(Math.round(sheep.x)-sheep.dir,Math.round(sheep.y)-5,sheep.stacks>4?2:1,9,99);
 }
 function doomStep(){const wsh=windX*windV/10,wpi=(Math.abs(wsh)*.6*256)|0,ws=wsh>0?1:-1;
   for(let x=0;x<W;x++)for(let y=1;y<H;y++){const src=y*W+x,p=DB[src];if(p===0){DB[src-W]=0;continue;}
-    const r=rb();let off=(r&3)===0?-1:(r&3)===3?1:0;if(((r>>>2)&255)<wpi)off+=ws;if(x+off<0||x+off>=W)off=0;const nv=p-DEC[(r>>>10)&7];DB[src-W+off]=nv>0?nv:0;}
-  flames((fx,fy,sz,key)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1||fy>=H)return;
-    for(let k=0;k<w;k++){const x=fx-(w>>1)+k;if(x<0||x>=W)continue;const e=(k===0||k===w-1)?7:0,v=base-e-(rb()&7);const i=fy*W+x;if(v>DB[i])DB[i]=v;}});
+    const r=rb();let off=(r&3)===0?-1:(r&3)===3?1:0;if(((r>>>2)&255)<wpi)off+=ws;if(x+off<0||x+off>=W)off=0;const nv=p-DEC[(r>>>10)&7];DB[src-W+off]=nv>0?nv:0;DZ[src-W+off]=DZ[src];}
+  flames((fx,fy,sz,key,d)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1||fy>=H)return;
+    for(let k=0;k<w;k++){const x=fx-(w>>1)+k;if(x<0||x>=W)continue;const e=(k===0||k===w-1)?7:0,v=base-e-(rb()&7);const i=fy*W+x;if(v>DB[i]){DB[i]=v;DZ[i]=d+1;}}});
 }
 function smokeStep(dt){
   for(const c of active){const s=STA[c],cx=c%GW,cy=(c/GW)|0,ob=OBJ[c]&&!DEAD[c];const fx=cx*2+1,fy=Math.max(0,cy*2-(OBJ[c]===2&&ob?5:ob?3:1)),k=fy*FW+fx;
@@ -369,6 +371,7 @@ function render(){
         else if(s===EMB){col=BY[i]<EPR[oc]?OA[i]:OC[i];if(col&&col!==OA[i]&&HP[i]<46&&((HP[i]+fr)&3)){col=TIM[oc]*2>EMBT[MAT[oc]]?ORA:RED;em=1;}}
         else{col=BY[i]<PROG[oc]?OC[i]:OP[i];if(s===BURN&&col===OC[i]&&HP[i]<40){col=(HP[i]+fr)&1?ORA:YEL;em=1;}
           else if(night&&WINM[i]&&s===NONE){col=(HP[i]&7)?YEL:PYEL;em=1;}}}
+      OCC[i]=col?DEP[oc]+1:0;
       if(!col){const c=CELL[i],s=STA[c];
         if(PK[i]===1){const w=Math.sin(x*.7+t*2.1+y*1.3)+Math.sin(y*.9-t*1.4+x*.2);col=w>1.7?(w>1.9?CYAN:B2):GP[i];}
         else if(PK[i]===2){if(COOL[c]){col=HP[i]<30&&COOL[c]<25?RED:(HP[i]&1?WD3:BLK);em=col===RED;}
@@ -403,11 +406,11 @@ function render(){
   if(haze){HZ.fill(0);let any=0;for(const c of active)if(STA[c]===BURN&&OBJ[c]&&!DEAD[c]){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<5;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
     for(const c of fieldList)if(FLD[c]===3){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<3;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
     if(any){tmp.set(out);for(let y=0;y<H;y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;for(let x=1;x<W-1;x++){const i=y*W+x;if(HZ[CELL[i]])out[i]=tmp[i+dx];}}}}
-  // flames
-  if(style==='sprite'){const L=[];flames((x,y,sz,key)=>L.push(x,y,sz,key));const idx=[];for(let k=0;k<L.length;k+=4)idx.push(k);idx.sort((a,b)=>L[a+1]-L[b+1]);
-    for(const k of idx){const x=L[k],y=L[k+1],sz=L[k+2],key=L[k+3],per=sz>=3?640:sz===2?500:400,f=(((ms+x*3047+y*88+key*131)%per)/per*4)|0,[w,h]=FS[sz],a=SPR[sz][f];
-      for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const tn=a[yy*w+xx];if(tn)putE(x-(w>>1)+xx,y-h+1+yy,TONE[tn]);}}}
-  else{for(let i=W;i<NP;i++){const v=DB[i];if(v<4)continue;if(v<8&&BY[i]>=(v-3)*3)continue;out[i]=DOOMP[v];}}
+  // flames. A flame pixel is skipped where an object with a deeper row stands in front of the flame's source
+  if(style==='sprite'){const L=[];flames((x,y,sz,key,d)=>L.push(x,y,sz,key,d+1));const idx=[];for(let k=0;k<L.length;k+=5)idx.push(k);idx.sort((a,b)=>L[a+1]-L[b+1]);
+    for(const k of idx){const x=L[k],y=L[k+1],sz=L[k+2],key=L[k+3],d=L[k+4],per=sz>=3?640:sz===2?500:400,f=(((ms+x*3047+y*88+key*131)%per)/per*4)|0,[w,h]=FS[sz],a=SPR[sz][f];
+      for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const tn=a[yy*w+xx];if(!tn)continue;const X=x-(w>>1)+xx,Y=y-h+1+yy;if(X<0||Y<0||X>=W||Y>=H)continue;const i=Y*W+X;if(OCC[i]<=d)out[i]=TONE[tn];}}}
+  else{for(let i=W;i<NP;i++){const v=DB[i];if(v<4)continue;if(v<8&&BY[i]>=(v-3)*3)continue;if(OCC[i]<=DZ[i])out[i]=DOOMP[v];}}
   // particles
   for(let j=0;j<PN;j++){if(PLF[j]<=0)continue;const f=1-PLF[j]/PML[j],ty=PTY[j],x=PXa[j],y=PYa[j];
     if(ty===0){if(f>.85&&(j&1))continue;putE(x,y,[WHITE,PYEL,YEL,YEL,ORA,ORA,RED][Math.min(6,f*7|0)]);}
