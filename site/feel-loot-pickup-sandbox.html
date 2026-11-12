@@ -465,7 +465,7 @@ function placeItems(corpse,roll,T,delay,boss,contrib){const L=roll.items;
   if(corpse.spill&&!corpse.forceCont){const order=list.map((it,i)=>i).sort((a,b)=>score(list[b])-score(list[a]));const tiles=scatterTiles(corpse.x,corpse.y,list.length);
     const stag=Math.min(TUNING.drop.stagger,list.length>1?TUNING.drop.seqCapMs/(list.length-1):0);
     const reveal=order.slice().reverse();// best item lands last
-    order.forEach((li,k)=>{const i=list[li],[tx,ty]=tiles[k],h=hash(i.def*7+k,corpse.id,T|0);const jx=((h%3)-1)*TUNING.drop.jitter,jy=(((h>>4)%3)-1)*TUNING.drop.jitter;
+    order.forEach((li,k)=>{const i=list[li],[tx,ty]=tiles[k],h=hash(i.def*7+k,corpse.id,T|0);const jx=((h%3)-1)*TUNING.drop.jitter,jy=(((h>>>4)%3)-1)*TUNING.drop.jitter;
       const ro=reveal.indexOf(li);const it=Object.assign({id:++SIDN,def:i.def,tier:i.tier,n:i.n,x:tx*16+8+jx,y:ty*16+10+jy,sx:corpse.x,sy:corpse.y-4,cont:null,order:ro,stag,spawnT:T,despawnAt:T+O.groundTotalS*1000,origOwner:roll.owner},own);
       // spills: 60 s private (owner set, or the killer group and victim party for a death pile), then public until 180 s
       if(!it.personal&&PARTY!=='rag'){const set=corpse.prio||(rrSet?[rrSet[(SV.rr++)%rrSet.length]]:corpse.ownerSet||partyOf(roll.owner));it.tiers=[[T+(corpse.prio?TUNING.death.priorityS:O.groundS)*1000,set]];it.ownUntil=it.tiers[0][0];if(rrSet)it.owner=set[0];}

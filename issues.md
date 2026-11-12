@@ -143,8 +143,10 @@ How to use this file:
   are cancelled.
 - [ ] **25.** `P4` Legendary beam is upside down. Solid at the top, fading to nothing at the item (`:349` to
   `:351`). Fix: `up=y/h`.
-- [ ] **26.** `P4` Spill scatter is lopsided. A third of items land 6 to 9 px too high because of a signed shift
+- [x] **26.** `P4` Spill scatter is lopsided. A third of items land 6 to 9 px too high because of a signed shift
   on a uint32 hash (`:468`). Fix: `(h>>>4)%3`.
+  Done: h>>>4. Over 12 boss drops, 257 of 793 items sat 6 or 9 px above their tile's centre row before.
+  After the change all 817 sit at -3, 0 or +3 px, about a third each.
 - [ ] **27.** `P3` Full prediction plus Loot all leaves ghost items and an inflated bag count. The client
   predicts without an ownership check (`:581`) and the server skips silently (`:494`). Fix: roll back
   unanswered predicted items in `clResult`, or filter with `canLoot` on the client.
