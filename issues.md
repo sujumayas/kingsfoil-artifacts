@@ -446,8 +446,11 @@ How to use this file:
   putImageData. Step plus render at 6x throttle, 600 frames: 2.29 ms measured against a HUD total of 2.07
   before, 2.27 against 2.20 after. With the wind x-ray on: 2.62 against 2.14 before, 2.52 against 2.48
   after. Card 11 now says about 0.4 ms on a desktop and 2.3 to 2.6 ms at 6x.
-- [ ] **88.** `P5` (suspected) HUD says "you: hidden, villager gets 0 B" even when the villager is adjacent or in
+- [x] **88.** `P5` (suspected) HUD says "you: hidden, villager gets 0 B" even when the villager is adjacent or in
   the same patch (`:673`).
+  Done: reproduced with the villager one cell away, the HUD read "hidden, villager gets 0 B". It now reads
+  "hidden, but the villager is close and still gets you" when the villager is adjacent or in the same
+  patch, and keeps the 0 B line when the villager is away.
 - [ ] **89.** `P5` A hidden villager is "not sent", yet the client keeps stamping its trail and rustle (`:384`).
 - [ ] **90.** `P6` (taste) Winter arrives as scattered single white pixels. Dawn and dusk snow is a flat salmon.
   Burnt ground is fully covered by snow (`:345`).
