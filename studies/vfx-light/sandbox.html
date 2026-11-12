@@ -216,15 +216,16 @@ function sky(h){const el=62*Math.sin((h-6)/12*Math.PI),az=(90+(h-6)/12*180)*Math
   else if(mel>2){const k=Math.min(1,(mel-2)/8);sun=[.16*k,.19*k,.32*k];dir=[-Math.sin(maz),Math.cos(maz)];len=Math.min(3,1/Math.tan(Math.max(4,mel)*Math.PI/180))*.62;}
   if(overcast){sun=[0,0,0];amb=el>0?lerp([.36,.36,.44],[.82,.84,.88],Math.min(1,el/25)):amb.map(v=>v*.8);dir=null;}
   return {el,amb,sun,dir,len,svy:dir?-dir[1]:0,svx:dir?-dir[0]:0};}
-function sunShadows(S,M){SH.fill(0);SHC.fill(0);SHX.fill(0);if(!S.dir||!opts.sunsh)return;const [dx,dy]=S.dir,k=S.len;
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,cls=M.CLS[i];if(cls===GROUND||cls===WATER||cls===INTER)continue;const ob=M.OB[i],h=ob-y;if(h<=0)continue;if(cls===CANOPY&&hash2(x*3,y*7)<.08)continue;
+function sunShadows(S,M){SH.fill(0);SHC.fill(0);SHX.fill(0);SUNP.fill(0);if(!S.dir)return;const [dx,dy]=S.dir,k=S.len;
+  if(opts.sunsh)for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,cls=M.CLS[i];if(cls===GROUND||cls===WATER||cls===INTER)continue;const ob=M.OB[i],h=ob-y;if(h<=0)continue;if(cls===CANOPY&&hash2(x*3,y*7)<.08)continue;
     // 3/4 view: roof rows encode depth (ground y = screen y + wall height); crown rows are part height, part depth
     let gy=ob,hh=h;if(cls===ROOF){hh=22;gy=y+22;}else if(cls===CANOPY){hh=15;gy=ob+(y-(ob-16))*.6;}
     // one height pixel covers up to 2.48 px of ground at low sun, so a thin post stamps in sub-steps to stay solid
     const ext=cls===ROOF?3:2,steps=cls===ROOF||cls===CANOPY?1:Math.max(1,Math.ceil(k));
     for(let s=0;s<steps;s++){const hq=hh-s/steps,sx=Math.round(x+dx*hq*k),sy=Math.round(gy+dy*hq*k);for(let e=0;e<2;e++)for(let f=0;f<ext;f++){const px=sx+e,py=sy+f;if(px>=0&&py>=0&&px<W&&py<H){const j=py*W+px;SH[j]=1;if(!SHC[j])SHC[j]=ob+1;else if(SHC[j]!==ob+1)SHX[j]=1;}}}}
   // house A interior sun patches: march toward the sun; walls block, window/door gaps let it in
-  SUNP.fill(0);if(roofOff){const lim=Math.min(40,16*k/.62);for(let y=42;y<=78;y++)for(let x=22;x<=98;x++){const i=y*W+x;if(!MIN.IN[i])continue;let lit=0;
+  // these run with Sun shadows off too: they are light coming in, not a shadow
+  if(roofOff){const lim=Math.min(40,16*k/.62);for(let y=42;y<=78;y++)for(let x=22;x<=98;x++){const i=y*W+x;if(!MIN.IN[i])continue;let lit=0;
     for(let s=1;s<=lim;s++){const px=Math.round(x-dx*s),py=Math.round(y-dy*s);if(px<0||py<0||px>=W||py>=H){lit=1;break;}const j=py*W+px;if(OCC[j]>=20){lit=0;break;}if(px<20||px>100||py<40||py>80){lit=1;break;}}SUNP[i]=lit;}}}
 
 // ---------- characters ----------

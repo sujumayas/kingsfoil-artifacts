@@ -808,8 +808,11 @@ How to use this file:
   Done: a post or fence pixel stamps its shadow in up to 3 sub-steps along the shadow, since one pixel of
   height covers up to 2.48 px of ground. Samples along the lamp post shadow with no shadow pixel under them:
   11 of 57 at 17:42 before, 1 of 57 after. At 16:30, 7 before and 2 after. `sunShadows` takes 0.4 ms.
-- [ ] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips
+- [x] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips
   `SUNP.fill(0)` at `:219`.
+  Done: the early return skipped the patch pass and its clear. The patches are light, so they now run
+  whenever the sun or moon is up. With Sun shadows off, the patch mask at 15:00 was the 10:00 one (254
+  pixels, 462 wrong). It now matches the mask with shadows on (314 pixels, 0 wrong).
 - [ ] **155.** `P5` "Your light's rays" view shows stale rays when Light shadows is off (`:284`, `:310`).
 - [ ] **156.** `P4` The carried lantern and torch handle draw through roofs and tree crowns (`:276` to `:278`).
 - [ ] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
