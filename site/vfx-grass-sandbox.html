@@ -421,11 +421,12 @@ const NGM=20,GMX=new Float32Array(3*NGM),GMY=new Float32Array(3*NGM),GVX=new Flo
 let holdT=0,sleeping=0,threatChecks=0,threatSec=0,nightRoll=1,nightRollName='normal',lastPhase='';
 function alloc(k){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(!LA[j]){LA[j]=1;ALIVE[k]++;LST[j]=0;LT[j]=0;LT2[j]=-1;LZ[j]=0;LVX[j]=LVY[j]=LVZ[j]=0;LTG[j]=-1;LPH[j]=rnd()*6.283;LANG[j]=rnd()*6.283;LB[j]=0;LC[j]=0;LCK[j]=rnd()*PRM.threatDt;LTD[j]=999;return j;}return -1;}
 function kill(j,k){if(LA[j]){LA[j]=0;ALIVE[k]--;}}
-let TAX=0,TAY=0;
+// flee direction from the last threat check, one unit vector per creature
+const LAX=new Float32Array(NPL),LAY=new Float32Array(NPL);
 function threat(j,x,y,fire){LCK[j]-=1;if(LCK[j]>0)return LTD[j];threatChecks++;LCK[j]=1;
   let bd=1e9,ax=0,ay=0;const chk=(px,py)=>{const d=Math.hypot(x-px,y-py);if(d<bd){bd=d;ax=x-px;ay=y-py;}};chk(P.x,P.y);if(V.x>0)chk(V.x,V.y);
   if(fire){const c=CELL[clamp(y|0,0,H-1)*W+clamp(x|0,0,W-1)],cx=c%GW,cy=(c/GW)|0;for(let oy=-3;oy<=3;oy++)for(let ox=-3;ox<=3;ox++){const nx=cx+ox,ny=cy+oy;if(nx>=0&&ny>=0&&nx<GW&&ny<GH&&BURN[ny*GW+nx]===1)chk(nx*8+4,ny*8+4);}}
-  const l=Math.hypot(ax,ay)||1;LVZ[j]=ax/l;LB[j]=ay/l;LTD[j]=bd;return bd;}
+  const l=Math.hypot(ax,ay)||1;LAX[j]=ax/l;LAY[j]=ay/l;LTD[j]=bd;return bd;}
 const tickThreat=(j,dt)=>{LCK[j]-=dt/PRM.threatDt-1;};
 const tuftOK=k=>k>=0&&k<TN&&TTOP[k]>0;
 function nearFlower(x,y,maxd){let best=-1,bd=maxd;for(let n=0;n<8;n++){const k=FLW[rnd()*FLW.length|0];if(!tuftOK(k)||TT[k]!==3)continue;const d=Math.hypot(TX[k]-x,TY[k]-y);if(d<bd){bd=d;best=k;}}return best;}
@@ -433,7 +434,7 @@ function spawnCricket(x,y){const j=alloc(8);if(j<0)return;LX[j]=x+(rnd()-.5)*6;L
 function spawnFrog(x,y,flee){const j=alloc(7);if(j<0)return;LX[j]=x;LY[j]=y;LST[j]=flee?1:0;LT[j]=flee?0:2+rnd()*4;if(flee){const a=Math.atan2(PCY-y,PCX-x);LANG[j]=a;}}
 function spawnAt(k,prefill){const j=alloc(k);if(j<0)return -1;const edge=()=>{const s=rnd()<.5;LX[j]=s?-6:W+6;LY[j]=30+rnd()*140;LANG[j]=s?0:Math.PI;};
   switch(k){
-  case 0:{const f=nearFlower(160,140,999);if(prefill&&f>=0){LX[j]=TX[f]+(rnd()-.5)*30;LY[j]=TY[f]+(rnd()-.5)*20;}else edge();LZ[j]=8;LC[j]=rnd()*3|0;LT[j]=1+rnd()*3;LTG[j]=-1;break;}
+  case 0:{const f=nearFlower(160,140,999);if(prefill&&f>=0){LX[j]=TX[f]+(rnd()-.5)*30;LY[j]=TY[f]+(rnd()-.5)*20;}else edge();LZ[j]=8;LC[j]=rnd()*3|0;LPH[j]=rnd()*.2;LT[j]=1+rnd()*3;LTG[j]=-1;break;}
   case 1:LX[j]=292;LY[j]=76;LZ[j]=6;LST[j]=1;LT[j]=0;LTG[j]=nearFlower(292,76,180);break;
   case 2:{const a=rnd()*6.283,r=rnd()*.7;LX[j]=PCX+Math.cos(a)*PRX*r;LY[j]=PCY+Math.sin(a)*PRY*r;LZ[j]=5;LT[j]=rnd()*2;break;}
   case 3:{const g=j-KS[3];LX[j]=80+rnd()*60;LY[j]=112+rnd()*16;for(let m=0;m<NGM;m++){const q=g*NGM+m;GMX[q]=LX[j]+(rnd()-.5)*10;GMY[q]=LY[j]-6+(rnd()-.5)*6;GVX[q]=(rnd()-.5)*10;GVY[q]=(rnd()-.5)*10;}break;}
@@ -465,17 +466,17 @@ function prefill(){targets();for(let k=0;k<KD.length;k++){if(k===8||k===10)conti
 // per-kind updates
 const offscreen=(x,y,m)=>x<-m||x>W+m||y<-m||y>H+m;
 function upBfly(j,dt){const st=LST[j];
-  if(st===1){const k=LTG[j];if(!tuftOK(k)){LST[j]=0;LVZ[j]=20;return;}LX[j]=TX[k]+TL[k]*(TFL[k]?-1:1);LY[j]=TY[k];LZ[j]=TTOP[k]+1;LT[j]-=dt;LPH[j]+=dt;
-    const th=threat(j,LX[j],LY[j]-LZ[j],false);if(th<PRM.bflyFlee||LT[j]<=0||LST[j]===9||TP.l>.95){LST[j]=0;LTG[j]=-1;LVZ[j]=30;LT2[j]=th<PRM.bflyFlee?1.2:0;LT[j]=3+rnd()*4;}return;}
-  // Stardew flight: flap kicks plus gravity, 4 or 6 flap frames, then a 200 ms rest
+  if(st===1){const k=LTG[j];if(!tuftOK(k)){LST[j]=0;LVZ[j]=20;LPH[j]=0;return;}LX[j]=TX[k]+TL[k]*(TFL[k]?-1:1);LY[j]=TY[k];LZ[j]=TTOP[k]+1;LT[j]-=dt;
+    const th=threat(j,LX[j],LY[j]-LZ[j],false);if(th<PRM.bflyFlee||LT[j]<=0||LST[j]===9||TP.l>.95){LST[j]=0;LTG[j]=-1;LVZ[j]=30;LPH[j]=0;LT2[j]=th<PRM.bflyFlee?1.2:0;LT[j]=3+rnd()*4;}return;}
+  // Stardew flight: flap kicks plus gravity, 4 or 6 flap frames, then a 200 ms rest.
+  // LPH is the time left on the current frame, LC>>2 the frames left. Frame 0 is the rest.
   LT2[j]-=dt;LPH[j]-=dt;
-  if(LPH[j]<=0){if(LC[j]>>2===0){LC[j]=(LC[j]&3)|((rnd()<.5?4:6)<<2);LANG[j]+=0;}
-    const left=LC[j]>>2;if(left>0){LC[j]=(LC[j]&3)|((left-1)<<2);LPH[j]=.045+rnd()*.035;if((left&1)===0){LVZ[j]+=PRM.bflyKick[0]+rnd()*(PRM.bflyKick[1]-PRM.bflyKick[0]);LVX[j]=clamp(LVX[j]+(rnd()*2-1)*PRM.bflySide,-PRM.bflyCap,PRM.bflyCap);LVY[j]=clamp(LVY[j]+(rnd()*2-1)*PRM.bflySide*.7,-PRM.bflyCap,PRM.bflyCap);}}
-    else{LPH[j]=.2;LC[j]=(LC[j]&3);LC[j]|=0;LPH[j]=.2;LC[j]=(LC[j]&3)|(0);LB[j]=1;}}
-  if(LB[j]>0&&LPH[j]<=.0001)LB[j]=0;
+  if(LPH[j]<=0){let left=LC[j]>>2;if(left===0)left=rnd()<.5?4:6;
+    if((left&1)===0){LVZ[j]+=PRM.bflyKick[0]+rnd()*(PRM.bflyKick[1]-PRM.bflyKick[0]);LVX[j]=clamp(LVX[j]+(rnd()*2-1)*PRM.bflySide,-PRM.bflyCap,PRM.bflyCap);LVY[j]=clamp(LVY[j]+(rnd()*2-1)*PRM.bflySide*.7,-PRM.bflyCap,PRM.bflyCap);}
+    left--;LC[j]=(LC[j]&3)|(left<<2);LPH[j]=left>0?.045+rnd()*.035:.2;}
   let sx=0,sy=0;const x=LX[j],y=LY[j],th=threat(j,x,y,false);
   if(th<PRM.bflyFlee&&LT2[j]<=0)LT2[j]=1.2;
-  if(LT2[j]>0){sx=LVZ.length&&0;sx=LVXa(j)*60;sy=LVYa(j)*60;}
+  if(LT2[j]>0){sx=LAX[j]*60;sy=LAY[j]*60;}
   else if(st===9){sx=x<W/2?-40:40;}
   else{LT[j]-=dt;if(LTG[j]<0&&LT[j]<=0){LTG[j]=nearFlower(x,y,90);LT[j]=4+rnd()*4;}
     const k=LTG[j];if(tuftOK(k)){const tx=TX[k]-x,ty=TY[k]-y,d=Math.hypot(tx,ty)||1;sx=tx/d*30;sy=ty/d*30;if(d<3&&LZ[j]<TTOP[k]+5){LST[j]=1;LT[j]=PRM.bflyPerch[0]+rnd()*(PRM.bflyPerch[1]-PRM.bflyPerch[0]);LVX[j]=LVY[j]=LVZ[j]=0;return;}}
@@ -484,8 +485,6 @@ function upBfly(j,dt){const st=LST[j];
   LX[j]+=LVX[j]*dt*rmF;LY[j]+=LVY[j]*dt*rmF*.8;LVZ[j]-=PRM.bflyGrav*dt;LZ[j]+=LVZ[j]*dt;
   const zmin=tuftOK(LTG[j])?TTOP[LTG[j]]+1:4;if(LZ[j]<zmin){LZ[j]=zmin;if(LVZ[j]<0)LVZ[j]=0;}if(LZ[j]>16){LZ[j]=16;if(LVZ[j]>0)LVZ[j]=0;}
   if(offscreen(LX[j],LY[j],10))kill(j,0);}
-function LVXa(j){return LVZ_(j,0);}function LVYa(j){return LVZ_(j,1);}
-function LVZ_(j,a){const dx=LX[j]-P.x,dy=LY[j]-P.y,l=Math.hypot(dx,dy)||1;return a?dy/l:dx/l;}
 function upBee(j,dt){const k=LTG[j];
   if(LST[j]===9){const dx=292-LX[j],dy=74-LY[j],d=Math.hypot(dx,dy);if(d<2){kill(j,1);return;}LX[j]+=dx/d*40*dt;LY[j]+=dy/d*40*dt;return;}
   if(LST[j]===1){if(!tuftOK(k)){LTG[j]=nearFlower(LX[j],LY[j],120);if(LTG[j]<0)LST[j]=9;return;}const tx=TX[k],ty=TY[k],dx=tx-LX[j],dy=ty-LY[j],d=Math.hypot(dx,dy);
@@ -521,16 +520,15 @@ function upFfly(j,dt){LANG[j]+=(rnd()-.5)*3*dt;const x=LX[j],y=LY[j];if(x<8)LANG
 function hopTo(j,a,dist,dur,peak){LANG[j]=a;LVX[j]=Math.cos(a)*dist/dur;LVY[j]=Math.sin(a)*dist/dur*.8;LT[j]=0;LT2[j]=dur;LB[j]=peak;}
 function hopStep(j,dt){LT[j]+=dt;const u=LT[j]/LT2[j];LX[j]+=LVX[j]*dt;LY[j]+=LVY[j]*dt;LZ[j]=Math.sin(Math.PI*Math.min(1,u))*LB[j];return u>=1;}
 function upRabbit(j,dt){tickThreat(j,dt);const th=threat(j,LX[j],LY[j],true);
-  if(LST[j]===9){LST[j]=2;hopTo(j,Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
-  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;if(th<PRM.rabbitFlee){LST[j]=2;hopTo(j,Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
+  if(LST[j]===9){LST[j]=2;hopTo(j,Math.atan2(LAY[j],LAX[j])+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
+  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;if(th<PRM.rabbitFlee){LST[j]=2;hopTo(j,Math.atan2(LAY[j],LAX[j])+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
     else if(LT[j]<=0){LST[j]=1;hopTo(j,rnd()*6.283,4,.2,2);}return;}
   if(hopStep(j,dt)){LZ[j]=0;stamp(4+(j&3),LX[j],LY[j],3,3);
     if(LST[j]===1){LST[j]=0;LT[j]=2+rnd()*5;return;}
     const c=CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)];
     if(th>PRM.rabbitStop||offscreen(LX[j],LY[j],4)){if(hides(c)||th>PRM.rabbitStop*1.2||offscreen(LX[j],LY[j],4)){kill(j,6);return;}}
-    let a=th<PRM.rabbitStop?Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.6:LANG[j];for(let n=0;n<6;n++){const nx=LX[j]+Math.cos(a)*10,ny=LY[j]+Math.sin(a)*8;if(!blockedPx(nx,ny)||offscreen(nx,ny,0))break;a+=1.1;}
+    let a=th<PRM.rabbitStop?Math.atan2(LAY[j],LAX[j])+(rnd()-.5)*.6:LANG[j];for(let n=0;n<6;n++){const nx=LX[j]+Math.cos(a)*10,ny=LY[j]+Math.sin(a)*8;if(!blockedPx(nx,ny)||offscreen(nx,ny,0))break;a+=1.1;}
     hopTo(j,a,PRM.rabbitSpeed*.22,.22,3);}}
-function LVZ_t(j){return LVZ[j];}
 function upFrog(j,dt){tickThreat(j,dt);
   // a frog marked for despawn leaps to the pond like a scared one
   if(LST[j]===9){LST[j]=1;hopTo(j,Math.atan2(PCY-LY[j],PCX-LX[j]),14,PRM.frogLeap,PRM.frogPeak);}
@@ -629,7 +627,7 @@ function drawCritter(j,crop){const x=LX[j]|0,y=LY[j]|0,z=LZ[j]|0;
 let litN=0;function drawFlyers(){litN=0;const dk=TP.l,shadowOK=dk<.6;
   for(let k=0;k<6;k++){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++){if(!LA[j])continue;const x=LX[j]|0,y=LY[j]|0,z=LZ[j]|0;
     if(shadowOK&&k<3&&z>1&&x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=(IDX[i]&~127)|DARKB[IDX[i]&127];}
-    if(k===0){const col=[BO,FWc,FBc][LC[j]&3];let fr;if(LST[j]===1)fr=Math.sin(simT*1.4+j)>.3?0:1;else if(LB[j]>0)fr=0;else{const ph=((LC[j]>>2)&7);fr=[0,1,2,1,0,1,2][ph]||0;}
+    if(k===0){const col=[BO,FWc,FBc][LC[j]&3];let fr;if(LST[j]===1)fr=Math.sin(simT*1.4+j)>.3?0:1;else{const ph=((LC[j]>>2)&7);fr=[0,1,2,1,0,1,2][ph]||0;}
       const rows=BF[fr],X=x-2,Y=y-z-1;for(let r=0;r<3;r++)for(let c=0;c<5;c++){const ch=rows[r][c];if(ch==='.')continue;ip(X+c,Y+r,ch==='k'?OUT:col);}}
     else if(k===1){const jx=LST[j]===0?Math.round(Math.sin(simT*13+j)*.8):0,X=x+jx,Y=y-z;ip(X,Y,BE1);ip(X+1,Y,BE2);if((frame+j)&1)ip(X,Y-1,WING);}
     else if(k===2){const d=LC[j]?-1:1,Y=y-z;for(let b=0;b<5;b++)ip(x+b*d,Y,b<2?DF1:DF2);const wy=(frame+j)&1?-1:1;ip(x+d,Y+wy,WING);ip(x+2*d,Y+wy,WING);}
@@ -773,7 +771,7 @@ function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal'
   V.x=-12;V.wait=30;Object.assign(P,{x:104,y:151,lx:104,ly:151});P.tx=178;P.ty=152;P.hasT=true;for(let n=0;n<4;n++)step(1/30);P.hideT=1;
   // butterflies settling on flowers near the path
   for(let j=KS[0];j<KS[0]+KC[0];j++)kill(j,0);const fls=FLW.filter(k=>tuftOK(k)&&TY[k]>112&&TY[k]<176&&TX[k]>112&&TX[k]<244&&Math.abs(TX[k]-P.x)>16&&Math.abs(TY[k]-P.y)>4);
-  for(let n=0;n<4&&fls.length;n++){const f=fls.splice(rnd()*fls.length|0,1)[0],j=alloc(0);if(j<0)break;LC[j]=n%3;if(n<3){LST[j]=1;LTG[j]=f;LT[j]=30;LX[j]=TX[f];LY[j]=TY[f];LZ[j]=TTOP[f]+1;}else{LX[j]=TX[f]-8;LY[j]=TY[f];LZ[j]=9;LT[j]=6;}}
+  for(let n=0;n<4&&fls.length;n++){const f=fls.splice(rnd()*fls.length|0,1)[0],j=alloc(0);if(j<0)break;LC[j]=n%3;LPH[j]=0;if(n<3){LST[j]=1;LTG[j]=f;LT[j]=30;LX[j]=TX[f];LY[j]=TY[f];LZ[j]=TTOP[f]+1;}else{LX[j]=TX[f]-8;LY[j]=TY[f];LZ[j]=9;LT[j]=6;}}
   // fireflies over meadow and wheat; about 20 timed to flash at the 2.5 s capture
   for(let j=KS[5];j<KS[5]+KC[5];j++)kill(j,5);
   for(let n=0;n<64;n++){const j=spawnAt(5,true);if(j<0)break;if(n%2===0){const y=LY[j];if(n%4===0){LX[j]=100+rnd()*124;LY[j]=20+rnd()*58;}else{LX[j]=112+rnd()*130;LY[j]=110+rnd()*64;}

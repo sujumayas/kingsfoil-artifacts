@@ -402,10 +402,15 @@ How to use this file:
   Done: a marked frog leaps to the pond and a marked rabbit runs off, like scared ones. spawnTick only marks
   resting frogs and rabbits. 5 frogs and 5 rabbits, then winter (targets 0 and 1), 30 s: 5 frogs and 4
   rabbits left, all frozen in state 9 before. 0 frogs and 1 resting rabbit after.
-- [ ] **79.** `P4` Butterflies never bob and their wings freeze about half the time. `threat()` writes the flee
+- [x] **79.** `P4` Butterflies never bob and their wings freeze about half the time. `threat()` writes the flee
   direction into `LVZ` and `LB` (`:428`), which butterflies use for vertical velocity and rest flag. `LPH` is
   advanced while perched (`:468`). The same overwrite flattens some rabbit hops. Fix: give `threat()` its own
   outputs (`TAX`, `TAY` at `:424` are declared and unused).
+  Done: threat() writes LAX and LAY per creature. Butterflies and rabbits read those. The flap loop was
+  rewritten, since the 200 ms rest branch could not run, and the flap timer starts near 0 on spawn and
+  take-off. 10 butterflies for 20 s: height range 3 to 4 px, 0.1 up-kicks per second and the same wing
+  frame held for 2.4 to 6.7 s before. Range 12 px, 2.9 kicks per second and 0.2 s at most (the rest)
+  after. They still perch, 33% of the time against 42%.
 - [ ] **80.** `P3` "One field layer" goes stale after Reset, for as long as the sim ran before it. `fieldBakeT`
   is not reset (`:656`, `:755`). Cuts made while paused in this mode do not show either.
 - [ ] **81.** `P4` The hidden traveller in wheat is a headless dithered torso, and the overlay draws over trees
