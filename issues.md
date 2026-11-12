@@ -776,9 +776,13 @@ How to use this file:
   `:210`). With the default start it happens about 4 s after load. Fix: ramp by elevation.
   Done: the sun colour scales over the first 4 degrees above the horizon, the moon from 2 to 10 degrees. The
   largest change in sun colour per 0.01 h of clock was 1.58 at 18:00 (all of it at once). Now 0.10.
-- [ ] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
+- [x] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
   candle (`:184`) sits inside the table occluder (`:138`), and the bed occluder (`:136`) beats the fireplace
   threshold (`:198`).
+  Done: the bed and the table are occluders of height 3, down from 6 and 5, so they sit under the 3.6 that
+  blocks a light of height 6. They still stop the traveller. Indoors at 21:00 the candle's shortest ray was
+  2.5 px and the floor beside the table got 0 light. Now 17.5 px and 0.71. The floor beyond the bed gets
+  0.21 from the fireplace, was 0.
 - [ ] **149.** `P4` The magic crystal shadows its own glow (`:188`, `:168`). The brazier has the same setup.
 - [ ] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
 - [ ] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the

@@ -128,15 +128,15 @@ for(let y=HA.y0;y<=HA.y1;y++)for(let x=HA.x0;x<=HA.x1;x++){const wall=x<=21||x>=
 for(let y=18;y<=62;y++)for(let x=18;x<=102;x++){let b=((y-18)%4===3)?RFA[1]:RFA[0];if(((x+((y>>2)&1)*3)%6)===0&&b===RFA[0])b=RFA[1];if(y===18||y===62||x===18||x===102)b=RFA[2];put(MOUT,x,y,b,ROOF,80);}
 for(let y=63;y<=80;y++)for(let x=20;x<=100;x++){let b=PL[0],cls=WALLF;if(x===20||x===100||y===63||y===80||(x-20)%20===0)b=TIMB;else if(hash2(x,y)<.2)b=PL[1];
   if(x>=56&&x<=63&&y>=68){b=(x===56||x===63||y===68)?TIMB:DOOR;}for(const wx of [30,80])if(x>=wx&&x<=wx+10&&y>=67&&y<=75){b=(x===wx||x===wx+10||y===67||y===75||x===wx+5)?TIMB:GLASS;if(b===GLASS){cls=WIN;HOUSE[y*W+x]=1;}}put(MOUT,x,y,b,cls,80);}
-// inside version: floor, low cut walls, furniture
+// inside version: floor, low cut walls, furniture. Bed and table are 3 high, under the 3.6 that blocks the fireplace and the candle
 for(let y=40;y<=80;y++)for(let x=20;x<=100;x++){const i=y*W+x;const wall=x<=21||x>=99||y<=41||y>=79;
   if(wall){const gap=isGapA(x,y);const door=y>=79&&x>=56&&x<=63;put(MIN,x,y,door?FLOOR[1]:gap?GLASS:(y<=41?STONE[0]:TIMB),door?INTER:OBJ,y);if(door)MIN.IN[i]=1;continue;}
   put(MIN,x,y,(y%4===0)?FLOOR[2]:(((x+(y>>2)*5)%11===0)?FLOOR[1]:FLOOR[0]),INTER,y);MIN.IN[i]=1;}
 for(let y=34;y<=39;y++)for(let x=20;x<=100;x++)put(MIN,x,y,y===34?STONE[2]:STONE[(x+y)%3===0?1:0],WALLF,41);
 for(let y=36;y<=46;y++)for(let x=52;x<=66;x++){const inner=x>=55&&x<=63&&y>=40;put(MIN,x,y,inner?STONE[2]:STONE[(x+y)%4===0?1:0],inner?INTER:OBJ,46);MIN.IN[y*W+x]=1;if(!inner&&y>=42)occ(x,y,8);}
-for(let y=44;y<=56;y++)for(let x=25;x<=39;x++){put(MIN,x,y,y<=47?BED[1]:BED[0],OBJ,56);MIN.IN[y*W+x]=1;occ(x,y,6);}
+for(let y=44;y<=56;y++)for(let x=25;x<=39;x++){put(MIN,x,y,y<=47?BED[1]:BED[0],OBJ,56);MIN.IN[y*W+x]=1;occ(x,y,3);}
 for(let y=62;y<=73;y++)for(let x=44;x<=72;x++){put(MIN,x,y,(x===44||x===72||y===62||y===73)?RUG[1]:RUG[0],INTER,y);}
-for(let y=56;y<=63;y++)for(let x=74;x<=86;x++){put(MIN,x,y,y===63?FLOOR[2]:TABLE,OBJ,63);occ(x,y,5);}
+for(let y=56;y<=63;y++)for(let x=74;x<=86;x++){put(MIN,x,y,y===63?FLOOR[2]:TABLE,OBJ,63);occ(x,y,3);}
 // wall torches beside the door (outside)
 // ---- house B (exterior only) ----
 const isGapB=(x,y)=>y>=63&&((x>=250&&x<=260)||(x>=288&&x<=298)||(x>=270&&x<=278));
