@@ -1,0 +1,189 @@
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five generations of loot and pickup, 1996 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or filter by generation. The axis is linear from 1995 to 2027. Each event keeps its evidence tag and source from §3.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG containers-->
+<figure class="fig" data-demo="containers" id="fig-containers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same wolf, looted four ways, and what each costs in clicks</h4><span class="illu">Loot roll made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="st" role="group" aria-label="Drop style"><button type="button" class="on" data-v="corpse">Corpse</button><button type="button" data-v="spill">Spill</button><button type="button" data-v="bag">One bag</button><button type="button" data-v="direct">Direct to bag</button></div></div>
+  <div class="stage click"><canvas width="192" height="96" aria-label="A knight kills a wolf; depending on the style the loot stays inside the corpse with a loot line, spills onto the grass, sits in one coloured bag or flies straight into the backpack"></canvas></div>
+  <div class="ctl"><label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The wolf drops 9 gold, meat, fine boots and a gem every time. <b>Corpse</b> is Canary's order. The corpse arrives already full, a tier glint shows the best item, and the line "Loot of a wolf" goes to the party <span class="cite"><b class="tag tv">V</b> S6<i>;</i> S13</span>. Click the corpse to open it, then click each item. <b>Spill</b> throws the items onto the grass in tier order, one click each. <b>One bag</b> is the Realm of the Mad God idea. A single bag in the colour of its best item, here purple for a rare gem <span class="cite"><b class="tag tv">V</b> S75</span>. <b>Direct to bag</b> skips the world and shows a toast, with zero clicks and nothing to remember <span class="cite"><b class="tag tv">V</b> S9<i>;</i> <b class="tag ti">I</b></span>. The readout keeps your click average per style.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG scatter-->
+<figure class="fig" data-demo="scatter" id="fig-scatter">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Three spill patterns, stepped item by item around walls you paint</h4><span class="illu">Item list made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="pat" role="group" aria-label="Pattern"><button type="button" data-v="ro">Ragnarok cycle</button><button type="button" data-v="ms">MapleStory row</button><button type="button" class="on" data-v="d1">Diablo ring search</button></div></div>
+  <div class="stage click"><canvas width="192" height="112" aria-label="A 12 by 7 tile grass grid with a goblin corpse in the centre tile, rocks on some tiles, and numbered items landing one at a time in the chosen pattern"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Items <input type="range" data-k="n" min="1" max="20" step="1" value="12"><output data-o="n">12</output></label>
+    <button type="button" class="btn ghost" data-b="step">Step</button><button type="button" class="btn ghost" data-b="play">Play</button><button type="button" class="btn ghost" data-b="reset">Reset</button><button type="button" class="btn ghost" data-b="clear">Clear rocks</button>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click or drag on the grid to place and remove rocks. <b>Ragnarok</b> puts the first item on the death cell and cycles SE, W, N for the rest. A blocked cell falls back to a free cell within 1, and a sub-cell jitter of 3, 6, 9 or 12 sixteenths keeps stacked items from covering each other exactly <span class="cite"><b class="tag tv">V</b> S66<i>;</i> S67</span>. <b>MapleStory</b> alternates right and left in 25 px steps on the mob's foothold, drawn here at half scale <span class="cite"><b class="tag tv">V</b> S70</span>. <b>Diablo</b> allows one item per tile and searches square rings outward past items, walls and creatures <span class="cite"><b class="tag tv">V</b> S84</span>. Only the ring search keeps every item on its own clickable tile, which is why §7 picks it for boss drops and death piles <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG arc-->
+<figure class="fig" data-demo="arc" id="fig-arc">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The pop arc is 400 ms with a 20 px apex, and a click cuts it short</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="pre" role="group" aria-label="Timing preset"><button type="button" class="on" data-v="ast">Asterion</button><button type="button" data-v="spd">Shattered PD</button><button type="button" data-v="dvx">devilutionX</button><button type="button" data-v="flare">Flare</button></div></div>
+  <div class="stage click"><canvas width="192" height="112" aria-label="A sword arcs out of a goblin corpse and lands on the grass; below, a height-over-time curve marks the landing and the moment the sound plays"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Duration <input type="range" data-k="dur" min="100" max="1000" step="10" value="400"><output data-o="dur">400 ms</output></label>
+    <label class="rng">Apex <input type="range" data-k="apex" min="0" max="40" step="2" value="20"><output data-o="apex">20 px</output></label>
+    <label><input type="checkbox" data-k="snd"> Sound</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Drop</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Shattered Pixel Dungeon launches at 100 px/s against 500 px/s² gravity, so the item peaks at 10 px after 200 ms and lands at 400 ms on a 16 px tile <span class="cite"><b class="tag tv">V</b> S125</span>. That is 20 px at Asterion's 32 px <span class="cite"><b class="tag ti">I</b></span>. devilutionX flips most items in 13 frames of 50 ms and plays the sound about 300 ms in <span class="cite"><b class="tag tv">V</b> S84</span>. Flare takes 600 ms and plays the loot sound on the flip <span class="cite"><b class="tag tv">V</b> S129</span>. Diablo and Flare draw their apex in frames, so the slider keeps whatever you set. Click the item in the air. Unlike Diablo, Asterion accepts the pickup at once and cuts the arc, because players spam-click <span class="cite"><b class="tag tv">V</b> S3<i>;</i> <b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG landing-->
+<figure class="fig" data-demo="landing" id="fig-landing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A floor shadow shows height, a material sound shows type, and a bounce only delays the read</h4><span class="illu">Bounce sizes illustrative</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="b" role="group" aria-label="Bounce"><button type="button" class="on" data-v="none">No bounce</button><button type="button" data-v="hop">Hop, top two tiers</button><button type="button" data-v="all">Bounce everything</button></div></div>
+  <div class="stage"><canvas width="192" height="88" aria-label="Five items of five tiers arc out of a corpse and land in a row; a number under each shows how many milliseconds passed before it stood still"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="sh" checked> Floor shadow</label>
+    <label><input type="checkbox" data-k="snd"> Landing sound by material</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Drop</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>SPD keeps a shadow 1.0 x 0.25 of the sprite at 60% black on the floor during the arc <span class="cite"><b class="tag tv">V</b> S125</span>. Untick it and the item seems to slide instead of rise. With sound on, gold clinks, the potion rings like glass and metal clangs, the way Diablo maps about 20 drop sounds to 43 item graphics <span class="cite"><b class="tag tv">V</b> S84</span>. No source in this study bounces its drops <span class="cite"><b class="tag tv">V</b> S125<i>;</i> S84<i>;</i> S129</span>. The numbers show the cost. Every bounce adds time before the item is still and readable. §7 allows one 4 px hop under 120 ms for epic and legendary only, 2 px here <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG bigdrop-->
+<figure class="fig" data-demo="bigdrop" id="fig-bigdrop">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A boss drop staggers 40 ms per item, caps the roll at 600 ms and lands the best item last</h4><span class="illu">Drop list made up</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="n" role="group" aria-label="Drop size"><button type="button" class="on" data-v="15">15 items</button><button type="button" data-v="30">30 items</button></div>
+    <div class="seg" data-seg="ord" role="group" aria-label="Order"><button type="button" class="on" data-v="tier">Tier ascending</button><button type="button" data-v="rnd">Random</button></div>
+  </div>
+  <div class="stage"><canvas width="224" height="128" aria-label="An orc corpse throws 15 or 30 items onto ring tiles around it, coins as one coin, a few coins or a pile; a strip at the bottom marks each item's launch time against a 600 ms line"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="cap" checked> Cap the sequence at 600 ms</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Drop</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>No source gave a stagger value, so 40 ms is the study's proposal <span class="cite"><b class="tag ti">I</b></span>. At 15 items the roll takes 560 ms. At 30 items it would take 1.2 s, too long for a crowd, so the cap squeezes the stagger to 20 ms. Untick the cap to compare. Tier order closes the drop on the legendary and its beam; random order may open with it <span class="cite"><b class="tag ti">I</b></span>. Coins use three sprites by stack size, as Flare picks a different flip by stack and Minecraft draws 1 to 5 copies <span class="cite"><b class="tag tv">V</b> S128<i>;</i> S134</span>. The 3 and 10 thresholds here are illustrative.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tiers-->
+<figure class="fig" data-demo="tiers" id="fig-tiers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five tiers in the shared colour order, with a shape ladder that survives colour blindness</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="sim" role="group" aria-label="Vision"><button type="button" class="on" data-v="none">Normal</button><button type="button" data-v="protan">Protan</button><button type="button" data-v="deutan">Deutan</button><button type="button" data-v="tritan">Tritan</button><button type="button" data-v="grey">Greyscale</button></div></div>
+  <div class="stage"><canvas width="224" height="104" aria-label="A sword, a ring, a gem and boots in each of five tiers on a floor, with tier names, hex values and the outline shape of each tier; the image can be filtered to simulate colour blindness"></canvas></div>
+  <div class="ctl"><div class="seg" data-seg="fl" role="group" aria-label="Floor"><button type="button" class="on" data-v="grass">Grass</button><button type="button" data-v="path">Dirt path</button><button type="button" data-v="stone">Stone</button></div></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Common <code>#E8E8E8</code>, uncommon <code>#4CE04C</code>, rare <code>#4C9BFF</code>, epic <code>#B45CFF</code>, legendary <code>#FF9A1F</code>, each with a 1 px dark outline. These are the study's picks for green and brown floors, in the white, green, blue, purple, orange order Borderlands made familiar <span class="cite"><b class="tag tv">V</b> S110<i>;</i> <b class="tag ti">I</b></span>. The shape ladder carries the tier a second way. Common has none, uncommon gets corner pixels, rare a full outline, epic adds a sparkle and legendary a beam. Switch to a simulation and the colours merge, but the ladder still sorts them. The simulation uses the Machado 2009 matrices at full strength, an approximation. Terraria's wiki warns that more than about 6 tiers make neighbours look alike <span class="cite"><b class="tag tv">V</b> S131</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG beams-->
+<figure class="fig" data-demo="beams" id="fig-beams">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A glow pulse for rare and up, and a legendary beam that strangers see for 2 s and the owner until pickup</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="who" role="group" aria-label="Viewer"><button type="button" class="on" data-v="owner">Owner</button><button type="button" data-v="stranger">Stranger</button></div></div>
+  <div class="stage click"><canvas width="224" height="112" aria-label="Rare and epic items pulse with a soft halo on the grass while a legendary falls with a beam of light; a graph below traces the pulse against a 60 percent cap; off screen drops show a blinking chip at the edge"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="ph" checked> Phase from item id</label>
+    <label><input type="checkbox" data-k="off"> Land off screen</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Drop legendary</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>SPD pulses a 60% tint on a 2 s triangle wave, and Minecraft gives each item its own phase so piles never move in lockstep <span class="cite"><b class="tag tv">V</b> S125<i>;</i> S134</span>. Untick the phase to see the lockstep. The halo here is a pre-baked sprite, which cost about 0.4 ms for 200 items on the M4 GPU against 20.1 ms for <code>shadowBlur</code> <span class="cite"><b class="tag tv">V</b> S5</span>. Path of Exile's Temp beam shows only while an item drops <span class="cite"><b class="tag tv">V</b> S103</span>. §7 gives strangers 2 s and the owner a beam until pickup, plus an edge chip when the drop lands off screen <span class="cite"><b class="tag ti">I</b></span>. Click the legendary to pick it up. The beam is 48 px tall here, 96 px at Asterion scale.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stings-->
+<figure class="fig" data-demo="stings" id="fig-stings">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Eight loot voices, own loot first, and a 6 dB duck under every legendary sting</h4><span class="illu">Drop mix illustrative</span></div>
+  <div class="stage"><canvas width="224" height="100" aria-label="Eight voice slots fill with item icons as drops land; a loot bus meter dips on a legendary sting; a scrolling lane plots own, party and stranger drops, with red crosses for culled sounds"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Drops per second <input type="range" data-k="dps" min="1" max="60" step="1" value="20"><output data-o="dps">20 /s</output></label>
+    <label><input type="checkbox" data-k="snd"> Sound</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="reset">Reset counters</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The rules are §4's proposal <span class="cite"><b class="tag ti">I</b></span>. Every drop lands with a material sound of 80 to 200 ms. Rare and up add a sting of 400 to 900 ms, for your own loot only. Party loot plays 6 dB down. Strangers stay silent except a legendary at 12 dB down. The pool holds 8 voices. When it is full, a new sound steals the lowest one, ranked mine, party, others and then tier, oldest first, or it is culled. A legendary sting ducks the loot bus 6 dB for 300 ms. Drag the rate to 60 and watch strangers' drops vanish first. Sound must never be the only channel, since Tibia players looted in silence until client 13.00 in September 2022 <span class="cite"><b class="tag tv">V</b> S47<i>;</i> S46</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG honest-->
+<figure class="fig" data-demo="honest" id="fig-honest">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Effect size follows tier, next to a fake near miss that starts a beam and lets it fizzle</h4><span class="illu">Drop sequence made up</span></div>
+  <div class="stage"><canvas width="224" height="96" aria-label="Two grass panels drop the same item; on the left the effect matches the tier, on the right every drop starts a legendary beam that fizzles unless the item really is legendary"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="fake" checked> Fake near miss</label>
+    <label><input type="checkbox" data-k="snd"> Sound</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+    <button type="button" class="btn ghost" data-b="go">Next drop</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>On the left each tier gets a fixed budget. Common a thud, uncommon a pitch-up, rare a glow, epic a glow and a sting, legendary a beam, a sting and a ping <span class="cite"><b class="tag ti">I</b></span>. On the right the beam rises before every drop, and it also makes every drop wait 700 ms. Kao and colleagues (CHI 2024, n = 1,699) found that feedback tied to success raised competence and curiosity, while amplification alone lowered them <span class="cite"><b class="tag tv">V</b> S143</span>. Clark and colleagues found that near misses felt worse than misses yet raised the desire to play <span class="cite"><b class="tag tv">V</b> S141</span>, and Zagal and colleagues class such designs as dark patterns <span class="cite"><b class="tag tv">V</b> S142</span>. In Larche's study the pause after a reveal grew from 4.91 s for rare to 5.70 s for legendary, so leave room after a great drop <span class="cite"><b class="tag tv">V</b> S140</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lootlog-->
+<figure class="fig" data-demo="lootlog" id="fig-lootlog">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia-style loot log with party lines, tier-coloured names and a split</h4><span class="illu">Names and loot made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="tab" role="group" aria-label="Log filter"><button type="button" class="on" data-v="all">All</button><button type="button" data-v="mine">Mine</button><button type="button" data-v="party">Party</button></div></div>
+  <div class="stage"><canvas width="224" height="112" aria-label="A dark chat panel lists lines such as Loot of a goblin followed by gold and item names in tier colours, each prefixed by the party member who killed it"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="col" checked> Colour item names</label>
+    <label><input type="checkbox" data-k="merge"> Merge repeats</label>
+    <label class="rng">Kills per second <input type="range" data-k="rate" min="0" max="4" step=".25" value="1"></label>
+    <button type="button" class="btn ghost" data-b="split">Split the session</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <div class="readout"><output data-o="split">Press Split to divide the gold four ways.</output></div>
+  <figcaption>Canary prints <code>"Loot of {}: {}"</code> and sends it to the whole party <span class="cite"><b class="tag tv">V</b> S6<i>;</i> S13</span>. Clients above protocol 1200 get item names as <code>{itemId|name}</code> so they can colour them <span class="cite"><b class="tag tv">V</b> S7</span>. Untick the colour to see the old log, where a legendary reads like a bone. Tibia's Party Hunt Analyser and the TibiaMaps splitter turn the log into who pays whom <span class="cite"><b class="tag tv">V</b> S44<i>;</i> S45</span>. Drag the kill rate up and the log turns into spam, which is why §4 suggests merging consecutive lines from the same monster type <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG labels-->
+<figure class="fig" data-demo="labels" id="fig-labels">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Labels only while a key is held, capped and sorted by tier, then own, then distance</h4><span class="illu">Item layout random</span></div>
+  <div class="stage click"><canvas width="224" height="128" aria-label="A grass field scattered with 46 items around a knight; while the key is held, labels appear over the items you may take, best tiers first, and a +N counter shows how many were left out"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="hold" aria-pressed="false">Hold for labels</button>
+    <label><input type="checkbox" data-k="tog"> Toggle instead of hold (touch)</label>
+    <label class="rng">Cap <input type="range" data-k="cap" min="4" max="48" step="1" value="32"><output data-o="cap">32</output></label>
+    <button type="button" class="btn ghost" data-b="refill">New field</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Press and hold the button, or Alt while the figure has focus. Diablo II shows ground labels while Alt is held, and D2R caps them at 32, where players say important drops get buried <span class="cite"><b class="tag tv">V</b> S89<i>;</i> S90</span>. Here the cap keeps the best 32 by tier, then your own, then distance from the knight, so the buried-drop bug cannot happen <span class="cite"><b class="tag ti">I</b></span>. Labels are hidden, never sprites, because PoE2 players complain when items vanish with their labels <span class="cite"><b class="tag tu">U</b> note 03</span>. Grey items belong to someone else and get no label. Click a label to pick its item; the hit test uses the label's rectangle, not the sprite under it <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG declutter-->
+<figure class="fig" data-demo="declutter" id="fig-declutter">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Label declutter, from a pile of overlaps to tile stacks with a sideways push, timed live on up to 3000 labels</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="mode" role="group" aria-label="Solver"><button type="button" data-v="off">Off</button><button type="button" data-v="stack">Stack upward</button><button type="button" class="on" data-v="push">Stack and push sideways</button></div></div>
+  <div class="stage"><canvas width="224" height="120" aria-label="Three piles of items with labels; with the solver off the labels overlap into an unreadable block, with it on they stack upward and sideways and hidden ones become +N counters"></canvas></div>
+  <div class="ctl"><label class="rng">Candidates timed <input type="range" data-k="n" min="100" max="3000" step="100" value="3000"><output data-o="n">3000</output></label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The solver sorts by tier, tries each label's natural spot, pushes it sideways by the other label's width as devilutionX does, then tries up to 7 steps of 10 px upward and hides the rest as "+N" over the tile <span class="cite"><b class="tag tv">V</b> S85<i>;</i> S5<i>;</i> <b class="tag ti">I</b></span>. devilutionX's licence forbids commercial use, so this is a reimplementation from the description <span class="cite"><b class="tag tv">V</b> S85</span>. The readout times both versions in this page on random labels in 320×180. A grid of 32 x 16 px cells only checks neighbours, and on the M4 it took 0.18 ms for 3000 candidates against 0.93 ms naive <span class="cite"><b class="tag tv">V</b> S5</span>. Only 118 of 3000 fit on that screen, so above about 100 candidates the solver is already a filter <span class="cite"><b class="tag tv">V</b> S5</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG filters-->
+<figure class="fig" data-demo="filters" id="fig-filters">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One tier style table and three filter presets, applied to the same pile</h4><span class="illu">Pile made up</span></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="pre" role="group" aria-label="Filter preset"><button type="button" class="on" data-v="all">Show all</button><button type="button" data-v="junk">Hide junk</button><button type="button" data-v="rare">Rare and up</button></div></div>
+  <div class="stage"><canvas width="224" height="104" aria-label="Twenty-eight drops on grass with labels; the chosen preset hides labels for junk or for everything below rare while every sprite stays on the ground"></canvas></div>
+  <div class="tbl" style="margin:10px 0 0"><table class="tstyle"><thead><tr><th>Tier</th><th>Label</th><th>Colour</th><th>Beam</th><th>Sound</th></tr></thead><tbody></tbody></table></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="snd"> Sound</label>
+    <button type="button" class="btn ghost" data-b="go">New pile</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion keeps all loot presentation in one <code>LootTierStyle</code> Resource per tier, and players get three presets plus a minimum tier for sound, label and beam, with no scripting language <span class="cite"><b class="tag ti">I</b></span>. Path of Exile rules set font size, colours, an alert sound, a beam and a minimap icon, or <code>Hide</code> <span class="cite"><b class="tag tv">V</b> S103</span>. NeverSink's PoE2 filter runs to 5,308 lines, and its hidden items keep a font-18 label and stay pickable <span class="cite"><b class="tag tv">V</b> S105</span>. Here a hidden tier loses its label and keeps its sprite. A filter that players need is a symptom of too many drops, so Diablo III and IV cut volume first <span class="cite"><b class="tag tv">V</b> S96<i>;</i> S97</span>.</figcaption>
+</figure>
+<!--/FIG-->

@@ -1,0 +1,101 @@
+{
+ "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+ "hardwareConcurrency": 14,
+ "dpr": 1,
+ "crossOriginIsolated": true
+} total_s 78
+     1.47      2.35  canvas2d_lowres320x180+upscale   baseline_floor_only n=0 f=100 {}
+    1.625     2.315  canvas2d_lowres320x180+upscale   items_static_blit n=50 f=100 {}
+    1.715     2.565  canvas2d_lowres320x180+upscale   items_poparc_bounce_shadow n=50 f=100 {}
+    1.775      2.64  canvas2d_lowres320x180+upscale   glow_halo_sprite_alpha n=50 f=100 {}
+    1.755     2.775  canvas2d_lowres320x180+upscale   glow_halo_sprite_prebaked_pulse n=50 f=100 {}
+    1.735     2.565  canvas2d_lowres320x180+upscale   glow_halo_lighter_additive n=50 f=100 {}
+     6.89     8.015  canvas2d_lowres320x180+upscale   glow_shadowBlur6 n=50 f=100 {}
+     1.63     2.475  canvas2d_lowres320x180+upscale   fly_to_bag_tween n=50 f=100 {}
+     2.01     3.065  canvas2d_lowres320x180+upscale   items_static_blit n=200 f=100 {}
+     2.76     3.905  canvas2d_lowres320x180+upscale   items_poparc_bounce_shadow n=200 f=100 {}
+    2.865     3.965  canvas2d_lowres320x180+upscale   glow_halo_sprite_alpha n=200 f=100 {}
+    3.195      4.47  canvas2d_lowres320x180+upscale   glow_halo_sprite_prebaked_pulse n=200 f=100 {}
+    2.975     4.225  canvas2d_lowres320x180+upscale   glow_halo_lighter_additive n=200 f=100 {}
+    23.57    24.995  canvas2d_lowres320x180+upscale   glow_shadowBlur6 n=200 f=100 {}
+    2.085      3.11  canvas2d_lowres320x180+upscale   fly_to_bag_tween n=200 f=100 {}
+     4.97      5.76  canvas2d_lowres320x180+upscale   items_static_blit n=1000 f=100 {}
+    9.605     11.18  canvas2d_lowres320x180+upscale   items_poparc_bounce_shadow n=1000 f=100 {}
+    9.645     11.01  canvas2d_lowres320x180+upscale   glow_halo_sprite_alpha n=1000 f=100 {}
+    9.555     10.84  canvas2d_lowres320x180+upscale   glow_halo_sprite_prebaked_pulse n=1000 f=100 {}
+     9.54      10.9  canvas2d_lowres320x180+upscale   glow_halo_lighter_additive n=1000 f=100 {}
+    100.2    101.78  canvas2d_lowres320x180+upscale   glow_shadowBlur6 n=1000 f=20 {}
+    5.265     6.145  canvas2d_lowres320x180+upscale   fly_to_bag_tween n=1000 f=100 {}
+    13.57    15.385  canvas2d_lowres320x180+upscale   items_static_blit n=3000 f=100 {}
+    26.97     29.62  canvas2d_lowres320x180+upscale   items_poparc_bounce_shadow n=3000 f=100 {}
+   27.215     29.58  canvas2d_lowres320x180+upscale   glow_halo_sprite_alpha n=3000 f=100 {}
+   26.895     28.94  canvas2d_lowres320x180+upscale   glow_halo_sprite_prebaked_pulse n=3000 f=100 {}
+   27.065    29.885  canvas2d_lowres320x180+upscale   glow_halo_lighter_additive n=3000 f=100 {}
+  319.065   339.625  canvas2d_lowres320x180+upscale   glow_shadowBlur6 n=3000 f=20 {}
+   13.995     15.86  canvas2d_lowres320x180+upscale   fly_to_bag_tween n=3000 f=100 {}
+    1.525     2.535  canvas2d_lowres320x180+upscale   beam_gradient_new_per_frame n=5 f=100 {}
+    1.495      2.29  canvas2d_lowres320x180+upscale   beam_gradient_cached_translate n=5 f=100 {}
+    1.515      2.26  canvas2d_lowres320x180+upscale   beam_sprite_lighter n=5 f=100 {}
+    1.525      2.45  canvas2d_lowres320x180+upscale   beam_gradient_new_per_frame n=20 f=100 {}
+    1.535     2.505  canvas2d_lowres320x180+upscale   beam_gradient_cached_translate n=20 f=100 {}
+     1.52     2.545  canvas2d_lowres320x180+upscale   beam_sprite_lighter n=20 f=100 {}
+     1.83     2.775  canvas2d_lowres320x180+upscale   beam_gradient_new_per_frame n=100 f=100 {}
+    1.595      2.58  canvas2d_lowres320x180+upscale   beam_gradient_cached_translate n=100 f=100 {}
+    1.755     2.795  canvas2d_lowres320x180+upscale   beam_sprite_lighter n=100 f=100 {}
+    2.875     3.835  canvas2d_lowres320x180+upscale   beam_gradient_new_per_frame n=300 f=100 {}
+     2.12     3.375  canvas2d_lowres320x180+upscale   beam_gradient_cached_translate n=300 f=100 {}
+     2.63      3.79  canvas2d_lowres320x180+upscale   beam_sprite_lighter n=300 f=100 {}
+    2.895     4.215  canvas2d_lowres320x180+upscale   label_bitmap_glyphs n=50 f=100 {}
+     1.62     2.435  canvas2d_lowres320x180+upscale   label_cached_canvas_each n=50 f=100 {}
+     1.61     2.785  canvas2d_lowres320x180+upscale   label_cached_atlas n=50 f=100 {}
+     1.74     2.965  canvas2d_lowres320x180+upscale   label_fillText_lowres6px n=50 f=100 {}
+     1.76      2.53  canvas2d_lowres320x180+upscale   label_fillText_measure_each n=50 f=100 {}
+    1.625     2.575  canvas2d_lowres320x180+upscale   label_fillText_overlay1280 n=50 f=100 {}
+    8.595     9.845  canvas2d_lowres320x180+upscale   label_bitmap_glyphs n=200 f=100 {}
+    2.115     3.175  canvas2d_lowres320x180+upscale   label_cached_canvas_each n=200 f=100 {}
+    1.925     3.025  canvas2d_lowres320x180+upscale   label_cached_atlas n=200 f=100 {}
+     2.67     3.535  canvas2d_lowres320x180+upscale   label_fillText_lowres6px n=200 f=100 {}
+    3.185     4.595  canvas2d_lowres320x180+upscale   label_fillText_measure_each n=200 f=100 {}
+    2.905     3.815  canvas2d_lowres320x180+upscale   label_fillText_overlay1280 n=200 f=100 {}
+    43.06     49.28  canvas2d_lowres320x180+upscale   label_bitmap_glyphs n=1000 f=20 {}
+    5.655     6.815  canvas2d_lowres320x180+upscale   label_cached_canvas_each n=1000 f=100 {}
+    5.025      6.29  canvas2d_lowres320x180+upscale   label_cached_atlas n=1000 f=100 {}
+    7.555     8.475  canvas2d_lowres320x180+upscale   label_fillText_lowres6px n=1000 f=100 {}
+    8.565     10.62  canvas2d_lowres320x180+upscale   label_fillText_measure_each n=1000 f=100 {}
+     7.25     8.195  canvas2d_lowres320x180+upscale   label_fillText_overlay1280 n=1000 f=100 {}
+  119.055   130.725  canvas2d_lowres320x180+upscale   label_bitmap_glyphs n=3000 f=20 {}
+    14.82    17.415  canvas2d_lowres320x180+upscale   label_cached_canvas_each n=3000 f=100 {}
+   13.475    15.485  canvas2d_lowres320x180+upscale   label_cached_atlas n=3000 f=100 {}
+   19.675    23.145  canvas2d_lowres320x180+upscale   label_fillText_lowres6px n=3000 f=100 {}
+   23.155     28.01  canvas2d_lowres320x180+upscale   label_fillText_measure_each n=3000 f=100 {}
+   19.515    21.035  canvas2d_lowres320x180+upscale   label_fillText_overlay1280 n=3000 f=100 {}
+    0.005      0.01  cpu_only                         solver_naive_On2 n=50 f=100 {'labels_placed': 43, 'overlap_checks': 1982}
+    0.005      0.01  cpu_only                         solver_spatial_grid n=50 f=100 {'labels_placed': 43, 'overlap_checks': 188}
+    0.035     1.295  cpu_only                         solver_naive_On2 n=200 f=100 {'labels_placed': 76, 'overlap_checks': 21420}
+    0.015      0.72  cpu_only                         solver_spatial_grid n=200 f=100 {'labels_placed': 76, 'overlap_checks': 1746}
+     1.48      2.46  cpu_only                         solver_naive_On2 n=1000 f=100 {'labels_placed': 99, 'overlap_checks': 140110}
+    0.055      1.33  cpu_only                         solver_spatial_grid n=1000 f=100 {'labels_placed': 99, 'overlap_checks': 11324}
+     5.65     6.595  cpu_only                         solver_naive_On2 n=3000 f=100 {'labels_placed': 118, 'overlap_checks': 480509}
+    1.155     2.075  cpu_only                         solver_spatial_grid n=3000 f=100 {'labels_placed': 118, 'overlap_checks': 38149}
+        0     0.005  cpu_only                         magnet_bruteforce_30p n=50 f=100 {'collected': 326}
+    0.005      0.01  cpu_only                         magnet_grid_30p n=50 f=100 {'collected': 326}
+    0.005     0.015  cpu_only                         magnet_bruteforce_30p n=200 f=100 {'collected': 1054}
+    0.005      0.01  cpu_only                         magnet_grid_30p n=200 f=100 {'collected': 1054}
+     0.03      1.27  cpu_only                         magnet_bruteforce_30p n=1000 f=100 {'collected': 5521}
+     0.02     0.805  cpu_only                         magnet_grid_30p n=1000 f=100 {'collected': 5521}
+     0.31     1.515  cpu_only                         magnet_bruteforce_30p n=3000 f=100 {'collected': 17455}
+     0.05     1.345  cpu_only                         magnet_grid_30p n=3000 f=100 {'collected': 17455}
+     2.49      3.47  canvas2d_lowres320x180+upscale   boss_drop_30p_cheap n=60 f=100 {'labels_candidates': 54, 'labels_placed': 28, 'states': {'rest': 54, 'pop': 6}}
+     3.79     4.845  canvas2d_lowres320x180+upscale   boss_drop_30p_naive n=60 f=100 {'labels_candidates': 54, 'labels_placed': 28, 'states': {'rest': 54, 'pop': 6}}
+    3.625     4.835  canvas2d_lowres320x180+upscale   boss_drop_30p_cheap n=200 f=100 {'labels_candidates': 183, 'labels_placed': 51, 'states': {'rest': 183, 'fly': 5, 'pop': 12}}
+     7.63     8.605  canvas2d_lowres320x180+upscale   boss_drop_30p_naive n=200 f=100 {'labels_candidates': 183, 'labels_placed': 51, 'states': {'rest': 183, 'fly': 5, 'pop': 12}}
+     7.73      9.24  canvas2d_lowres320x180+upscale   boss_drop_30p_cheap n=600 f=100 {'labels_candidates': 508, 'labels_placed': 59, 'states': {'rest': 508, 'pop': 73, 'fly': 19}}
+    20.66    22.125  canvas2d_lowres320x180+upscale   boss_drop_30p_naive n=600 f=100 {'labels_candidates': 508, 'labels_placed': 59, 'states': {'rest': 508, 'pop': 73, 'fly': 19}}
+     0.59     1.575  canvas2d_lowres320x180+upscale   raf_labels_canvas_atlas n=50 f=120 {'raf_interval_median_ms': 16.665, 'raf_interval_p95_ms': 16.67, 'frames_over_20ms': 0, 'main_TaskDuration_ms_per_frame': 1.05, 'main_ScriptDuration_ms_per_frame': 0.663, 'main_RecalcStyleDuration_ms_per_frame': 0.0, 'main_LayoutDuration_ms_per_frame': 0.0, 'main_RecalcStyleCount_per_frame': 0.0}
+    0.515     1.475  dom_spans_over_canvas            raf_labels_dom_spans n=50 f=120 {'raf_interval_median_ms': 16.665, 'raf_interval_p95_ms': 16.67, 'frames_over_20ms': 0, 'main_TaskDuration_ms_per_frame': 1.295, 'main_ScriptDuration_ms_per_frame': 0.588, 'main_RecalcStyleDuration_ms_per_frame': 0.078, 'main_LayoutDuration_ms_per_frame': 0.007, 'main_RecalcStyleCount_per_frame': 1.01}
+      1.6     2.025  canvas2d_lowres320x180+upscale   raf_labels_canvas_atlas n=200 f=120 {'raf_interval_median_ms': 16.665, 'raf_interval_p95_ms': 16.67, 'frames_over_20ms': 0, 'main_TaskDuration_ms_per_frame': 1.875, 'main_ScriptDuration_ms_per_frame': 1.557, 'main_RecalcStyleDuration_ms_per_frame': 0.0, 'main_LayoutDuration_ms_per_frame': 0.0, 'main_RecalcStyleCount_per_frame': 0.0}
+    1.285     2.105  dom_spans_over_canvas            raf_labels_dom_spans n=200 f=120 {'raf_interval_median_ms': 16.665, 'raf_interval_p95_ms': 16.67, 'frames_over_20ms': 0, 'main_TaskDuration_ms_per_frame': 3.023, 'main_ScriptDuration_ms_per_frame': 1.202, 'main_RecalcStyleDuration_ms_per_frame': 0.44, 'main_LayoutDuration_ms_per_frame': 0.013, 'main_RecalcStyleCount_per_frame': 1.01}
+    7.625     8.905  canvas2d_lowres320x180+upscale   raf_labels_canvas_atlas n=1000 f=120 {'raf_interval_median_ms': 16.665, 'raf_interval_p95_ms': 16.67, 'frames_over_20ms': 0, 'main_TaskDuration_ms_per_frame': 8.187, 'main_ScriptDuration_ms_per_frame': 7.719, 'main_RecalcStyleDuration_ms_per_frame': 0.0, 'main_LayoutDuration_ms_per_frame': 0.0, 'main_RecalcStyleCount_per_frame': 0.0}
+     5.42     6.875  dom_spans_over_canvas            raf_labels_dom_spans n=1000 f=120 {'raf_interval_median_ms': 16.665, 'raf_interval_p95_ms': 16.67, 'frames_over_20ms': 2, 'main_TaskDuration_ms_per_frame': 14.272, 'main_ScriptDuration_ms_per_frame': 5.594, 'main_RecalcStyleDuration_ms_per_frame': 1.914, 'main_LayoutDuration_ms_per_frame': 0.046, 'main_RecalcStyleCount_per_frame': 1.01}
+    24.25    25.945  canvas2d_lowres320x180+upscale   raf_labels_canvas_atlas n=3000 f=120 {'raf_interval_median_ms': 33.325, 'raf_interval_p95_ms': 33.335, 'frames_over_20ms': 61, 'main_TaskDuration_ms_per_frame': 25.371, 'main_ScriptDuration_ms_per_frame': 24.483, 'main_RecalcStyleDuration_ms_per_frame': 0.0, 'main_LayoutDuration_ms_per_frame': 0.0, 'main_RecalcStyleCount_per_frame': 0.0}
+   17.845    20.685  dom_spans_over_canvas            raf_labels_dom_spans n=3000 f=120 {'raf_interval_median_ms': 50, 'raf_interval_p95_ms': 50.005, 'frames_over_20ms': 119, 'main_TaskDuration_ms_per_frame': 50.525, 'main_ScriptDuration_ms_per_frame': 18.343, 'main_RecalcStyleDuration_ms_per_frame': 5.78, 'main_LayoutDuration_ms_per_frame': 0.19, 'main_RecalcStyleCount_per_frame': 1.01}

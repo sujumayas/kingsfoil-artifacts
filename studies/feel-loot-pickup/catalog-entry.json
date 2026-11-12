@@ -1,0 +1,69 @@
+{
+ "id": "feel-loot-pickup",
+ "type": "study",
+ "path": "/feel-loot-pickup-topdown-pixel.html",
+ "title": "Loot and pickup in a top-down pixel MMORPG: drops, reveals, pickup, sharing and death",
+ "short": "Loot and pickup",
+ "nav": "Loot and pickup",
+ "summary": "What happens between a kill and a full bag in a Tibia-like world: corpses and spills, drop arcs, rarity tells, labels, quick loot, ownership windows, races and death drops, with the server rules and the measured cost behind each.",
+ "series": {
+  "id": "feel",
+  "number": 3
+ },
+ "date": "2026-11-11",
+ "updated": "2026-11-11",
+ "thumb": "/thumbs/feel-loot-pickup.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "ui"
+  ],
+  "concept": [
+   "loot"
+  ],
+  "technique": [
+   "loot-ownership",
+   "rarity-tiers",
+   "label-declutter",
+   "loot-filters",
+   "item-magnet",
+   "death-drops",
+   "client-prediction",
+   "spatial-grid",
+   "bitmap-font"
+  ]
+ },
+ "stats": {
+  "words": 19661,
+  "techniques": 35,
+  "figures": 35,
+  "games": 29,
+  "sources": 154
+ },
+ "pair": "feel-loot-pickup-sandbox",
+ "_sandbox": {
+  "title": "Loot and pickup in a top-down pixel MMORPG Sandbox (playable)",
+  "path": "/feel-loot-pickup-sandbox.html"
+ }
+}

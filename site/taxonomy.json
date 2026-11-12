@@ -226,6 +226,11 @@
      "id": "combat-feel",
      "label": "Combat feel",
      "desc": "Hit feedback, targeting, telegraphs and the feel of fights"
+    },
+    {
+     "id": "loot",
+     "label": "Loot",
+     "desc": "Drops, reveals, pickup and sharing"
     }
    ]
   },
@@ -572,6 +577,36 @@
      "id": "spell-queue",
      "label": "Spell queue",
      "desc": "Input buffers, queue windows and cooldown locks"
+    },
+    {
+     "id": "loot-ownership",
+     "label": "Loot ownership",
+     "desc": "Owner windows, priority stages and party rules"
+    },
+    {
+     "id": "rarity-tiers",
+     "label": "Rarity tiers",
+     "desc": "Tier colours, shapes, glows, beams and sounds"
+    },
+    {
+     "id": "label-declutter",
+     "label": "Label declutter",
+     "desc": "Hold-key labels, sorted caps and overlap solvers"
+    },
+    {
+     "id": "loot-filters",
+     "label": "Loot filters",
+     "desc": "Data-driven tier styles and player filter presets"
+    },
+    {
+     "id": "item-magnet",
+     "label": "Item magnet",
+     "desc": "Walk-over and magnet pickup with delays"
+    },
+    {
+     "id": "death-drops",
+     "label": "Death drops",
+     "desc": "What players lose on death and who may loot it"
     }
    ]
   },
