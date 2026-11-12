@@ -346,7 +346,7 @@ const GLOWS=TC.map((c,t)=>{const r=TUNING.glow.r[t]||6,s=r*2+1,[cv2,g]=mk(s,s),i
   g.putImageData(im,0,0);return cv2;});
 // beam: legendary only, 16 x 48 px; 2 px white core, solid tier sides, dithered fade to the edges and upward
 const BEAM=(()=>{const bw=TUNING.beam.w,h=TUNING.beam.h,[bc,g]=mk(bw,h),im=g.createImageData(bw,h),q=C(TC[4]),c0=(bw-1)/2;
-  for(let y=0;y<h;y++)for(let x=0;x<bw;x++){const up=1-y/h,dx=Math.abs(x-c0),thr=BAY[(y&3)*4+(x&3)]/16;let a,col=q;
+  for(let y=0;y<h;y++)for(let x=0;x<bw;x++){const up=y/h,dx=Math.abs(x-c0),thr=BAY[(y&3)*4+(x&3)]/16;let a,col=q;
     if(dx<1){a=1;col=mixc(q,Q.wh,.85);}else if(dx<3){a=1;col=mixc(q,Q.wh,.2);}else{const e=(dx-3)/(c0-3);a=(1-e)*.7;if(thr>1-e)a=0;}
     if(up<.25&&thr>up*4)a=0;const i=(y*bw+x)*4;im.data[i]=col&255;im.data[i+1]=col>>8&255;im.data[i+2]=col>>16&255;im.data[i+3]=Math.round(a*210*Math.min(1,up*1.5+.2));}
   g.putImageData(im,0,0);return bc;})();

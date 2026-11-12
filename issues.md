@@ -141,8 +141,9 @@ How to use this file:
   Done: timers that add a ground item (rain and spills) carry a drop flag, and Clear items removes only
   those. A goblin killed before the click respawns 5 s after its death, and 200 rain items still in the air
   are cancelled.
-- [ ] **25.** `P4` Legendary beam is upside down. Solid at the top, fading to nothing at the item (`:349` to
+- [x] **25.** `P4` Legendary beam is upside down. Solid at the top, fading to nothing at the item (`:349` to
   `:351`). Fix: `up=y/h`.
+  Done: up=y/h. Checked in a zoomed screenshot. The beam is solid at the item and dithers out at the top.
 - [x] **26.** `P4` Spill scatter is lopsided. A third of items land 6 to 9 px too high because of a signed shift
   on a uint32 hash (`:468`). Fix: `(h>>>4)%3`.
   Done: h>>>4. Over 12 boss drops, 257 of 793 items sat 6 or 9 px above their tile's centre row before.
