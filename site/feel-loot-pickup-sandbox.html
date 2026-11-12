@@ -374,12 +374,14 @@ function resetEquip(){EQUIP.length=0;for(const [k,t] of [['sword',2],['shield',1
 function mkEnt(kind,x,y,o){const e=Object.assign({id:++EID,kind,x,y,dir:'d',walk:0,walking:false,hp:100,mhp:100,dead:false,sdead:false,dieT:-1,flash:0,dmg:new Map(),first:null,atkT:0,task:null,think:0,stuck:0,lat:40+ri(120),bubble:null,swing:0,bag:{list:[],gold:0}},o);ENTS.push(e);return e;}
 const freeSpot=(x0,x1,y0,y1)=>{for(let i=0;i<60;i++){const x=x0+rnd()*(x1-x0),y=y0+rnd()*(y1-y0);if(!solidAt(x,y)&&!solidAt(x-4,y)&&!solidAt(x+4,y)&&!isPZ(tileOf(x),tileOf(y)))return [x,y];}return [200,90];};
 function spawnMob(kind){const [x,y]=freeSpot(100,310,20,170);return mkEnt(kind,x,y,{team:'mob',sheet:SPR[kind],hp:kind==='elite'?160:55,mhp:kind==='elite'?160:55,name:kind==='elite'?'GOBLIN CHIEF':'GOBLIN',wander:0});}
+// an entity a slider removes is marked dead on the server first, so an attacker or a bot that still holds it lets go
+function dropEnt(e){e.sdead=true;ENTS.splice(ENTS.indexOf(e),1);}
 function syncPop(){const wantG=Math.min(16,TUNING.mobs.base+Math.floor(NALLY/2));
-  let gs=ENTS.filter(e=>e.kind==='gob');while(gs.length<wantG){spawnMob('gob');gs=ENTS.filter(e=>e.kind==='gob');}while(gs.length>wantG){const g=gs.pop();ENTS.splice(ENTS.indexOf(g),1);}
+  let gs=ENTS.filter(e=>e.kind==='gob');while(gs.length<wantG){spawnMob('gob');gs=ENTS.filter(e=>e.kind==='gob');}while(gs.length>wantG){const g=gs.find(e=>e.sdead)||gs[gs.length-1];gs.splice(gs.indexOf(g),1);dropEnt(g);}// goblins waiting to respawn go first
   if(!ENTS.some(e=>e.kind==='elite'))spawnMob('elite');
-  let al=ENTS.filter(e=>e.kind==='ally');while(al.length<NALLY){const i=al.length,[x,y]=freeSpot(40,300,20,170);al.push(mkEnt('ally',x,y,{team:'me',sheet:SPR.allies[i%8],name:'ALLY '+(i+1),hp:400,mhp:400}));}while(al.length>NALLY){const a=al.pop();ENTS.splice(ENTS.indexOf(a),1);}
+  let al=ENTS.filter(e=>e.kind==='ally');while(al.length<NALLY){const i=al.length,[x,y]=freeSpot(40,300,20,170);al.push(mkEnt('ally',x,y,{team:'me',sheet:SPR.allies[i%8],name:'ALLY '+(i+1),hp:400,mhp:400}));}while(al.length>NALLY){dropEnt(al.pop());}
   al.forEach((a,i)=>{a.ninja=NINJA&&(i%4===1||al.length===1);a.name=(a.ninja?'NINJA ':'ALLY ')+(i+1);});
-  const wantP=MODE==='pvp'?NPVP:0;let pv=ENTS.filter(e=>e.kind==='pvp');while(pv.length<wantP){const i=pv.length,[x,y]=freeSpot(220,310,20,170);pv.push(mkEnt('pvp',x,y,{team:'foe',sheet:SPR.pvp[i%4],name:['GRIM','VEX','MORDA','KHAL'][i%4],hp:220,mhp:220}));}while(pv.length>wantP){const p=pv.pop();ENTS.splice(ENTS.indexOf(p),1);}}
+  const wantP=MODE==='pvp'?NPVP:0;let pv=ENTS.filter(e=>e.kind==='pvp');while(pv.length<wantP){const i=pv.length,[x,y]=freeSpot(220,310,20,170);pv.push(mkEnt('pvp',x,y,{team:'foe',sheet:SPR.pvp[i%4],name:['GRIM','VEX','MORDA','KHAL'][i%4],hp:220,mhp:220}));}while(pv.length>wantP){dropEnt(pv.pop());}}
 const inParty=pid=>{if(PARTY==='top')return false;const e=ENTS.find(x=>x.id===pid);return !!e&&(e===PL||(e.kind==='ally'&&!e.ninja));};
 // shared ownership rule (server truth; the client runs the same rule on replicated fields to guess)
 function canLoot(pid,o,T){if(o.personal)return o.owner===pid;

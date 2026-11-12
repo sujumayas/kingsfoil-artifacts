@@ -220,8 +220,13 @@ How to use this file:
   Done: buttons in the control panels get min-height 44 px under body.coarse, the class fit() sets for a
   coarse pointer or a viewport under 700 px. Measured at 390 px: every button was 30 px and is 44 px now.
   The panels grow from 1,715 to 2,107 px. Desktop buttons stay at 30 px.
-- [ ] **41.** `P3` (suspected) Lowering the Allied players slider removes live goblins with `gs.pop()` (`:377`),
+- [x] **41.** `P3` (suspected) Lowering the Allied players slider removes live goblins with `gs.pop()` (`:377`),
   leaving stale targets.
+  Done: confirmed. Attacked a goblin, lowered the slider so it was removed, and the player hit it twice
+  more, killed it and got a corpse from a goblin that was not on screen. A removed goblin, ally or PvP enemy
+  is now marked dead on the server before it leaves the list, which the attack target, the bots' hunt tasks
+  and svAction already check. Same test after: no hits, no corpse. Goblins waiting to respawn are removed
+  before live ones.
 - [ ] **42.** `P3` (suspected) Magnet "far" rejects are meant to be silent, but `s.req=false` (`:618`) runs before
   the `!s.req` test (`:623`), so "TOO FAR" pops and the magnet retries each frame.
 
