@@ -499,6 +499,11 @@ How to use this file:
   row shift and keeps both dashes or one. Baked into two byte arrays at load. Chance that a lit pixel has
   a lit pixel 8 px to the right, 8 px below and 16 px to the right, on deep sea with a base rate near
   12%: 35%, 50% and 31% before, 18%, 30% and 10% after. Sync tile phase still shows the aligned grid.
+- [x] **182.** `P4` (found by the owner in review of PR #13) The walker faces the wrong way when it
+  walks east or west.
+  Done: `walkSpr()` looked the sprite up with `'durl'[wk.dir]`, while `wk.dir` is 0 down, 1 up, 2 left,
+  3 right. The string is now `'dulr'`. Sprite used for left, right, up and down: r, l, u, d before and
+  l, r, u, d after. The fishing line already read 2 as left.
 
 ## vfx-fire
 

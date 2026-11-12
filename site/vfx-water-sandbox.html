@@ -383,7 +383,7 @@ function reflect(s,x0,y0,r1){const by=y0+s.h,rr=r1==null?s.h:r1;for(let y=0;y<rr
 const put=(x,y,c)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<W&&y<H)IDX[y*W+x]=c;};
 const putW=(x,y,f)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;if(WATER[i])IDX[i]=f(IDX[i]);}};
 function ellipse(cx,cy,rx,ry,f,half){const n=Math.max(10,Math.ceil(rx*5));for(let k=0;k<n;k++){const a=k/n*6.283,s=Math.sin(a);if(half===1&&s<0||half===-1&&s>=0)continue;putW(cx+Math.cos(a)*rx,cy+s*ry,f);}}
-const walkSpr=()=>{const f=wk.mv?[1,0,2,0][Math.floor(wk.at*8)&3]:0;return WALK['durl'[wk.dir]+f];};
+const walkSpr=()=>{const f=wk.mv?[1,0,2,0][Math.floor(wk.at*8)&3]:0;return WALK['dulr'[wk.dir]+f];};
 let surf='cycle',sync=false,caust=true,reflOn=true,view='normal',waterMs=0;
 function render(){const t0=performance.now(),t=simT;IDX.set(BASEIDX);
   const cyc=surf==='cycle',tfr=Math.floor(t*5);
