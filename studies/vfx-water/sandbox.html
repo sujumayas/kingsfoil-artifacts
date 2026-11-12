@@ -318,8 +318,15 @@ function updBoat(dt){if(!boat.on)return;const dx=boat.tx-boat.x,dy=boat.ty-boat.
 const logs=[];
 const floatOk=(x,y)=>{if(x<0||y<0||x>=W||y>=H)return false;const j=(y|0)*W+(x|0);return !!(WATER[j]||BODY[j]===4);};
 function addLog(x,y){if(logs.length>=8)logs.shift();logs.push({x,y,vx:0,vy:0,ph:rnd()*6.283,wt:0,fall:false,age:0});if(floatOk(x,y))splash(x,y,4);else msg('Logs only float on water.');}
+// logs steer by the per-pixel river tangent, not the 8-direction cell flow. Near a bank the bed slope pushes them back to
+// mid-stream, and the plunge pool drains toward the river below it
+function logFlow(i,x,y){if(BODY[i]!==2)return [PFX[i],PFY[i]];
+  if(POOLF[i]){const dx=64-x,dy=59-y,d=Math.hypot(dx,dy)||1;return [dx/d*14,dy/d*14];}
+  const s=RSPD[i]*9;let fx=RTX[i]*s,fy=RTY[i]*s;
+  if(RIVD[i]<.75&&x>=1&&y>=1&&x<W-1&&y<H-1){const gx=(BODY[i+1]===2?RIVD[i+1]:0)-(BODY[i-1]===2?RIVD[i-1]:0),gy=(BODY[i+W]===2?RIVD[i+W]:0)-(BODY[i-W]===2?RIVD[i-W]:0),k=(.75-RIVD[i])*60;fx+=gx*k;fy+=gy*k;}
+  return [fx,fy];}
 function updLogs(dt){for(let k=logs.length-1;k>=0;k--){const g=logs[k];g.age+=dt;if(g.x<-8||g.y<-8||g.x>W+8||g.y>H+8||g.age>120){logs.splice(k,1);continue;}
-  if(!floatOk(g.x,g.y))continue;const i=(g.y|0)*W+(g.x|0),fx=PFX[i],fy=PFY[i];
+  if(!floatOk(g.x,g.y))continue;const i=(g.y|0)*W+(g.x|0),[fx,fy]=logFlow(i,g.x|0,g.y|0);
   if(Math.hypot(fx,fy)>.5){const a=Math.min(1,dt*1.6);g.vx+=(fx-g.vx)*a;g.vy+=(fy-g.vy)*a;}else{g.vx*=1-dt*.2;g.vy*=1-dt*.2;}
   const nx=g.x+g.vx*dt,ny=g.y+g.vy*dt,edge=nx<0||ny<0||nx>=W||ny>=H;
   if(edge||floatOk(nx,ny)){g.x=nx;g.y=ny;}else if(floatOk(nx,g.y)){g.x=nx;g.vy*=-.3;}else if(floatOk(g.x,ny)){g.y=ny;g.vx*=-.3;}else{g.vx*=.5;g.vy*=.5;}
@@ -406,10 +413,11 @@ function render(){const t0=performance.now(),t=simT;IDX.set(BASEIDX);
   for(const p of wakes){if(p.age>=p.life)continue;const a=p.age/p.life,x=Math.round(p.x),y=Math.round(p.y);if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(!WATER[i])continue;if(a>.6&&BY[i]<(a-.6)*40)continue;IDX[i]=a<.2?FM:LIGHTM[IDX[i]];}
   if(light!=='day'){const mx=light==='night'?262:246,gl=light==='night'?MOON:T1;for(let y=60;y<H;y++){const r=hash(y,(t*6)|0,50);if((r&3)===0)continue;const w=.8+(y-60)*.035,ox=((r>>4)%5)-2;
     for(let x=Math.round(mx-w+ox);x<=mx+w+ox;x++){if(x<0||x>=W)continue;const i=y*W+x;if(WATER[i]&&BODY[i]===1&&hf(x,y,((t*8)|0)+51)<.45)IDX[i]=gl;}}}
+  // logs go down before the posts and the planks, so they pass under the bridge and the pier
+  for(const g of logs){const bob=Math.round(Math.sin(t*Math.PI+g.ph)),x0=Math.round(g.x)-5,y0=Math.round(g.y)-2+bob;if(floatOk(g.x,g.y)){blit(LOG,x0,y0,0,3);for(let x=0;x<10;x++)putW(x0+x,y0+3,v=>LIGHTM[v]);}else blit(LOG,x0,y0);}
   for(let k=0;k<OVLP.length;k++)IDX[OVLP[k]]=OVLC[k];
   waterMs=waterMs*.9+(performance.now()-t0)*.1;
   for(let k=0;k<DECKP.length;k++)IDX[DECKP[k]]=DECKC[k];
-  for(const g of logs){const bob=Math.round(Math.sin(t*Math.PI+g.ph)),x0=Math.round(g.x)-5,y0=Math.round(g.y)-2+bob;if(floatOk(g.x,g.y)){blit(LOG,x0,y0,0,3);for(let x=0;x<10;x++)putW(x0+x,y0+3,v=>LIGHTM[v]);}else blit(LOG,x0,y0);}
   if(fs.st!=='idle'){const bx=Math.round(fs.x),by=Math.round(fs.y)+(fs.st==='wait'?Math.round(Math.sin(t*5)*.6):0);
     if(fs.st==='fly'){put(bx,by-1,WH);put(bx,by,BOB);}else if(fs.st==='bite'){put(bx,by,BOB);putW(bx-1,by+1,v=>LIGHTM[v]);putW(bx+1,by+1,v=>LIGHTM[v]);}else{put(bx,by-2,WH);put(bx,by-1,BOB);putW(bx-1,by,v=>LIGHTM[v]);putW(bx+1,by,v=>LIGHTM[v]);}}
   const ents=UPR.map(o=>({by:o.by,f:()=>blit(o.s,o.x,o.y)}));

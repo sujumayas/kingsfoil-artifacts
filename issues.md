@@ -464,9 +464,13 @@ How to use this file:
 
 ## vfx-water
 
-- [ ] **91.** `P3` Logs jam on the banks and under the bridge and are drawn over the bridge planks. They follow
+- [x] **91.** `P3` Logs jam on the banks and under the bridge and are drawn over the bridge planks. They follow
   the 8-direction cell flow (`:321` to `:327`, `:236`). Draw order at `:411`, `:412`. Fix: steer with the per-pixel
   tangent `RTX/RTY` and blit logs before the deck.
+  Done: logs steer with `RTX/RTY` times the segment speed, get pushed to mid-stream near a bank and leave
+  the plunge pool by its outlet. They are drawn before the posts and the planks. 8 logs dropped from above
+  the falls down to the mouth, 60 s: 1 reached the sea before, 8 after, the slowest in 14.7 s. A log
+  under the bridge covered 35 deck pixels before, 0 after.
 - [ ] **92.** `P3` Flow field at the river mouth is a radial starburst over dry beach, pointing upstream in
   places (`:235`).
 - [ ] **93.** `P4` Palette-cycle highlights drift out to sea while the swash comes in (`:134`, `:143`). Fix:
