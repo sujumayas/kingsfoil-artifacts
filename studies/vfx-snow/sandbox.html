@@ -220,11 +220,11 @@ FL.forEach(f=>{for(let k=0;k<f.x.length;k++){spawnFlake(f,k,false);f.on[k]=1;}})
 // ---------- snow ops ----------
 function deposit(i,a){const s=S[i];if(!holds(s))return;if(Wt[i]>90&&rnd()<.6){Wt[i]-=3;return;}D[i]=Math.min(s===CANOPY?14:MAXD,D[i]+a);if(P[i])P[i]=P[i]>14?P[i]-14:0;}
 function stamp(x,y,w,h,keep,packV,spillAhead){x|=0;y|=0;let spill=0;
-  for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const px=x+xx,py=y+yy;if(px<1||py<1||px>=W-1||py>=H-1)continue;const i=py*W+px;if(!holds(S[i]))continue;
+  for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const px=x+xx,py=y+yy;if(px<1||py<1||px>=W-1||py>=H-1)continue;const i=py*W+px;if(cls(S[i])!==1)continue; // feet only touch ground, path and ice, never a roof or canopy drawn in front
     const nd=(D[i]*keep)|0;spill+=D[i]-nd;D[i]=nd;if(nd>0||D[i]===0)P[i]=Math.max(P[i],packV);}
   if(spill<=0)return;const per=Math.max(1,(spill/6)|0);
   for(let k=0;k<6&&spill>0;k++){const a=rnd()*6.283,r=Math.max(w,h)*.5+1.2;const px=Math.round(x+w/2-.5+Math.cos(a)*r),py=Math.round(y+h/2-.5+Math.sin(a)*r*.7);
-    if(px<0||py<0||px>=W||py>=H)continue;const i=py*W+px;if(holds(S[i])&&P[i]<200){D[i]=Math.min(MAXD,D[i]+per);spill-=per;}}}
+    if(px<0||py<0||px>=W||py>=H)continue;const i=py*W+px;if(cls(S[i])===1&&P[i]<200){D[i]=Math.min(MAXD,D[i]+per);spill-=per;}}}
 function brush(cx,cy,r,mode){const r2=r*r;let col=0;
   for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=x-cx,dy=y-cy;if(dx*dx+dy*dy>r2)continue;const i=y*W+x;if(!holds(S[i]))continue;
     if(mode==='snow')D[i]=Math.min(MAXD,D[i]+5);else{if(D[i]>2){col+=D[i]-2;D[i]=2;}P[i]=170;}}
@@ -260,7 +260,7 @@ const VMAP={h:V_HAT,H:V_HATB,s:SKIN,e:EYE,y:V_SCARF,c:V_COAT,C:CAN_B,l:LEG,b:BOO
 const FOXT=[[".....od","fooooo.",".oooo..",".d..d.."],[".....od","fooooo.",".oooo..","..d.d.."]];
 const FMAP={o:FOX,d:FOX_D,f:FOX_W};
 function blocked(x,y){x|=0;y|=0;for(let xx=x-2;xx<=x+2;xx++){if(xx<0||xx>=W||y<4||y>=H)return true;if(Cm[y*W+xx]||Cm[(y-1)*W+xx])return true;}return false;}
-function depthAt(x,y){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return 0;const i=y*W+x;return (D[i]+D[i-1]+D[i+1])/3;}
+function depthAt(x,y){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return 0;const i=y*W+x,g=j=>cls(S[j])===1?D[j]:0;return (g(i)+g(i-1)+g(i+1))/3;}
 function stepFeet(c,dx,dy,big){c.dist+=Math.hypot(dx,dy);const stride=big?4:5;if(c.dist<stride)return;c.dist=0;c.foot^=1;
   const side=c.foot?1:-1,horiz=Math.abs(dx)>Math.abs(dy);
   const fx=c.x+(horiz?0:side*1.5)-1,fy=c.y+(horiz?side*.8:0)-1;stamp(fx,fy,2,2,.3,255);

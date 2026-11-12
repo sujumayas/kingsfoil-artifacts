@@ -714,9 +714,12 @@ How to use this file:
 
 ## vfx-snow
 
-- [ ] **135.** `P3` Footprints appear on the roof, tree canopies and rock tops when the player or fox walks
+- [x] **135.** `P3` Footprints appear on the roof, tree canopies and rock tops when the player or fox walks
   behind them. `stamp()` and `depthAt()` accept any snow-holding pixel (`:222`, `:262`). Fix: require
   `cls(S[i])===1`.
+  Done: `stamp()` and its rim spill need `cls(S[i])===1`, and `depthAt()` reads ground depth only. Walking
+  57 px behind the roof left 44 packed pixels on the roof, now 0. A walk on open ground still packs 28
+  pixels.
 - [ ] **136.** `P4` Snow on the top and bottom canvas rows never melts (`:243`).
 - [ ] **137.** `P4` Snow shading compares depth across surface boundaries, so the lit flank of every pine gets
   the darkest shadow colour (`:336`). Fix: only use a neighbour of the same class.
