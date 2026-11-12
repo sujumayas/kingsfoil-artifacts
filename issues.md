@@ -881,7 +881,8 @@ How to use this file:
   per colour, and the lists are reused. The HUD is built every 12th frame and written when it changed: 60
   writes per 180 frames before, 15 after. Frame median with 341 sprites drawn: 0.7 to 0.6 ms, 4.4 to 4.0 ms
   at 6x throttle.
-- [ ] **167.** `P6` The Wind slider has no value readout.
+- [x] **167.** `P6` The Wind slider has no value readout.
+  Done: a readout next to the slider, "45%" at load, updated on input.
 - [ ] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
   fixing #5. The stage sits in a `1fr 200px` grid next to the minimap (`:19`), so the shared `fit()` needs the
   grid cell width, not `main`.

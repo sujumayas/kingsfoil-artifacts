@@ -59,7 +59,7 @@ code{font:13px "IBM Plex Mono",monospace;color:var(--warm)}
   <div class="controls">
     <div class="group"><h3>Season & wind</h3>
       <div class="btns" id="sbtns"><button data-s="0">🌸 Spring</button><button data-s="1" class="on">☀ Summer</button><button data-s="2">🍂 Autumn</button><button data-s="3">❄ Winter</button><button id="auto">Auto year</button></div>
-      <label>Wind <input id="wind" type="range" min="0" max="100" value="45"></label>
+      <label>Wind <input id="wind" type="range" min="0" max="100" value="45"><span id="windv">45%</span></label>
     </div>
     <div class="group"><h3>When you walk behind a tree</h3>
       <div class="btns" id="obtns"><button data-o="dither" class="on">Dither fade</button><button data-o="cutaway">Cutaway circle</button><button data-o="silhouette">X-ray silhouette</button><button data-o="none">Nothing</button></div>
@@ -364,7 +364,7 @@ function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Ma
     const hs=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;if(hs!==hudS)hudEl.textContent=hudS=hs;}}
 document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.onclick=()=>{season=+b.dataset.s;auto=false;document.getElementById('auto').classList.remove('on');});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
-const wEl=document.getElementById('wind');wEl.oninput=()=>wind=wEl.value/100;
+const wEl=document.getElementById('wind');wEl.oninput=()=>{wind=wEl.value/100;document.getElementById('windv').textContent=wEl.value+'%';};
 document.querySelectorAll('#obtns [data-o]').forEach(b=>b.onclick=()=>{occ=b.dataset.o;document.querySelectorAll('#obtns [data-o]').forEach(x=>x.classList.toggle('on',x===b));});
 document.querySelectorAll('#lbtns [data-l]').forEach(b=>b.onclick=()=>{layers[b.dataset.l]=!layers[b.dataset.l];b.classList.toggle('on',layers[b.dataset.l]);});
 // biome jump points + legend
