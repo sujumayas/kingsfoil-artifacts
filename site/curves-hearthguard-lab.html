@@ -137,7 +137,8 @@ function model(S,ref){
         if(w===2||w===4){var e=EL[c][w===2?0:1];wx+=e*xm;wg+=gold1(e)*gm;}
         t+=SPAN[w]+GAP;
       }else{
-        bossS=BOSS_S[c]*hpf*(ref?ref.rows[c*6+5].dmgRaw/dmg(Ls):1);
+        // boss time is a fixed assumption per chapter, as in notes/curves_model.py. It does not shrink with hero damage
+        bossS=BOSS_S[c]*hpf;
         var nadds=(3+c)*Math.max(0,Math.floor((bossS-6)/5+1));
         wx=BO[c][1]*xm+nadds*avgOf(R[c],function(m){return XP[m];})*xm;
         wg=gold1(BO[c][1])*gm+nadds*avgOf(R[c],function(m){return gold1(XP[m]);})*gm;

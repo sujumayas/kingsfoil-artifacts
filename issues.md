@@ -892,9 +892,12 @@ How to use this file:
 
 ## curves-hearthguard
 
-- [ ] **168.** `P5` "Proposed sawtooth" does not reproduce the report. Chapter 4 starts at 0.85, the report says
+- [x] **168.** `P5` "Proposed sawtooth" does not reproduce the report. Chapter 4 starts at 0.85, the report says
   0.92. The lab scales boss time by reference damage over current damage (`:140`), which
   `notes/curves_model.py` does not. Fix: drop the factor, or regenerate the report numbers from the lab.
+  Done: the factor that scaled boss time by reference damage over current damage is gone, as in
+  `notes/curves_model.py`. All 30 proposal ratios now match report §11 (chapter 4 starts at 0.92, was 0.85,
+  and chapter 3 wave 5 reads 1.07, was 0.99). The 30 current-build ratios still match the §4 table.
 - [ ] **169.** `P5` The Players slider changes hero level and run length (25.5 to 36.2 min at 3 players),
   against the caption "Per-hero XP equals solo in co-op" (`:124`, `:140` to `:142`).
 - [ ] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
