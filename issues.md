@@ -772,8 +772,10 @@ How to use this file:
   multiplier at noon, against 1.54 on open ground: traveller 0.58 to 1.49, barrel 0.58 to 1.55, rock 0.59 to
   1.55, obelisk 0.59 to 1.30, trunk 0.58 to 1.55. Standing in the obelisk's shadow at 15:00 the traveller
   still reads 0.58.
-- [ ] **147.** `P4` Sunlight snaps off at 18:00 and on at 06:00, moonlight at about 18:23 and 05:37 (`:208`,
+- [x] **147.** `P4` Sunlight snaps off at 18:00 and on at 06:00, moonlight at about 18:23 and 05:37 (`:208`,
   `:210`). With the default start it happens about 4 s after load. Fix: ramp by elevation.
+  Done: the sun colour scales over the first 4 degrees above the horizon, the moon from 2 to 10 degrees. The
+  largest change in sun colour per 0.01 h of clock was 1.58 at 18:00 (all of it at once). Now 0.10.
 - [ ] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
   candle (`:184`) sits inside the table occluder (`:138`), and the bed occluder (`:136`) beats the fireplace
   threshold (`:198`).

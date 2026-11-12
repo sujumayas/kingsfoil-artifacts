@@ -210,8 +210,9 @@ function sky(h){const el=62*Math.sin((h-6)/12*Math.PI),az=(90+(h-6)/12*180)*Math
   const NIGHT=[.10,.12,.24],TWI=[.34,.28,.44],GOLDA=[.46,.42,.54],DAYA=[.5,.56,.7];
   if(el>20){amb=DAYA;sun=[1.02,.98,.9];}else if(el>6){const k=(el-6)/14;amb=lerp(GOLDA,DAYA,k);sun=lerp([1.05,.72,.42],[1.02,.98,.9],k);}
   else if(el>0){const k=el/6;amb=lerp(TWI,GOLDA,k);sun=lerp([.9,.42,.24],[1.05,.72,.42],k);}else if(el>-8){const k=(el+8)/8;amb=lerp(NIGHT,TWI,k);sun=[0,0,0];}else{amb=NIGHT;sun=[0,0,0];}
-  if(el>0){dir=[-Math.sin(az),Math.cos(az)];len=Math.min(4,1/Math.tan(Math.max(4,el)*Math.PI/180))*.62;}
-  else if(mel>4){sun=[.16,.19,.32];dir=[-Math.sin(maz),Math.cos(maz)];len=Math.min(3,1/Math.tan(mel*Math.PI/180))*.62;}
+  // sun and moon ramp in by elevation: the sun over its first 4 degrees, the moon from 2 to 10 degrees
+  if(el>0){const k=Math.min(1,el/4);sun=sun.map(v=>v*k);dir=[-Math.sin(az),Math.cos(az)];len=Math.min(4,1/Math.tan(Math.max(4,el)*Math.PI/180))*.62;}
+  else if(mel>2){const k=Math.min(1,(mel-2)/8);sun=[.16*k,.19*k,.32*k];dir=[-Math.sin(maz),Math.cos(maz)];len=Math.min(3,1/Math.tan(Math.max(4,mel)*Math.PI/180))*.62;}
   if(overcast){sun=[0,0,0];amb=el>0?lerp([.36,.36,.44],[.82,.84,.88],Math.min(1,el/25)):amb.map(v=>v*.8);dir=null;}
   return {el,amb,sun,dir,len,svy:dir?-dir[1]:0,svx:dir?-dir[0]:0};}
 function sunShadows(S,M){SH.fill(0);SHC.fill(0);SHX.fill(0);if(!S.dir||!opts.sunsh)return;const [dx,dy]=S.dir,k=S.len;
