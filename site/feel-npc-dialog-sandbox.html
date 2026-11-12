@@ -133,7 +133,10 @@ function mkFont(id,chars,data,rows,lh,sp,marks){const g={};let i=0;
   return FONTS[id]={id,g,rows,lh,sp,N:i,cache:{}};}
 const F1=mkFont(1,F1C,F1D,9,10,3,['48','ak','i0']),F2=mkFont(2,F2C,F2D,6,7,2,['40','e0','k0']);
 function glyphOf(F,ch){let G=F.g[ch];if(G)return G;if(F===F2){const u=ch.toUpperCase();G=F.g[u]||F.g[STRIP[u]];if(G)return G;}else if(STRIP[ch]&&F.g[STRIP[ch]])return F.g[STRIP[ch]];return F.g['?'];}
-const adv=(F,ch)=>ch===' '?F.sp:glyphOf(F,ch).w+1;
+// fillText mode lays text out with the vector font's own advance (monospace, rounded up to whole pixels), so it is compared on its own metrics
+const fillFont=(F,s)=>(F===F1?9:7)*s+'px ui-monospace,Menlo,monospace',FILLA={};let curFont='';
+function fillAdv(F){let a=FILLA[F.id];if(!a){ctx.font=fillFont(F,1);curFont='';a=FILLA[F.id]=Math.ceil(ctx.measureText('M').width);}return a;}
+const adv=(F,ch)=>REN==='fill'?fillAdv(F):ch===' '?F.sp:glyphOf(F,ch).w+1;
 function atlas(F,fg,eff,ec){const k=fg+eff+ec;let a=F.cache[k];if(a)return a;const ch=F.rows+2+TOP,pb=PB(F.N*7,ch),cf=C(fg),ce=C(ec);
   for(let pass=0;pass<2;pass++)for(const c in F.g){const G=F.g[c],ox=G.i*7+1;
     for(let r=-TOP;r<F.rows;r++)for(let x=0;x<5;x++)if((r<0?G.top?G.top[r+TOP]:0:G.rr[r])&(16>>x)){const y=1+TOP+r;
@@ -147,7 +150,7 @@ function B9(img,sx,sy,sw,sh,dx,dy,dw,dh,nr){if(dw<=0||dh<=0)return;ctx.drawImage
 function R(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(x|0,y|0,w|0,h|0);ST.blits++;}
 let REN='bit',RM=false;
 function drawCh(F,ch,x,y,s,fg,eff,ec){if(ch===' ')return;ST.glyphs++;ST.blits++;x|=0;y|=0;
-  if(REN==='fill'){ctx.font=(F===F1?9:7)*s+'px ui-monospace,Menlo,monospace';ctx.textBaseline='top';
+  if(REN==='fill'){const f=fillFont(F,s);if(f!==curFont){ctx.font=curFont=f;ctx.textBaseline='top';} // the font is set when it changes, not once per glyph
     if(eff===2){ctx.strokeStyle='#'+ec;ctx.lineWidth=2;ctx.strokeText(ch,x,y);ST.blits++;}else if(eff===1){ctx.fillStyle='#'+ec;ctx.fillText(ch,x,y+s);ST.blits++;}
     ctx.fillStyle='#'+fg;ctx.fillText(ch,x,y);return;}
   const G=glyphOf(F,ch);ctx.drawImage(atlas(F,fg,eff,ec),G.i*7,0,7,F.rows+2+TOP,x-s,y-(1+TOP)*s,7*s,(F.rows+2+TOP)*s);}
@@ -990,7 +993,10 @@ const setClut=v=>{CLUT=v;mark('#clut button','c',v);};
 const setCps=v=>{CPS=+v;$('cps').value=Math.min(120,CPS);$('cpsl').textContent=CPS>=999?'instant':CPS;mark('#spd button','v',CPS);};
 const setLang=v=>{LANG=v;mark('#lang button','l',v);chipKey='';LOGV.dirty=true;};
 group('#styles button','s',setStyle);group('#views button','v',setView);group('#clut button','c',setClut);group('#spd button','v',setCps);group('#lang button','l',setLang);
-group('#ren button','r',v=>{REN=v;mark('#ren button','r',v);});group('#focus button','f',v=>{FOCUS=v;mark('#focus button','f',v);SV.foc={f:null,q:[],last:0};SV.priv={};});
+// the two renderers have different advances, so text already on screen is laid out again on a switch
+function reflow(){if(D.on&&D.gl)relayout(true);for(const e of LOG)e.L=layout(e.gl,F1,204);for(const b of BUBS){b.L=layout(b.gl,b.F,b.kind==='npc'?150:84);b.w=b.L.w+b.pad*2;b.h=b.L.lines*b.F.lh+b.pad*2-1;}LOGV.dirty=true;}
+const setRen=v=>{REN=v;mark('#ren button','r',v);reflow();};
+group('#ren button','r',setRen);group('#focus button','f',v=>{FOCUS=v;mark('#focus button','f',v);SV.foc={f:null,q:[],last:0};SV.priv={};});
 $('cps').oninput=e=>setCps(e.target.value);
 const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',get());b.onclick=()=>{set(!get());sy();};return sy;};
 tog('auto',()=>AUTO,v=>AUTO=v);tog('big',()=>BIG,v=>{BIG=v;if(D.gl)relayout(true);});const syncRm=tog('rm',()=>RM,v=>RM=v);tog('blip',()=>SND,v=>SND=v);
@@ -1013,7 +1019,7 @@ function reset(){svReset();talkAt=-1e9;Object.assign(CL,{v:{q1:0,herbs:0,q2:0},g
   for(const e of [PL,...VIL]){e.px=e.tx*16;e.py=e.ty*16;}cam.x=clamp(PL.px+8-W/2,0,WW-W);cam.y=clamp(PL.py+8-H/2,0,WHH-H);}
 $('reset').onclick=reset;
 document.querySelector('button[data-demo="showcase"]').onclick=showcase;
-function showcase(){reset();setStyle('auto');setView('normal');REN='bit';mark('#ren button','r','bit');RM=false;syncRm();setLang('en');setClut('stack');paused=false;syncPause();BIG=false;$('big').classList.remove('on');
+function showcase(){reset();setStyle('auto');setView('normal');setRen('bit');RM=false;syncRm();setLang('en');setClut('stack');paused=false;syncPause();BIG=false;$('big').classList.remove('on');
   NSIM=6;$('sims').value=6;$('simsl').textContent=6;simT=8;
   SV.v.q2=2;CL.v.q2=2;Object.assign(PL,{tx:12,ty:6,fx:12,fy:6,d:'u',mv:0});PL.px=192;PL.py=96;
   const put=(e,x,y,d)=>{Object.assign(e,{tx:x,ty:y,fx:x,fy:y,mv:0,path:null,d:d||'d',hold:simT+9});e.px=x*16;e.py=y*16;};

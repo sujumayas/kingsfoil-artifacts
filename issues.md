@@ -303,8 +303,13 @@ How to use this file:
   line, so capitals keep their full height. The atlas cell grows 2 px, from 7x11 to 7x13 in the main font.
   All 7 fell back to the bare letter in both fonts before, none do now. With an outline, a mark can touch a
   descender on the line above.
-- [ ] **59.** `P4` (taste) Canvas fillText comparison mode places vector glyphs at bitmap advances, so words
+- [x] **59.** `P4` (taste) Canvas fillText comparison mode places vector glyphs at bitmap advances, so words
   split. `ctx.font` is set per glyph (`:147`), which inflates that mode's cost.
+  Done: in fillText mode every glyph advances by the vector font's width rounded up, 6 px for the main font,
+  and switching renderer re-flows the dialog, the log and the bubbles. The advance was off by up to 3.42 px
+  per glyph before, 1.49 px on average, and is off by 0.58 px now. Text is wider in this mode, so lines wrap
+  sooner. ctx.font is set only when it changes. With 30 players and the elder's box open, a frame took 0.551
+  ms for 334 glyphs before and 0.498 ms for 297 after, in headless Chromium.
 
 ## vfx-magic
 
