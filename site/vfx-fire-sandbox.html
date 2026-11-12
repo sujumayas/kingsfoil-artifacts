@@ -451,14 +451,13 @@ function xray(){
 
 // ---------- loop and UI ----------
 let last=performance.now(),acc=0,fxAcc=0,hudN=0;
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;
+function loop(now){requestAnimationFrame(loop);let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;
   if(paused){if(queue.length){for(const a of queue)applyAction(a);queue.length=0;const na=[];for(let c=0;c<NC;c++)if(STA[c]>=IGN&&STA[c]<=EMB)na.push(c);active=na;}}
   else{acc+=dt;while(acc>=.25){acc-=.25;simTick();}}
   fxAcc+=dt;let n=0;while(fxAcc>=1/60&&n<6){fxAcc-=1/60;step60();n++;}if(n>=6)fxAcc=0;
   render();
   if(++hudN%6===0){let nb=0;for(const c of active)if(STA[c]!==EMB)nb++;
-    document.getElementById('hud').textContent=`tick ${tick}${paused?' (paused)':''} · burning ${nb} · active ${active.length} · sim ${simMs.toFixed(3)} ms/tick · net per tick: full set ${netFull} B, events ${netEv} B (illustrative) · particles ${pCount}/256${capOn?' · cap 3 ignitions/tick':''} · seed ${seed}`;}
-  requestAnimationFrame(loop);}
+    document.getElementById('hud').textContent=`tick ${tick}${paused?' (paused)':''} · burning ${nb} · active ${active.length} · sim ${simMs.toFixed(3)} ms/tick · net per tick: full set ${netFull} B, events ${netEv} B (illustrative) · particles ${pCount}/256${capOn?' · cap 3 ignitions/tick':''} · seed ${seed}`;}}
 const $=id=>document.getElementById(id);
 const group=(sel,attr,fn)=>{const bs=document.querySelectorAll(sel);bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset[attr]);});};
 const setTool=t=>{tool=t;document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));};

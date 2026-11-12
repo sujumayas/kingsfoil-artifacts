@@ -446,10 +446,9 @@ function drawView(){
 
 // ---------- loop and UI ----------
 let last=performance.now(),hudN=0;
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else lastDt=0;render();
+function loop(now){requestAnimationFrame(loop);let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else lastDt=0;render();
   if(++hudN%6===0){let nr=0,nw=0;for(const p of rings)if(p.age<p.life)nr++;for(const p of wakes)if(p.age<p.life)nw++;
-    $('hud').textContent=`tide ${tide}/255 ${tideAuto?'auto, 2 min period (illustrative)':'manual'} · net ${netB} B (1 B per change) · water pass ${waterMs.toFixed(2)} ms · rings ${nr}/64 · wake ${nw}/256 · BFS + depth ${bfsMs.toFixed(2)} ms · fish ${fishN} · ${wk.st==='swim'?'swimming':wk.st==='wade'?'wading x0.6':'on land'}${paused?' · paused':''}${msgT>0?' · '+msgText:''}`;}
-  requestAnimationFrame(loop);}
+    $('hud').textContent=`tide ${tide}/255 ${tideAuto?'auto, 2 min period (illustrative)':'manual'} · net ${netB} B (1 B per change) · water pass ${waterMs.toFixed(2)} ms · rings ${nr}/64 · wake ${nw}/256 · BFS + depth ${bfsMs.toFixed(2)} ms · fish ${fishN} · ${wk.st==='swim'?'swimming':wk.st==='wade'?'wading x0.6':'on land'}${paused?' · paused':''}${msgT>0?' · '+msgText:''}`;}}
 let tool='walk';
 const group=(sel,attr,fn)=>{const bs=document.querySelectorAll(sel);bs.forEach(b=>b.onclick=()=>fn(b.dataset[attr]));};
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===v));

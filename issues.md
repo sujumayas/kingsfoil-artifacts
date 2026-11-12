@@ -21,7 +21,7 @@ How to use this file:
   clock value: a queued cast fired inside `step()` (`:866`), or any cast while paused. The rounding only occurs
   when `now+cd` crosses a power of two, so the risky moments are just before 4.1 s, 8.2 s, 16.4 s, 32.8 s and
   65.5 s of play. Fix: `Math.max(0,...)` on the index.
-- [ ] **2.** `P1` All canvas sandboxes. One exception freezes the page for good, because `render()` runs before
+- [x] **2.** `P1` All canvas sandboxes. One exception freezes the page for good, because `render()` runs before
   `requestAnimationFrame(loop)`. Seen in combat juice (`:875`), loot pickup (`:868`) and acid. Fix: request the
   next frame first, or wrap step and render in try/finally.
 - [ ] **3.** `P2` Keyboard dies after touching a slider. The keydown handler returns for `INPUT` targets and range

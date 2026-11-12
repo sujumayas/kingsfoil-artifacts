@@ -408,13 +408,12 @@ function drawView(){
 // ---------- loop and UI ----------
 let last=performance.now(),hudN=0;
 const f2=v=>v.toFixed(2),hh=t=>{const m=Math.floor(t*1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render();
+function loop(now){requestAnimationFrame(loop);let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render();
   if(++hudN%10===0){const tn=performance.now();while(fieldTimes.length&&fieldTimes[0]<tn-1000)fieldTimes.shift();
     const o=(on,s)=>on?s:`<span class="off">${s.replace(/[\d.]+ ?$/,'off')}</span>`;
     const lay=[`field ${f2(T.field)}`,`texture ${f2(T.tex)}${noise==='proc'?' (fbm)':''}`,`fog pass ${f2(T.pass)}`,o(cloudsOn,`clouds ${f2(T.clouds)}`),`atmosphere ${f2(T.atmos)}${rays==='blur'?' (blur x'+samples+')':''}`,o(fowOn,`fog of war ${f2(T.fow)}`),`draw ${f2(T.draw)}`].join(' · ');
     $('hud').innerHTML=`${todName(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${PRE[preset].n} · ${mode==='steps'?'palette steps':mode==='dither'?'Bayer dither':'alpha blend'}${paused?' · paused':''}<br>${lay} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · field ${fieldTimes.length}/s · FOV recomputes ${fovN} (${f2(fovMs)} ms) · revealed ${revealed}<br>net: weather ${netW} B (7 B per change) · vision ${netV} B · creatures sent ${sentN}/${beasts.length}${view==='cost'?' · heat = layer ms per touched pixel':''}`;
-    if(tAuto)syncTime();}
-  requestAnimationFrame(loop);}
+    if(tAuto)syncTime();}}
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===v));
 const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
 const setTool=v=>{tool=v;mark('#tools button','t',v);},setView=v=>{view=v;mark('#views button','v',v);},setMode=v=>{mode=v;mark('#modes button','m',v);};

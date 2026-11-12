@@ -366,12 +366,12 @@ const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255;const r=t<.
 // ---------- loop & UI ----------
 const hud=document.getElementById('hud'),windEl=document.getElementById('wind');
 let last=performance.now(),simAcc=0;
-function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){const gm=dt*2*speed;clock=(clock+gm)%1440;updateWeather(gm,dt);
     const t0=performance.now();const sunF=weather==='sunny'?daylight(clock):weather==='overcast'?.15:0;
     simAcc+=dt*60*speed;let n=0;while(simAcc>=1&&n<32){simStep(sunF);simAcc--;n++;}if(simAcc>4)simAcc=0;simMs=simMs*.9+(performance.now()-t0)*.1;
     updateEntities(dt);updateFlakes(dt);frameN++;}
-  render();requestAnimationFrame(frame);}
+  render();}
 document.querySelectorAll('#wbtns [data-w]').forEach(b=>b.onclick=()=>{auto=false;document.getElementById('auto').classList.remove('on');setWeather(b.dataset.w);});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
 windEl.oninput=()=>{auto=false;document.getElementById('auto').classList.remove('on');};

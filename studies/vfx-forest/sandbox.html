@@ -335,10 +335,9 @@ function drawAtlas(s){let x=4,y=4,rowH=0,maxW=0;const pos=[];for(const sp of SPR
 
 // ---------- loop & UI ----------
 let last=performance.now();
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();
   if((time*10|0)%3===0){const b=BIOMES[biomeAt(player.x,player.y)];const sn=['Spring','Summer','Autumn','Winter'][Math.floor(season+.5)%4];
-    document.getElementById('hud').textContent=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;}
-  requestAnimationFrame(loop);}
+    document.getElementById('hud').textContent=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;}}
 document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.onclick=()=>{season=+b.dataset.s;auto=false;document.getElementById('auto').classList.remove('on');});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
 const wEl=document.getElementById('wind');wEl.oninput=()=>wind=wEl.value/100;

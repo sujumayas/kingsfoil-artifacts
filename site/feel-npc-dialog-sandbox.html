@@ -947,11 +947,10 @@ function render(dt){ST.glyphs=ST.blits=0;COSTR.length=0;HITS=[];const c=cam.x,d=
   cam.x=c;cam.y=d;}
 const f2=v=>v.toFixed(2);let last=performance.now(),hudN=0,chipKey='';
 const clock=()=>{const m=Math.floor(((simT%120)/120*1440+480)%1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render(paused?0:dt);
+function loop(now){requestAnimationFrame(loop);let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render(paused?0:dt);
   if(++hudN%10===0){const sn={auto:'per NPC',box:'box + portrait',bubble:'bubble',chat:'keyword chat'}[STYLE];
     $('hud').innerHTML=`town ${clock()} · ${sn} · ${REN==='bit'?'bitmap atlas':'canvas fillText'} · clutter ${CLUT} · ${FOCUS==='shared'?'shared focus':'private sessions'}${paused?' · paused':''}<br>world ${f2(T.world)} · overhead ${f2(T.over)} · dialog ${f2(T.dlg)} · panels ${f2(T.pan)} · ambient ${f2(T.amb)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · glyphs ${ST.glyphs} · blits ${ST.blits} · bubbles ${ST.bub} (hidden ${ST.hid})<br>net: last step ${NET.lastId} B as ids vs ${NET.lastTxt} B as text · ${NET.times.length} msg/s · dropped ${NET.dropped} · ${LAT} ms ${OPTIM?'optimistic':'wait for server'}`;
-    syncChips();const f=facing(),tb=$('talk'),coarse=matchMedia('(pointer:coarse)').matches;tb.style.display=coarse&&(f||D.on)&&!TRADE.on&&!CARD.on?'block':'none';tb.textContent=D.on?(LANG==='es'?'Seguir':'Next'):f&&f.pl!=null?(LANG==='es'?'Coger':'Pick'):(LANG==='es'?'Hablar':'Talk');}
-  requestAnimationFrame(loop);}
+    syncChips();const f=facing(),tb=$('talk'),coarse=matchMedia('(pointer:coarse)').matches;tb.style.display=coarse&&(f||D.on)&&!TRADE.on&&!CARD.on?'block':'none';tb.textContent=D.on?(LANG==='es'?'Seguir':'Next'):f&&f.pl!=null?(LANG==='es'?'Coger':'Pick'):(LANG==='es'?'Hablar':'Talk');}}
 function syncChips(){let l=[];if(D.on&&D.state==='opts')l=D.opts.map(o=>plain(str(o.id)));else if(dist(PL,NPCS.sailor)<=5)l=LANG==='es'?['hola','nombre','trabajo','viaje','sí','mañana','adiós']:['hi','name','job','travel','yes','tomorrow','bye'];
   const k=l.join('|');if(k===chipKey)return;chipKey=k;const c=$('chips');c.innerHTML='';for(const s of l){const b=document.createElement('button');b.className='chip';b.textContent=s;b.onclick=()=>{ensureAudio();onKw(s.toLowerCase());};c.appendChild(b);}}
 // ---------- UI ----------

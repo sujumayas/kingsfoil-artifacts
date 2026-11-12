@@ -719,14 +719,13 @@ function step(dt){simT+=dt;frame++;swayT=step5?Math.floor(simT*5)/5:simT;
 let last=performance.now(),hudN=0,secT=0;
 const f2=v=>v.toFixed(2),hh=t=>{const m=Math.floor(t*1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
 const SN=['spring','summer','autumn','winter'];
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else windUpdate();render();
+function loop(now){requestAnimationFrame(loop);let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else windUpdate();render();
   secT+=dt;if(secT>=1){secT-=1;netRate=netSec;netSec=0;stampRate=stampSec;stampSec=0;netFlat=flatCellsSec*PRM.netTile;flatCellsSec=0;threatSec=threatChecks;threatChecks=0;}
   if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`].join(' · ');
     const lifeS=[0,1,2,3,4,5,6,7,8,9].map(k=>`${['bfly','bee','dfly','gnat','moth','ffly','rabbit','frog','crick','drift'][k]} ${ALIVE[k]}/${KC[k]}`).join(' ');
     const sea=sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo];
     $('hud').innerHTML=`${sea} · ${phaseOf(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${windPre} ${Math.round(windStr*100)}% · ${weather==='rain'?'after rain':'clear'} · ${rmode==='tufts'?'per-tuft':'field layer'}, ${smooth?'smooth':'snapped'}${paused?' · paused':''}<br>${L} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · ${rmode==='tufts'?`tufts ${tuftsDrawn}/${TN}, settled ${settled}, flattened ${flatN}`:`field px ${tuftsDrawn}`} · stamps ${stampRate}/s · regrow ${regN} cells/tick (${regChanged} grew) · ground rebakes ${bakeN}<br>net ${netRate} B/s (${netTotal} B total) · trampling 0 B (sending each flatten would be ${netFlat} B/s) · you: ${playerHidden?'hidden, villager gets 0 B':P.reveal>0?'revealed':'in the open'} · villager: ${V.x<0?'away':villHidden?(V.sent?(leak&&!V.adj?'hidden but SENT (leak)':'hidden, seen up close'):'hidden, not sent'):'visible'}<br>${lifeS} · sleeping ${sleeping} · threat checks ${threatSec}/s · fireflies lit ${litN} · night ${nightRollName}`;
-    if(tAuto)syncTime();}
-  requestAnimationFrame(loop);}
+    if(tAuto)syncTime();}}
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
 const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
 const setTool=v=>{tool=v;mark('#tools button','t',v);},setView=v=>{view=v;mark('#views button','v',v);};
