@@ -678,8 +678,11 @@ How to use this file:
   returns to exactly 0 (`:283`, `:345`). Fix: `I>.02`.
   Done: `I` decays toward 0 and never reaches it (7e-10 after 60 s of sun), so 60 streaks kept falling.
   Streaks and background hits now need `I>.02`. 60 drops alive before, 0 after.
-- [ ] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps
+- [x] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps
   feeding evaporation mist (`:185`, `:115`, `:229`, `:231`).
+  Done: water pixels never dry, so the pond fed the mist grid for as long as the sun was out. They are left
+  out of the wet-ground average. After 3 min of sun the pond showed 91 lattice pixels with mist at 0.25, now
+  0 and 0.
 - [ ] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,
   awning `SHL` at `:146`).
 - [ ] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point

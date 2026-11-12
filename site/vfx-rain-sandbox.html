@@ -233,7 +233,7 @@ function simStep(sunny){
   // barrel fills from the sky, overflows into the dirt
   barrel.fill=Math.min(1.05,barrel.fill+I*.00006);if(sunny)barrel.fill=Math.max(0,barrel.fill-.000004);if(barrel.fill>1){barrel.fill=1;WAT[81*W+120]+=.05;}
   // mist: spray haze from heavy rain on hard surfaces + evaporation mist when the sun returns
-  if(frameN%10===0)for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const i=cy*2*W+cx*2;CWET[cy*GW+cx]=(WET[i]+WET[i+1]+WET[i+W]+WET[i+W+1])/1020;}
+  if(frameN%10===0)for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const i=cy*2*W+cx*2;CWET[cy*GW+cx]=((S[i]===WATER?0:WET[i])+(S[i+1]===WATER?0:WET[i+1])+(S[i+W]===WATER?0:WET[i+W])+(S[i+W+1]===WATER?0:WET[i+W+1]))/1020;} // open water is not drying ground
   const spray=Math.max(0,I-.45)*.03,evap=sunny?.0045:0;mistOff+=wind*.25;const mo=((mistOff|0)%GW+GW)%GW;
   if(spray>0)for(let cy=0;cy<GH;cy++){const r=cy*GW;for(let cx=0;cx<GW;cx++){let k=cx+mo;if(k>=GW)k-=GW;MI[r+cx]+=spray*HARDS[r+cx]*MNZ[r+k];}}
   if(evap>0)for(let c=0;c<GW*GH;c++)MI[c]+=evap*CWET[c]*CWET[c];
