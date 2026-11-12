@@ -707,7 +707,10 @@ How to use this file:
   Done: confirmed first: at t = 600 s a wind change of 0.1 moved the curtain noise by 2,520 px, a mean
   change of 0.15 in curtain density. The offset is now the wind integrated over time, and the same change
   moves nothing.
-- [ ] **134.** `P6` The Intensity readout and HUD do not update while paused.
+- [x] **134.** `P6` The Intensity readout and HUD do not update while paused.
+  Done: the readout is written every drawn frame, the HUD counts drawn frames, and the Intensity and Wind
+  sliders apply while paused. Paused, moving Intensity to 77 left the readout at 50% and the HUD unchanged.
+  Both now show 77%.
 
 ## vfx-snow
 
