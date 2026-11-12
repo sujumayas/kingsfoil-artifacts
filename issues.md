@@ -227,8 +227,12 @@ How to use this file:
   is now marked dead on the server before it leaves the list, which the attack target, the bots' hunt tasks
   and svAction already check. Same test after: no hits, no corpse. Goblins waiting to respawn are removed
   before live ones.
-- [ ] **42.** `P3` (suspected) Magnet "far" rejects are meant to be silent, but `s.req=false` (`:618`) runs before
+- [x] **42.** `P3` (suspected) Magnet "far" rejects are meant to be silent, but `s.req=false` (`:618`) runs before
   the `!s.req` test (`:623`), so "TOO FAR" pops and the magnet retries each frame.
+  Done: confirmed. The text test now reads s.mag, which sendAct sets for magnet and walk-over requests, so a
+  far reject on those is silent. A clicked item still says TOO FAR. After any reject the magnet waits
+  TUNING.retryMs, 300 ms, before asking for that item again. Stepping away from a coin each time the request
+  was in flight gave 10 requests in 2 s and stacked TOO FAR texts before, and 4 requests and no text after.
 
 ## feel-npc-dialog
 

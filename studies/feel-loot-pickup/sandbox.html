@@ -629,7 +629,7 @@ function clResult(res,snap){CL.sbag=snap;
     else if(r.why==='notyours'){textAt(s.x,s.y-10,'NOT YOURS YET',P.r3);sfx('deny',{tag:'own'});}
     else if(r.why==='full'){bagFull();}
     else if(r.why==='early'){/* landed too recently: queue again */if(!s.dead)clLater(now+150,()=>{if(CL.items.get(s.id)===s&&!s.pred&&!s.pend)queueAct({k:'take',id:s.id});});}
-    else if(r.why==='far'&&!s.req){textAt(s.x,s.y-10,'TOO FAR',P.s2);}}
+    else if(r.why==='far'&&!s.mag){textAt(s.x,s.y-10,'TOO FAR',P.s2);}}
   if(res.full&&!res.rej.length)bagFull();
   if(res.kind==='race'||res.race){}}
 function clRemove2(s,by){const e=ENTS.find(x=>x.id===by);if(e&&FX.fly)FLY.push({img:itemImg(artOf(s.def,s.n),s.tier,0),x0:s.x,y0:s.y,x1:e.x,y1:e.y-10,t:0,dur:220,h:8,to:null,small:1});}
@@ -646,7 +646,7 @@ function arrive(s){BUMP=TUNING.bagBump.ms;const gold=ITEMS[s.def].gold;POPS.push
   if(gold){if(now-STREAK.last>TUNING.audio.streakResetMs)STREAK.n=0;STREAK.n=Math.min(TUNING.audio.streakMax,STREAK.n+1);/* +1 semitone per pickup within 1.2 s, cap 8 */STREAK.last=now;sfx('coin',{tag:'own',n:s.n,streak:STREAK.n});}else sfx('pick',{tag:'own',tier:s.tier});}
 function updPickup(dt){
   // magnet and walk-over: only items you own, only gold
-  if(!PL.dead&&!PL.sdead){const mr=MAGT*16;/* magnet: 1 tile, gold only, owner only, 400 ms after landing, never in PvP combat */for(const ci of CL.items.values()){if(!ci.landed||ci.pred||ci.pend||ci.req||ci.def!==0||ci.dead)continue;if(now<pickT(ci))continue;
+  if(!PL.dead&&!PL.sdead){const mr=MAGT*16;/* magnet: 1 tile, gold only, owner only, 400 ms after landing, never in PvP combat */for(const ci of CL.items.values()){if(!ci.landed||ci.pred||ci.pend||ci.req||ci.def!==0||ci.dead||now-(ci.denyT||-1e9)<TUNING.retryMs)continue;// after a reject the magnet waits 300 ms before it asks againif(now<pickT(ci))continue;
       const d=Math.max(Math.abs(ci.x-PL.x),Math.abs(ci.y-PL.y));const mine=ci.owner===PL.id||(ci.owner==='party'&&inParty(PL.id))||(ci.personal&&ci.owner===PL.id);
       if(FX.walk&&d<=TUNING.walkOverPx&&canLoot(PL.id,ci,now)){ci.req=true;queueAct({k:'take',id:ci.id,magnet:1});}
       else if(FX.magnet&&mine&&d<=mr&&canLoot(PL.id,ci,now)&&!(MODE==='pvp'&&now-(PL.combatT||-1e9)<TUNING.magnet.combatMs)){ci.req=true;queueAct({k:'take',id:ci.id,magnet:1});}}}
