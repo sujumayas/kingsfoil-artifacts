@@ -1,0 +1,380 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Grass bench</title></head>
+<body>
+<pre id="out">Grass, wind and small life benchmark. Call runCPU() / await runGPU() from the console or Playwright.</pre>
+<script>
+"use strict";
+// ---------------- harness (same as studies/vfx-fog/notes/bench/fogbench.html) ----------------
+// Each sample runs fn repeatedly until >= minSampleMs elapsed. Median of samples, p10/p90 reported.
+function bench(name, fn, opts = {}) {
+  const warmMs = opts.warmMs ?? 150, samples = opts.samples ?? 25, minSampleMs = opts.minSampleMs ?? 8;
+  let t0 = performance.now();
+  while (performance.now() - t0 < warmMs) fn();
+  const per = [];
+  for (let s = 0; s < samples; s++) {
+    let n = 0; const a = performance.now(); let b;
+    do { fn(); n++; b = performance.now(); } while (b - a < minSampleMs);
+    per.push((b - a) / n);
+  }
+  per.sort((x, y) => x - y);
+  return { name, median_ms: +per[samples >> 1].toFixed(4), p10_ms: +per[Math.floor(samples * 0.1)].toFixed(4), p90_ms: +per[Math.floor(samples * 0.9)].toFixed(4) };
+}
+let SINK = 0;
+function hash2(ix, iy) {
+  let h = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+let RNG = 2463534242;
+function rnd() { RNG ^= RNG << 13; RNG ^= RNG >>> 17; RNG ^= RNG << 5; return (RNG >>> 0) / 4294967296; }
+
+const W = 320, H = 180;
+// ---------------- assets built in code ----------------
+// one 8x8 tuft: 4 blades of height 5..8, two greens. Pixel list per sway frame (shear -2..2, top row moves most).
+const TUFT = []; // [dx, dy, abgr]
+{ const blades = [[1, 6], [3, 8], [4, 7], [6, 5]];
+  for (const [bx, bh] of blades) for (let k = 0; k < bh; k++) TUFT.push([bx, 7 - k, k > bh - 3 ? 0xff5ad27a : 0xff2e8a3c]); }
+const NFR = 5; // frames for shear -2..2
+function shearOff(s, row) { return Math.round(s * (7 - row) / 7); }
+const atlas = document.createElement('canvas'); atlas.width = 12 * NFR; atlas.height = 8;
+const tuftCv = document.createElement('canvas'); tuftCv.width = 8; tuftCv.height = 8;
+{ const a = atlas.getContext('2d'), t = tuftCv.getContext('2d');
+  const hex = c => '#' + [c & 255, (c >> 8) & 255, (c >> 16) & 255].map(v => v.toString(16).padStart(2, '0')).join('');
+  for (let f = 0; f < NFR; f++) for (const [dx, dy, c] of TUFT) { a.fillStyle = hex(c); a.fillRect(f * 12 + 2 + dx + shearOff(f - 2, dy), dy, 1, 1); }
+  for (const [dx, dy, c] of TUFT) { t.fillStyle = hex(c); t.fillRect(dx, dy, 1, 1); } }
+// pixel offset lists for the ImageData path
+const FR_OFF = [], FR_COL = [];
+for (let f = 0; f < NFR; f++) { FR_OFF.push(Int32Array.from(TUFT.map(([dx, dy]) => dy * W + dx + shearOff(f - 2, dy)))); FR_COL.push(Uint32Array.from(TUFT.map(p => p[2]))); }
+// wind: 1D table of integer shear -2..2, scrolled (a travelling gust)
+const WIND = new Int8Array(1024); for (let i = 0; i < 1024; i++) WIND[i] = Math.max(-2, Math.min(2, Math.round(1.2 * Math.sin(i * 0.035) + 1.0 * Math.sin(i * 0.11 + 1.3))));
+function makeTufts(N) { const x = new Int16Array(N), y = new Int16Array(N); for (let i = 0; i < N; i++) { x[i] = 2 + (hash2(i, 7) * (W - 12) | 0); y[i] = hash2(i, 9) * (H - 8) | 0; }
+  // y-sort once (static grass)
+  const idx = [...Array(N).keys()].sort((a, b) => y[a] - y[b]); return { N, x: Int16Array.from(idx.map(i => x[i])), y: Int16Array.from(idx.map(i => y[i])) }; }
+function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+const ground = mkCanvas(W, H); { const g = ground.getContext('2d'); for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) { const v = hash2(x, y); g.fillStyle = v < 0.3 ? '#3f7d34' : v < 0.8 ? '#47873a' : '#52944a'; g.fillRect(x, y, 2, 2); } }
+const groundU32 = new Uint32Array(ground.getContext('2d').getImageData(0, 0, W, H).data.buffer.slice(0));
+
+function mainCtx() { const c = mkCanvas(W, H); return c.getContext('2d', { willReadFrequently: true }); }
+function sync(cx) { SINK += cx.getImageData(0, 0, 1, 1).data[1]; }
+
+// ---------------- CPU: tufts ----------------
+function tuftsBaked(cx, T, t) { cx.drawImage(ground, 0, 0); const o = (t * 40) | 0;
+  for (let i = 0; i < T.N; i++) { const x = T.x[i], f = WIND[(x + o) & 1023] + 2; cx.drawImage(atlas, f * 12, 0, 12, 8, x - 2, T.y[i], 12, 8); } }
+function tuftsRowSlice(cx, T, t) { cx.drawImage(ground, 0, 0); const o = (t * 40) | 0;
+  for (let i = 0; i < T.N; i++) { const x = T.x[i], y = T.y[i], s = WIND[(x + o) & 1023];
+    for (let r = 0; r < 8; r++) cx.drawImage(tuftCv, 0, r, 8, 1, x + shearOff(s, r), y + r, 8, 1); } }
+function tuftsImageData(cx, img, u32, T, t) { u32.set(groundU32); const o = (t * 40) | 0;
+  for (let i = 0; i < T.N; i++) { const x = T.x[i], base = T.y[i] * W + x, f = WIND[(x + o) & 1023] + 2, off = FR_OFF[f], col = FR_COL[f];
+    for (let p = 0; p < off.length; p++) u32[base + off[p]] = col[p]; }
+  cx.putImageData(img, 0, 0); }
+function bakeLayer(T) { const c = mkCanvas(W, H), g = c.getContext('2d'); for (let i = 0; i < T.N; i++) g.drawImage(tuftCv, T.x[i], T.y[i]); return c; }
+function fieldRowBands(cx, layer, t, band) { cx.drawImage(ground, 0, 0); const o = (t * 40) | 0;
+  for (let y = 0; y < H; y += band) { const s = WIND[(y * 3 + o) & 1023]; cx.drawImage(layer, 0, y, W, band, s, y, W, band); } }
+function fieldBlocks(cx, layer, t, band, colw) { cx.drawImage(ground, 0, 0); const o = (t * 40) | 0;
+  for (let y = 0; y < H; y += band) for (let x = 0; x < W; x += colw) { const s = WIND[(x + y * 3 + o) & 1023]; cx.drawImage(layer, x, y, colw, band, x + s, y, colw, band); } }
+
+// ---------------- CPU: interaction / trail map ----------------
+function makeTrail(MW, MH, K, r) { const m = { MW, MH, K, r, map: new Uint8Array(MW * MH), f: new Float32Array(MW * MH), wx: new Float32Array(K), wy: new Float32Array(K), disk: [] };
+  for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx * dx + dy * dy <= r * r) m.disk.push(dx, dy, 255 - ((dx * dx + dy * dy) * 128 / (r * r) | 0));
+  for (let k = 0; k < K; k++) { m.wx[k] = hash2(k, 3) * MW; m.wy[k] = hash2(k, 4) * MH; } return m; }
+function moveWalkers(m) { for (let k = 0; k < m.K; k++) { m.wx[k] = (m.wx[k] + (rnd() - 0.4) * 0.5 + m.MW) % m.MW; m.wy[k] = (m.wy[k] + (rnd() - 0.5) * 0.5 + m.MH) % m.MH; } }
+function trailStepU8(m, dec) { const a = m.map, n = a.length; for (let i = 0; i < n; i++) { const v = a[i]; a[i] = v > dec ? v - dec : 0; }
+  moveWalkers(m); const d = m.disk, MW = m.MW, MH = m.MH;
+  for (let k = 0; k < m.K; k++) { const cx = m.wx[k] | 0, cy = m.wy[k] | 0;
+    for (let j = 0; j < d.length; j += 3) { const x = cx + d[j], y = cy + d[j + 1]; if (x < 0 || y < 0 || x >= MW || y >= MH) continue; const i = y * MW + x; if (a[i] < d[j + 2]) a[i] = d[j + 2]; } } }
+function trailStepF32(m, mul) { const a = m.f, n = a.length; for (let i = 0; i < n; i++) a[i] *= mul;
+  moveWalkers(m); const d = m.disk, MW = m.MW, MH = m.MH;
+  for (let k = 0; k < m.K; k++) { const cx = m.wx[k] | 0, cy = m.wy[k] | 0;
+    for (let j = 0; j < d.length; j += 3) { const x = cx + d[j], y = cy + d[j + 1]; if (x < 0 || y < 0 || x >= MW || y >= MH) continue; const i = y * MW + x; const v = d[j + 2] / 255; if (a[i] < v) a[i] = v; } } }
+
+// ---------------- CPU: regrowth ----------------
+// stage 0 = cut/bare, 1..3 growing, 3 = tall. Random tick: cell grows if stage>0, or if a 4-neighbour is tall (spread).
+function makeGrowth(GW, GH) { const g = new Uint8Array(GW * GH); for (let i = 0; i < g.length; i++) g[i] = hash2(i, 11) < 0.5 ? 0 : (hash2(i, 12) * 4) | 0; return g; }
+function randomTick(g, GW, GH, R) { const n = GW * GH; let grown = 0;
+  for (let k = 0; k < R; k++) { const i = (rnd() * n) | 0, s = g[i];
+    if (s >= 3) { if (rnd() < 0.002) g[i] = 0; continue; } // occasional grazing so the grid never saturates
+    if (s > 0) { g[i] = s + 1; grown++; continue; }
+    const x = i % GW; if ((x > 0 && g[i - 1] === 3) || (x < GW - 1 && g[i + 1] === 3) || (i >= GW && g[i - GW] === 3) || (i + GW < n && g[i + GW] === 3)) { g[i] = 1; grown++; } }
+  return grown; }
+function fullScanCA(g, g2, GW, GH) { // every cell every tick: the expensive alternative
+  const n = GW * GH; for (let i = 0; i < n; i++) { const s = g[i]; if (s > 0) { g2[i] = s < 3 ? s + 1 : 3; continue; }
+    const x = i % GW; g2[i] = ((x > 0 && g[i - 1] === 3) || (x < GW - 1 && g[i + 1] === 3) || (i >= GW && g[i - GW] === 3) || (i + GW < n && g[i + GW] === 3)) ? 1 : 0; }
+  for (let i = 0; i < n; i += 97) if (g2[i] === 3) g2[i] = 0; g.set(g2); }
+
+// ---------------- CPU: small life ----------------
+function makeLife(N) { const L = { N, x: new Float32Array(N), y: new Float32Array(N), vx: new Float32Array(N), vy: new Float32Array(N), a: new Float32Array(N), ph: new Float32Array(N), ph2: new Float32Array(N), om: new Float32Array(N) };
+  for (let i = 0; i < N; i++) { L.x[i] = hash2(i, 1) * W; L.y[i] = hash2(i, 2) * H; L.a[i] = hash2(i, 5) * 6.283; L.ph[i] = hash2(i, 6) * 6.283; L.om[i] = 6.283 * (0.9 + 0.2 * hash2(i, 8)); } return L; }
+const PLAYER = { x: 160, y: 90 };
+function butterflyUpdate(L, dt, t) { const N = L.N, r2 = 40 * 40;
+  for (let i = 0; i < N; i++) { let a = L.a[i] + (rnd() - 0.5) * 0.8; L.a[i] = a; let vx = Math.cos(a) * 18, vy = Math.sin(a) * 18;
+    const dx = L.x[i] - PLAYER.x, dy = L.y[i] - PLAYER.y, d2 = dx * dx + dy * dy;
+    if (d2 < r2) { const k = 60 / Math.sqrt(d2 + 1); vx += dx * k; vy += dy * k; }
+    let x = L.x[i] + vx * dt, y = L.y[i] + vy * dt; if (x < 0) x += W; else if (x >= W) x -= W; if (y < 0) y += H; else if (y >= H) y -= H;
+    L.x[i] = x; L.y[i] = y; L.ph[i] += 6.283 * 8 * dt; } }
+const bfly = mkCanvas(10, 4); { const g = bfly.getContext('2d'); g.fillStyle = '#f2e27a'; g.fillRect(0, 1, 2, 2); g.fillRect(3, 1, 2, 2); g.fillRect(6, 0, 1, 3); g.fillRect(8, 0, 1, 3); g.fillStyle = '#333'; g.fillRect(2, 1, 1, 2); g.fillRect(7, 1, 1, 2); }
+function butterflyDraw(cx, L, t) { cx.drawImage(ground, 0, 0); for (let i = 0; i < L.N; i++) { const f = (L.ph[i] / 3.1416 | 0) & 1, bob = Math.sin(L.ph[i] * 0.125) * 2; cx.drawImage(bfly, f * 5, 0, 5, 4, L.x[i] | 0, (L.y[i] + bob) | 0, 5, 4); } }
+// fireflies: drift + Kuramoto phase coupling with neighbours inside radius R
+const FR_R = 24, FR_K = 1.2;
+function fireflyDrift(L, dt) { for (let i = 0; i < L.N; i++) { L.a[i] += (rnd() - 0.5) * 0.3; let x = L.x[i] + Math.cos(L.a[i]) * 4 * dt, y = L.y[i] + Math.sin(L.a[i]) * 4 * dt; L.x[i] = (x + W) % W; L.y[i] = (y + H) % H; } }
+function kuramotoNaive(L, dt) { fireflyDrift(L, dt); const N = L.N, R2 = FR_R * FR_R, ph = L.ph, out = L.ph2;
+  for (let i = 0; i < N; i++) { let s = 0, c = 0; const xi = L.x[i], yi = L.y[i], pi = ph[i];
+    for (let j = 0; j < N; j++) { const dx = L.x[j] - xi, dy = L.y[j] - yi; if (dx * dx + dy * dy < R2 && j !== i) { s += Math.sin(ph[j] - pi); c++; } }
+    out[i] = (pi + (L.om[i] + (c ? FR_K * s / c : 0)) * dt) % 6.2832; }
+  L.ph2 = ph; L.ph = out; }
+const GCW = Math.ceil(W / FR_R), GCH = Math.ceil(H / FR_R);
+function kuramotoGrid(L, dt, G) { fireflyDrift(L, dt); const N = L.N, R2 = FR_R * FR_R, ph = L.ph, out = L.ph2;
+  // counting sort into cells
+  G.cnt.fill(0); for (let i = 0; i < N; i++) { const c = ((L.y[i] / FR_R) | 0) * GCW + ((L.x[i] / FR_R) | 0); G.cell[i] = c; G.cnt[c + 1]++; }
+  for (let c = 0; c < GCW * GCH; c++) G.cnt[c + 1] += G.cnt[c]; G.fill.set(G.cnt);
+  for (let i = 0; i < N; i++) G.ids[G.fill[G.cell[i]]++] = i;
+  for (let i = 0; i < N; i++) { let s = 0, c = 0; const xi = L.x[i], yi = L.y[i], pi = ph[i], cx = (xi / FR_R) | 0, cy = (yi / FR_R) | 0;
+    for (let gy = cy - 1; gy <= cy + 1; gy++) { if (gy < 0 || gy >= GCH) continue;
+      for (let gx = cx - 1; gx <= cx + 1; gx++) { if (gx < 0 || gx >= GCW) continue; const cc = gy * GCW + gx;
+        for (let q = G.cnt[cc]; q < G.cnt[cc + 1]; q++) { const j = G.ids[q]; const dx = L.x[j] - xi, dy = L.y[j] - yi; if (dx * dx + dy * dy < R2 && j !== i) { s += Math.sin(ph[j] - pi); c++; } } } }
+    out[i] = (pi + (L.om[i] + (c ? FR_K * s / c : 0)) * dt) % 6.2832; }
+  L.ph2 = ph; L.ph = out; }
+
+// mean-field per cell: sum(sin(pj - pi)) = Sy*cos(pi) - Sx*sin(pi), with Sx = sum cos pj, Sy = sum sin pj over the 3x3 cells.
+// Approximates the radius with a 3x3-cell square and includes self (sin 0 = 0). 2 trig calls per firefly instead of one per pair.
+function kuramotoCellMean(L, dt, G) { fireflyDrift(L, dt); const N = L.N, ph = L.ph, NC = GCW * GCH;
+  G.sx.fill(0); G.sy.fill(0); G.cnt.fill(0);
+  for (let i = 0; i < N; i++) { const c = ((L.y[i] / FR_R) | 0) * GCW + ((L.x[i] / FR_R) | 0); G.cell[i] = c; G.sx[c] += Math.cos(ph[i]); G.sy[c] += Math.sin(ph[i]); G.cnt[c]++; }
+  for (let i = 0; i < N; i++) { const c = G.cell[i], cx = c % GCW, cy = (c / GCW) | 0; let Sx = 0, Sy = 0, n = 0;
+    for (let gy = cy - 1; gy <= cy + 1; gy++) { if (gy < 0 || gy >= GCH) continue; for (let gx = cx - 1; gx <= cx + 1; gx++) { if (gx < 0 || gx >= GCW) continue; const q = gy * GCW + gx; Sx += G.sx[q]; Sy += G.sy[q]; n += G.cnt[q]; } }
+    const pi = ph[i]; const s = Sy * Math.cos(pi) - Sx * Math.sin(pi); ph[i] = (pi + (L.om[i] + (n > 1 ? FR_K * s / (n - 1) : 0)) * dt) % 6.2832; } }
+function makeGrid(N) { return { cnt: new Int32Array(GCW * GCH + 1), fill: new Int32Array(GCW * GCH + 1), cell: new Int32Array(N), ids: new Int32Array(N), sx: new Float32Array(GCW * GCH), sy: new Float32Array(GCW * GCH) }; }
+// pollen
+function pollenUpdate(L, dt, t) { const wx = 14 + 6 * Math.sin(t * 0.7); for (let i = 0; i < L.N; i++) { let x = L.x[i] + (wx + WIND[(i * 7 + (t * 30 | 0)) & 1023] * 3) * dt, y = L.y[i] + Math.sin(L.ph[i] + t * 2) * 6 * dt; if (x >= W) x -= W; if (y < 0) y += H; else if (y >= H) y -= H; L.x[i] = x; L.y[i] = y; } }
+function pollenFillRect(cx, L) { cx.drawImage(ground, 0, 0); cx.fillStyle = '#fff6c8'; for (let i = 0; i < L.N; i++) cx.fillRect(L.x[i] | 0, L.y[i] | 0, 1, 1); }
+function pollenPixels(img, u32, cx, L) { u32.set(groundU32); for (let i = 0; i < L.N; i++) u32[(L.y[i] | 0) * W + (L.x[i] | 0)] = 0xffc8f6ff; cx.putImageData(img, 0, 0); }
+// glow
+const HALO_R = 4; const halo = mkCanvas(9, 9); { const g = halo.getContext('2d'); const id = g.createImageData(9, 9);
+  for (let y = 0; y < 9; y++) for (let x = 0; x < 9; x++) { const d2 = (x - 4) ** 2 + (y - 4) ** 2, f = Math.max(0, 1 - d2 / 20); const i = (y * 9 + x) * 4; id.data[i] = 200 * f; id.data[i + 1] = 255 * f; id.data[i + 2] = 90 * f; id.data[i + 3] = 255 * f; } g.putImageData(id, 0, 0); }
+const nightGround = mkCanvas(W, H); { const g = nightGround.getContext('2d'); g.drawImage(ground, 0, 0); g.fillStyle = 'rgba(10,20,50,0.7)'; g.fillRect(0, 0, W, H); }
+const nightU32 = new Uint32Array(nightGround.getContext('2d').getImageData(0, 0, W, H).data.buffer.slice(0));
+function glowSprites(cx, L) { cx.globalCompositeOperation = 'source-over'; cx.drawImage(nightGround, 0, 0); cx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < L.N; i++) cx.drawImage(halo, (L.x[i] | 0) - 4, (L.y[i] | 0) - 4); cx.globalCompositeOperation = 'source-over'; }
+function glowPerPixel(cx, img, u8, u32, L) { u32.set(nightU32); const r = HALO_R, r2 = 20;
+  for (let i = 0; i < L.N; i++) { const fx = L.x[i] | 0, fy = L.y[i] | 0;
+    for (let dy = -r; dy <= r; dy++) { const y = fy + dy; if (y < 0 || y >= H) continue;
+      for (let dx = -r; dx <= r; dx++) { const x = fx + dx; if (x < 0 || x >= W) continue; const f = 1 - (dx * dx + dy * dy) / r2; if (f <= 0) continue;
+        const p = (y * W + x) * 4; const R = u8[p] + 200 * f, G = u8[p + 1] + 255 * f, B = u8[p + 2] + 90 * f; u8[p] = R; u8[p + 1] = G; u8[p + 2] = B; } } } // Uint8Clamped saturates
+  cx.putImageData(img, 0, 0); }
+const LM_W = 80, LM_H = 45; const lmCv = mkCanvas(LM_W, LM_H); const lmCx = lmCv.getContext('2d', { willReadFrequently: true }); const lmImg = lmCx.createImageData(LM_W, LM_H); const lmF = new Float32Array(LM_W * LM_H);
+const K3 = [0.25, 0.5, 0.25, 0.5, 1, 0.5, 0.25, 0.5, 0.25];
+function glowLightMap(cx, L) { lmF.fill(0);
+  for (let i = 0; i < L.N; i++) { const gx = (L.x[i] / 4) | 0, gy = (L.y[i] / 4) | 0;
+    for (let k = 0; k < 9; k++) { const x = gx + (k % 3) - 1, y = gy + ((k / 3) | 0) - 1; if (x < 0 || y < 0 || x >= LM_W || y >= LM_H) continue; lmF[y * LM_W + x] += K3[k]; } }
+  const d = lmImg.data; for (let i = 0, p = 0; i < lmF.length; i++, p += 4) { const v = lmF[i] > 1 ? 255 : lmF[i] * 255; d[p] = 200; d[p + 1] = 255; d[p + 2] = 90; d[p + 3] = v; }
+  lmCx.putImageData(lmImg, 0, 0);
+  cx.drawImage(nightGround, 0, 0); cx.globalCompositeOperation = 'lighter'; cx.imageSmoothingEnabled = true; cx.drawImage(lmCv, 0, 0, W, H); cx.imageSmoothingEnabled = false; cx.globalCompositeOperation = 'source-over'; }
+
+function runCPU() {
+  const R = []; let t = 0; const cx = mainCtx(); cx.imageSmoothingEnabled = false;
+  const img = cx.createImageData(W, H), u32 = new Uint32Array(img.data.buffer), u8 = img.data;
+  R.push(bench('cpu baseline: ground blit + 1px readback sync', () => { cx.drawImage(ground, 0, 0); sync(cx); }));
+  R.push(bench('cpu baseline: putImageData 320x180 + sync', () => { cx.putImageData(img, 0, 0); sync(cx); }));
+  for (const N of [500, 2000, 8000]) { const T = makeTufts(N);
+    R.push(bench(`cpu tufts pre-baked sway frames drawImage N=${N}`, () => { tuftsBaked(cx, T, t += 0.016); sync(cx); }));
+    R.push(bench(`cpu tufts per-row slicing (8 drawImage per tuft) N=${N}`, () => { tuftsRowSlice(cx, T, t += 0.016); sync(cx); }));
+    R.push(bench(`cpu tufts ImageData pixel writes + putImageData N=${N}`, () => { tuftsImageData(cx, img, u32, T, t += 0.016); sync(cx); }));
+    const layer = bakeLayer(T);
+    R.push(bench(`cpu field layer row bands 2px (90 drawImage) N=${N}`, () => { fieldRowBands(cx, layer, t += 0.016, 2); sync(cx); }));
+    R.push(bench(`cpu field layer blocks 4px x 32px (450 drawImage) N=${N}`, () => { fieldBlocks(cx, layer, t += 0.016, 4, 32); sync(cx); }));
+    R.push(bench(`cpu re-bake field layer (after trampling) N=${N}`, () => { SINK += bakeLayer(T).width; }, { samples: 11 }));
+  }
+  for (const [MW, MH, r] of [[80, 45, 2], [160, 90, 3]]) for (const K of [1, 10, 100]) {
+    const m = makeTrail(MW, MH, K, r); R.push(bench(`cpu trail map u8 decay+stamp ${MW}x${MH} K=${K} r=${r}`, () => { trailStepU8(m, 2); SINK += m.map[100]; }));
+    if (K === 10) { const m2 = makeTrail(MW, MH, K, r); R.push(bench(`cpu trail map f32 multiply-decay+stamp ${MW}x${MH} K=${K} r=${r}`, () => { trailStepF32(m2, 0.98); SINK += m2.f[100]; })); }
+  }
+  for (const [GW, GH] of [[40, 23], [256, 256], [1024, 1024]]) { const g = makeGrowth(GW, GH), g2 = new Uint8Array(GW * GH);
+    for (const Rn of [16, 256, 4096, 65536]) { if (Rn > GW * GH * 4) continue; R.push(bench(`cpu regrowth random tick ${GW}x${GH} R=${Rn}`, () => { SINK += randomTick(g, GW, GH, Rn); })); }
+    R.push(bench(`cpu regrowth full-scan CA ${GW}x${GH} (every cell)`, () => { fullScanCA(g, g2, GW, GH); SINK += g[5]; }));
+  }
+  for (const N of [50, 200, 1000]) { const L = makeLife(N);
+    R.push(bench(`cpu butterflies update (wander+bob+flee) N=${N}`, () => { butterflyUpdate(L, 0.016, t += 0.016); SINK += L.x[0]; }));
+    R.push(bench(`cpu butterflies draw drawImage N=${N}`, () => { butterflyDraw(cx, L, t); sync(cx); }));
+    const F = makeLife(N); R.push(bench(`cpu fireflies kuramoto naive O(n^2) N=${N}`, () => { kuramotoNaive(F, 0.016); SINK += F.ph[0]; }));
+    const F2 = makeLife(N), G = makeGrid(N); R.push(bench(`cpu fireflies kuramoto uniform grid N=${N}`, () => { kuramotoGrid(F2, 0.016, G); SINK += F2.ph[0]; }));
+    const F3 = makeLife(N), G3 = makeGrid(N); R.push(bench(`cpu fireflies kuramoto cell mean-field N=${N}`, () => { kuramotoCellMean(F3, 0.016, G3); SINK += F3.ph[0]; }));
+    R.push(bench(`cpu glow additive halo sprites (lighter) N=${N}`, () => { glowSprites(cx, F2); sync(cx); }));
+    R.push(bench(`cpu glow per-pixel radial loop r=4 + putImageData N=${N}`, () => { glowPerPixel(cx, img, u8, u32, F2); sync(cx); }));
+    R.push(bench(`cpu glow 80x45 light map stamp + upscale lighter N=${N}`, () => { glowLightMap(cx, F2); sync(cx); }));
+  }
+  { const F = makeLife(4000), G = makeGrid(4000); R.push(bench(`cpu fireflies kuramoto uniform grid N=4000`, () => { kuramotoGrid(F, 0.016, G); SINK += F.ph[0]; }));
+    const F4 = makeLife(4000), G4 = makeGrid(4000); R.push(bench(`cpu fireflies kuramoto cell mean-field N=4000`, () => { kuramotoCellMean(F4, 0.016, G4); SINK += F4.ph[0]; })); }
+  // Kuramoto correctness: grid == naive on the same start state
+  { const a = makeLife(300), b = makeLife(300), G = makeGrid(300); RNG = 99; kuramotoNaive(a, 0.016); RNG = 99; kuramotoGrid(b, 0.016, G); let ok = true; for (let i = 0; i < 300; i++) if (Math.abs(a.ph[i] - b.ph[i]) > 1e-4) ok = false; R.push({ name: 'kuramoto grid == naive', ok }); }
+  for (const N of [500, 2000, 8000]) { const P = makeLife(N);
+    R.push(bench(`cpu pollen update N=${N}`, () => { pollenUpdate(P, 0.016, t += 0.016); SINK += P.x[0]; }));
+    R.push(bench(`cpu pollen draw fillRect 1px N=${N}`, () => { pollenFillRect(cx, P); sync(cx); }));
+    R.push(bench(`cpu pollen draw pixel writes + putImageData N=${N}`, () => { pollenPixels(img, u32, cx, P); sync(cx); }));
+  }
+  return { sink: SINK, userAgent: navigator.userAgent, results: R };
+}
+
+// ---------------- GPU (WebGL2) ----------------
+const NOISE_GLSL = `uniform sampler2D noiseTex; float wind(vec2 gp, float t){ return texture(noiseTex, gp/128. + vec2(t*0.08, 0.)).r*2.-1.; }`;
+const VS_FULL = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+// instanced tufts: quad 12x8 game px (8 px sprite + 2 px shear margin each side). Shear snapped per row in the fragment shader.
+const VS_TUFT = `#version 300 es
+precision highp float; in vec2 corner; in vec3 inst; uniform vec2 res; uniform float scale, t; uniform vec4 single; uniform bool useSingle;
+${NOISE_GLSL}
+out vec2 lp; flat out float shear;
+void main(){ vec3 I = useSingle ? single.xyz : inst; vec2 gp = I.xy + corner*vec2(12.,8.) - vec2(2.,0.);
+  shear = clamp(floor(wind(I.xy, t)*2.5+0.5), -2., 2.); lp = corner*vec2(12.,8.);
+  vec2 px = gp*scale; gl_Position = vec4(px/res*2.-1., 0., 1.); gl_Position.y = -gl_Position.y; }`;
+const FS_TUFT = `#version 300 es
+precision highp float; in vec2 lp; flat in float shear; uniform sampler2D tuftTex; out vec4 o;
+void main(){ int row = int(lp.y); float off = floor(shear*float(7-row)/7.+0.5); int x = int(floor(lp.x)) - 2 - int(off);
+  vec4 c = (x>=0 && x<8) ? texelFetch(tuftTex, ivec2(x,row), 0) : vec4(0.); o = c; }`;
+// full-screen grass field shaders working in game-pixel space
+const FS_HDR = `#version 300 es
+precision highp float; out vec4 o; uniform float t, scale; uniform sampler2D layerTex; uniform sampler2D rootTex; uniform sampler2D trailTex;
+${NOISE_GLSL}
+`;
+const FS_FIELD = {
+  field_shift: `void main(){ ivec2 gp = ivec2(gl_FragCoord.xy/scale); gp.y = 179-gp.y; float s = floor(wind(vec2(gp.x, gp.y/4*4), t)*2.5+0.5);
+    o = texelFetch(layerTex, ivec2(clamp(gp.x-int(s),0,319), gp.y), 0); }`,
+  field_shift_trail: `void main(){ ivec2 gp = ivec2(gl_FragCoord.xy/scale); gp.y = 179-gp.y; float s = floor(wind(vec2(gp.x, gp.y/4*4), t)*2.5+0.5);
+    float tr = texture(trailTex, (vec2(gp)+0.5)/vec2(320.,180.)).r; s = mix(s, 0., tr);
+    vec4 c = texelFetch(layerTex, ivec2(clamp(gp.x-int(s),0,319), gp.y), 0); c.rgb *= 1.-0.3*tr; o = c; }`,
+  field_blades6: `void main(){ ivec2 gp = ivec2(gl_FragCoord.xy/scale); gp.y = 179-gp.y; vec4 c = vec4(0.);
+    for(int k=0;k<6;k++){ ivec2 q = ivec2(gp.x, min(gp.y+k,179)); float s = floor(wind(vec2(q), t)*2.5*float(k)/6.+0.5);
+      float h = texelFetch(rootTex, ivec2(clamp(q.x-int(s),0,319), q.y), 0).r*8.; if(h > float(k)) { c = vec4(mix(vec3(.18,.54,.24), vec3(.35,.82,.48), float(k)/6.), 0.99); break; } }
+    o = c; }`,
+};
+// trail ping-pong
+const FS_DECAY = `#version 300 es
+precision highp float; uniform sampler2D prev; uniform float dec; out vec4 o; void main(){ float v = texelFetch(prev, ivec2(gl_FragCoord.xy), 0).r; o = vec4(max(v-dec,0.),0.,0.,1.); }`;
+const VS_PTS = `#version 300 es
+in vec2 wp; uniform vec2 mres; uniform float ps; void main(){ gl_Position = vec4(wp/mres*2.-1.,0.,1.); gl_PointSize = ps; }`;
+const FS_PTS = `#version 300 es
+precision highp float; out vec4 o; void main(){ float d = length(gl_PointCoord-0.5)*2.; o = vec4(max(0., 1.-d*d*0.5)*step(d,1.),0.,0.,1.); }`;
+// glow halos: instanced additive quads, radial falloff in fragment
+const VS_HALO = `#version 300 es
+precision highp float; in vec2 corner; in vec3 inst; uniform vec2 res; uniform float scale; out vec2 lp;
+void main(){ lp = corner*2.-1.; vec2 gp = inst.xy + (corner-0.5)*9.; vec2 px = gp*scale; gl_Position = vec4(px/res*2.-1.,0.,1.); }`;
+const FS_HALO = `#version 300 es
+precision highp float; in vec2 lp; out vec4 o; void main(){ float f = max(0., 1.-dot(lp,lp)); o = vec4(vec3(.78,1.,.35)*f, f); }`;
+
+async function runGPU(opts = {}) {
+  const out = { info: {}, results: [] };
+  const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4;
+  const gl = cv.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) { out.info.error = 'no webgl2'; return out; }
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  out.info.vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+  out.info.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  out.info.version = gl.getParameter(gl.VERSION); out.info.userAgent = navigator.userAgent;
+  const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2'); out.info.timer_query = !!tq; out.info.blend = 'always on (SRC_ALPHA, ONE_MINUS_SRC_ALPHA, or ONE,ONE for glow, MAX for trail stamps)';
+  function compile(vs, fs) { const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) + src); return s; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.bindAttribLocation(p, 0, 'p'); gl.bindAttribLocation(p, 0, 'wp'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const U = new Proxy({}, { get: (o, k) => o[k] ?? (o[k] = gl.getUniformLocation(p, k)) }); return { p, U }; }
+  function mkTex(w, h, data, fmt, ifmt, type, filt, wrap) { const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+    gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, w, h, 0, fmt, type, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filt); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filt);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap ?? gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap ?? gl.REPEAT); return tx; }
+  // textures: 0 noise, 1 tuft, 2 layer, 3 root, 4 trail (bound per test)
+  const n8 = new Uint8Array(128 * 128); for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) n8[y * 128 + x] = 255 * (0.5 + 0.25 * Math.sin(x * 6.283 / 64) + 0.25 * Math.sin((x + y) * 6.283 / 32));
+  const noiseTex = mkTex(128, 128, n8, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.LINEAR);
+  const tp = new Uint8Array(8 * 8 * 4); for (const [dx, dy, c] of TUFT) { const i = (dy * 8 + dx) * 4; tp[i] = c & 255; tp[i + 1] = (c >> 8) & 255; tp[i + 2] = (c >> 16) & 255; tp[i + 3] = 255; }
+  const tuftTex = mkTex(8, 8, tp, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, gl.NEAREST, gl.CLAMP_TO_EDGE);
+  const T2 = makeTufts(2000), lay = new Uint8Array(W * H * 4), root = new Uint8Array(W * H);
+  for (let i = 0; i < T2.N; i++) for (const [dx, dy, c] of TUFT) { const p = ((T2.y[i] + dy) * W + T2.x[i] + dx); lay[p * 4] = c & 255; lay[p * 4 + 1] = (c >> 8) & 255; lay[p * 4 + 2] = (c >> 16) & 255; lay[p * 4 + 3] = 245; }
+  for (let i = 0; i < T2.N; i++) for (const bx of [1, 3, 4, 6]) root[(T2.y[i] + 7) * W + T2.x[i] + bx] = 160 + (hash2(i, bx) * 95 | 0);
+  const layerTex = mkTex(W, H, lay, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, gl.NEAREST, gl.CLAMP_TO_EDGE);
+  const rootTex = mkTex(W, H, root, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.NEAREST, gl.CLAMP_TO_EDGE);
+  const trail8 = new Uint8Array(80 * 45); for (let i = 0; i < trail8.length; i++) trail8[i] = hash2(i, 77) < 0.1 ? 255 : 0;
+  const trailTex = mkTex(80, 45, trail8, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.LINEAR, gl.CLAMP_TO_EDGE);
+  const binds = () => { [noiseTex, tuftTex, layerTex, rootTex, trailTex].forEach((tx, i) => { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tx); }); gl.activeTexture(gl.TEXTURE7); };
+  binds();
+  const setSamplers = P => { gl.useProgram(P.p); gl.uniform1i(P.U.noiseTex, 0); gl.uniform1i(P.U.tuftTex, 1); gl.uniform1i(P.U.layerTex, 2); gl.uniform1i(P.U.rootTex, 3); gl.uniform1i(P.U.trailTex, 4); };
+  // VAOs
+  const fullVAO = gl.createVertexArray(); gl.bindVertexArray(fullVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const cornerBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+  function instVAO(P, N, spreadX, spreadY) { const v = gl.createVertexArray(); gl.bindVertexArray(v); const lc = gl.getAttribLocation(P.p, 'corner'), li = gl.getAttribLocation(P.p, 'inst');
+    gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); gl.enableVertexAttribArray(lc); gl.vertexAttribPointer(lc, 2, gl.FLOAT, false, 0, 0);
+    const d = new Float32Array(N * 3); const T = makeTufts(N); for (let i = 0; i < N; i++) { d[i * 3] = T.x[i]; d[i * 3 + 1] = T.y[i]; d[i * 3 + 2] = hash2(i, 3); }
+    if (li >= 0) { gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, d, gl.STATIC_DRAW); gl.enableVertexAttribArray(li); gl.vertexAttribPointer(li, 3, gl.FLOAT, false, 0, 0); gl.vertexAttribDivisor(li, 1); }
+    return { v, d }; }
+  const px = new Uint8Array(4);
+  function sync() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+  function timeK(drawOnce, K) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); sync(); return performance.now() - a; }
+  function med(a) { a = a.slice().sort((x, y) => x - y); return a[a.length >> 1]; }
+  function pct(a, q) { a = a.slice().sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(a.length * q))]; }
+  async function timerQuery(drawOnce, K) {
+    const q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); for (let k = 0; k < K; k++) drawOnce(k); gl.endQuery(tq.TIME_ELAPSED_EXT);
+    for (let i = 0; i < 4000; i++) { await new Promise(r => setTimeout(r, 0)); if (gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) break; }
+    const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT); const ns = gl.getQueryParameter(q, gl.QUERY_RESULT); gl.deleteQuery(q);
+    return disjoint ? NaN : ns / 1e6; }
+  // per-frame cost = slope between batches of 1 and K frames (removes the readPixels sync). p10/p90 from per-sample slopes.
+  async function gpuBench(name, drawOnce) {
+    for (let i = 0; i < 4; i++) timeK(drawOnce, 3);
+    const probe = Math.max(0.001, (timeK(drawOnce, 12) - timeK(drawOnce, 1)) / 11);
+    const K = Math.max(4, Math.min(2000, Math.round(80 / probe)));
+    const s1 = [], sK = [];
+    for (let s = 0; s < 9; s++) { s1.push(timeK(drawOnce, 1)); sK.push(timeK(drawOnce, K)); }
+    const m1 = med(s1), slopes = sK.map(v => (v - m1) / (K - 1));
+    const r = { name, median_ms: +med(slopes).toFixed(4), p10_ms: +pct(slopes, 0.1).toFixed(4), p90_ms: +pct(slopes, 0.9).toFixed(4), K, sync_ms: +m1.toFixed(3) };
+    if (tq) { const tqs = []; const KT = Math.max(Math.min(K, 400), 20); for (let s = 0; s < 5; s++) tqs.push((await timerQuery(drawOnce, KT)) / KT); r.timer_query_ms = +med(tqs.filter(x => !isNaN(x))).toFixed(5); r.KT = KT; }
+    console.log(name, r.median_ms, r.timer_query_ms ?? '');
+    return r;
+  }
+  const PT = compile(VS_TUFT, FS_TUFT); setSamplers(PT);
+  const PH = compile(VS_HALO, FS_HALO);
+  const PF = {}; for (const [k, b] of Object.entries(FS_FIELD)) { PF[k] = compile(VS_FULL, FS_HDR + b); setSamplers(PF[k]); }
+  for (const [RW, RH, scale] of [[320, 180, 1], [1280, 720, 4]]) {
+    const fb = gl.createFramebuffer(), ct = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, ct);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, RW, RH); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ct, 0);
+    gl.viewport(0, 0, RW, RH); const tag = `${RW}x${RH}`;
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(PT.p); gl.uniform2f(PT.U.res, RW, RH); gl.uniform1f(PT.U.scale, scale);
+    for (const N of [500, 2000, 8000, 32000]) { const { v, d } = instVAO(PT, N);
+      gl.useProgram(PT.p); gl.uniform1i(PT.U.useSingle, 0);
+      out.results.push(await gpuBench(`gpu tufts instanced 1 draw N=${N} ${tag}`, k => { gl.bindVertexArray(v); gl.uniform1f(PT.U.t, k * 0.016); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, N); }));
+      if (N <= 8000) { const { v: v1 } = instVAO(PT, 1); gl.uniform1i(PT.U.useSingle, 1);
+        out.results.push(await gpuBench(`gpu tufts separate draws (uniform per tuft) N=${N} ${tag}`, k => { gl.bindVertexArray(v1); gl.uniform1f(PT.U.t, k * 0.016); for (let i = 0; i < N; i++) { gl.uniform4f(PT.U.single, d[i * 3], d[i * 3 + 1], d[i * 3 + 2], 0); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); } }));
+        gl.uniform1i(PT.U.useSingle, 0); }
+    }
+    gl.bindVertexArray(fullVAO);
+    for (const [key, P] of Object.entries(PF)) { gl.useProgram(P.p); gl.uniform1f(P.U.scale, scale);
+      out.results.push(await gpuBench(`gpu ${key} full-screen ${tag}`, k => { gl.uniform1f(P.U.t, k * 0.016); gl.drawArrays(gl.TRIANGLES, 0, 3); })); }
+    { const P = PF.field_shift; gl.useProgram(P.p);
+      for (const L of [4, 8]) out.results.push(await gpuBench(`gpu overdraw: ${L} blended field_shift layers ${tag}`, k => { gl.uniform1f(P.U.t, k * 0.016); for (let l = 0; l < L; l++) gl.drawArrays(gl.TRIANGLES, 0, 3); })); }
+    // glow halos additive
+    gl.blendFunc(gl.ONE, gl.ONE); gl.useProgram(PH.p); gl.uniform2f(PH.U.res, RW, RH); gl.uniform1f(PH.U.scale, scale);
+    for (const N of [200, 1000, 8000]) { const { v } = instVAO(PH, N); out.results.push(await gpuBench(`gpu glow halos instanced additive 9x9 N=${N} ${tag}`, k => { gl.bindVertexArray(v); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, N); })); }
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.deleteFramebuffer(fb); gl.deleteTexture(ct);
+  }
+  // trail map: GPU ping-pong (decay pass + K walker points with MAX blend) vs CPU map upload
+  const PD = compile(VS_FULL, FS_DECAY), PP = compile(VS_PTS, FS_PTS);
+  for (const [MW, MH, ps] of [[80, 45, 5], [160, 90, 7]]) {
+    const tex = [0, 1].map(() => mkTex(MW, MH, null, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, gl.NEAREST, gl.CLAMP_TO_EDGE));
+    const fbs = tex.map(tx => { const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0); return f; });
+    for (const K of [1, 10, 100]) {
+      const pv = gl.createVertexArray(); gl.bindVertexArray(pv); const pb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, pb); const wp = new Float32Array(K * 2); for (let i = 0; i < K; i++) { wp[i * 2] = hash2(i, 1) * MW; wp[i * 2 + 1] = hash2(i, 2) * MH; }
+      gl.bufferData(gl.ARRAY_BUFFER, wp, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      let cur = 0;
+      out.results.push(await gpuBench(`gpu trail ping-pong decay+stamp ${MW}x${MH} K=${K}`, k => {
+        const nx = 1 - cur; gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[nx]); gl.viewport(0, 0, MW, MH);
+        gl.disable(gl.BLEND); gl.useProgram(PD.p); gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(PD.U.prev, 5); gl.uniform1f(PD.U.dec, 0.008);
+        gl.bindVertexArray(fullVAO); gl.drawArrays(gl.TRIANGLES, 0, 3);
+        for (let i = 0; i < K; i++) { wp[i * 2] = (wp[i * 2] + 0.1) % MW; } gl.bindBuffer(gl.ARRAY_BUFFER, pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, wp);
+        gl.enable(gl.BLEND); gl.blendEquation(gl.MAX); gl.useProgram(PP.p); gl.uniform2f(PP.U.mres, MW, MH); gl.uniform1f(PP.U.ps, ps); gl.bindVertexArray(pv); gl.drawArrays(gl.POINTS, 0, K);
+        gl.blendEquation(gl.FUNC_ADD); cur = nx; }));
+    }
+    const up = mkTex(MW, MH, null, gl.RED, gl.R8, gl.UNSIGNED_BYTE, gl.LINEAR, gl.CLAMP_TO_EDGE), data = new Uint8Array(MW * MH);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[0]); gl.viewport(0, 0, MW, MH); gl.disable(gl.BLEND); gl.useProgram(PD.p); gl.uniform1i(PD.U.prev, 5); gl.bindVertexArray(fullVAO);
+    out.results.push(await gpuBench(`gpu trail CPU map upload texSubImage2D R8 ${MW}x${MH} (+1 tiny draw)`, k => { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, up); data[0] = k; gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, MW, MH, gl.RED, gl.UNSIGNED_BYTE, data); gl.drawArrays(gl.TRIANGLES, 0, 3); }));
+    gl.enable(gl.BLEND);
+  }
+  return out;
+}
+window.runCPU = runCPU; window.runGPU = runGPU;
+</script>
+</body></html>

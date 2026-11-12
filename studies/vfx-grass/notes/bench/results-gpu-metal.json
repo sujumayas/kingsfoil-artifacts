@@ -1,0 +1,394 @@
+{
+ "info": {
+  "vendor": "Google Inc. (Apple)",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+  "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "timer_query": true,
+  "blend": "always on (SRC_ALPHA, ONE_MINUS_SRC_ALPHA, or ONE,ONE for glow, MAX for trail stamps)"
+ },
+ "results": [
+  {
+   "name": "gpu tufts instanced 1 draw N=500 320x180",
+   "median_ms": 0.005,
+   "p10_ms": 0.0047,
+   "p90_ms": 0.0186,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.00469,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts separate draws (uniform per tuft) N=500 320x180",
+   "median_ms": 0.8048,
+   "p10_ms": 0.781,
+   "p90_ms": 2.6667,
+   "K": 22,
+   "sync_ms": 1.7,
+   "timer_query_ms": 0.63709,
+   "KT": 22
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=2000 320x180",
+   "median_ms": 0.015,
+   "p10_ms": 0.0122,
+   "p90_ms": 0.0246,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01165,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts separate draws (uniform per tuft) N=2000 320x180",
+   "median_ms": 3.2667,
+   "p10_ms": 3.2,
+   "p90_ms": 3.3833,
+   "K": 7,
+   "sync_ms": 4.1,
+   "timer_query_ms": 2.01101,
+   "KT": 20
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=8000 320x180",
+   "median_ms": 0.0562,
+   "p10_ms": 0.0501,
+   "p90_ms": 0.0586,
+   "K": 1760,
+   "sync_ms": 0.4,
+   "timer_query_ms": 0.05564,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts separate draws (uniform per tuft) N=8000 320x180",
+   "median_ms": 13.1,
+   "p10_ms": 12.9333,
+   "p90_ms": 13.7,
+   "K": 4,
+   "sync_ms": 14.4,
+   "timer_query_ms": 7.91394,
+   "KT": 20
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=32000 320x180",
+   "median_ms": 0.2239,
+   "p10_ms": 0.2215,
+   "p90_ms": 0.234,
+   "K": 419,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.22304,
+   "KT": 400
+  },
+  {
+   "name": "gpu field_shift full-screen 320x180",
+   "median_ms": 0.0024,
+   "p10_ms": 0.0023,
+   "p90_ms": 4.1325,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00209,
+   "KT": 400
+  },
+  {
+   "name": "gpu field_shift_trail full-screen 320x180",
+   "median_ms": 0.0031,
+   "p10_ms": 0.0029,
+   "p90_ms": 0.006,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00294,
+   "KT": 400
+  },
+  {
+   "name": "gpu field_blades6 full-screen 320x180",
+   "median_ms": 0.0092,
+   "p10_ms": 0.0078,
+   "p90_ms": 0.0275,
+   "K": 2000,
+   "sync_ms": 0.2,
+   "timer_query_ms": 0.00693,
+   "KT": 400
+  },
+  {
+   "name": "gpu overdraw: 4 blended field_shift layers 320x180",
+   "median_ms": 0.0066,
+   "p10_ms": 0.0063,
+   "p90_ms": 0.0285,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.0058,
+   "KT": 400
+  },
+  {
+   "name": "gpu overdraw: 8 blended field_shift layers 320x180",
+   "median_ms": 0.0156,
+   "p10_ms": 0.0109,
+   "p90_ms": 0.0386,
+   "K": 2000,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.00959,
+   "KT": 400
+  },
+  {
+   "name": "gpu glow halos instanced additive 9x9 N=200 320x180",
+   "median_ms": 0.0015,
+   "p10_ms": 0.0014,
+   "p90_ms": 0.0054,
+   "K": 2000,
+   "sync_ms": 0.2,
+   "timer_query_ms": 0.00114,
+   "KT": 400
+  },
+  {
+   "name": "gpu glow halos instanced additive 9x9 N=1000 320x180",
+   "median_ms": 0.0063,
+   "p10_ms": 0.0055,
+   "p90_ms": 0.0072,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.00467,
+   "KT": 400
+  },
+  {
+   "name": "gpu glow halos instanced additive 9x9 N=8000 320x180",
+   "median_ms": 0.048,
+   "p10_ms": 0.0467,
+   "p90_ms": 0.0491,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.03885,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=500 1280x720",
+   "median_ms": 0.0168,
+   "p10_ms": 0.0145,
+   "p90_ms": 0.0202,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.0128,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts separate draws (uniform per tuft) N=500 1280x720",
+   "median_ms": 1.335,
+   "p10_ms": 0.8175,
+   "p90_ms": 1.545,
+   "K": 41,
+   "sync_ms": 1.9,
+   "timer_query_ms": 0.51473,
+   "KT": 41
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=2000 1280x720",
+   "median_ms": 0.0584,
+   "p10_ms": 0.0554,
+   "p90_ms": 0.0623,
+   "K": 1760,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.04578,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts separate draws (uniform per tuft) N=2000 1280x720",
+   "median_ms": 3.375,
+   "p10_ms": 3.3563,
+   "p90_ms": 4.5188,
+   "K": 17,
+   "sync_ms": 4.1,
+   "timer_query_ms": 2.05046,
+   "KT": 20
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=8000 1280x720",
+   "median_ms": 0.2141,
+   "p10_ms": 0.2034,
+   "p90_ms": 0.2305,
+   "K": 440,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.21676,
+   "KT": 400
+  },
+  {
+   "name": "gpu tufts separate draws (uniform per tuft) N=8000 1280x720",
+   "median_ms": 14.14,
+   "p10_ms": 14,
+   "p90_ms": 14.22,
+   "K": 6,
+   "sync_ms": 14.1,
+   "timer_query_ms": 8.03839,
+   "KT": 20
+  },
+  {
+   "name": "gpu tufts instanced 1 draw N=32000 1280x720",
+   "median_ms": 0.8639,
+   "p10_ms": 0.7833,
+   "p90_ms": 0.9111,
+   "K": 109,
+   "sync_ms": 1.1,
+   "timer_query_ms": 0.88609,
+   "KT": 109
+  },
+  {
+   "name": "gpu field_shift full-screen 1280x720",
+   "median_ms": 0.0174,
+   "p10_ms": 0.0156,
+   "p90_ms": 0.018,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01535,
+   "KT": 400
+  },
+  {
+   "name": "gpu field_shift_trail full-screen 1280x720",
+   "median_ms": 0.0192,
+   "p10_ms": 0.0179,
+   "p90_ms": 0.0197,
+   "K": 2000,
+   "sync_ms": 0.7,
+   "timer_query_ms": 0.0172,
+   "KT": 400
+  },
+  {
+   "name": "gpu field_blades6 full-screen 1280x720",
+   "median_ms": 0.0641,
+   "p10_ms": 0.0634,
+   "p90_ms": 0.0671,
+   "K": 2000,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.05337,
+   "KT": 400
+  },
+  {
+   "name": "gpu overdraw: 4 blended field_shift layers 1280x720",
+   "median_ms": 0.067,
+   "p10_ms": 0.0631,
+   "p90_ms": 0.0686,
+   "K": 1257,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.05815,
+   "KT": 400
+  },
+  {
+   "name": "gpu overdraw: 8 blended field_shift layers 1280x720",
+   "median_ms": 0.1277,
+   "p10_ms": 0.1222,
+   "p90_ms": 0.1357,
+   "K": 677,
+   "sync_ms": 0.9,
+   "timer_query_ms": 0.12013,
+   "KT": 400
+  },
+  {
+   "name": "gpu glow halos instanced additive 9x9 N=200 1280x720",
+   "median_ms": 0.004,
+   "p10_ms": 0.0033,
+   "p90_ms": 0.0049,
+   "K": 2000,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.00311,
+   "KT": 400
+  },
+  {
+   "name": "gpu glow halos instanced additive 9x9 N=1000 1280x720",
+   "median_ms": 0.0204,
+   "p10_ms": 0.0186,
+   "p90_ms": 0.0222,
+   "K": 2000,
+   "sync_ms": 0.6,
+   "timer_query_ms": 0.01385,
+   "KT": 400
+  },
+  {
+   "name": "gpu glow halos instanced additive 9x9 N=8000 1280x720",
+   "median_ms": 0.158,
+   "p10_ms": 0.1537,
+   "p90_ms": 0.1694,
+   "K": 677,
+   "sync_ms": 0.8,
+   "timer_query_ms": 0.14811,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail ping-pong decay+stamp 80x45 K=1",
+   "median_ms": 0.0121,
+   "p10_ms": 0.0103,
+   "p90_ms": 0.0152,
+   "K": 166,
+   "sync_ms": 0.5,
+   "timer_query_ms": 0.00717,
+   "KT": 166
+  },
+  {
+   "name": "gpu trail ping-pong decay+stamp 80x45 K=10",
+   "median_ms": 0.0107,
+   "p10_ms": 0.0106,
+   "p90_ms": 0.0113,
+   "K": 2000,
+   "sync_ms": 0.2,
+   "timer_query_ms": 0.00779,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail ping-pong decay+stamp 80x45 K=100",
+   "median_ms": 0.0106,
+   "p10_ms": 0.0106,
+   "p90_ms": 0.011,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.00732,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail CPU map upload texSubImage2D R8 80x45 (+1 tiny draw)",
+   "median_ms": 0.0553,
+   "p10_ms": 0.0196,
+   "p90_ms": 0.515,
+   "K": 1760,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.4991,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail ping-pong decay+stamp 160x90 K=1",
+   "median_ms": 0.0107,
+   "p10_ms": 0.0105,
+   "p90_ms": 0.0119,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.008,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail ping-pong decay+stamp 160x90 K=10",
+   "median_ms": 0.0106,
+   "p10_ms": 0.0105,
+   "p90_ms": 0.0107,
+   "K": 2000,
+   "sync_ms": 0.3,
+   "timer_query_ms": 0.0081,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail ping-pong decay+stamp 160x90 K=100",
+   "median_ms": 0.0107,
+   "p10_ms": 0.0107,
+   "p90_ms": 0.0108,
+   "K": 2000,
+   "sync_ms": 0.2,
+   "timer_query_ms": 0.00807,
+   "KT": 400
+  },
+  {
+   "name": "gpu trail CPU map upload texSubImage2D R8 160x90 (+1 tiny draw)",
+   "median_ms": 27.8571,
+   "p10_ms": 16.9714,
+   "p90_ms": 64.6,
+   "K": 8,
+   "sync_ms": 0.7,
+   "timer_query_ms": 7.52659,
+   "KT": 20
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "metal"
+}

@@ -1,0 +1,468 @@
+{
+ "sink": 157660834.61272693,
+ "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+ "results": [
+  {
+   "name": "cpu baseline: ground blit + 1px readback sync",
+   "median_ms": 0.1841,
+   "p10_ms": 0.18,
+   "p90_ms": 0.1951
+  },
+  {
+   "name": "cpu baseline: putImageData 320x180 + sync",
+   "median_ms": 0.1818,
+   "p10_ms": 0.1739,
+   "p90_ms": 0.1951
+  },
+  {
+   "name": "cpu tufts pre-baked sway frames drawImage N=500",
+   "median_ms": 0.6833,
+   "p10_ms": 0.6615,
+   "p90_ms": 0.7909
+  },
+  {
+   "name": "cpu tufts per-row slicing (8 drawImage per tuft) N=500",
+   "median_ms": 4.3,
+   "p10_ms": 4.15,
+   "p90_ms": 4.6
+  },
+  {
+   "name": "cpu tufts ImageData pixel writes + putImageData N=500",
+   "median_ms": 0.225,
+   "p10_ms": 0.2216,
+   "p90_ms": 0.2353
+  },
+  {
+   "name": "cpu field layer row bands 2px (90 drawImage) N=500",
+   "median_ms": 0.3154,
+   "p10_ms": 0.2963,
+   "p90_ms": 0.3375
+  },
+  {
+   "name": "cpu field layer blocks 4px x 32px (450 drawImage) N=500",
+   "median_ms": 0.6308,
+   "p10_ms": 0.6154,
+   "p90_ms": 0.6538
+  },
+  {
+   "name": "cpu re-bake field layer (after trampling) N=500",
+   "median_ms": 0.15,
+   "p10_ms": 0.1455,
+   "p90_ms": 0.2412
+  },
+  {
+   "name": "cpu tufts pre-baked sway frames drawImage N=2000",
+   "median_ms": 2.35,
+   "p10_ms": 2.275,
+   "p90_ms": 2.4
+  },
+  {
+   "name": "cpu tufts per-row slicing (8 drawImage per tuft) N=2000",
+   "median_ms": 16.3,
+   "p10_ms": 16.1,
+   "p90_ms": 16.9
+  },
+  {
+   "name": "cpu tufts ImageData pixel writes + putImageData N=2000",
+   "median_ms": 0.2581,
+   "p10_ms": 0.2531,
+   "p90_ms": 0.2645
+  },
+  {
+   "name": "cpu field layer row bands 2px (90 drawImage) N=2000",
+   "median_ms": 0.32,
+   "p10_ms": 0.3,
+   "p90_ms": 0.3375
+  },
+  {
+   "name": "cpu field layer blocks 4px x 32px (450 drawImage) N=2000",
+   "median_ms": 0.6231,
+   "p10_ms": 0.6143,
+   "p90_ms": 0.6385
+  },
+  {
+   "name": "cpu re-bake field layer (after trampling) N=2000",
+   "median_ms": 0.5929,
+   "p10_ms": 0.5857,
+   "p90_ms": 0.6143
+  },
+  {
+   "name": "cpu tufts pre-baked sway frames drawImage N=8000",
+   "median_ms": 8.7,
+   "p10_ms": 8.3,
+   "p90_ms": 9
+  },
+  {
+   "name": "cpu tufts per-row slicing (8 drawImage per tuft) N=8000",
+   "median_ms": 66.3,
+   "p10_ms": 57.7,
+   "p90_ms": 67.9
+  },
+  {
+   "name": "cpu tufts ImageData pixel writes + putImageData N=8000",
+   "median_ms": 0.3682,
+   "p10_ms": 0.3636,
+   "p90_ms": 0.3857
+  },
+  {
+   "name": "cpu field layer row bands 2px (90 drawImage) N=8000",
+   "median_ms": 0.324,
+   "p10_ms": 0.3037,
+   "p90_ms": 0.3375
+  },
+  {
+   "name": "cpu field layer blocks 4px x 32px (450 drawImage) N=8000",
+   "median_ms": 0.6615,
+   "p10_ms": 0.6143,
+   "p90_ms": 0.6917
+  },
+  {
+   "name": "cpu re-bake field layer (after trampling) N=8000",
+   "median_ms": 2.45,
+   "p10_ms": 2.375,
+   "p90_ms": 4.3
+  },
+  {
+   "name": "cpu trail map u8 decay+stamp 80x45 K=1 r=2",
+   "median_ms": 0.001,
+   "p10_ms": 0.001,
+   "p90_ms": 0.0011
+  },
+  {
+   "name": "cpu trail map u8 decay+stamp 80x45 K=10 r=2",
+   "median_ms": 0.0023,
+   "p10_ms": 0.0022,
+   "p90_ms": 0.0023
+  },
+  {
+   "name": "cpu trail map f32 multiply-decay+stamp 80x45 K=10 r=2",
+   "median_ms": 0.0015,
+   "p10_ms": 0.0014,
+   "p90_ms": 0.0015
+  },
+  {
+   "name": "cpu trail map u8 decay+stamp 80x45 K=100 r=2",
+   "median_ms": 0.0071,
+   "p10_ms": 0.0068,
+   "p90_ms": 0.0073
+  },
+  {
+   "name": "cpu trail map u8 decay+stamp 160x90 K=1 r=3",
+   "median_ms": 0.0064,
+   "p10_ms": 0.0063,
+   "p90_ms": 0.0066
+  },
+  {
+   "name": "cpu trail map u8 decay+stamp 160x90 K=10 r=3",
+   "median_ms": 0.0072,
+   "p10_ms": 0.0068,
+   "p90_ms": 0.0073
+  },
+  {
+   "name": "cpu trail map f32 multiply-decay+stamp 160x90 K=10 r=3",
+   "median_ms": 0.0066,
+   "p10_ms": 0.0064,
+   "p90_ms": 0.0067
+  },
+  {
+   "name": "cpu trail map u8 decay+stamp 160x90 K=100 r=3",
+   "median_ms": 0.0162,
+   "p10_ms": 0.0158,
+   "p90_ms": 0.0164
+  },
+  {
+   "name": "cpu regrowth random tick 40x23 R=16",
+   "median_ms": 0.0001,
+   "p10_ms": 0.0001,
+   "p90_ms": 0.0001
+  },
+  {
+   "name": "cpu regrowth random tick 40x23 R=256",
+   "median_ms": 0.0008,
+   "p10_ms": 0.0008,
+   "p90_ms": 0.0008
+  },
+  {
+   "name": "cpu regrowth full-scan CA 40x23 (every cell)",
+   "median_ms": 0.0006,
+   "p10_ms": 0.0006,
+   "p90_ms": 0.0006
+  },
+  {
+   "name": "cpu regrowth random tick 256x256 R=16",
+   "median_ms": 0.0001,
+   "p10_ms": 0.0001,
+   "p90_ms": 0.0001
+  },
+  {
+   "name": "cpu regrowth random tick 256x256 R=256",
+   "median_ms": 0.0008,
+   "p10_ms": 0.0008,
+   "p90_ms": 0.0008
+  },
+  {
+   "name": "cpu regrowth random tick 256x256 R=4096",
+   "median_ms": 0.012,
+   "p10_ms": 0.0119,
+   "p90_ms": 0.0123
+  },
+  {
+   "name": "cpu regrowth random tick 256x256 R=65536",
+   "median_ms": 0.1951,
+   "p10_ms": 0.1905,
+   "p90_ms": 0.1976
+  },
+  {
+   "name": "cpu regrowth full-scan CA 256x256 (every cell)",
+   "median_ms": 0.0567,
+   "p10_ms": 0.0556,
+   "p90_ms": 0.063
+  },
+  {
+   "name": "cpu regrowth random tick 1024x1024 R=16",
+   "median_ms": 0.0001,
+   "p10_ms": 0.0001,
+   "p90_ms": 0.0001
+  },
+  {
+   "name": "cpu regrowth random tick 1024x1024 R=256",
+   "median_ms": 0.0009,
+   "p10_ms": 0.0008,
+   "p90_ms": 0.0009
+  },
+  {
+   "name": "cpu regrowth random tick 1024x1024 R=4096",
+   "median_ms": 0.0123,
+   "p10_ms": 0.0121,
+   "p90_ms": 0.0124
+  },
+  {
+   "name": "cpu regrowth random tick 1024x1024 R=65536",
+   "median_ms": 0.1976,
+   "p10_ms": 0.1951,
+   "p90_ms": 0.2
+  },
+  {
+   "name": "cpu regrowth full-scan CA 1024x1024 (every cell)",
+   "median_ms": 0.9,
+   "p10_ms": 0.8889,
+   "p90_ms": 0.9222
+  },
+  {
+   "name": "cpu butterflies update (wander+bob+flee) N=50",
+   "median_ms": 0.0007,
+   "p10_ms": 0.0007,
+   "p90_ms": 0.0007
+  },
+  {
+   "name": "cpu butterflies draw drawImage N=50",
+   "median_ms": 0.2793,
+   "p10_ms": 0.27,
+   "p90_ms": 0.3037
+  },
+  {
+   "name": "cpu fireflies kuramoto naive O(n^2) N=50",
+   "median_ms": 0.0029,
+   "p10_ms": 0.0029,
+   "p90_ms": 0.003
+  },
+  {
+   "name": "cpu fireflies kuramoto uniform grid N=50",
+   "median_ms": 0.0035,
+   "p10_ms": 0.0034,
+   "p90_ms": 0.0037
+  },
+  {
+   "name": "cpu fireflies kuramoto cell mean-field N=50",
+   "median_ms": 0.0033,
+   "p10_ms": 0.0032,
+   "p90_ms": 0.0033
+  },
+  {
+   "name": "cpu glow additive halo sprites (lighter) N=50",
+   "median_ms": 0.2857,
+   "p10_ms": 0.2645,
+   "p90_ms": 0.3037
+  },
+  {
+   "name": "cpu glow per-pixel radial loop r=4 + putImageData N=50",
+   "median_ms": 0.2222,
+   "p10_ms": 0.2162,
+   "p90_ms": 0.2286
+  },
+  {
+   "name": "cpu glow 80x45 light map stamp + upscale lighter N=50",
+   "median_ms": 0.2613,
+   "p10_ms": 0.2581,
+   "p90_ms": 0.2667
+  },
+  {
+   "name": "cpu butterflies update (wander+bob+flee) N=200",
+   "median_ms": 0.0025,
+   "p10_ms": 0.0025,
+   "p90_ms": 0.0025
+  },
+  {
+   "name": "cpu butterflies draw drawImage N=200",
+   "median_ms": 0.415,
+   "p10_ms": 0.405,
+   "p90_ms": 0.4263
+  },
+  {
+   "name": "cpu fireflies kuramoto naive O(n^2) N=200",
+   "median_ms": 0.0506,
+   "p10_ms": 0.0497,
+   "p90_ms": 0.0516
+  },
+  {
+   "name": "cpu fireflies kuramoto uniform grid N=200",
+   "median_ms": 0.0235,
+   "p10_ms": 0.0229,
+   "p90_ms": 0.0246
+  },
+  {
+   "name": "cpu fireflies kuramoto cell mean-field N=200",
+   "median_ms": 0.0133,
+   "p10_ms": 0.013,
+   "p90_ms": 0.0135
+  },
+  {
+   "name": "cpu glow additive halo sprites (lighter) N=200",
+   "median_ms": 0.4211,
+   "p10_ms": 0.415,
+   "p90_ms": 0.4263
+  },
+  {
+   "name": "cpu glow per-pixel radial loop r=4 + putImageData N=200",
+   "median_ms": 0.2613,
+   "p10_ms": 0.2485,
+   "p90_ms": 0.2667
+  },
+  {
+   "name": "cpu glow 80x45 light map stamp + upscale lighter N=200",
+   "median_ms": 0.2667,
+   "p10_ms": 0.2531,
+   "p90_ms": 0.2793
+  },
+  {
+   "name": "cpu butterflies update (wander+bob+flee) N=1000",
+   "median_ms": 0.0122,
+   "p10_ms": 0.0119,
+   "p90_ms": 0.0124
+  },
+  {
+   "name": "cpu butterflies draw drawImage N=1000",
+   "median_ms": 1.2714,
+   "p10_ms": 1.1857,
+   "p90_ms": 1.4167
+  },
+  {
+   "name": "cpu fireflies kuramoto naive O(n^2) N=1000",
+   "median_ms": 1.2,
+   "p10_ms": 1.1714,
+   "p90_ms": 1.2571
+  },
+  {
+   "name": "cpu fireflies kuramoto uniform grid N=1000",
+   "median_ms": 0.45,
+   "p10_ms": 0.4421,
+   "p90_ms": 0.4611
+  },
+  {
+   "name": "cpu fireflies kuramoto cell mean-field N=1000",
+   "median_ms": 0.0696,
+   "p10_ms": 0.0684,
+   "p90_ms": 0.0708
+  },
+  {
+   "name": "cpu glow additive halo sprites (lighter) N=1000",
+   "median_ms": 1.2,
+   "p10_ms": 1.1125,
+   "p90_ms": 1.2571
+  },
+  {
+   "name": "cpu glow per-pixel radial loop r=4 + putImageData N=1000",
+   "median_ms": 0.41,
+   "p10_ms": 0.405,
+   "p90_ms": 0.4211
+  },
+  {
+   "name": "cpu glow 80x45 light map stamp + upscale lighter N=1000",
+   "median_ms": 0.2733,
+   "p10_ms": 0.2581,
+   "p90_ms": 0.2828
+  },
+  {
+   "name": "cpu fireflies kuramoto uniform grid N=4000",
+   "median_ms": 6.75,
+   "p10_ms": 6.7,
+   "p90_ms": 6.85
+  },
+  {
+   "name": "cpu fireflies kuramoto cell mean-field N=4000",
+   "median_ms": 0.2857,
+   "p10_ms": 0.2828,
+   "p90_ms": 0.2893
+  },
+  {
+   "name": "kuramoto grid == naive",
+   "ok": true
+  },
+  {
+   "name": "cpu pollen update N=500",
+   "median_ms": 0.0031,
+   "p10_ms": 0.003,
+   "p90_ms": 0.0031
+  },
+  {
+   "name": "cpu pollen draw fillRect 1px N=500",
+   "median_ms": 0.328,
+   "p10_ms": 0.3115,
+   "p90_ms": 0.3522
+  },
+  {
+   "name": "cpu pollen draw pixel writes + putImageData N=500",
+   "median_ms": 0.2162,
+   "p10_ms": 0.2105,
+   "p90_ms": 0.225
+  },
+  {
+   "name": "cpu pollen update N=2000",
+   "median_ms": 0.0124,
+   "p10_ms": 0.0121,
+   "p90_ms": 0.0125
+  },
+  {
+   "name": "cpu pollen draw fillRect 1px N=2000",
+   "median_ms": 0.6231,
+   "p10_ms": 0.6154,
+   "p90_ms": 0.6538
+  },
+  {
+   "name": "cpu pollen draw pixel writes + putImageData N=2000",
+   "median_ms": 0.2162,
+   "p10_ms": 0.2103,
+   "p90_ms": 0.2278
+  },
+  {
+   "name": "cpu pollen update N=8000",
+   "median_ms": 0.0491,
+   "p10_ms": 0.0488,
+   "p90_ms": 0.05
+  },
+  {
+   "name": "cpu pollen draw fillRect 1px N=8000",
+   "median_ms": 1.9,
+   "p10_ms": 1.8,
+   "p90_ms": 2.025
+  },
+  {
+   "name": "cpu pollen draw pixel writes + putImageData N=8000",
+   "median_ms": 0.2353,
+   "p10_ms": 0.225,
+   "p90_ms": 0.2412
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "metal"
+}

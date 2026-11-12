@@ -1,0 +1,233 @@
+<!--FIG windgrid-->
+<figure class="fig" data-demo="windgrid" id="fig-windgrid">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">WindGrid: one timestamp and direction per visible tile</h4><span class="illu">Push curve shape, field and walkers illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="96" aria-label="A walker crosses a field of grass tufts on 8 pixel tiles; tiles the walker touches flick their tufts sideways and settle; a sheep wanders and stops"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Push lasts <input type="range" data-k="dur" min="20" max="180" step="10" value="20"><output data-o="dur"></output></label>
+    <label><input type="checkbox" data-k="grid"> Show the timestamps</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Terraria keeps one <code>{Time, DirectionX, DirectionY}</code> per visible tile and stamps every tile a moving player's hitbox covers [V, S53]. Grass reads the age and pops sideways, peaking at 3.5 px and gone in 20 frames, 0.33 s [I]. Here the walker and the sheep both stamp, the way Asterion would stamp from every moving entity, and a standing sheep stamps nothing. Slide the push to 1 to 3 s for the Asterion decay [I]. The catch is that a timestamp keeps only the latest walker, so it cannot sum a crowd the way a trail map can [I]. It costs 12 bytes per tile and zero network bytes [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG trailmap-->
+<figure class="fig" data-demo="trailmap" id="fig-trailmap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">An 80x45 byte map that walkers stamp, beside the grass it bends</h4><span class="illu">Village layout and walker routes illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="80" height="45" aria-label="A small grey image: bright where walkers just passed, fading to black; walkers are white dots, standing walkers red"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>The map.</b> One byte per cell, 255 on contact.</p></div>
+    <div><div class="stage"><canvas width="160" height="90" aria-label="The same area as grass: villagers and a sheep walk between points, leaving pale flattened trails that stand back up over a few seconds"></canvas></div><p class="pl"><b>The grass.</b> Flat above 170, half up above 60, upright below.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Walkers <input type="range" data-k="n" min="1" max="10" value="6"><output data-o="n"></output></label>
+    <label class="rng">Decay to 0 in <input type="range" data-k="dec" min="2" max="4" step="0.5" value="3"><output data-o="dec"></output></label>
+    <div class="seg" data-seg="view" role="group" aria-label="Map view"><button type="button" class="on" data-v="raw">Raw bytes</button><button type="button" data-v="pose">Pose bands</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each frame every cell decays first, then each moving walker stamps 255 around its feet, so a walker who stops stamps nothing [I]. The grass shows three poses read from the byte, because three discrete poses look more pixel-honest than a lerp [I]. A CPU map like this skips the SubViewport and goes up once per frame with <code>ImageTexture.update()</code> [I]. GDQuest uses a 128x128 never-cleared SubViewport for a 16x16 m plane, and Kodeco 256x256 for about 20x20 m [V, S96, S95]. Unlike a timestamp grid, two walkers on one cell simply both write 255. Zero network bytes, since every client stamps from positions it already has [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crush-->
+<figure class="fig" data-demo="crush" id="fig-crush">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Crush and recovery: a tuft lies down, then stands a beat after you leave</h4><span class="illu">Stiffness and push scale are our picks</span></div>
+  <div class="stage"><canvas width="128" height="56" aria-label="Side view of seven grass tufts; a walker steps through them, they flatten and then spring back at different speeds; the middle tuft is marked in gold"></canvas><div class="hud" data-hud></div></div>
+  <svg class="chart" viewBox="0 0 320 122" role="img" aria-label="Plot over the last 10 seconds: the gold tuft's tip height in blue, its crush value in gold and the recovery factor dashed in green"></svg>
+  <div class="ctl">
+    <label class="rng">Crush fade a <input type="range" data-k="a" min="0.1" max="0.5" step="0.05" value="0.25"><output data-o="a"></output></label>
+    <label class="rng">Spring s <input type="range" data-k="s" min="1" max="8" step="0.5" value="3"><output data-o="s"></output></label>
+    <label class="rng">η from one full push <input type="range" data-k="e0" min="0.5" max="2" step="0.25" value="1"><output data-o="e0"></output></label>
+    <label><input type="checkbox" data-k="floor" checked> 10% recovery floor</label>
+    <label><input type="checkbox" data-k="auto" checked> Walk through every 6 s</label>
+    <button type="button" class="btn" data-b="step">Step through now</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Blue is tip height, gold is the crush η and dashed green is the recovery factor. Jahrmann and Wimmer move the tip by <code>(r + g + w)·dt + d</code>, with the collision push <code>d</code> not scaled by dt [V, S119]. Crush fades as <code>η = max(η − a·dt, 0)</code>, each push adds its squared length, and recovery is <code>r = (rest − tip)·s·max(1 − η, 0.1)</code> [V, S119]. Push η above 1 and untick the floor, and the tuft stays flat until η drops back under 1. With the floor it always creeps up at 10%. Wind sway here is scaled by <code>(1 − η)</code>, as the 2D port suggests [I]. Their test ran 397,881 blades on a GTX 780M in 8.13 ms per frame, 0.547 ms of it physics [V, S119].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rustle-->
+<figure class="fig" data-demo="rustle" id="fig-rustle">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The entry rustle: four frames, four leaves and one soft swish</h4><span class="illu">Tile art, leaf motion and routes illustrative</span></div>
+  <div class="stage"><canvas width="160" height="96" aria-label="A walker steps tile by tile through tall grass; each tile it enters shakes through four frames and throws four leaves; a speaker icon in the corner lights while the sound plays"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="auto" checked> Walk on its own</label>
+    <button type="button" class="btn" data-b="step">One step</button>
+    <label><input type="checkbox" data-k="leak"> Rustle for a hidden walker too</label>
+    <label><input type="checkbox" data-k="show"> Show where it is</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Pokémon Emerald plays 4 frames then rest, 50 ticks or about 0.83 s per rustle [V, S13]. Shattered Pixel Dungeon throws 4 leaf particles per trample [V, S72]. Stardew plays <code>grassyStep</code> only on screen and only once at a time, so overlapping steps share one voice [V, S36, S51]. Tick the hidden walker to see the MMO leak. Its rustles draw its path through grass it is supposed to hide in, which is why a client plays them only for walkers it can see [I]. A step costs one 4 to 5 frame sprite, 4 particles and zero network bytes.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG desire-->
+<figure class="fig" data-demo="desire" id="fig-desire">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Desire paths: many walkers wear the shortcuts a crowd agrees on</h4><span class="illu">Time compressed; T, I, σ and stage cut-offs illustrative</span></div>
+  <div class="stage"><canvas width="192" height="120" aria-label="A village green with a house, a tree, a well, a gate and a market stall; small villagers walk between them and wear the grass into dirt paths that join into a network"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Wear model"><button type="button" class="on" data-v="helb">Helbing</button><button type="button" data-v="count">Step counter</button></div>
+    <label class="rng">Durability T <input type="range" data-k="T" min="10" max="300" step="10" value="90"><output data-o="T"></output></label>
+    <label class="rng">Footprint I <input type="range" data-k="I" min="0.02" max="0.3" step="0.01" value="0.08"><output data-o="I"></output></label>
+    <label class="rng">Walkers <input type="range" data-k="n" min="2" max="40" value="16"><output data-o="n"></output></label>
+    <button type="button" class="btn ghost" data-b="reset">Regrow everything</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Helbing's ground comfort is <code>dG/dt = (G0 − G)/T + I(1 − G/Gmax)·Σ steps</code>, with T the durability, I the footprint and Gmax saturation [V, S122]. Walkers here lean toward worn ground ahead, which is the trail attraction that turns many routes into a few shared paths. <code>κ = I·T/σ²</code> sets direct paths against a network, and the paper gives no numbers [V, S122]. The step counter is the Step Erosion mod, dirt after 20 steps and path after 50, reverting after 72 h idle [V, S67, S68]. On a server, G is one byte per tile, ticked once a minute, with a 9-byte update only when a tile crosses a stage [I]. Busy towns need unique walkers per hour, or a square turns to mud in minutes [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG randomtick-->
+<figure class="fig" data-demo="randomtick" id="fig-randomtick">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Random ticks vs a full scan: same regrowth, cost set by the picks</h4><span class="illu">Bare shapes and grid sizes illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="96" aria-label="Grass creeping back over a cut path, a burn scar and a mown square; gold pixels mark the cells picked this tick"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Random ticks.</b> A few picks per section per tick.</p></div>
+    <div><div class="stage"><canvas width="96" height="96" aria-label="The same field regrowing with a full scan that visits every cell every tick"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Full scan.</b> Every cell, every tick, same odds.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Picks <input type="range" data-k="p" min="0" max="6" step="1" value="4"><output data-o="p"></output></label>
+    <div class="seg" data-seg="n" role="group" aria-label="Grid size"><button type="button" class="on" data-v="96">96²</button><button type="button" data-v="256">256²</button><button type="button" data-v="1024">1024²</button></div>
+    <button type="button" class="btn ghost" data-b="reset">Clear again</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both sides run one rule. Full grass tries 4 spots around it and seeds bare ones at 50%, young grass climbs a stage at 65%, close to Minecraft's 4 tries and Stardew's daily 65% check [V, S59, S38]. The right side gives every cell the same chance per tick, so both regrow at the same mean pace. Switch to 1024² and only the full scan slows, since the picks scale with the sections and not with what is inside them. Minecraft picks 3 blocks per 16x16x16 section per tick, one visit per block every 68.27 s [V, S59, S60]. Regrowth comes back patchy and uneven at the edges, which suits a path being reclaimed [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stages-->
+<figure class="fig" data-demo="stages" id="fig-stages">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A stage ladder evaluated lazily from changed_at, 9 bytes per visible change</h4><span class="illu">Regrowth step 6 s, sweep 2 s and item ids illustrative</span></div>
+  <div class="stage click"><canvas width="160" height="80" aria-label="A field of 16 pixel tiles at different stages: tall, shin high, short, stubble, burnt and green shoots on ash; a villager bends grass as he walks; tapping a tile cuts, burns or sends a sheep"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="tool" role="group" aria-label="Tool"><button type="button" class="on" data-v="cut">Scythe</button><button type="button" data-v="burn">Fire</button><button type="button" data-v="graze">Sheep</button></div>
+  </div>
+  <pre class="readout" data-log aria-live="off" style="white-space:pre;margin:8px 0 0;min-height:5.2em"></pre>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Cutting and grazing push a tile down one ladder, tall to shin high to short to stubble, as in Cataclysm DDA's <code>transforms_into</code> chain [V, S76]. Fire drops it to burnt, and DST burnt tufts leave ash and no tuft [V, S94, S93, S78]. Only changed tiles store <code>changed_at</code>. The server works out the stage when it looks, and a coarse sweep over changed tiles sends a packet only when the stage differs [I]. The packet is <code>0x6B</code> with a 5-byte position, stackpos and a 2-byte item, about 9 bytes, sent only to players who see the tile [V, S23; I]. The villager's bending is client-side and sends nothing. Syncing every flatten instead is the counter that keeps climbing.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hiding-->
+<figure class="fig" data-demo="hiding" id="fig-hiding">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hiding in tall grass: the server decides, each client gets only what it may see</h4><span class="illu">Map, routes and patch shapes illustrative</span></div>
+  <div class="stage"><canvas width="160" height="112" aria-label="Player A in a blue tunic walks through two patches of tall grass; a party member in green and two enemies in red stand nearby; dotted lines show which viewers the server sends A to"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="view" role="group" aria-label="Whose view"><button type="button" class="on" data-v="server">Server</button><button type="button" data-v="A">A (owner)</button><button type="button" data-v="B">Enemy B</button><button type="button" data-v="D">Enemy D</button></div>
+    <div class="seg" data-seg="self" role="group" aria-label="How the owner sees themselves"><button type="button" class="on" data-v="check">50% checker</button><button type="button" data-v="dark">Dark + outline</button><button type="button" data-v="alpha">Smooth alpha</button></div>
+    <label class="rng">Hide delay <input type="range" data-k="delay" min="0" max="500" step="50" value="400"><output data-o="delay"></output></label>
+    <button type="button" class="btn" data-b="atk">A attacks</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A target in tall grass is visible if the viewer is in the same party, within Chebyshev distance 1, in the same patch, or the target was revealed [I]. Attacking sets <code>revealedUntil = now + 2000 ms</code>, a 300 to 500 ms delay on the remove stops flicker, and the add goes out at distance 2 while closing so ping cannot pop a monster on top of you [I]. The server withholds everything else, the way VALORANT's server "withholds information about the positions of enemies" [V, S81, S82]. The owner still sees themselves. Brawl Stars makes your character transparent [V, S83], and for pixel art a 50% world-locked checker or a dark 2-colour palette with a team outline beats smooth alpha below 0.6 [I, note 04].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tfsleak-->
+<figure class="fig" data-demo="tfsleak" id="fig-tfsleak">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The TFS anti-pattern: invisible still sends the position</h4><span class="illu">Creature id and coordinates illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="A viewer stands left of a grass patch; an invisible player walks a loop; with the modified client on, a red outline and trail show where it is"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>TFS.</b> Sent with an empty outfit.</p><pre class="readout" data-log="a" style="white-space:pre-wrap;margin-top:6px;font-size:11px;min-height:5.6em"></pre></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="The same scene where the hidden player is never sent, so even a modified client shows only grass"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Our rule.</b> Never sent.</p><pre class="readout" data-log="b" style="white-space:pre-wrap;margin-top:6px;font-size:11px;min-height:5.6em"></pre></div>
+  </div>
+  <div class="ctl"><label><input type="checkbox" data-k="mod" checked> Modified client</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption><code>Player::canSeeCreature</code> returns false for an invisible creature only when it is not a player, so invisible players pass [V, S24]. <code>ProtocolGame::AddCreature</code> then sends them with an empty outfit, but position, direction and light still go out [V, S23]. An honest client draws nothing. A modified one draws the position. The fix needs no new plumbing, since creatures that fail <code>canSeeCreature</code> are already skipped in tile descriptions [V, S23, S25]. Put the grass rule there and the hidden player is never sent [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG butterfly-->
+<figure class="fig" data-demo="butterfly" id="fig-butterfly">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The flap-hop: the body moves only when the wings do</h4><span class="illu">Speeds scaled to this view</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="160" height="100" aria-label="Three butterflies flap in short hops over a meadow, land on flowers and fold their wings, and scatter when the pointer or a walker comes close"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Flap-hop.</b> Kick, glide, 200 ms rest.</p></div>
+    <div><div class="stage"><canvas width="160" height="100" aria-label="Three butterflies jitter in a random walk with wings strobing every frame, ignoring flowers and walkers"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Random walk.</b> The anti-pattern.</p></div>
+  </div>
+  <div class="ctl"><label><input type="checkbox" data-k="bench"> Also update 1,000 off screen</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew rolls <code>flapSpeed</code> once per butterfly, 45 to 80 ms per frame, with a 4-frame flap in spring and 6 in summer, then 200 ± 5 ms of rest [V, S39]. Each flap kicks the butterfly up and sideways, and gravity pulls it down between beats [V, S39]. That is 2 to 5.6 flaps per second against a real cabbage white's 11.8 Hz, which would alias at 60 fps, so the slow game rate is the readable one [V, S128; I]. The per-butterfly flap speed keeps a group out of step [V, S39]. Each one has a 1 px shadow, and two or three on screen read better than twenty [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pondlife-->
+<figure class="fig" data-demo="pondlife" id="fig-pondlife">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bees hop, a dragonfly darts, midges hang on a spring</h4><span class="illu">Pond, flowers and tuning values illustrative</span></div>
+  <div class="stage"><canvas width="192" height="112" aria-label="A flower bed on the left with bees hopping between flowers; a pond on the right ringed with reeds and cattails, where a teal dragonfly hovers and darts and a cloud of dark midges bobs over a post"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="bees" checked> Bees</label>
+    <label><input type="checkbox" data-k="dfly" checked> Dragonfly</label>
+    <label class="rng">Midges <input type="range" data-k="n" min="8" max="30" value="20"><output data-o="n"></output></label>
+    <label class="rng">Spring k <input type="range" data-k="k" min="4" max="40" value="8"><output data-o="k"></output></label>
+    <label class="rng">Jitter <input type="range" data-k="jit" min="20" max="300" step="10" value="180"><output data-o="jit"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Bumblebees take a median of about 2 s between flowers of one species, and time on flowers exceeds time in flight [V, S129, S130]. The bees here sit 1 to 2.4 s and fly straight, as in the Sandbox [S11]. The dragonfly hovers 0.8 to 3 s, darts 0.1 to 0.25 s with a sharp start and soft stop, and goes home every 3 to 6 darts [I]. Midges have no shared heading. Each is pulled back to the centre, harder the farther it strays, stiffer sideways than up and down, over a dark marker [V, S134]. Per midge that is <code>a = −k(p − c) + jitter</code>, <code>v = (v + a·dt)·0.96</code>, with <code>k_y = 0.5·k_x</code> [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG moths-->
+<figure class="fig" data-demo="moths" id="fig-moths">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Moths keep their back to the lamp, so they circle it</h4><span class="illu">Orbit sizes and timings illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="112" aria-label="Four moths circle a street lamp at night, sometimes stalling and sometimes diving across the light and reversing"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Dorsal tilt.</b> Orbit, stall, invert.</p></div>
+    <div><div class="stage"><canvas width="128" height="112" aria-label="Four moths fly straight at the same lamp and bounce off the bulb"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Straight at it.</b> The myth.</p></div>
+  </div>
+  <div class="ctl"><button type="button" class="btn" data-b="light">Switch the lamp off</button></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Fabian et al. filmed 477 flights and found that insects "do not steer directly toward the light" [V, S135]. They tilt their back toward it, which sends them sideways around it in three motifs, orbiting, stalling and inverting [V, S135]. When the light toggled, insects swapped orbit direction in 25 of 37 trials [V, S135], and switching the lamp here flips each moth with that chance. The controller is a tangent velocity around the light plus a radial pull toward a 6 to 16 px ring, with a chance every 2 to 6 s to stall or dive across [I]. Moths that fly straight into the lamp look wrong [V, S135].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fireflies-->
+<figure class="fig" data-demo="fireflies" id="fig-fireflies">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fireflies: rare solo blinks, or bursts that fall into step</h4><span class="illu">Coupling strength of the phase models illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A night meadow under a treeline with fireflies drifting low; each flash rises in one frame and fades through a soft halo while the fly lifts a couple of pixels"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Species"><button type="button" class="on" data-v="py">P. pyralis, solo</button><button type="button" data-v="ca">P. carolinus, bursts</button></div>
+    <div class="seg" data-seg="cm" role="group" aria-label="Coupling method"><button type="button" class="on" data-v="pulse">Pulse</button><button type="button" data-v="naive">Phase, naive</button><button type="button" data-v="grid">Phase, grid</button><button type="button" data-v="mean">Phase, mean field</button></div>
+    <label class="rng">Flies <input type="range" data-k="n" min="0" max="7" step="1" value="3"><output data-o="n"></output></label>
+    <label><input type="checkbox" data-k="on" checked> Coupling</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>P. pyralis gives one long J-shaped flash every 5.9 ± 0.6 s, waist high [V, S136, S139]. P. carolinus flashes in bursts of 5 to 8, about 0.55 s apart, then stays dark, and bursts repeat about every 12 s [V, S136, S137]. Pulse coupling follows Nicky Case, a neighbour's flash nudges the clock by <code>clock·0.035</code>, here within 48 px [V, S115; I]. Each flash rises in one frame and falls through four halo frames while the fly lifts 2 px [I]. Push the count up and switch to the phase models to see what trig every frame costs. For a whole MMO, a phase from a hash of tile and server time gives every client the same pulse for zero bytes [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG halos-->
+<figure class="fig" data-demo="halos" id="fig-halos">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Glow: halo sprites vs a per-pixel loop vs one light per firefly</h4><span class="illu">Glow radii and colours illustrative</span></div>
+  <div class="stage"><canvas width="160" height="96" aria-label="Fireflies glowing over a night meadow, drawn with the chosen glow method"></canvas><div class="hud" data-hud></div></div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px">
+    <div style="flex:0 0 112px"><div class="stage"><canvas width="28" height="7" aria-label="The halo atlas: four frames from a bright core with a plus and dithered diamond down to a dim core"></canvas></div></div>
+    <p style="flex:1 1 200px;margin:0;font-size:12px;color:var(--mute);line-height:1.4">The atlas. Core, a plus one step down, a 50% diamond two steps down, then each frame fades a step.</p>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Glow method"><button type="button" class="on" data-v="sprite">Halo sprites</button><button type="button" data-v="radial">Per-pixel radial</button><button type="button" data-v="light">One light each</button></div>
+    <label class="rng">Fireflies <input type="range" data-k="n" min="10" max="200" step="10" value="40"><output data-o="n"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Godot's GLES3 canvas lets one item take at most 15 lights, and a render 256 [V, S103]. Give each firefly a light and the ones past 15 simply go dark, popping as the sort order changes. Additive halos also overlap into off-palette white [I]. Halo sprites in palette steps with normal alpha keep every colour legal, which the off-palette count shows [I]. On the CPU a radial loop measured faster than sprite draws, 0.052 ms against 0.19 ms for 200 [V, S12], but it fills the edge with colours the palette never had. To light the grass as well, stamp one texel per firefly into the light map instead [S6; I, note 06].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG critters-->
+<figure class="fig" data-demo="critters" id="fig-critters">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Rabbit, frog and cricket: a slow threat check and a scripted escape</h4><span class="illu">Radii are the Kingsfoil table's scaling; layout illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="112" aria-label="A meadow with a bush, a pond and a patch of tall grass; a rabbit nibbles and bolts for the bush when the walker comes near, a frog leaps into the pond, and cutting the tall grass flushes crickets"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl"><label><input type="checkbox" data-k="rings" checked> Show flee rings and checks</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew's rabbits poll every 200 ms and dive into a bush, and frogs leap with about 0.8 s of air and 1.1 tiles of height [V, S41, S42; I]. DST adds hysteresis, flee within one radius and stop only past a larger one [V, S79]. The rings show the Kingsfoil table, a rabbit fleeing inside 4 tiles and stopping past 8, a frog at 3 [I, note 07]. Those are the researcher's scaling, not shipped values. Crickets come out of cut grass, as Terraria's grasshoppers and BotW's crickets do [V, S58, S164], and walking through tall grass flushes one 1 to 3% of the time with a cooldown [I]. A white dot blinks at each check. Nothing here uses pathfinding.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG seeds-->
+<figure class="fig" data-demo="seeds" id="fig-seeds">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Seeds, pollen and petals ride the wind and wrap, so none spawn or die</h4><span class="illu">Mote counts and flutter illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="Dandelion clocks on a meadow shed seeds that drift downwind and sink toward their shadows, while pollen specks and pink petals float across as the camera pans"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Wind <input type="range" data-k="wind" min="0" max="3" step="0.1" value="1"><output data-o="wind"></output></label>
+    <label><input type="checkbox" data-k="pan" checked> Pan the camera</label>
+    <div class="seg" data-seg="wrap" role="group" aria-label="Wrap space"><button type="button" class="on" data-v="world">Wrap in world space</button><button type="button" data-v="screen">Screen space</button></div>
+    <button type="button" class="btn" data-b="gust">Gust</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A dandelion seed falls at 39.1 cm/s [V, S141], about 12 px/s at 32 px per metre. From 1 m it lands in about 2.5 s, about 2.5 tiles downwind in a 1 m/s breeze [I]. Each seed sinks toward a 1 px shadow, and now and then one catches a lift, like Stardew's 0.1% "blowing" state [V, S48]. Stardew moves each debris particle by <code>dx + globalWind</code> and <code>dy + 0.5</code> per update [V, S48]. Pollen and petals wrap around the world, so the count never changes. Switch to screen space while the camera pans and they slide with the camera, the anti-pattern [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG spawn-->
+<figure class="fig" data-demo="spawn" id="fig-spawn">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Spawn tables pick the cast; anchors place them off screen under a cap</h4><span class="illu">Per-kind counts and map illustrative</span></div>
+  <div class="stage"><canvas width="192" height="112" aria-label="A small world with flower patches, a pond with reeds, two lamps and a bush; a white box is the camera and a dotted box the spawn range; creatures appear on anchors just outside the camera, and a row of pool slots below fills with their colours"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="season" role="group" aria-label="Season"><button type="button" data-v="0">Spring</button><button type="button" class="on" data-v="1">Summer</button><button type="button" data-v="2">Autumn</button><button type="button" data-v="3">Winter</button></div>
+    <div class="seg" data-seg="wx" role="group" aria-label="Weather"><button type="button" class="on" data-v="clear">Clear</button><button type="button" data-v="rain">Rain</button><button type="button" data-v="wind">Windy</button></div>
+    <label class="rng">Hour <input type="range" data-k="hr" min="0" max="23.5" step="0.5" value="11"><output data-o="hr"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew caps critters at 10 per location, 20 in summer, spawns none in rain, keeps butterflies to spring and summer before 15:00 and brings a second critter within 2 tiles 40% of the time [V, S45]. Here rain still leaves frogs, as in the Sandbox [S11]. Terraria sends no flyers in wind over 20 mph [V, S55, S57]. Creatures spawn on features that explain them, flowers, reeds, lamps and a bush, just outside the camera, and despawn once they leave the range. The pool is a fixed row of slots, so nothing allocates. Seed each spawn from <code>hash(chunkX, chunkY, timeBucket, worldSeed)</code> with 30 to 60 s buckets and every client agrees [I].</figcaption>
+</figure>
+<!--/FIG-->

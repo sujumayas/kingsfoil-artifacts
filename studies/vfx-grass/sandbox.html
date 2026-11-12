@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grass Sandbox: top-down pixel grass, wind and small life</title>
+<style>
+:root{--bg:#0d110e;--panel:#141a16;--line:#26312a;--lamp:#e6c56a;--lamp2:#a8904e;--cool:#cfe6b4;--txt:#e8e9e2;--mute:#9da797;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--lamp)}
+header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--lamp);letter-spacing:-.5px}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
+.hud{position:static;font:11.5px/1.45 var(--mono);background:#080a08;padding:5px 9px;border-top:1px solid var(--line);color:#eef0ea}
+.hud b{color:var(--lamp);font-weight:600}.hud .off{color:#6c7468}
+.bar{display:inline-block;width:80px;height:7px;background:#2a3328;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#86d49a}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0}
+.group h3{margin:0 0 8px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button{font:500 13px system-ui,sans-serif;background:#1b221d;color:var(--txt);border:1px solid #344036;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--lamp2)}button.on{background:var(--lamp);color:#241a06;border-color:var(--lamp)}
+button kbd{font:11px var(--mono);opacity:.65;margin-right:4px}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:8px}
+label span{min-width:4.5em;text-align:right;font:12px var(--mono)}
+input[type=range]{flex:1;min-width:0;accent-color:#a8904e}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h4{margin:0 0 6px;font-family:var(--mono);font-size:16px;color:var(--lamp)}
+.card p{margin:0;color:#d4d8cf;font-size:14px}
+code{font:13px var(--mono);color:var(--cool)}
+.keys{color:var(--mute);font-size:13px;margin:8px 0 0}
+@media (max-width:640px){.hud{font-size:10.5px;padding:6px 8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Grass Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="vfx-grass-topdown-pixel.html">top-down pixel grass study</a> · VFX series #9 · November 2026</div>
+</header>
+<main>
+  <div class="stage"><canvas id="c" width="320" height="180" aria-label="Grass, wind and small life simulation"></canvas><div class="hud" id="hud">loading</div></div>
+  <p class="keys">Walk with the arrows or WASD, or tap where the traveller should go. Keys: <b>1-5</b> tools, <b>Shift+S</b> next season (plain S walks down), <b>T</b> auto time, <b>V</b> next view, <b>Space</b> pause. The day runs on a 2 minute clock. Trampling is client-side and costs 0 bytes. Only grass stage changes go over the wire.</p>
+  <div class="controls">
+    <div class="group"><h3>Tools</h3>
+      <div class="btns" id="tools"><button data-t="walk" class="on"><kbd>1</kbd>Walk</button><button data-t="cut"><kbd>2</kbd>Cut</button><button data-t="burn"><kbd>3</kbd>Burn</button><button data-t="plant"><kbd>4</kbd>Regrow</button><button data-t="lamp"><kbd>5</kbd>Lamp</button></div>
+      <label>Regrowth <input id="regs" type="range" min="0" max="80" value="12"><span id="regsl">12/tick</span></label>
+    </div>
+    <div class="group"><h3>Grass render</h3>
+      <div class="btns" id="rmode"><button data-r="tufts" class="on">Per-tuft sprites</button><button data-r="field">One field layer</button></div>
+      <div class="btns" id="smode" style="margin-top:6px"><button data-s="snap" class="on">Pixel-snapped shear</button><button data-s="smooth">Smooth sub-pixel</button></div>
+      <div class="btns" style="margin-top:6px"><button id="inter" class="on">Interaction map</button><button id="wear" class="on">Wear paths</button><button id="step5">Sway at 5 fps</button></div>
+      <label>Stress <input id="stress" type="range" min="1" max="8" value="1"><span id="stressl">1x</span></label>
+    </div>
+    <div class="group"><h3>Wind</h3>
+      <div class="btns" id="wpre"><button data-w="calm">Calm</button><button data-w="breeze" class="on">Breeze</button><button data-w="gusty">Gusty</button><button data-w="storm">Storm</button></div>
+      <div class="btns" style="margin-top:6px"><button id="gusts" class="on">Gust waves</button></div>
+      <label>Direction <input id="wdir" type="range" min="0" max="359" value="12"><span id="wdirl">12°</span></label>
+      <label>Strength <input id="wstr" type="range" min="0" max="100" value="30"><span id="wstrl">30%</span></label>
+    </div>
+    <div class="group"><h3>Small life</h3>
+      <div class="btns" id="life"><button data-k="0" class="on">Butterflies</button><button data-k="1" class="on">Bees</button><button data-k="2" class="on">Dragonflies</button><button data-k="3" class="on">Gnats</button><button data-k="4" class="on">Moths</button><button data-k="5" class="on">Fireflies</button><button data-k="6" class="on">Rabbits</button><button data-k="7" class="on">Frogs</button><button data-k="8" class="on">Crickets</button><button data-k="9" class="on">Pollen and seeds</button></div>
+      <div class="btns" style="margin-top:6px"><button id="sync">Synchronous fireflies</button></div>
+      <label>Density <input id="dens" type="range" min="0" max="200" value="100"><span id="densl">100%</span></label>
+    </div>
+    <div class="group"><h3>Season, time, weather</h3>
+      <div class="btns" id="seas"><button data-s="0">Spring</button><button data-s="1" class="on">Summer</button><button data-s="2">Autumn</button><button data-s="3">Winter</button></div>
+      <div class="btns" id="wx" style="margin-top:6px"><button data-x="clear" class="on">Clear</button><button data-x="rain">After rain</button><button id="tauto" class="on"><kbd>T</kbd>Auto time</button><button id="rm">Reduce motion</button></div>
+      <label>Time <input id="tod" type="range" min="0" max="999" value="560"><span id="todl">13:26</span></label>
+    </div>
+    <div class="group"><h3>X-ray view</h3>
+      <div class="btns" id="views"><button data-v="normal" class="on">Normal</button><button data-v="inter">Interaction map</button><button data-v="wear">Wear map</button><button data-v="wind">Wind field</button><button data-v="state">Grass state</button><button data-v="cost">Cost view</button></div>
+    </div>
+    <div class="group"><h3>Server and simulation</h3>
+      <div class="btns"><button id="leak">Send hidden players (TFS leak)</button></div>
+      <div class="btns" style="margin-top:6px"><button id="pause">Pause</button><button id="reset">Reset</button><button data-demo="showcase">Showcase</button></div>
+    </div>
+  </div>
+  <div class="explain">
+    <div class="card"><h4>1 · Server grass truth</h4><p>Each 8 px cell holds a growth stage (tall, regrowing, cut stubble), a burn state and a regrowth clock. Wind, season and weather come from a slow server clock. Only stage changes are sent, at 9 bytes each, the size of a TFS tile update. Cosmetic trampling stays on the client and costs 0 bytes. The HUD also shows what sending every flatten value would cost. A player in untrampled tall grass is hidden from everyone except party members, adjacent viewers (Chebyshev distance 1) and viewers in the same grass patch. The hide waits 400 ms after you enter, so it does not flicker at patch edges. Hidden players are not sent at all. Cutting or burning counts as an attack and reveals you for 2,000 ms, as League brush does. The sandbox has no party, so that case never fires. <b>Send hidden players</b> plays the TFS anti-pattern: an invisible player still goes out with an empty outfit, so the position leaks. You see yourself dithered.</p></div>
+    <div class="card"><h4>2 · Ground tiles</h4><p>The ground is baked once into a palette-index buffer and copied each frame. Grass tone comes from a position hash plus two noise scales, so there is no visible grid. Road, pond and path edges use a 2-corner rule: each pixel blends its four corner values and thresholds against a hash, which gives the same result as a 16-tile Wang set. Wear uses the same rule, so desire paths get ragged edges. Only 8 by 8 blocks whose state changed are rebaked.</p></div>
+    <div class="card"><h4>3 · Tufts and y-sort</h4><p>Tall grass, wheat, flowers and reeds are a few thousand tufts built in code at load. Every tuft is pre-baked at 13 whole-pixel leans, 3 crush levels, 4 growth heights and with a gust sheen: about 9,400 tiny pixel lists. Each tuft gets a hashed variant, an offset, a 50% flip and its own phase, as Stardew does with up to 4 tufts per tile. Tufts y-sort with characters, so a walker in tall grass loses the lower body behind the blades. <b>One field layer</b> draws all grass in a single shader-like pass instead. Characters then sit on top and their legs are cropped, Pokemon style.</p></div>
+    <div class="card"><h4>4 · Wind and gusts</h4><p>The model has two parts (Habel 2007). A slow, strong gust map is a cosine wave about 100 px long that travels downwind, inside a noise envelope. A weak flutter is two slow waves at 0.13 and 0.29 Hz. Crests run at 33 px/s in a breeze up to 170 px/s in a storm, Terraria's 3.0 s to 0.6 s period scaled to 8 px cells. Below 0.12 strength the grass stands still. Wheat bends most, then tall grass, flowers, reeds and short grass. Bent tips switch to one lighter palette step, so the gust reads as a sheen. <b>Smooth sub-pixel</b> is the anti-pattern: blended edge colours that smear and shimmer. <b>Sway at 5 fps</b> steps the sway like the Dynamic 2D Grass add-on.</p></div>
+    <div class="card"><h4>5 · Interaction map</h4><p>An 80 by 45 map at 4 px holds crush, push and bend direction for every walker (player, villager, sheep, rabbits). GDQuest uses 128 by 128 for a 16 m plane. Stamp strength equals the distance moved, so standing still leaves no new mark. The push peaks at 3 px and fades in 0.33 s (Terraria WindGrid). Each frame the map decays before the walkers stamp. The crush fades linearly and recovers in about 3 s through three poses: flat above 170, half above 60, then upright. Tufts keep 10% of their spring so they never freeze flat (Jahrmann and Wimmer 2017). Flat tufts are drawn as 1 to 3 px strokes, one palette step darker, lying in the walk direction, and the ground under a fresh trail darkens one step. Entering tall grass plays a 0.83 s rustle (Emerald: 4 frames of 10 ticks, then rest) and throws 4 leaves (Shattered Pixel Dungeon). Tufts with no wind, crush or rustle are settled and skip the lean math.</p></div>
+    <div class="card"><h4>6 · Desire paths</h4><p>Wear follows Helbing's trail model on one byte per 4 px cell: each footstep adds <code>I·(1 - G/Gmax)</code>, and wear fades back toward zero with time constant T. Grass looks worn after about 20 steps and turns to dirt after about 50, the thresholds of the Step Erosion plugin. A path that nobody uses fades back. That takes 72 hours in Step Erosion and 3 minutes here, compressed 1:1440. Worn cells hide tufts and rebake the ground.</p></div>
+    <div class="card"><h4>7 · Cut, burn, graze, regrow</h4><p>The scythe turns a cell to stubble and throws clippings. A cricket jumps out 25% of the time and a frog 2% of the time (Stardew weeds). Fire uses the Fire study's grid rule: burning cells ignite neighbours with odds set by fuel, wind direction, rain and snow. Sheep graze one cell at a time. Regrowth is a random tick. Each tick picks N cells, a cell grows one stage with 65% odds, and a full cell spreads to a cut neighbour 25% of the time (Stardew). With TFS (2 stages of 240 s) and Luanti (about 300 s per tile) as reference, the default here is compressed about 20x.</p></div>
+    <div class="card"><h4>8 · Small life</h4><p>All creatures live in one pooled struct-of-arrays and are culled off screen. Butterflies use Stardew flight: each flap kicks them up and sideways, gravity pulls between flaps, and they rest 200 ms after 4 or 6 flap frames. Ours also land on flowers and flee. Bees hop between flowers about every 2 s. Dragonflies hover, then dart at 10x the speed. Midges are springs pulled toward a centre. Moths orbit the lamp, stall and flip. Rabbits run once a threat is within 5 cells and dive into cover. Frogs leap for 0.8 s into the pond. Critters check for threats every 200 ms, not every frame. Rules from Stardew and Terraria: no butterflies after 15:00 (ours taper), in rain or in a storm, and frogs come out after rain.</p></div>
+    <div class="card"><h4>9 · Fireflies</h4><p>The default model is pulse coupling (Nicky Case's shape), not Kuramoto. Each fly's phase rises at 1/period, with the period 5.9 s ± 10% (P. pyralis). At 1 the fly flashes and resets, and every neighbour within 48 px gets <code>phase += phase·0.035</code>. A uniform 48 px grid finds the neighbours, and the work only happens on flash frames. A flash rises in 1 frame and falls over 0.4 s through 4 halo frames, with a J-shaped rise. <b>Synchronous</b> switches to P. carolinus: bursts of 6 flashes 0.5 s apart, then about 9 s of darkness, with the same coupling. The glow is a pre-made halo that raises palette light levels. It is not a per-pixel light. Godot Compatibility allows at most 15 lights per canvas item, so one light per fly is not possible there. Each night rolls a density: heavy about 1 in 9, empty about 1 in 3 (Terraria). Fireflies stay out about 3 h after dusk.</p></div>
+    <div class="card"><h4>10 · Seasons, weather, access</h4><p>The season is a palette swap. The grass ramps are anchored on Stardew's hues, spring 119°, summer 89° and fall 16°, with yellower lights and bluer shadows. A per-cell phenology offset makes the field turn over 8 s instead of all at once. Winter adds snow, so only tufts' tips poke through, the pond freezes and the trees go bare. After rain, grass gets darker and more saturated, with glints and road puddles. <b>Reduce motion</b> stops field sway completely, because guidelines flag repeated motion over 25% of the screen. <b>Density</b> thins creatures. Numbers not tied to a source above are illustrative.</p></div>
+    <div class="card"><h4>11 · What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed. Everything writes palette indices into one buffer, and one lookup table turns them into colours. The study's benchmark found this path fastest. For 2,000 tufts, writing pixels straight into one buffer costs 0.051 ms. One Canvas2D <code>drawImage</code> per tuft costs 1.62 ms. Slicing each tuft per row at draw time costs 12 ms, so never do that. An 80 by 45 trail map with 10 walkers costs 0.0023 ms. A random-tick pick costs about 3 ns. Firefly sync at 1,000 flies costs 1.14 ms naive, 0.42 ms with a grid and 0.067 ms with a per-cell mean field. A CPU halo loop beats additive sprites, 0.22 ms against 0.89 ms for 1,000 halos. A full frame should stay near 1 ms even with a 6x CPU throttle. <b>Stress</b> multiplies tufts and creatures up to 8x so you can see where the budget breaks. <b>Cost view</b> colours each 8 px cell by the pixel writes and updates it caused.</p></div>
+  </div>
+  <p class="keys" style="margin-top:16px">Full research: <a href="vfx-grass-topdown-pixel.html">Top-down pixel grass study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="vfx-light-sandbox.html">Light</a> · <a href="vfx-fire-sandbox.html">Fire</a> · <a href="vfx-water-sandbox.html">Water</a> · <a href="vfx-fog-sandbox.html">Fog</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
+</main>
+<script>
+(()=>{
+"use strict";
+const W=320,H=180,NP=W*H,GW=40,GH=23,NC=GW*GH,TW=80,TH=45,NTR=TW*TH;
+const $=id=>document.getElementById(id);
+const cv=$('c'),ctx=cv.getContext('2d');
+const img=ctx.createImageData(W,H),out=new Uint32Array(img.data.buffer);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,sm=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
+const hash=(x,y,s)=>{let h=Math.imul(x|0,0x27d4eb2d)^Math.imul(y|0,0x165667b1)^Math.imul(s|0,0x9e3779b1);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;h=Math.imul(h,0x297a2d39);h^=h>>>15;return h>>>0;};
+const hf=(x,y,s)=>hash(x,y,s)/4294967296;
+const vn=(x,y,s)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);const a=hf(xi,yi,s),b=hf(xi+1,yi,s),c=hf(xi,yi+1,s),d=hf(xi+1,yi+1,s);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+let rs=0x2545f491;const rnd=()=>{rs^=rs<<13;rs^=rs>>>17;rs^=rs<<5;return (rs>>>0)/4294967296;};
+const mkR=seed=>{let s=seed|0;return()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};};
+const BAYM=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],BY=new Uint8Array(NP),CELL=new Uint16Array(NP),TRP=new Uint16Array(NP);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;BY[i]=BAYM[(y&3)*4+(x&3)]*16+8;CELL[i]=(y>>3)*GW+(x>>3);TRP[i]=(y>>2)*TW+(x>>2);}
+const SINT=new Float32Array(256);for(let i=0;i<256;i++)SINT[i]=Math.sin(i/256*6.28318);
+const sinT=v=>SINT[(v|0)&255];
+
+// ---------- numbers (sources in the cards; the rest illustrative) ----------
+const PRM={windMin:.12,gustLen:100,idleHz:[.13,.29],
+  pre:{calm:[.05,33,.3],breeze:[.3,50,1],gusty:[.55,95,1.5],storm:[.95,170,1.2]},
+  pushPx:3,pushFade:.33,crushFade:3,crushPerPx:34,spring:.1,stampR:6,
+  wearI:.025,wearT:180,wearWorn:102,wearDirt:184,rustle:.83,
+  regrowHz:5,grow:.65,spread:.25,netTile:9,netWx:6,netEnt:12,reveal:2,hideDelay:.4,
+  bflyKick:[11,40],bflySide:24,bflyCap:40,bflyGrav:150,bflyFlee:24,bflyPerch:[3,8],
+  beeHop:2,dflyHover:3,dflyDart:55,
+  fflyPer:5.9,fflyJit:.6,fflyFlash:[.3,.75],syncCycle:12,syncN:6,syncGap:.5,syncOn:.12,couple:.035,fflyR:48,
+  threatDt:.2,rabbitFlee:40,rabbitStop:80,rabbitSpeed:45,frogFlee:48,frogLeap:.8,frogPeak:9,
+  seedFall:12,dayLen:120,seasonLen:8};
+
+// ---------- palette ----------
+const PH=[];const C=h=>(PH.push(h),PH.length-1);
+const OUT=C('141219');
+const G0=C('0'),G1=C('0'),G2=C('0'),G3=C('0'),G4=C('0'),G5=C('0'),W0=C('0'),W1=C('0'),W2=C('0'),W3=C('0'),W4=C('0'),L0=C('0'),L1=C('0'),L2=C('0'),L3=C('0');
+const E0=C('2a1f1d'),E1=C('432f27'),E2=C('624533'),E3=C('86644a'),E4=C('ad9068');
+const A0=C('162336'),A1=C('203a52'),A2=C('2f5a6e'),A3=C('5f8e9a'),A4=C('a8d0cc');
+const R0=C('211e26'),R1=C('35333d'),R2=C('514e57'),R3=C('726f76'),R4=C('9d9a9b');
+const K0=C('3f2230'),K1=C('612f39'),K2=C('874641');
+const S0=C('93a6c0'),S1=C('cbd6e4'),S2=C('eff4f8');
+const B0=C('1c1a1a'),B1=C('2e2a28'),B2=C('4a4440'),EM=C('d0582a');
+const FWc=C('ece8da'),FYc=C('ecc94a'),FPc=C('dc8ca6'),FVc=C('9a7ad6'),FRc=C('cc4436'),FBc=C('70a0dc');
+const F1=C('ff8a2a'),F2=C('ffcc5a'),F3=C('fff2c0');
+const RB1=C('8a6a4a'),RB2=C('c8b090'),FG1=C('6a9a3a'),FG2=C('3a5a28');
+const SH1=C('e8e4d8'),SH2=C('b4ae a0'.replace(' ','')),SHF=C('3a302a');
+const BO=C('e08a30'),BE1=C('e8c040'),BE2=C('241c14'),DF1=C('3ab4ac'),DF2=C('2a6aa0'),WING=C('c8d8e8');
+const FF=C('e4ff8a'),FFD=C('8a9a48'),MO=C('d4c8a8'),CR=C('7a8a2a');
+const RD=C('a03c3c'),RD2=C('6a2632'),SK=C('dca47c'),HR=C('3a2622'),BL1=C('4a6a9a'),BL2=C('2a3e66');
+const FL=C('ffe2a0'),WN=C('f0b45e'),GL=C('f4fbff');
+const NB=PH.length,PR=[],PG=[],PB=[];PH.forEach((h,i)=>{const v=h.length===6?h:'000000';PR[i]=parseInt(v.slice(0,2),16);PG[i]=parseInt(v.slice(2,4),16);PB[i]=parseInt(v.slice(4,6),16);});
+// season ramps G0-5, W0-4, L0-3. Grass anchored on Stardew hues: spring (60,180,58), summer (110,190,24), fall (219,102,58)
+const SEAS=[
+ ['152a2a','1e4834','2b6c3a','3a9440','3cb43a','a6d860', '2a4a2c','44703a','6a9844','98bc5a','c8dc80', '24502e','3e8238','6cb444','b4dc6c'],
+ ['1a2a26','26442a','3a6426','508a20','6ebe18','c4dc54', '5a4222','8a6a2a','b8902e','dab44a','f2d878', '213e2c','325e30','4a8034','74a848'],
+ ['2a2024','46342a','6a5030','8e6a34','b87a3c','db9a56', '4a3424','6e4e2a','946a34','b88e48','d8b070', '58242a','983a26','d06a2a','f0a848'],
+ ['262c34','3a4448','525e5a','6e7868','8c927c','aeae98', '4a4438','6a6250','8c8268','aea488','cec6aa', '3a3434','52484a','6a5e5a','857870']];
+const SRGB=SEAS.map(a=>a.map(h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]));
+const BRT=new Uint8Array(128),DARKB=new Uint8Array(128);for(let i=0;i<128;i++){BRT[i]=i;DARKB[i]=i;}
+[[G0,G1,G2,G3,G4,G5],[W0,W1,W2,W3,W4],[L0,L1,L2,L3],[E0,E1,E2,E3,E4],[A0,A1,A2,A3,A4],[R0,R1,R2,R3,R4],[S0,S1,S2],[B0,B1,B2],[K0,K1,K2]].forEach(r=>{for(let k=0;k<r.length;k++){if(k)DARKB[r[k]]=r[k-1];if(k<r.length-1)BRT[r[k]]=r[k+1];}});
+DARKB[G0]=OUT;DARKB[S0]=R3;DARKB[E0]=OUT;DARKB[A0]=OUT;[FWc,FYc,FPc,FBc].forEach(c=>DARKB[c]=G2);
+const FCOL=[FWc,FYc,FPc,FVc,FRc,FBc],FCEN=[FYc,E3,FYc,FYc,OUT,FWc],FMASK=[3,7,1,6,2,3];
+
+// ---------- time of day ----------
+const KF={night:{m:[.3,.37,.6],a:[5,8,22],l:1},dawn:{m:[.96,.8,.74],a:[24,10,16],l:.8},morn:{m:[1,.93,.85],a:[14,8,6],l:.3},day:{m:[1,1,1],a:[0,0,0],l:0},dusk:{m:[1,.76,.62],a:[28,8,10],l:.86}};
+const TK=[[0,'night'],[.19,'night'],[.26,'dawn'],[.33,'morn'],[.42,'day'],[.62,'day'],[.71,'dusk'],[.79,'night'],[1.001,'night']];
+function todP(t){let k=0;while(TK[k+1][0]<t)k++;const [t0,a]=TK[k],[t1,b]=TK[k+1],u=sm((t-t0)/(t1-t0)),A=KF[a],B=KF[b],L=(p,q)=>p+(q-p)*u;return {m:A.m.map((v,j)=>L(v,B.m[j])),a:A.a.map((v,j)=>L(v,B.a[j])),l:L(A.l,B.l)};}
+const phaseOf=t=>t<.2||t>=.79?'night':t<.3?'dawn':t<.68?'day':'dusk';
+const pack=(r,g,b)=>(255<<24|clamp(b|0,0,255)<<16|clamp(g|0,0,255)<<8|clamp(r|0,0,255))>>>0;
+const LUT=new Uint32Array(8<<10),LMIX=[0,.2,.36,.54,.24,.46,.8,0];
+let tod=.56,TP=todP(tod),lutT=-1,lutDirty=true,sFrom=1,sTo=1,sP=1,weather='clear';
+function buildLUT(){const p=TP=todP(tod),wet=weather==='rain',dk=p.l,A=SRGB[sFrom],B=SRGB[sTo];
+  for(let s=0;s<8;s++){const u=s/7;for(let b=0;b<128;b++){let r,g,bl;
+    if(b>=NB){r=g=bl=255;}else{
+      if(b>=G0&&b<=L3){const k=b-G0;r=A[k][0]+(B[k][0]-A[k][0])*u;g=A[k][1]+(B[k][1]-A[k][1])*u;bl=A[k][2]+(B[k][2]-A[k][2])*u;}else{r=PR[b];g=PG[b];bl=PB[b];}
+      if(wet&&((b>=G0&&b<=L3)||(b>=E0&&b<=E4))){r*=.8;g*=.86;bl*=.86;const gr=(r+g+bl)/3;r+=(r-gr)*.35;g+=(g-gr)*.35;bl+=(bl-gr)*.35;}
+      if(b===FF||b===FL||b===F1||b===F2||b===F3||b===EM){}
+      else if(b===WN){const l=Math.min(1,dk*1.3);r=86+154*l;g=66+112*l;bl=52+40*l;}
+      else{r=r*p.m[0]+p.a[0];g=g*p.m[1]+p.a[1];bl=bl*p.m[2]+p.a[2];}}
+    for(let l=0;l<8;l++){let r2=r,g2=g,b2=bl;const v=LMIX[l]*Math.min(1,dk*1.2);
+      if(l>=1&&l<=3){r2+=(255-r2)*v;g2+=(208-g2)*v;b2+=(150-b2)*v;}else if(l===4||l===5){r2+=(214-r2)*v;g2+=(255-g2)*v;b2+=(120-b2)*v;}else if(l===6){r2+=(255-r2)*v;g2+=(170-g2)*v;b2+=(90-b2)*v;}
+      LUT[s<<10|l<<7|b]=pack(r2,g2,b2);}}}
+  lutT=tod;lutDirty=false;}
+
+// ---------- world layout ----------
+const ROAD=[[-6,96],[40,94],[90,98],[140,93],[190,97],[236,92],[280,94],[326,90]],LANE=[[236,92],[252,70],[266,40]],PATHS=[[[72,97],[66,112],[60,124]],[[160,95],[166,114],[158,134]]];
+const segD=(P,x,y)=>{let bd=1e9;for(let k=0;k<P.length-1;k++){const a=P[k],b=P[k+1],dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy;let t=((x-a[0])*dx+(y-a[1])*dy)/L;t=t<0?0:t>1?1:t;const ex=a[0]+dx*t-x,ey=a[1]+dy*t-y,d=ex*ex+ey*ey;if(d<bd)bd=d;}return Math.sqrt(bd);};
+const PCX=54,PCY=146,PRX=38,PRY=22;
+const pondD=(x,y)=>{const dx=(x-PCX)/PRX,dy=(y-PCY)/PRY;return Math.sqrt(dx*dx+dy*dy)+(vn(x/6,y/6,50)-.5)*.16;};
+function regionAt(x,y){const n=vn(x/14,y/14,31),n2=vn(x/9,y/9,32);
+  if(x>254&&x<315&&y>110&&y<173)return 8;
+  {const e=vn(x/5,y/5,36)-.5;if(x>92+(n-.5)*14+e*5&&x<230+(n-.5)*12+e*5&&y>14&&y<80+(n2-.5)*10+e*4)return 2;}
+  const pd=pondD(x,y);if(pd>.9&&pd<1.24&&n2>.36)return 6;
+  if((x>106+(n-.5)*16&&x<248&&y>104+(n2-.5)*10)||(x<112&&y>108&&pd>1)){return vn(x/11,y/11,33)>.6?3:1;}
+  if(x<88&&y>18&&y<86&&vn(x/12,y/12,34)>.62)return 1;
+  if(vn(x/10,y/10,35)>.75&&y>16)return 3;
+  return 0;}
+const PT=new Uint8Array(NP),BASE=new Uint8Array(NP),GV=new Uint8Array(NP),SHD=new Uint8Array(NP),REG=new Uint8Array(NP),PUD=new Uint8Array(NP),FLOR=new Uint8Array(NP);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,q=hf(x,y,22),pd=pondD(x,y);
+  const rd=segD(ROAD,x,y)+(vn(x/4,y/4,51)-.5)*1.4,ln=segD(LANE,x,y)+(vn(x/4,y/4,52)-.5)*1.1,fp=Math.min(segD(PATHS[0],x,y),segD(PATHS[1],x,y))+(vn(x/3,y/3,53)-.5)*.9;
+  REG[i]=regionAt(x,y);
+  const t=vn(x/7,y/6,20)*.55+vn(x/2.5,y/2.5,21)*.25+q*.35;GV[i]=t<.42?G1:t<.62?G2:t<.82?G3:G4;
+  if(pd<1){PT[i]=3;BASE[i]=pd<.5?A0:pd<.84?A1:A2;if(pd>.93&&y<PCY)BASE[i]=A3;}
+  else if(pd<1.09){PT[i]=4;BASE[i]=q<.5?E1:E0;}
+  else if(rd<4.3||ln<2.8){PT[i]=1;const d=rd<4.3?rd:ln+1.5;let c=E3;if(Math.abs(d-2)<.5)c=E2;if(q<.08)c=E4;else if(q>.95)c=E2;if(d>3.5)c=E2;BASE[i]=c;if(vn(x/7,y/3,54)>.64&&d<3)PUD[i]=1;}
+  else if(fp<1.5){PT[i]=2;BASE[i]=q<.35?E2:E3;}
+  else{PT[i]=0;if(rd<5.4||ln<3.8||fp<2.3||pd<1.17)SHD[i]=1;if((REG[i]===0||REG[i]===3)&&hf(x,y,60)<.005)FLOR[i]=1+(hash(x,y,61)&3);}}
+for(let y=1;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(PT[i]===0&&hf(x,y,5)<.045){GV[i]=G4;if(PT[i-W]===0)GV[i-W]=G3;}}
+const put=(x,y,c)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;BASE[i]=c;PT[i]=5;}};
+const shade=(cx,cy,rx,ry)=>{for(let y=Math.floor(cy-ry);y<=cy+ry;y++)for(let x=Math.floor(cx-rx);x<=cx+rx;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=(x-cx)/rx,dy=(y-cy)/ry;if(dx*dx+dy*dy<1)SHD[y*W+x]=1;}};
+// hedge (leaf ramp, so it follows the season)
+for(let x=0;x<242;x++){const yb=9+Math.round(2.4*vn(x/5,0,40));for(let y=0;y<=yb;y++){const s=vn(x/4,y/4,41)+y/yb*.45+(hf(x,y,42)-.5)*.2;let c=s<.55?L3:s<.8?L2:L1;if(y===yb)c=L0;else if(hf(x,y,43)<.05)c=L0;put(x,y,c);}for(let k=1;k<=2;k++)if(yb+k<H)SHD[(yb+k)*W+x]=1;}
+// cottage
+const CX0=246;
+{shade(CX0+22,40,24,3);for(let y=4;y<38;y++)for(let x=CX0+40;x<CX0+43;x++)if(x<W)SHD[y*W+x]=1;
+ for(let r=0;r<18;r++)for(let dx=0;dx<40;dx++){let c=(r&1)?K1:((dx+(r>>1)*2)%4===0?K0:K1);if(r===0)c=K2;else if(r===17)c=K0;else if(dx<12&&!(r&1)&&c===K1)c=K2;if(dx===0||dx===39)c=K0;put(CX0+dx,r,c);}
+ for(let r=2;r<9;r++)for(let dx=28;dx<32;dx++)put(CX0+dx,r,dx===28?R1:dx===31?R3:R2);put(CX0+28,1,R1);put(CX0+29,1,R2);put(CX0+30,1,R2);put(CX0+31,1,R3);
+ for(let r=18;r<38;r++)for(let dx=1;dx<39;dx++){let c=dx%9===0?E1:E3;if(r===18)c=E0;else if(r===37)c=E1;else if(dx>32&&c===E3)c=E4;
+   if(dx>=17&&dx<=22&&r>=27)c=(dx===17||dx===22||r===27)?E1:(dx===21&&r===32?FYc:E0);
+   if((dx>=5&&dx<=10||dx>=28&&dx<=33)&&r>=22&&r<=27){c=(dx===5||dx===10||dx===28||dx===33||r===22||r===27)?E1:WN;if(r===24&&c===WN)c=E1;}
+   if((dx>=5&&dx<=10||dx>=28&&dx<=33)&&r===28)c=(dx&1)?FPc:G3;put(CX0+dx,r,c);}}
+// beehive
+{const hv=["..hh..",".hHhh.","hHhhhh","hhhhhh","hhddhh",".ssss."],mp={h:E3,H:E4,d:E0,s:E1};hv.forEach((row,r)=>[...row].forEach((ch,dx)=>{if(ch!=='.')put(289+dx,71+r,mp[ch]);}));shade(292,77,4,1.5);}
+// fence
+{const post=(x,y)=>{put(x,y-4,E2);put(x,y-3,E2);put(x,y-2,E1);put(x,y-1,E1);put(x+1,y-4,E3);put(x+1,y-3,E2);put(x+1,y-2,E2);put(x+1,y-1,E1);};
+ for(let x=252;x<=318;x++){for(const y of[108,175]){if(x%8===4)continue;put(x,y-4,E3);put(x,y-2,E2);}}
+ for(let y=108;y<=175;y++){if(y>=134&&y<=148)continue;put(253,y-2,E2);put(317,y-2,E3);}
+ for(let x=252;x<=318;x+=8){post(x,108);post(x,176);}for(let y=116;y<=172;y+=8){if(y>=132&&y<=148)continue;post(252,y);post(316,y);}post(252,132);post(252,152);}
+// lily pads
+for(const [lx,ly,fl] of[[38,150,1],[64,140,0],[72,157,0],[30,138,0]]){for(let dy=-1;dy<=1;dy++)for(let dx=-2;dx<=2;dx++){if(Math.abs(dx)===2&&dy)continue;if(dx===1&&dy===-1)continue;put(lx+dx,ly+dy,dy===1?G2:G3);}if(fl){put(lx,ly-1,FPc);put(lx-1,ly-1,FWc);}}
+// trees
+const TREES=[{x:24,y:74,r:10,s:3},{x:306,y:60,r:9,s:5},{x:240,y:128,r:8,s:7}];
+for(const T of TREES){shade(T.x-3,T.y,T.r+2,3);for(let dx=-1;dx<=2;dx++)put(T.x+dx,T.y,E1);}
+// cells
+const CT=new Uint8Array(NC);
+for(let c=0;c<NC;c++){const x=(c%GW)*8+4,y=Math.min(H-1,((c/GW)|0)*8+4),i=y*W+x,pt=PT[i];CT[c]=pt===5?7:pt===3?5:(pt===1||pt===2)?4:pt===4?(REG[i]===6?6:0):REG[i];}
+const FUEL=[.5,1,1.2,.9,0,0,.4,0,.8];
+const PHEN=new Float32Array(NC);for(let c=0;c<NC;c++){const x=c%GW,y=(c/GW)|0;PHEN[c]=clamp(vn(x/6,y/6,90)*.75+hf(x,y,91)*.25,0,1);}
+// grass patches: connected tall-grass components (server hiding rule)
+const PATCH=new Int16Array(NC);
+function labelPatches(){PATCH.fill(-1);let id=0;const st=[];for(let c=0;c<NC;c++){if(PATCH[c]>=0||!hides(c))continue;PATCH[c]=id;st.push(c);while(st.length){const a=st.pop(),ax=a%GW,ay=(a/GW)|0;for(const [dx,dy] of[[1,0],[-1,0],[0,1],[0,-1]]){const bx=ax+dx,by=ay+dy;if(bx<0||by<0||bx>=GW||by>=GH)continue;const b=by*GW+bx;if(PATCH[b]<0&&hides(b)){PATCH[b]=id;st.push(b);}}}id++;}patchDirty=false;}
+let patchDirty=true;
+
+// ---------- tuft sprites, pre-baked ----------
+const NTY=5,NVR=6,LN=13,SQ=[1,.68,.42],STF=[.45,1,1.3,.75,.6];
+const key=(t,v,h,q,L,hi)=>(((((t*NVR+v)*4+h)*3+q)*LN+L+6)*2+hi);
+const NKEY=NTY*NVR*4*3*LN*2;
+function genBase(t,v,hl){const R=mkR(t*1009+v*97+7),P=[],add=(x,r,c)=>P.push([x,r,c]),hm=[1,.68,.42,0][hl],stub=hl===3;
+  if(t===0){const n=2+(R()*2|0);for(let b=0;b<n;b++){const bx=b-(n>>1),h=stub?1:Math.max(1,Math.round((3+R()*1.6)*Math.max(hm,.5))),ln=(R()-.5)*1.6;for(let r=0;r<h;r++){const u=r/Math.max(1,h-1);add(bx+Math.round(ln*u),r,r===h-1?G4:r===0?G2:G3);}}}
+  else if(t===1){const short=v>=4,n=short?3:3+(R()*3|0),Hf=short?5.5+R()*1.5:8.5+R()*3;add(-1,0,G0);add(1,0,G0);
+    for(let b=0;b<n;b++){const bx=Math.round((b-(n-1)/2)*1.3+(R()-.5)*.8),lean=bx===0?(R()-.5)*2:Math.sign(bx)*(.6+R()*1.6);
+      if(stub){add(bx,0,G2);if(R()<.6)add(bx,1,G3);continue;}
+      const h=Math.max(2,Math.round(Hf*(.62+R()*.38)*hm));
+      for(let r=0;r<h;r++){const u=r/(h-1);let c=u<.25?G1:u<.5?G2:u<.8?G3:G4;if(r===h-1&&R()<.45)c=G5;if(bx<0&&c>G1)c--;add(bx+Math.round(lean*u*u),r,c);}}}
+  else if(t===2){const n=2+(R()*2|0);add(0,0,W0);
+    for(let b=0;b<n;b++){const bx=b*2-(n-1),lean=(R()-.5)*1.4;if(stub){add(bx,0,W2);add(bx,1,W3);continue;}
+      const h=Math.max(3,Math.round((10+R()*3)*hm));
+      for(let r=0;r<h;r++){const u=r/(h-1),x=bx+Math.round(lean*u*u);if(r>=h-3&&hl<2){add(x,r,(r&1)?W4:W3);add(x+(((r+b)&1)?1:-1),r,W2);}else add(x,r,u<.45?W1:W2);}
+      if(hl<2&&R()<.6)add(bx+Math.round(lean),h,W4);}}
+  else if(t===3){const col=FCOL[v],h=Math.max(2,Math.round((4.5+R()*2.5)*Math.max(hm,.4)));add(-1,0,G1);add(-1,1,G2);add(2,0,G2);add(2,1,G3);
+    if(stub){add(0,0,G2);add(0,1,G3);}
+    else{for(let r=0;r<h;r++)add(0,r,r<h/2?G2:G3);add(R()<.5?-1:1,1+(R()*2|0),G3);
+      if(hl===2)add(0,h,G4);else if(v%2===0){add(0,h-1,col);add(-1,h,col);add(1,h,col);add(0,h+1,col);add(0,h,FCEN[v]);}else{add(0,h,col);add(0,h+1,col);add(1,h,col);}}}
+  else{const n=2+(R()*2|0);add(-1,0,G0);
+    for(let b=0;b<n;b++){const bx=b*2-(n-1)+(R()<.5?0:1),h=stub?2:Math.max(3,Math.round((11+R()*3)*hm));
+      for(let r=0;r<h;r++)add(bx,r,r<h*.3?G1:r<h*.7?G2:G3);
+      if(b===0&&hl<2&&!stub){for(let r=h-4;r<h-1;r++){add(bx,r,E1);add(bx+1,r,E0);}add(bx,h,G3);}}
+    if(!stub)for(let r=0;r<6*Math.max(hm,.5);r++)add(-1-Math.round(r*.5),r,G2);}
+  P.sort((a,b)=>a[1]-b[1]);return P;}
+const POW=new Float32Array(17);for(let i=0;i<17;i++)POW[i]=Math.pow(i/16,1.5);
+const SOFF=new Int32Array(NKEY+1),SHM=new Uint8Array(NKEY);let SPX,SPY,SPC;
+{const xs=[],ys=[],cs=[];let k=0;
+ for(let t=0;t<NTY;t++)for(let v=0;v<NVR;v++)for(let hl=0;hl<4;hl++){const base=genBase(t,v,hl);let hm=1;for(const p of base)if(p[1]>hm)hm=p[1];
+   for(let q=0;q<3;q++)for(let L=-6;L<=6;L++)for(let hi=0;hi<2;hi++){SOFF[k]=xs.length;let mh=0;
+     for(const p of base){const r=p[1],r2=Math.round(r*SQ[q]);xs.push(p[0]+Math.round(L*POW[Math.round(r/hm*16)]));ys.push(-r2);cs.push(hi&&r>hm*.5?BRT[p[2]]:p[2]);if(r2>mh)mh=r2;}
+     SHM[k]=Math.max(1,mh);k++;}}
+ SOFF[NKEY]=xs.length;SPX=Int8Array.from(xs);SPY=Int8Array.from(ys);SPC=Uint8Array.from(cs);}
+const SPRITE_N=NKEY;
+
+// ---------- character and critter sprites ----------
+const spr=(rows,map)=>{const h=rows.length,w=rows[0].length,p=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const c=rows[y][x];if(c!=='.'&&map[c]!=null)p[y*w+x]=map[c]+1;}return {w,h,p};};
+const PM={h:HR,s:SK,o:OUT,R:RD2,r:RD,k:E0,y:E4,Y:E3,B:BL2,b:BL1};
+const ptop=["..hhh..",".hhhhh.",".hsssh.",".sosos.","..sss..",".RrrrR.","sRrrrRs",".RrrrR.",".RRRRR."];
+const vtop=["..YYY..","yyyyyyy",".hsssh.",".sosos.","..sss..",".BbbbB.","sBbbbBs",".BbbbB.",".BBBBB."];
+const legs=[[".k...k.",".k...k."],[".k..k..","..k.k.."],["..k..k.","..k.k.."]];
+const PLY=legs.map(l=>spr([...ptop,...l],PM)),VIL=legs.map(l=>spr([...vtop,...l],PM));
+const SHM_={w:SH1,W:SH2,F:SHF,k:OUT};
+const SHP=[spr([".wwwww...","wwwwwwwFF","wwwwwwwFk","WwwwwwwF.",".WWWWWW..",".k.k.k.k."],SHM_),spr([".wwwww...","wwwwwww..","wwwwwwwFF","WwwwwwwFk",".WWWWWWF.",".k.k.k.k."],SHM_)];
+const RBM={b:RB1,l:RB2,t:FWc,k:OUT};
+const RAB=[spr(["...b..","...bb.","tbbbbk",".bbbl."],RBM),spr(["......","...b..","tbbbb.",".bbbbk"],RBM),spr(["....b.","...bb.","tbbbbk","b...l."],RBM)];
+const FRG=[spr([".e.e.","ggggg","d...d"],{e:FYc,g:FG1,d:FG2}),spr([".e.e.","ggggg",".d.d."],{e:FYc,g:FG1,d:FG2})];
+const BF=[["ww.ww","wwkww",".w.w."],[".w.w.",".wkw.","..k.."],["..w..","..w..","..k.."]];
+// trees: band offsets for sway (Forest D1)
+function bakeTree(T){const r=T.r,P=[],cy=-7-r,add=(dx,dy,c,f)=>P.push([dx,dy,c,f]);
+  for(let k=0;k<9;k++){add(0,-k,E1,2);add(1,-k,E2,2);}add(-1,0,E0,2);add(2,0,E1,2);
+  const br=(x1,y1)=>{const n=Math.max(Math.abs(x1),Math.abs(y1+8),1);for(let s=0;s<=n;s++){const x=Math.round(x1*s/n),y=Math.round(-8+(y1+8)*s/n);add(x,y,E1,2);if(s<n*.5)add(x+1,y,E2,2);}};
+  br(-Math.round(r*.6),cy+1);br(Math.round(r*.55),cy-1);br(0,cy-Math.round(r*.6));br(-Math.round(r*.3),cy-Math.round(r*.8));br(Math.round(r*.7),cy+Math.round(r*.3));
+  for(let y=Math.floor(cy-r);y<=cy+r;y++)for(let x=-r-1;x<=r+1;x++){const dx=(x-.5)/(r+1),dy=(y-cy)/r,d=dx*dx+dy*dy+(vn(x*.5+T.s,y*.5,T.s)-.5)*.5;if(d>=1)continue;const s=-dx*.6+dy*.8+(hf(x,y,T.s)-.5)*.4;add(x,y,s<-.45?L3:s<.05?L2:s<.5?L1:L0,1);}
+  const has=new Set(P.filter(p=>p[3]===2).map(p=>p[0]+','+p[1]));
+  T.n=P.length;T.dx=Int8Array.from(P.map(p=>p[0]));T.dy=Int8Array.from(P.map(p=>p[1]));T.c=Uint8Array.from(P.map(p=>p[2]));
+  T.f=Uint8Array.from(P.map(p=>p[3]|((p[3]===2&&!has.has(p[0]+','+(p[1]-1)))?4:0)));
+  T.b=Uint8Array.from(P.map(p=>p[1]>-9?0:p[1]<cy-r/3?3:p[1]<cy+r/3?2:1));T.h=Float32Array.from(P.map(p=>hf(p[0]+T.s,p[1],77)));T.cell=CELL[Math.min(H-1,T.y)*W+T.x];T.ph=T.s;}
+TREES.forEach(bakeTree);
+
+// ---------- cell state (server truth) ----------
+const HGT=new Uint8Array(NC),HL=new Uint8Array(NC),BURN=new Uint8Array(NC),FIRE=new Float32Array(NC),SHK=new Float32Array(NC),STG=new Uint8Array(NC),SEAC=new Uint8Array(NC);
+const lvlOf=v=>v>=192?0:v>=128?1:v>=64?2:3;
+function hides(c){const t=CT[c];return (t===1||t===2||t===3||t===6||t===8)&&HL[c]<=1&&!BURN[c];}
+let netTotal=0,netSec=0,netRate=0,netFlatSec=0,netFlat=0,netWxSec=0;
+function netTx(b){netTotal+=b;netSec+=b;}
+function setH(c,v){v=clamp(v|0,0,255);HGT[c]=v;const nl=lvlOf(v);if(nl!==HL[c]){HL[c]=nl;netTx(PRM.netTile);markBlock(c);fieldDirty=true;patchDirty=true;}}
+function setBurn(c,b){if(BURN[c]!==b){BURN[c]=b;netTx(PRM.netTile);markBlock(c);fieldDirty=true;patchDirty=true;}}
+
+// ---------- tufts ----------
+let TN=0,TX,TY,TT,TV,TCELL,TTR,TPH,TL,TTOP,TFL,TFAC,TKEY,FLW=[],stressN=1;
+function buildTufts(mult){const R=mkR(1234),a=[],DENS=[.5,5,7.5,5,0,0,4.5,0,4];
+  for(let c=0;c<NC;c++){const cx=c%GW,cy=(c/GW)|0,n=Math.ceil(8*mult);
+    for(let k=0;k<n;k++){const x=cx*8+(R()*8|0),y=Math.min(H-1,cy*8+(R()*8|0)),i=y*W+x,pt=PT[i],reg=REG[i];if(R()>=DENS[reg]/8)continue;
+      let t=-1,v=0;
+      if(pt===0){if(reg===0)t=R()<.06?3:0;else if(reg===1)t=R()<.07?3:1;else if(reg===2)t=2;else if(reg===3)t=R()<.5?3:1;else if(reg===6)t=R()<.6?4:1;else if(reg===8){t=1;v=4+(R()*2|0);}}
+      else if((pt===4||(pt===3&&pondD(x,y)>.9))&&reg===6)t=4;
+      if(t<0)continue;if(t===1&&reg!==8)v=hash(cx,cy,k)%4;else if(t!==1)v=hash(cx,cy,k+9)%6;
+      a.push([x,y,t,v,R()*256,R()<.5?1:0,.5+R()*.5]);}}
+  a.sort((p,q)=>p[1]-q[1]||p[0]-q[0]);TN=a.length;
+  TX=new Int16Array(TN);TY=new Int16Array(TN);TT=new Uint8Array(TN);TV=new Uint8Array(TN);TCELL=new Uint16Array(TN);TTR=new Uint16Array(TN);TPH=new Float32Array(TN);TL=new Int8Array(TN);TTOP=new Uint8Array(TN);TFL=new Uint8Array(TN);TFAC=new Float32Array(TN);TKEY=new Int32Array(TN).fill(-1);
+  FLW=[];a.forEach((p,k)=>{TX[k]=p[0];TY[k]=p[1];TT[k]=p[2];TV[k]=p[3];TPH[k]=p[4];TFL[k]=p[5];TFAC[k]=p[6];const i=p[1]*W+p[0];TCELL[k]=CELL[i];TTR[k]=TRP[i];if(p[2]===3)FLW.push(k);});
+  fieldDirty=true;}
+
+// ---------- dynamic buffers ----------
+const GROUND=new Uint8Array(NP),IDX=new Uint16Array(NP),IDX2=new Uint16Array(NP),AW=new Uint8Array(NP),STGP=new Uint8Array(NP);
+const CRU=new Float32Array(NTR),PSH=new Float32Array(NTR),TDX=new Int8Array(NTR),TWX=new Int8Array(NTR),TWY=new Int8Array(NTR),WEAR=new Float32Array(NTR),WLV=new Uint8Array(NTR),WL=new Float32Array(NTR),WH=new Float32Array(NTR),LSTEP=new Int32Array(8).fill(-1);
+const DIRTY=new Uint8Array(NC);let dirtyList=[],fieldDirty=true;
+const CWC=new Float32Array(NC),CWS=new Float32Array(NC);
+function markBlock(c){if(c>=0&&c<NC&&!DIRTY[c]){DIRTY[c]=1;dirtyList.push(c);}}
+const snowOf=c=>{const u=STG[c]/7;return (sTo===3?u:0)+(sFrom===3?1-u:0);};
+const wearAt=(x,y)=>{const gx=clamp((x-2)/4,0,TW-1.001),gy=clamp((y-2)/4,0,TH-1.001),ix=gx|0,iy=gy|0,fx=gx-ix,fy=gy-iy,k=iy*TW+ix;return (WEAR[k]*(1-fx)+WEAR[k+1]*fx)*(1-fy)+(WEAR[k+TW]*(1-fx)+WEAR[k+TW+1]*fx)*fy;};
+let wearOn=true,interOn=true,bakeN=0;
+function bakeBlock(c){const x0=(c%GW)*8,y0=((c/GW)|0)*8,y1=Math.min(H,y0+8),snow=snowOf(c),sea=SEAC[c],lvl=HL[c],burn=BURN[c],wet=weather==='rain';
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x0+8;x++){const i=y*W+x,pt=PT[i],h=hf(x,y,70);let g;
+    if(pt===5){g=BASE[i];if(snow>.4&&(g===K0||g===K1||g===K2||(g>=L0&&g<=L3&&y<12))&&h<snow*1.2-.2)g=h<.25?S1:S2;}
+    else if(pt===3){g=BASE[i];if(snow>.55)g=hf(x,y,71)<.08?A3:(g===A0?S0:S1);}
+    else if(pt===1||pt===2||pt===4){g=BASE[i];if(wet&&PUD[i])g=(y>0&&!PUD[i-W])?A3:A2;if(snow>0&&hf(x,y,72)<snow*.7)g=h<.3?S0:S1;}
+    else{const reg=REG[i];let gg=GV[i];
+      if(reg===2)gg=((y+(x>>3))&3)===0?E1:(h<.5?W0:W1);else if(reg!==0)gg=DARKB[gg];
+      if(SHD[i])gg=DARKB[gg];
+      if(burn===2)gg=h<.55?B0:h<.88?B1:B2;else if(burn===1)gg=h<.5?B1:B2;
+      else{if(lvl===3&&reg!==0)gg=reg===2?(h<.3?W2:W1):(h<.25?G3:G2);
+        if(wearOn){const w=wearAt(x,y)+(hf(x,y,74)-.5)*46;if(w>PRM.wearDirt+20)gg=h<.25?E3:E4;else if(w>PRM.wearDirt)gg=h<.6?E3:E4;else if(w>PRM.wearWorn+30)gg=h<.55?E3:G4;else if(w>PRM.wearWorn)gg=h<.3?E3:BRT[gg];}
+        if(FLOR[i]&&sea<=1&&snow<.3)gg=[FWc,FYc,FPc,FBc][FLOR[i]-1];}
+      if(snow>0){const t=hf(x,y,75);if(t<snow*1.08-.04)gg=SHD[i]?(t<.5?S0:S1):(t<snow*.25?S1:S2);}
+      g=gg;}
+    GROUND[i]=g;}
+  DIRTY[c]=0;bakeN++;CWC[c]+=64;}
+function bakeAll(){for(let c=0;c<NC;c++)bakeBlock(c);dirtyList=[];}
+const WLST=[];for(let i=0;i<NP;i++)if(PT[i]===3&&(BASE[i]===A1||BASE[i]===A2))WLST.push(i);
+const WLA=Int32Array.from(WLST);
+
+// ---------- wind ----------
+const GENV=new Float32Array(512);{const R=mkR(77);for(let k=0;k<6;k++){const c=R()*512,w=40+R()*70,a=.55+R()*.45;for(let i=0;i<512;i++){let d=Math.abs(i-c);d=Math.min(d,512-d);if(d<w){const u=d/w;GENV[i]+=a*(1-u*u)*(1-u*u);}}}for(let i=0;i<512;i++)GENV[i]=Math.min(1,.15+GENV[i]);}
+let windPre='breeze',windDir=12,windStr=.3,gustSpeed=50,gustAmp=1,gustsOn=true,wcx=1,wcy=0,gustPh=0,envPh=0,step5=false,rm=false;
+function windUpdate(){const tw=step5?Math.floor(simT*5)/5:simT,on=windStr>=PRM.windMin&&!rm,base=on?windStr*1.4:0,ga=on&&gustsOn?windStr*3.2*gustAmp:0,k=6.2832/PRM.gustLen,ph=step5?Math.floor(gustPh/ (gustSpeed/5||1))*(gustSpeed/5||1):gustPh;
+  for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){const t=ty*TW+tx,x=tx*4+2,y=ty*4+2,p=x*wcx+y*wcy;let g=0;
+    if(ga>0){const env=GENV[(((p-envPh)*.25)|0)&511];g=env*(.5+.5*Math.cos((p-ph)*k));g*=g;}
+    WH[t]=g;WL[t]=base+g*ga;}
+  return tw;}
+
+// ---------- state ----------
+let simT=0,frame=0,tool='walk',view='normal',paused=false,tAuto=true,smooth=false,rmode='tufts',density=1,syncF=false,leak=false,regrowN=12;
+const P={x:186,y:146,tx:0,ty:0,hasT:false,mv:false,at:0,face:1,cell:-1,reveal:0,lx:186,ly:146};
+const V={x:-12,y:95,i:0,wait:0,mv:false,at:0,face:1,sent:false,lx:0,ly:0};
+const VWP=[[-12,95,0],[118,95,0],[160,112,0],[190,140,0],[212,158,3],[196,136,0],[176,106,0],[236,93,0],[256,66,0],[264,45,3],[254,68,0],[236,93,0],[150,95,0],[-12,95,2]];
+const SHEEP=[{x:276,y:132},{x:298,y:156}];
+let lamps=[];const LAMP0=[[238,52],[148,103]];
+const keys={l:0,r:0,u:0,d:0};
+const blockedPx=(x,y)=>{if(x<2||x>W-3||y<12||y>H-1)return true;const p=PT[(y|0)*W+(x|0)];return p===5||p===3;};
+
+// ---------- interaction map ----------
+let stampsN=0,stampRate=0,stampSec=0,flatCellsSec=0;
+function stamp(wi,x,y,moved,R,vx,vy){vx=vx||0;vy=vy||0;const vl=Math.hypot(vx,vy)||1;if(!interOn)return;const r=R/4,cx=x/4,cy=y/4,x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(TW-1,Math.floor(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(TH-1,Math.floor(cy+r));
+  const tc=clamp(cy|0,0,TH-1)*TW+clamp(cx|0,0,TW-1),step=tc!==LSTEP[wi];LSTEP[wi]=tc;if(moved<=0&&!step)return;stampSec++;
+  for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){const dx=tx+.5-cx,dy=(ty+.5-cy)*(ty+.5>cy?1.4:.9),d=Math.hypot(dx,dy);if(d>=r)continue;const f=1-d/r,k=ty*TW+tx;
+    if(moved>0){const was=CRU[k];CRU[k]=Math.min(1,CRU[k]+moved*PRM.crushPerPx/255*Math.sqrt(f)*2);PSH[k]=Math.max(PSH[k],f);TDX[k]=dx>.2?64:dx<-.2?-64:(P.face>0?64:-64);if(vx||vy){TWX[k]=vx/vl*64;TWY[k]=vy/vl*64;}if(CRU[k]-was>.02)flatCellsSec++;}
+    if(step&&wearOn&&f>.3){WEAR[k]+=255*PRM.wearI*(1-WEAR[k]/255)*f*1.6;}}}
+function interUpdate(dt){const dc=dt/PRM.crushFade,dp=dt/PRM.pushFade;
+  for(let k=0;k<NTR;k++){if(CRU[k]>0)CRU[k]=Math.max(0,CRU[k]-dc);if(PSH[k]>0)PSH[k]=Math.max(0,PSH[k]-dp);}
+  if(wearOn){const dw=dt/PRM.wearT;for(let k=0;k<NTR;k++){const w=WEAR[k];if(w<=0)continue;const nw=w-w*dw-.02;WEAR[k]=nw>0?nw:0;const lv=WEAR[k]>PRM.wearDirt?3:WEAR[k]>PRM.wearWorn+30?2:WEAR[k]>PRM.wearWorn?1:0;
+    if(lv!==WLV[k]){if(lv>=2||WLV[k]>=2)netTx(PRM.netTile);WLV[k]=lv;const c=CELL[((k/TW)|0)*4*W+(k%TW)*4];for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const cx=(c%GW)+ox,cy=((c/GW)|0)+oy;if(cx>=0&&cy>=0&&cx<GW&&cy<GH)markBlock(cy*GW+cx);}fieldDirty=true;}}}
+  const walkers=[[P,0,8],[V,1,6]];
+  for(const [w,wi,R] of walkers){const vx=w.x-w.lx,vy=w.y-w.ly,m=Math.hypot(vx,vy);w.lx=w.x;w.ly=w.y;if(w===V&&V.x<0)continue;stamp(wi,w.x,w.y,m,R,vx,vy);rustle(w,wi);}
+  SHEEP.forEach((s,j)=>{const vx=s.x-(s.lx||s.x),vy=s.y-(s.ly||s.y),m=Math.hypot(vx,vy);s.lx=s.x;s.ly=s.y;stamp(2+j,s.x,s.y,m,5,vx,vy);});
+  for(let c=0;c<NC;c++)if(SHK[c]>0)SHK[c]=Math.max(0,SHK[c]-dt);}
+const RCELL=new Int32Array(8).fill(-1);
+function rustle(w,wi){const c=CELL[clamp(w.y|0,0,H-1)*W+clamp(w.x|0,0,W-1)];if(c===RCELL[wi])return;RCELL[wi]=c;
+  if(!interOn||!hides(c))return;SHK[c]=PRM.rustle;
+  for(let k=0;k<4;k++){const j=alloc(KB);if(j<0)break;LX[j]=w.x+(rnd()-.5)*4;LY[j]=w.y;LZ[j]=4;LVX[j]=(rnd()-.5)*30;LVY[j]=(rnd()-.5)*8;LVZ[j]=20+rnd()*25;LT[j]=1;LTG[j]=CT[c]===2?W3:rnd()<.5?G4:G3;LST[j]=0;}
+  if(wi<2&&KON[8]&&sTo!==3&&TP.l<.7&&rnd()<.3)spawnCricket(w.x,w.y);}
+
+// ---------- regrowth, fire, grazing ----------
+let regAcc=0,fireAcc=0,regN=0,regChanged=0;
+function regrowTick(){regN=regrowN;regChanged=0;
+  for(let n=0;n<regrowN;n++){const c=rnd()*NC|0,t=CT[c];if(!FUEL[t])continue;
+    if(BURN[c]===2){if(rnd()<.35){setBurn(c,0);HGT[c]=0;HL[c]=3;regChanged++;}continue;}
+    if(BURN[c])continue;
+    if(HGT[c]<255){if(rnd()<PRM.grow){setH(c,Math.min(255,HGT[c]+64));regChanged++;}}
+    else if(rnd()<PRM.spread){const nb=[c-1,c+1,c-GW,c+GW][rnd()*4|0];if(nb>=0&&nb<NC&&FUEL[CT[nb]]&&!BURN[nb]&&HGT[nb]<192){setH(nb,HGT[nb]+64);regChanged++;}}}}
+function fireTick(){const wet=weather==='rain',list=[];for(let c=0;c<NC;c++)if(BURN[c]===1)list.push(c);
+  for(const c of list){FIRE[c]-=.1;if(FIRE[c]<=0){setBurn(c,2);HGT[c]=0;HL[c]=3;continue;}const cx=c%GW,cy=(c/GW)|0;
+    for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){if(!ox&&!oy)continue;const nx=cx+ox,ny=cy+oy;if(nx<0||ny<0||nx>=GW||ny>=GH)continue;const n=ny*GW+nx,f=FUEL[CT[n]];if(!f||BURN[n])continue;
+      const d=Math.hypot(ox,oy),wk=clamp(1+2.4*windStr*(ox*wcx+oy*wcy)/d,.15,4);let p=.085*f*(.25+HGT[n]/255)*wk*(wet?.35:1)*(snowOf(n)>.5?.12:1);if(rnd()<p){setBurn(n,1);FIRE[n]=1+rnd()*.6;}}
+    if(rnd()<.35){const j=alloc(KB);if(j>=0){LX[j]=cx*8+rnd()*8;LY[j]=cy*8+6;LZ[j]=4;LVX[j]=wcx*windStr*12;LVY[j]=0;LVZ[j]=8+rnd()*6;LT[j]=1.6;LST[j]=2;LTG[j]=R2;}}}}
+function ignite(x,y){const c=CELL[y*W+x];if(FUEL[CT[c]]&&!BURN[c]&&HGT[c]>20){setBurn(c,1);FIRE[c]=1.3;P.reveal=PRM.reveal;}}
+let fx=[];
+function cutAt(x,y){let any=false;for(let c=0;c<NC;c++){const cx=(c%GW)*8+4,cy=((c/GW)|0)*8+4;if(Math.hypot(cx-x,cy-y)>9)continue;if(!FUEL[CT[c]]||BURN[c]||HL[c]===3)continue;setH(c,0);any=true;
+  for(let k=0;k<3;k++){const j=alloc(KB);if(j<0)break;LX[j]=cx+(rnd()-.5)*6;LY[j]=cy+2;LZ[j]=5;LVX[j]=(rnd()-.5)*40;LVY[j]=(rnd()-.5)*10;LVZ[j]=25+rnd()*20;LT[j]=1;LST[j]=0;LTG[j]=CT[c]===2?W3:G4;}
+  if(KON[8]&&rnd()<.25)spawnCricket(cx,cy);if(KON[7]&&rnd()<.02)spawnFrog(cx,cy,true);}
+  fx.push({x,y,t:.2});if(any)P.reveal=PRM.reveal;}
+function plantAt(x,y){for(let c=0;c<NC;c++){const cx=(c%GW)*8+4,cy=((c/GW)|0)*8+4;if(Math.hypot(cx-x,cy-y)>11)continue;if(!FUEL[CT[c]])continue;if(BURN[c]===2){setBurn(c,0);setH(c,70);}else if(!BURN[c])setH(c,HGT[c]+90);}
+  for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++)if(Math.hypot(tx*4+2-x,ty*4+2-y)<11)WEAR[ty*TW+tx]*=.4;}
+
+// ---------- small life: one pooled struct of arrays ----------
+const KD=[['bfly','butterflies',24],['bee','bees',14],['dfly','dragonflies',6],['gnat','gnat swarms',3],['moth','moths',18],['ffly','fireflies',90],['rabbit','rabbits',5],['frog','frogs',5],['cricket','crickets',12],['drift','pollen/seeds',70],['bit','bits',180]];
+const KB=10,KS=[],KC=[];let NPL=0;for(const k of KD){KS.push(NPL);KC.push(k[2]);NPL+=k[2];}
+const LA=new Uint8Array(NPL),LX=new Float32Array(NPL),LY=new Float32Array(NPL),LZ=new Float32Array(NPL),LVX=new Float32Array(NPL),LVY=new Float32Array(NPL),LVZ=new Float32Array(NPL),LT=new Float32Array(NPL),LT2=new Float32Array(NPL),LPH=new Float32Array(NPL),LANG=new Float32Array(NPL),LB=new Float32Array(NPL),LCK=new Float32Array(NPL),LTD=new Float32Array(NPL),LST=new Uint8Array(NPL),LC=new Uint8Array(NPL),LTG=new Int32Array(NPL);
+const ALIVE=new Int32Array(KD.length),TGT=new Float32Array(KD.length),KON=new Uint8Array(KD.length).fill(1),SPT=new Float32Array(KD.length);
+const NGM=20,GMX=new Float32Array(3*NGM),GMY=new Float32Array(3*NGM),GVX=new Float32Array(3*NGM),GVY=new Float32Array(3*NGM);
+let holdT=0,sleeping=0,threatChecks=0,threatSec=0,nightRoll=1,nightRollName='normal',lastPhase='';
+function alloc(k){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(!LA[j]){LA[j]=1;ALIVE[k]++;LST[j]=0;LT[j]=0;LT2[j]=-1;LZ[j]=0;LVX[j]=LVY[j]=LVZ[j]=0;LTG[j]=-1;LPH[j]=rnd()*6.283;LANG[j]=rnd()*6.283;LB[j]=0;LC[j]=0;LCK[j]=rnd()*PRM.threatDt;LTD[j]=999;return j;}return -1;}
+function kill(j,k){if(LA[j]){LA[j]=0;ALIVE[k]--;}}
+let TAX=0,TAY=0;
+function threat(j,x,y,fire){LCK[j]-=1;if(LCK[j]>0)return LTD[j];threatChecks++;LCK[j]=1;
+  let bd=1e9,ax=0,ay=0;const chk=(px,py)=>{const d=Math.hypot(x-px,y-py);if(d<bd){bd=d;ax=x-px;ay=y-py;}};chk(P.x,P.y);if(V.x>0)chk(V.x,V.y);
+  if(fire){const c=CELL[clamp(y|0,0,H-1)*W+clamp(x|0,0,W-1)],cx=c%GW,cy=(c/GW)|0;for(let oy=-3;oy<=3;oy++)for(let ox=-3;ox<=3;ox++){const nx=cx+ox,ny=cy+oy;if(nx>=0&&ny>=0&&nx<GW&&ny<GH&&BURN[ny*GW+nx]===1)chk(nx*8+4,ny*8+4);}}
+  const l=Math.hypot(ax,ay)||1;LVZ[j]=ax/l;LB[j]=ay/l;LTD[j]=bd;return bd;}
+const tickThreat=(j,dt)=>{LCK[j]-=dt/PRM.threatDt-1;};
+const tuftOK=k=>k>=0&&k<TN&&TTOP[k]>0;
+function nearFlower(x,y,maxd){let best=-1,bd=maxd;for(let n=0;n<8;n++){const k=FLW[rnd()*FLW.length|0];if(!tuftOK(k)||TT[k]!==3)continue;const d=Math.hypot(TX[k]-x,TY[k]-y);if(d<bd){bd=d;best=k;}}return best;}
+function spawnCricket(x,y){const j=alloc(8);if(j<0)return;LX[j]=x+(rnd()-.5)*6;LY[j]=y+2;LTG[j]=1+(rnd()*3|0);LT[j]=0;LST[j]=1;LANG[j]=rnd()*6.283;}
+function spawnFrog(x,y,flee){const j=alloc(7);if(j<0)return;LX[j]=x;LY[j]=y;LST[j]=flee?1:0;LT[j]=flee?0:2+rnd()*4;if(flee){const a=Math.atan2(PCY-y,PCX-x);LANG[j]=a;}}
+function spawnAt(k,prefill){const j=alloc(k);if(j<0)return -1;const edge=()=>{const s=rnd()<.5;LX[j]=s?-6:W+6;LY[j]=30+rnd()*140;LANG[j]=s?0:Math.PI;};
+  switch(k){
+  case 0:{const f=nearFlower(160,140,999);if(prefill&&f>=0){LX[j]=TX[f]+(rnd()-.5)*30;LY[j]=TY[f]+(rnd()-.5)*20;}else edge();LZ[j]=8;LC[j]=rnd()*3|0;LT[j]=1+rnd()*3;LTG[j]=-1;break;}
+  case 1:LX[j]=292;LY[j]=76;LZ[j]=6;LST[j]=1;LT[j]=0;LTG[j]=nearFlower(292,76,180);break;
+  case 2:{const a=rnd()*6.283,r=rnd()*.7;LX[j]=PCX+Math.cos(a)*PRX*r;LY[j]=PCY+Math.sin(a)*PRY*r;LZ[j]=5;LT[j]=rnd()*2;break;}
+  case 3:{const g=j-KS[3];LX[j]=80+rnd()*60;LY[j]=112+rnd()*16;for(let m=0;m<NGM;m++){const q=g*NGM+m;GMX[q]=LX[j]+(rnd()-.5)*10;GMY[q]=LY[j]-6+(rnd()-.5)*6;GVX[q]=(rnd()-.5)*10;GVY[q]=(rnd()-.5)*10;}break;}
+  case 4:{if(!lamps.length){kill(j,k);return -1;}const li=rnd()*lamps.length|0;LTG[j]=li;LX[j]=lamps[li].x;LY[j]=lamps[li].y-9;LT[j]=4+rnd()*3;LVX[j]=(rnd()<.5?-1:1)*(3+rnd()*2);break;}
+  case 5:{let x,y,n=0;do{x=8+rnd()*304;y=24+rnd()*150;n++;}while(n<20&&(PT[(y|0)*W+(x|0)]>=3||REG[(y|0)*W+(x|0)]===0));LX[j]=x;LY[j]=y;LZ[j]=6+rnd()*4;LT[j]=rnd();LC[j]=0;LPH[j]=PRM.fflyPer+(rnd()*2-1)*PRM.fflyJit;LT2[j]=-1;LST[j]=0;LANG[j]=PRM.fflyFlash[0]+rnd()*(PRM.fflyFlash[1]-PRM.fflyFlash[0]);break;}
+  case 6:{let x,y,n=0;do{x=10+rnd()*300;y=20+rnd()*150;n++;}while(n<30&&(!hides(CELL[(y|0)*W+(x|0)])||Math.hypot(x-P.x,y-P.y)<60||blockedPx(x,y)));LX[j]=x;LY[j]=y;LT[j]=1+rnd()*3;LST[j]=0;break;}
+  case 7:{let x,y,n=0;do{const a=rnd()*6.283;x=PCX+Math.cos(a)*PRX*1.12;y=PCY+Math.sin(a)*PRY*1.12;n++;}while(n<20&&(blockedPx(x,y)||Math.hypot(x-P.x,y-P.y)<50));LX[j]=x;LY[j]=y;LT[j]=2+rnd()*4;break;}
+  case 9:{const s=sTo;if(s===3){LC[j]=3;LX[j]=rnd()*W;LY[j]=rnd()*H;LZ[j]=10+rnd()*40;}else if(s===2){const T=TREES[rnd()*3|0];LC[j]=2;LX[j]=T.x+(rnd()-.5)*T.r*2;LY[j]=T.y+2;LZ[j]=8+T.r+rnd()*T.r;LTG[j]=rnd()<.5?L2:L3;}
+    else{const f=FLW.length?FLW[rnd()*FLW.length|0]:-1;if(f<0||!tuftOK(f)){kill(j,k);return -1;}LC[j]=(s===0&&TV[f]===1)?1:0;LX[j]=TX[f];LY[j]=TY[f];LZ[j]=TTOP[f]+1;LTG[j]=LC[j]?FWc:(rnd()<.6?FYc:FWc);}
+    LT[j]=8+rnd()*8;break;}}
+  return j;}
+function targets(){const ph=phaseOf(tod),s=sTo,wet=weather==='rain',dk=TP.l,storm=windStr>.8,d=density*Math.min(stressN,4),day=ph==='day';
+  const before3=tod<.625;
+  TGT[0]=storm||wet?0:(day?(before3?[8,10,4,0][s]:[3,4,1,0][s]):ph==='dawn'?[1,2,0,0][s]:0);
+  TGT[1]=day&&!wet?[6,8,2,0][s]:0;
+  TGT[2]=(day||ph==='dusk')&&!storm?[2,4,1,0][s]:0;
+  TGT[3]=ph==='dusk'?[1,2,1,0][s]:day&&s===1?1:0;
+  TGT[4]=dk>.6?lamps.length*[2,3,2,0][s]:0;
+  const aft=((tod-.735+1)%1);TGT[5]=dk>.72&&aft<.5?[10,48,0,0][s]*nightRoll*(aft<.125?1:.25)*(wet?1.2:1):0;
+  TGT[6]=wet?0:[2,2,2,1][s]*(ph==='night'?.5:1);
+  TGT[7]=[3,3,1,0][s]*(wet?2:1)*(ph==='night'?1.5:1);
+  TGT[8]=0;TGT[9]=s===3?40:s===2?12:day?[18,12,0,0][s]:0;
+  const cap=[10,20,10,10][s];let amb=TGT[0]+TGT[1]+TGT[6];if(amb>cap){const f=cap/amb;TGT[0]*=f;TGT[1]*=f;TGT[6]*=f;}
+  for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;TGT[k]=KON[k]?Math.min(KC[k],Math.round(TGT[k]*(k===3||k===4?Math.min(d,1.5):d))):0;}}
+function spawnTick(dt){if(holdT>0){holdT-=dt;return;}for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;SPT[k]-=dt;if(SPT[k]>0)continue;SPT[k]=k===0?2.5+rnd()*2.5:k===5||k===9?.15:.6;
+  if(ALIVE[k]<TGT[k]){const n=k===0?1+(rnd()*2|0):1;for(let m=0;m<n;m++)spawnAt(k,false);}
+  else if(ALIVE[k]>TGT[k]){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(LA[j]&&LST[j]!==9){LST[j]=9;break;}}}}
+function prefill(){targets();for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;while(ALIVE[k]<TGT[k])if(spawnAt(k,true)<0)break;}}
+// per-kind updates
+const offscreen=(x,y,m)=>x<-m||x>W+m||y<-m||y>H+m;
+function upBfly(j,dt){const st=LST[j];
+  if(st===1){const k=LTG[j];if(!tuftOK(k)){LST[j]=0;LVZ[j]=20;return;}LX[j]=TX[k]+TL[k]*(TFL[k]?-1:1);LY[j]=TY[k];LZ[j]=TTOP[k]+1;LT[j]-=dt;LPH[j]+=dt;
+    const th=threat(j,LX[j],LY[j]-LZ[j],false);if(th<PRM.bflyFlee||LT[j]<=0||LST[j]===9||TP.l>.95){LST[j]=0;LTG[j]=-1;LVZ[j]=30;LT2[j]=th<PRM.bflyFlee?1.2:0;LT[j]=3+rnd()*4;}return;}
+  // Stardew flight: flap kicks plus gravity, 4 or 6 flap frames, then a 200 ms rest
+  LT2[j]-=dt;LPH[j]-=dt;
+  if(LPH[j]<=0){if(LC[j]>>2===0){LC[j]=(LC[j]&3)|((rnd()<.5?4:6)<<2);LANG[j]+=0;}
+    const left=LC[j]>>2;if(left>0){LC[j]=(LC[j]&3)|((left-1)<<2);LPH[j]=.045+rnd()*.035;if((left&1)===0){LVZ[j]+=PRM.bflyKick[0]+rnd()*(PRM.bflyKick[1]-PRM.bflyKick[0]);LVX[j]=clamp(LVX[j]+(rnd()*2-1)*PRM.bflySide,-PRM.bflyCap,PRM.bflyCap);LVY[j]=clamp(LVY[j]+(rnd()*2-1)*PRM.bflySide*.7,-PRM.bflyCap,PRM.bflyCap);}}
+    else{LPH[j]=.2;LC[j]=(LC[j]&3);LC[j]|=0;LPH[j]=.2;LC[j]=(LC[j]&3)|(0);LB[j]=1;}}
+  if(LB[j]>0&&LPH[j]<=.0001)LB[j]=0;
+  let sx=0,sy=0;const x=LX[j],y=LY[j],th=threat(j,x,y,false);
+  if(th<PRM.bflyFlee&&LT2[j]<=0)LT2[j]=1.2;
+  if(LT2[j]>0){sx=LVZ.length&&0;sx=LVXa(j)*60;sy=LVYa(j)*60;}
+  else if(st===9){sx=x<W/2?-40:40;}
+  else{LT[j]-=dt;if(LTG[j]<0&&LT[j]<=0){LTG[j]=nearFlower(x,y,90);LT[j]=4+rnd()*4;}
+    const k=LTG[j];if(tuftOK(k)){const tx=TX[k]-x,ty=TY[k]-y,d=Math.hypot(tx,ty)||1;sx=tx/d*30;sy=ty/d*30;if(d<3&&LZ[j]<TTOP[k]+5){LST[j]=1;LT[j]=PRM.bflyPerch[0]+rnd()*(PRM.bflyPerch[1]-PRM.bflyPerch[0]);LVX[j]=LVY[j]=LVZ[j]=0;return;}}
+    if(x<16)sx+=30;if(x>W-16)sx-=30;if(y<24)sy+=30;if(y>H-8)sy-=30;}
+  const rmF=rm?.5:1;LVX[j]+=(sx-LVX[j])*Math.min(1,dt*1.5);LVY[j]+=(sy-LVY[j])*Math.min(1,dt*1.5);
+  LX[j]+=LVX[j]*dt*rmF;LY[j]+=LVY[j]*dt*rmF*.8;LVZ[j]-=PRM.bflyGrav*dt;LZ[j]+=LVZ[j]*dt;
+  const zmin=tuftOK(LTG[j])?TTOP[LTG[j]]+1:4;if(LZ[j]<zmin){LZ[j]=zmin;if(LVZ[j]<0)LVZ[j]=0;}if(LZ[j]>16){LZ[j]=16;if(LVZ[j]>0)LVZ[j]=0;}
+  if(offscreen(LX[j],LY[j],10))kill(j,0);}
+function LVXa(j){return LVZ_(j,0);}function LVYa(j){return LVZ_(j,1);}
+function LVZ_(j,a){const dx=LX[j]-P.x,dy=LY[j]-P.y,l=Math.hypot(dx,dy)||1;return a?dy/l:dx/l;}
+function upBee(j,dt){const k=LTG[j];
+  if(LST[j]===9){const dx=292-LX[j],dy=74-LY[j],d=Math.hypot(dx,dy);if(d<2){kill(j,1);return;}LX[j]+=dx/d*40*dt;LY[j]+=dy/d*40*dt;return;}
+  if(LST[j]===1){if(!tuftOK(k)){LTG[j]=nearFlower(LX[j],LY[j],120);if(LTG[j]<0)LST[j]=9;return;}const tx=TX[k],ty=TY[k],dx=tx-LX[j],dy=ty-LY[j],d=Math.hypot(dx,dy);
+    if(d<1.5){LST[j]=0;LT[j]=PRM.beeHop*(.5+rnd()*.7);return;}const s=Math.min(d,48*dt);LX[j]+=dx/d*s;LY[j]+=dy/d*s;LZ[j]+=((TTOP[k]+3)-LZ[j])*Math.min(1,dt*6);return;}
+  LT[j]-=dt;if(tuftOK(k)){LZ[j]=TTOP[k]+3;LX[j]=TX[k]+TL[k]*(TFL[k]?-1:1);}if(LT[j]<=0){LTG[j]=nearFlower(LX[j],LY[j],60);LST[j]=1;if(LTG[j]<0)LST[j]=9;}}
+function upDfly(j,dt){LT[j]-=dt;
+  if(LST[j]===1){LX[j]+=LVX[j]*dt;LY[j]+=LVY[j]*dt;if(LT[j]<=0){LST[j]=0;LT[j]=.8+rnd()*1.8;LVX[j]=LVY[j]=0;}}
+  else{LX[j]+=Math.sin(simT*2+LPH[j])*PRM.dflyHover*dt;LY[j]+=Math.cos(simT*1.7+LPH[j])*PRM.dflyHover*.6*dt;
+    if(LT[j]<=0){if(LST[j]===9){LANG[j]=LX[j]<W/2?Math.PI:0;}else{const a=rnd()*6.283,r=rnd()*.85,tx=PCX+Math.cos(a)*PRX*r,ty=PCY+Math.sin(a)*PRY*r;LANG[j]=Math.atan2(ty-LY[j],tx-LX[j]);}
+      const sp=PRM.dflyDart*(rm?.5:1);LVX[j]=Math.cos(LANG[j])*sp;LVY[j]=Math.sin(LANG[j])*sp*.8;LST[j]=1;LT[j]=.15+rnd()*.25;LC[j]=LVX[j]<0?1:0;}}
+  if(offscreen(LX[j],LY[j],8))kill(j,2);}
+function upGnat(j,dt){const g=j-KS[3];LX[j]+=Math.sin(simT*.3+LPH[j])*3*dt;LY[j]+=Math.cos(simT*.23+LPH[j])*2*dt;if(LST[j]===9){kill(j,3);return;}
+  for(let m=0;m<NGM;m++){const q=g*NGM+m,dx=GMX[q]-LX[j],dy=GMY[q]-(LY[j]-7),d=Math.hypot(dx,dy),k=2.5+d*.35;
+    GVX[q]+=(-dx*k+(rnd()-.5)*200)*dt;GVY[q]+=(-dy*k+(rnd()-.5)*200)*dt;GVX[q]*=1-dt*1.2;GVY[q]*=1-dt*1.2;GMX[q]+=GVX[q]*dt;GMY[q]+=GVY[q]*dt;}}
+function upMoth(j,dt){const L=lamps[LTG[j]];if(!L||TP.l<.5){kill(j,4);return;}const cx=L.x,cy=L.y-9;LT[j]-=dt;
+  if(LT[j]<=0){const r=rnd();if(r<.4){LVX[j]=-LVX[j];}else if(r<.75){LT2[j]=.35;}LT[j]=1.2+rnd()*3;}
+  if(LT2[j]>0)LT2[j]-=dt;else LANG[j]+=LVX[j]*dt;const R=(LT2[j]>0?2:5)+2.5*Math.sin(simT*1.7+LPH[j]*3);
+  LX[j]+=((cx+Math.cos(LANG[j])*R)-LX[j])*Math.min(1,dt*8);LY[j]+=((cy+Math.sin(LANG[j])*R*.7)-LY[j])*Math.min(1,dt*8);if(LST[j]===9)kill(j,4);}
+// fireflies: uniform grid for neighbour lookup
+const FGW=7,FGH=4,FHEAD=new Int32Array(FGW*FGH),FNEXT=new Int32Array(NPL);let flashSec=0;
+function buildFGrid(){FHEAD.fill(-1);const s=KS[5],e=s+KC[5];for(let j=s;j<e;j++){if(!LA[j])continue;const g=clamp(LY[j]/48|0,0,FGH-1)*FGW+clamp(LX[j]/48|0,0,FGW-1);FNEXT[j]=FHEAD[g];FHEAD[g]=j;}}
+function couple(j){if(holdT>0)return;const gx=clamp(LX[j]/48|0,0,FGW-1),gy=clamp(LY[j]/48|0,0,FGH-1);
+  for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const x=gx+ox,y=gy+oy;if(x<0||y<0||x>=FGW||y>=FGH)continue;for(let i=FHEAD[y*FGW+x];i>=0;i=FNEXT[i]){if(i===j||LT2[i]>=0)continue;const d=Math.hypot(LX[i]-LX[j],LY[i]-LY[j]);if(d<PRM.fflyR){LT[i]+=LT[i]*PRM.couple;if(LT[i]>1)LT[i]=1;}}}}
+function upFfly(j,dt){LANG[j]+=(rnd()-.5)*3*dt;const x=LX[j],y=LY[j];if(x<8)LANG[j]=0;else if(x>W-8)LANG[j]=Math.PI;if(y<24)LANG[j]=1.57;else if(y>H-4)LANG[j]=-1.57;
+  const sp=rm?2:4;LX[j]+=Math.cos(LANG[j])*sp*dt;LY[j]+=Math.sin(LANG[j])*sp*.7*dt;
+  const lit=LT2[j]>=0;
+  if(syncF){LT[j]+=dt/PRM.syncCycle;if(lit){LT2[j]+=dt;const fi=Math.floor(LT2[j]/PRM.syncGap),on=LT2[j]-fi*PRM.syncGap<PRM.syncOn&&fi<LC[j];if(on){if(LB[j]<.99){flashSec++;couple(j);}LB[j]=1;}else LB[j]*=Math.pow(.9,dt*60);if(fi>=LC[j]+1)LT2[j]=-1;}
+    else LB[j]*=Math.pow(.9,dt*60);
+    if(LT[j]>=1){LT[j]=0;LT2[j]=0;LC[j]=5+(rnd()*4|0);if(LST[j]===9){kill(j,5);return;}}}
+  else{LT[j]+=dt/LPH[j];if(lit){LT2[j]+=dt;if(LT2[j]<.4){LB[j]=1-Math.floor(LT2[j]/.1)/4;LVZ[j]=LT2[j]<.1?-3:9;}else{LT2[j]=-1;LB[j]=0;}}else{LB[j]=0;LVZ[j]+=((6+3*Math.sin(simT*.6+j)-LZ[j])*.8-LVZ[j])*dt*2;}
+    if(LT[j]>=1){LT[j]=0;LT2[j]=0;LB[j]=1;flashSec++;couple(j);if(LST[j]===9){kill(j,5);return;}}
+    LZ[j]=clamp(LZ[j]+LVZ[j]*dt,2,16);}}
+function hopTo(j,a,dist,dur,peak){LANG[j]=a;LVX[j]=Math.cos(a)*dist/dur;LVY[j]=Math.sin(a)*dist/dur*.8;LT[j]=0;LT2[j]=dur;LB[j]=peak;}
+function hopStep(j,dt){LT[j]+=dt;const u=LT[j]/LT2[j];LX[j]+=LVX[j]*dt;LY[j]+=LVY[j]*dt;LZ[j]=Math.sin(Math.PI*Math.min(1,u))*LB[j];return u>=1;}
+function upRabbit(j,dt){tickThreat(j,dt);const th=threat(j,LX[j],LY[j],true);
+  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;if(th<PRM.rabbitFlee){LST[j]=2;hopTo(j,Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
+    else if(LT[j]<=0){LST[j]=1;hopTo(j,rnd()*6.283,4,.2,2);}return;}
+  if(hopStep(j,dt)){LZ[j]=0;stamp(4+(j&3),LX[j],LY[j],3,3);
+    if(LST[j]===1){LST[j]=0;LT[j]=2+rnd()*5;return;}
+    const c=CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)];
+    if(th>PRM.rabbitStop||offscreen(LX[j],LY[j],4)){if(hides(c)||th>PRM.rabbitStop*1.2||offscreen(LX[j],LY[j],4)){kill(j,6);return;}}
+    let a=th<PRM.rabbitStop?Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.6:LANG[j];for(let n=0;n<6;n++){const nx=LX[j]+Math.cos(a)*10,ny=LY[j]+Math.sin(a)*8;if(!blockedPx(nx,ny)||offscreen(nx,ny,0))break;a+=1.1;}
+    hopTo(j,a,PRM.rabbitSpeed*.22,.22,3);}
+  if(LST[j]===9&&LST[j]!==2){}}
+function LVZ_t(j){return LVZ[j];}
+function upFrog(j,dt){tickThreat(j,dt);
+  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;const th=threat(j,LX[j],LY[j],true);if(th<PRM.frogFlee||LST[j]===9){LST[j]=1;const a=Math.atan2(PCY-LY[j],PCX-LX[j]);hopTo(j,a,14,PRM.frogLeap,PRM.frogPeak);}else if(LT[j]<=0){LT[j]=3+rnd()*5;}return;}
+  if(LST[j]===1&&LT2[j]<=0)hopTo(j,LANG[j],14,PRM.frogLeap,PRM.frogPeak);
+  if(hopStep(j,dt)){LZ[j]=0;const i=clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1);if(PT[i]===3){const b=alloc(KB);if(b>=0){LX[b]=LX[j];LY[b]=LY[j];LST[b]=3;LT[b]=.5;LZ[b]=0;}kill(j,7);return;}hopTo(j,Math.atan2(PCY-LY[j],PCX-LX[j]),14,PRM.frogLeap,PRM.frogPeak);}}
+function upCricket(j,dt){if(LT2[j]<=0)hopTo(j,LANG[j],6,.18,4);if(hopStep(j,dt)){LZ[j]=0;LTG[j]--;if(LTG[j]<=0){kill(j,8);return;}hopTo(j,LANG[j]+(rnd()-.5)*1.5,6,.18,4);}}
+function upDrift(j,dt){const k=TRP[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)],g=WH[k]||0,ws=windStr<PRM.windMin?0:windStr,c=LC[j];
+  LX[j]+=(wcx*ws*(14+g*26)+Math.sin(simT*1.3+LPH[j])*3)*dt;LY[j]+=(wcy*ws*10+Math.cos(simT*.9+LPH[j])*2)*dt;LT[j]-=dt;
+  if(c===3)LZ[j]-=10*dt;else if(c===2){LZ[j]-=6*dt;LX[j]+=Math.sin(simT*3+LPH[j])*6*dt;}else if(c===1)LZ[j]=Math.max(0,LZ[j]-PRM.seedFall*dt*(.3-g*.4)+Math.sin(simT+LPH[j])*.3*dt);else LZ[j]=4+Math.sin(simT*.7+LPH[j])*2;
+  if(c===0){if(LX[j]>W)LX[j]-=W;else if(LX[j]<0)LX[j]+=W;}
+  if(LZ[j]<=0&&c>=1){LZ[j]=0;if(LT[j]>1.5)LT[j]=1.5;}
+  if(LT[j]<=0||offscreen(LX[j],LY[j],6)||(LST[j]===9&&c!==0))kill(j,9);}
+function upBit(j,dt){LT[j]-=dt;const st=LST[j];if(st===3){if(LT[j]<=0)kill(j,KB);return;}
+  if(st===2){LX[j]+=LVX[j]*dt;LZ[j]+=LVZ[j]*dt;}else{LVZ[j]-=70*dt;LX[j]+=LVX[j]*dt;LY[j]+=LVY[j]*dt;LZ[j]+=LVZ[j]*dt;if(LZ[j]<0){LZ[j]=0;LVX[j]=LVY[j]=LVZ[j]=0;}}
+  if(LT[j]<=0)kill(j,KB);}
+const UPD=[upBfly,upBee,upDfly,upGnat,upMoth,upFfly,upRabbit,upFrog,upCricket,upDrift,upBit];
+function lifeUpdate(dt){const ph=phaseOf(tod);if(ph!==lastPhase){if(ph==='dusk'){const r=rnd();nightRoll=r<1/9?2:r<1/9+1/3?0:1;nightRollName=nightRoll===2?'heavy':nightRoll===0?'empty':'normal';}lastPhase=ph;}
+  if(frame%15===0&&holdT<=0)targets();spawnTick(dt);buildFGrid();sleeping=0;
+  for(let k=0;k<KD.length;k++){const s=KS[k],e=s+KC[k],f=UPD[k];
+    for(let j=s;j<e;j++){if(!LA[j])continue;
+      const rest=(k===0&&LST[j]===1)||((k===6||k===7)&&LST[j]===0);
+      if(rest&&LTD[j]>70){if((frame+j)&3){sleeping++;continue;}f(j,dt*4);}else f(j,dt);
+      if(LA[j])CWC[CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)]]+=12;}}}
+
+// ---------- walkers ----------
+function moveWalker(w,ix,iy,sp,dt){const l=Math.hypot(ix,iy);w.mv=l>0;if(!w.mv)return;const s=sp*dt/l,nx=w.x+ix*s,ny=w.y+iy*s;if(!blockedPx(nx,w.y))w.x=nx;if(!blockedPx(w.x,ny))w.y=ny;w.at+=dt;if(ix)w.face=ix>0?1:-1;}
+function stepWalkers(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
+  if(ix||iy)P.hasT=false;else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);if(d<1.2)P.hasT=false;else{ix=dx/d;iy=dy/d;}}
+  const pc=CELL[(P.y|0)*W+(P.x|0)];moveWalker(P,ix,iy,hides(pc)?29:36,dt);if(P.reveal>0)P.reveal-=dt;
+  const pc2=CELL[(P.y|0)*W+(P.x|0)];P.hideT=hides(pc2)&&P.reveal<=0?(P.hideT||0)+dt:0;const vc2=V.x>0?CELL[clamp(V.y|0,0,H-1)*W+clamp(V.x|0,0,W-1)]:-1;V.hideT=vc2>=0&&hides(vc2)?(V.hideT||0)+dt:0;
+  // villager
+  if(V.wait>0){V.wait-=dt;V.mv=false;}else{const wp=VWP[V.i],dx=wp[0]-V.x,dy=wp[1]-V.y,d=Math.hypot(dx,dy);if(d<1.5){V.wait=wp[2];V.i=(V.i+1)%VWP.length;if(V.i===0){V.x=VWP[0][0];V.y=VWP[0][1];}}else{V.x+=dx/d*24*dt;V.y+=dy/d*24*dt;V.mv=true;V.at+=dt;V.face=dx>0?1:-1;}}
+  // sheep graze
+  for(const s of SHEEP){s.t=(s.t||0)-dt;if(s.st===1){const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);if(d<1){s.st=0;s.t=3+rnd()*3;}else{s.x+=dx/d*8*dt;s.y+=dy/d*8*dt;s.face=dx>0?1:-1;s.at=(s.at||0)+dt;}}
+    else{if(((simT*.8)|0)!==((( simT-dt)*.8)|0)){const c=CELL[(s.y|0)*W+(s.x|0)];if(FUEL[CT[c]]&&!BURN[c]&&HGT[c]>0)setH(c,HGT[c]-50);}
+      if(s.t<=0){let bx=s.x,by=s.y,bh=-1;for(let n=0;n<6;n++){const x=260+rnd()*50,y=118+rnd()*50,c=CELL[(y|0)*W+(x|0)];if(HGT[c]>bh){bh=HGT[c];bx=x;by=y;}}s.tx=bx;s.ty=by;s.st=1;}}}}
+
+// ---------- render ----------
+const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};
+let flatN=0,tuftsDrawn=0,settled=0,lifeDrawAcc=0,playerHidden=false,villHidden=false;
+const ip=(x,y,c)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=c;if(smooth)AW[i]=255;}};
+const setL=(x,y,l)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x,cur=(IDX[i]>>7)&7;if(l>cur)IDX[i]=(IDX[i]&127)|(l<<7);}};
+function blitS(S,x0,y0,flip,crop,mask){const w=S.w,h=S.h-(crop||0),p=S.p;for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+(flip?w-1-x:x)];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;if(mask&&(y<4||((X+Y)&1)))continue;const i=Y*W+X;IDX[i]=v-1;if(smooth)AW[i]=255;}}}
+function blend(x,y,c,a){if(a<.06||x<0||x>=W||y<0||y>=H)return;const i=y*W+x;if(a>.94){IDX[i]=c;AW[i]=255;return;}IDX2[i]=IDX[i];IDX[i]=c;AW[i]=a*255|0;}
+let oscT1=0,oscT2=0,swayT=0;
+function tuftState(k){// returns key or -1, also lean in tuftLf
+  const c=TCELL[k];if(BURN[c]===2){TTOP[k]=0;return -1;}let hl=HL[c];const t=TT[k];
+  if(t===3&&!(FMASK[TV[k]]&(1<<SEAC[c]))){TTOP[k]=0;return -1;}
+  if(t===2&&SEAC[c]===3)hl=(k%7)?3:Math.max(hl,1);
+  const tr=TTR[k];if(wearOn){const wl=WLV[tr];if(wl>=3){TTOP[k]=0;return -1;}if(wl>=2&&hl<2)hl=2;else if(wl>=1&&hl<1)hl=1;}
+  const CR=CRU[tr],I=CR>1?1:CR,ps=PSH[tr],sh=SHK[c],w=WL[tr];
+  if(w===0&&I===0&&ps===0&&sh===0&&TKEY[k]>=0&&!smooth&&(TKEY[k]/(LN*2*3)|0)%4===hl){settled++;tuftLf=0;tuftQ=0;return TKEY[k];}
+  const fl=TFL[k]?-1:1,spr=Math.max(PRM.spring,1-I),fac=TFAC[k];
+  let lf=(w+(w>0?(.25+windStr*.5)*(.6*sinT(TPH[k]+oscT1)+.4*sinT(TPH[k]*1.7+oscT2)):0))*STF[t]*spr*wcx;
+  lf+=TDX[tr]/64*(I*2+ps*PRM.pushPx)*fac;
+  if(sh>0){const fi=Math.floor((PRM.rustle-sh)/(PRM.rustle/5));lf+=[1,-1,1,-1,0][fi]||0;}
+  let L=Math.round(lf);if(L>6)L=6;else if(L<-6)L=-6;
+  let q=CR>.67?2:CR>.235?1:0;if(!q&&Math.abs(wcy)*w*STF[t]>3.4)q=1;
+  const hi=WH[tr]>.5&&windStr>=.2&&t!==0?1:0;tuftLf=lf;tuftQ=q;
+  const kk=key(t,TV[k],hl,q,(fl<0?-L:L),hi);TKEY[k]=kk;return kk;}
+let tuftLf=0,tuftQ=0;
+function drawTuft(k){const kk=tuftState(k);if(kk<0)return;if(tuftQ===2&&!smooth&&TT[k]!==4&&snowOf(TCELL[k])<.5){flatStroke(k);return;}const c=TCELL[k],s=SOFF[kk],e=SOFF[kk+1],x0=TX[k],y0=TY[k],fl=TFL[k]?-1:1,snow=snowOf(c),sr=snow>.5?(TT[k]===0?4:2):0;
+  TTOP[k]=SHM[kk];TL[k]=(SPX[e-1]-SPX[s])||0;
+  if(smooth){const kb=kk-(((kk>>1)%LN)-6)*2,sb=SOFF[kb],eb=SOFF[kb+1],hm=SHM[kb],lf=tuftLf;
+    for(let p=sb;p<eb;p++){const r=-SPY[p];if(r<sr)continue;const y=y0+SPY[p];if(y<0)continue;const fx=x0+SPX[p]*fl+lf*POW[Math.min(16,(r/hm*16)|0)],xi=Math.floor(fx),f=fx-xi;blend(xi,y,SPC[p],1-f);blend(xi+1,y,SPC[p],f);}}
+  else for(let p=s;p<e;p++){if(sr&&-SPY[p]<sr)continue;const x=x0+SPX[p]*fl,y=y0+SPY[p];if(x<0||x>=W||y<0)continue;IDX[y*W+x]=SPC[p];}
+  if(sr)ip(x0,y0,S2);
+  if(weather==='rain'&&(k&7)===0&&((frame+k*13)%60)<6){ip(x0+SPX[e-1]*fl,y0+SPY[e-1],GL);}
+  tuftsDrawn++;CWC[c]+=e-s;}
+function flatStroke(k){const tr=TTR[k],t=TT[k],len=t===0?1:t===3?2:3;let dx=TWX[tr]/64,dy=TWY[tr]/64;if(!dx&&!dy)dx=TDX[tr]/64||1;if(TFL[k]){dx+=.35;}const x0=TX[k],y0=TY[k];
+  for(let s=0;s<=len;s++){const x=Math.round(x0+dx*s+(k&1)),y=Math.round(y0+dy*s*.6);if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;IDX[i]=(IDX[i]&~127)|DARKB[IDX[i]&127];}
+  if(t===3){const x=Math.round(x0+dx*(len+1)),y=Math.round(y0+dy*(len+1)*.6);ip(x,y,DARKB[FCOL[TV[k]]]===FCOL[TV[k]]?FCOL[TV[k]]:FCOL[TV[k]]);}
+  TTOP[k]=0;tuftsDrawn++;flatN++;CWC[TCELL[k]]+=len+1;}
+// entities
+const ENY=new Float32Array(64),ENK=new Uint8Array(64),ENJ=new Int16Array(64),EO=new Int16Array(64);let EN=0;
+const addE=(y,k,j)=>{if(EN<64){ENY[EN]=y;ENK[EN]=k;ENJ[EN]=j;EN++;}};
+function buildEnts(){EN=0;addE(P.y,0,0);if(V.x>-6&&(!villHidden||leak||V.adj))addE(V.y,1,0);SHEEP.forEach((s,j)=>addE(s.y,2,j));TREES.forEach((t,j)=>addE(t.y,3,j));lamps.forEach((l,j)=>addE(l.y,4,j));
+  for(const k of[6,7,8]){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(LA[j])addE(LY[j],5,j);}
+  for(let i=0;i<EN;i++)EO[i]=i;for(let i=1;i<EN;i++){const v=EO[i];let j=i-1;while(j>=0&&ENY[EO[j]]>ENY[v]){EO[j+1]=EO[j];j--;}EO[j+1]=v;}}
+function drawEnt(e,crop){const k=ENK[e],j=ENJ[e];
+  if(k===0){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,crop?6:0);}
+  else if(k===1){const S=V.mv?VIL[1+((V.at*7|0)&1)]:VIL[0];blitS(S,(V.x|0)-3,(V.y|0)-S.h+1,V.face<0,crop?6:0);}
+  else if(k===2){const s=SHEEP[j],S=SHP[s.st===1?0:((simT*1.2+j)|0)&1];blitS(S,(s.x|0)-4,(s.y|0)-S.h+1,s.face<0,crop?2:0);}
+  else if(k===3)drawTree(TREES[j]);
+  else if(k===4){const L=lamps[j],x=L.x,y=L.y;for(let h=0;h<9;h++)ip(x,y-h,E0);ip(x-1,y,E1);ip(x+1,y,E1);ip(x-1,y-9,R1);ip(x+1,y-9,R1);ip(x,y-10,R1);ip(x,y-9,TP.l>.4?FL:R3);}
+  else{const t0=performance.now();drawCritter(j,crop);lifeDrawAcc+=performance.now()-t0;}}
+function drawTree(T){const sw=windStr<PRM.windMin||rm?0:(windStr*1.1+WH[TRP[Math.max(0,T.y-T.r*2)*W+T.x]]*windStr*2+.35*Math.sin(simT*1.1+T.ph)*windStr)*wcx*.8,off=[0,Math.round(sw*.45),Math.round(sw),Math.round(sw*1.5)];
+  const sw2=snowOf(T.cell),keep=1-.9*sw2,aut=SEAC[T.cell]===2?.82:1,n=T.n;
+  for(let p=0;p<n;p++){const f=T.f[p];if(f&1&&T.h[p]>keep*aut)continue;let c=T.c[p];if(f&4&&sw2>.5)c=S2;ip(T.x+T.dx[p]+off[T.b[p]],T.y+T.dy[p],c);}}
+function drawCritter(j,crop){const x=LX[j]|0,y=LY[j]|0,z=LZ[j]|0;
+  if(j>=KS[6]&&j<KS[7]){const S=LST[j]===0?RAB[((LPH[j]*1.5)|0)&1]:RAB[2];blitS(S,x-3,y-S.h+1-z,Math.cos(LANG[j])<0,crop?2:0);}
+  else if(j>=KS[7]&&j<KS[8]){const S=FRG[LST[j]?1:((LPH[j]*.8)|0)&1];blitS(S,x-2,y-2-z,false,0);}
+  else{ip(x,y-z,CR);ip(x+1,y-z,CR);if(z>0)ip(x,y-z-1,FG2);}}
+let litN=0;function drawFlyers(){litN=0;const dk=TP.l,shadowOK=dk<.6;
+  for(let k=0;k<6;k++){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++){if(!LA[j])continue;const x=LX[j]|0,y=LY[j]|0,z=LZ[j]|0;
+    if(shadowOK&&k<3&&z>1&&x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=(IDX[i]&~127)|DARKB[IDX[i]&127];}
+    if(k===0){const col=[BO,FWc,FBc][LC[j]&3];let fr;if(LST[j]===1)fr=Math.sin(simT*1.4+j)>.3?0:1;else if(LB[j]>0)fr=0;else{const ph=((LC[j]>>2)&7);fr=[0,1,2,1,0,1,2][ph]||0;}
+      const rows=BF[fr],X=x-2,Y=y-z-1;for(let r=0;r<3;r++)for(let c=0;c<5;c++){const ch=rows[r][c];if(ch==='.')continue;ip(X+c,Y+r,ch==='k'?OUT:col);}}
+    else if(k===1){const jx=LST[j]===0?Math.round(Math.sin(simT*13+j)*.8):0,X=x+jx,Y=y-z;ip(X,Y,BE1);ip(X+1,Y,BE2);if((frame+j)&1)ip(X,Y-1,WING);}
+    else if(k===2){const d=LC[j]?-1:1,Y=y-z;for(let b=0;b<5;b++)ip(x+b*d,Y,b<2?DF1:DF2);const wy=(frame+j)&1?-1:1;ip(x+d,Y+wy,WING);ip(x+2*d,Y+wy,WING);}
+    else if(k===3){if(dk>.9)continue;const g=j-KS[3];for(let m=0;m<NGM;m++){const q=g*NGM+m;ip(GMX[q]|0,GMY[q]|0,OUT);}}
+    else if(k===4){const X=x,Y=y;ip(X,Y,MO);if((frame+j)&1)ip(X+1,Y,MO);}
+    else if(k===5){const b=LB[j];if(b<.2)continue;litN++;const X=x,Y=y-z;ip(X,Y,b>=.5?FF:FFD);
+      if(b>=.5&&dk>.3){const r2=b>.9?10:b>.6?5:2;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const d=dx*dx+dy*dy;if(d>r2)continue;const yy=Y+dy,xx=X+dx;if(xx<0||yy<0||xx>=W||yy>=H)continue;const lv=d<=(b>.6?2:0)?5:(d<=5||BY[yy*W+xx]<128)?4:0;if(lv)setL(xx,yy,lv);}}}}}
+  // drift and bits
+  for(let j=KS[9];j<KS[9]+KC[9];j++){if(!LA[j])continue;ip(LX[j]|0,(LY[j]-LZ[j])|0,LC[j]===3?S2:LTG[j]>0?LTG[j]:FYc);}
+  for(let j=KS[KB];j<KS[KB]+KC[KB];j++){if(!LA[j])continue;const x=LX[j]|0,y=LY[j]|0;
+    if(LST[j]===3){const r=(.5-LT[j])*14|0;for(let a=0;a<12;a++)ip(x+Math.round(Math.cos(a/12*6.283)*r),y+Math.round(Math.sin(a/12*6.283)*r*.5),A4);}
+    else ip(x,(LY[j]-LZ[j])|0,LST[j]===2?(LT[j]>.8?R2:R1):LTG[j]);}
+  // flames
+  const fk=(simT*10)|0;for(let c=0;c<NC;c++){if(BURN[c]!==1)continue;const cx=(c%GW)*8,cy=((c/GW)|0)*8;for(let n=0;n<3;n++){const h=hash(c,n,fk),x=cx+(h&7),y=cy+4+((h>>3)&3),ht=2+((h>>5)&3);for(let r=0;r<ht;r++)ip(x,y-r,r===0?F3:r<ht-1?F2:F1);if(h&256)ip(x+1,y,F2);}
+    if(TP.l>.2)ring(cx+4,cy+4,9,3);if(TP.l>.2)setL(cx+4,cy+4,6);}
+  // scythe arcs
+  for(const f of fx){const a0=Math.PI*(1.1-f.t*4);for(let a=0;a<8;a++){const an=a0+a*.18;ip(Math.round(f.x+Math.cos(an)*7),Math.round(f.y+Math.sin(an)*4),a<6?GL:S1);}}}
+function ring(cx,cy,r,mx){const R=Math.ceil(r);for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy*1.4);if(d>=r)continue;const i=y*W+x;const u=d/r+(BY[i]-128)/2048;let lv=mx-Math.floor(u*mx);if(lv>mx)lv=mx;if(lv<=0)continue;const cur=(IDX[i]>>7)&7;if(lv>cur)IDX[i]=(IDX[i]&127)|(lv<<7);CWC[CELL[i]]+=.3;}}}
+// field layer: all grass in one pass (a shader would do this)
+let FC=new Uint8Array(NP),FR=new Uint8Array(NP),FS=new Uint8Array(NP),FPIX=new Int32Array(0),fieldBakeT=-9;
+function bakeField(){FC.fill(0);const list=[];
+  for(let k=0;k<TN;k++){const c=TCELL[k];if(BURN[c]===2)continue;let hl=HL[c];const t=TT[k];if(t===3&&!(FMASK[TV[k]]&(1<<SEAC[c])))continue;if(t===2&&SEAC[c]===3)hl=(k%7)?3:Math.max(hl,1);const wl=wearOn?WLV[TTR[k]]:0;if(wl>=3)continue;if(wl>=2&&hl<2)hl=2;
+    const kk=key(t,TV[k],hl,0,0,0),s=SOFF[kk],e=SOFF[kk+1],hm=SHM[kk],fl=TFL[k]?-1:1,sr=snowOf(c)>.5?2:0;TTOP[k]=hm;TL[k]=0;
+    for(let p=s;p<e;p++){if(-SPY[p]<sr)continue;const x=TX[k]+SPX[p]*fl,y=TY[k]+SPY[p];if(x<0||x>=W||y<0)continue;const i=y*W+x;FC[i]=SPC[p];FR[i]=Math.min(255,(-SPY[p]/hm*255)|0);FS[i]=STF[t]*100;}}
+  for(let i=0;i<NP;i++)if(FC[i])list.push(i);FPIX=Int32Array.from(list);fieldDirty=false;fieldBakeT=simT;}
+const SB=new Float32Array(NTR),KEEP=new Uint8Array(NTR);
+function drawField(){if(fieldDirty&&simT-fieldBakeT>.25)bakeField();
+  for(let t=0;t<NTR;t++){const I=Math.min(1,CRU[t]),w=WL[t];SB[t]=(w+(w>0?(.25+windStr*.5)*sinT(t*7+oscT1):0))*Math.max(PRM.spring,1-I)*wcx+TDX[t]/64*(I*2+PSH[t]*PRM.pushPx);KEEP[t]=255-I*130;}
+  const n=FPIX.length,hiOn=windStr>0;for(let m=0;m<n;m++){const i=FPIX[m],t=TRP[i],r=FR[i];if(r>KEEP[t])continue;const y=(i/W)|0,x=i-y*W+Math.round(SB[t]*FS[i]*.01*POW[r>>4]);if(x<0||x>=W)continue;let c=FC[i];if(hiOn&&r>128&&WH[t]>.5&&windStr>=.2)c=BRT[c];IDX[y*W+x]=c;}
+  tuftsDrawn=n;}
+function render(){const now=()=>performance.now();let t0=now(),t;
+  if(lutDirty||Math.abs(tod-lutT)>.0015)buildLUT();
+  CWC.fill(0);bakeN=0;let nb=0;while(dirtyList.length&&nb<240){bakeBlock(dirtyList.pop());nb++;}
+  IDX.set(GROUND);if(smooth)AW.fill(255);
+  if(snowOf(CELL[PCY*W+PCX])<.55){const sh=rm?0:simT*6|0;for(let k=0;k<WLA.length;k+=1){const i=WLA[k],x=i%W,y=(i/W)|0;const v=hash((x+sh)>>2,y,(simT*1.5)|0)&63;if(v===0)IDX[i]=A3;else if(v===1&&y&1)IDX[i]=A4;}}
+  if(interOn){for(let k=0;k<NTR;k++){const v=CRU[k];if(v<.235)continue;const x0=(k%TW)*4,y0=((k/TW)|0)*4;for(let y=y0;y<y0+4&&y<H;y++)for(let x=x0;x<x0+4;x++){if(v<.4&&((x+y)&1))continue;const i=y*W+x;if(PT[i]!==0)continue;IDX[i]=v>.67?DARKB[DARKB[IDX[i]]]:DARKB[IDX[i]];}}}
+  t=now();ema('ground',t-t0);t0=t;
+  oscT1=swayT*256*PRM.idleHz[0];oscT2=swayT*256*PRM.idleHz[1];
+  tuftsDrawn=0;settled=0;flatN=0;lifeDrawAcc=0;
+  // hiding (server rule): hidden unless the viewer is in the same patch or adjacent
+  if(patchDirty)labelPatches();
+  const pc=CELL[(P.y|0)*W+(P.x|0)],vc=V.x>0?CELL[clamp(V.y|0,0,H-1)*W+clamp(V.x|0,0,W-1)]:-1;
+  const adj=vc>=0&&Math.abs(pc%GW-vc%GW)<=1&&Math.abs(((pc/GW)|0)-((vc/GW)|0))<=1,same=vc>=0&&PATCH[pc]>=0&&PATCH[pc]===PATCH[vc];
+  playerHidden=hides(pc)&&P.reveal<=0&&P.hideT>=PRM.hideDelay;villHidden=vc>=0&&hides(vc)&&V.hideT>=PRM.hideDelay;V.adj=adj||same;
+  const vSent=V.x>-6&&(!villHidden||leak||V.adj);if(vSent!==V.sent){netTx(PRM.netEnt);V.sent=vSent;}
+  buildEnts();
+  if(rmode==='tufts'){let j=0;for(let k=0;k<TN;k++){const ty=TY[k];while(j<EN&&ENY[EO[j]]<ty)drawEnt(EO[j++],false);drawTuft(k);}while(j<EN)drawEnt(EO[j++],false);}
+  else{drawField();for(let j=0;j<EN;j++){const e=EO[j],k=ENK[e];let crop=false;if(k===0)crop=hides(pc);else if(k===1)crop=villHidden;else if(k===2||k===5){const yy=ENY[e]|0,xx=k===2?SHEEP[ENJ[e]].x|0:LX[ENJ[e]]|0;crop=hides(CELL[clamp(yy,0,H-1)*W+clamp(xx,0,W-1)]);}drawEnt(e,crop);}}
+  if(playerHidden&&rmode==='tufts'){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,0,true);}
+  t=now();ema('tufts',t-t0-lifeDrawAcc);t0=t;
+  drawFlyers();t=now();ema('lifeD',t-t0+lifeDrawAcc);t0=t;
+  const dk=TP.l;if(dk>.35){const r=17*Math.min(1,(dk-.35)*2.2);for(const L of lamps)ring(L.x,L.y-9,r,3);ring(CX0+8,24,7,2);ring(CX0+31,24,7,2);}
+  if(!smooth){for(let i=0;i<NP;i++)out[i]=LUT[STGP[i]<<10|IDX[i]];}
+  else{for(let i=0;i<NP;i++){const s=STGP[i]<<10,c=LUT[s|IDX[i]],a=AW[i];if(a===255){out[i]=c;continue;}const d=LUT[s|IDX2[i]],ia=255-a;
+    out[i]=(255<<24|((((c>>16)&255)*a+((d>>16)&255)*ia)>>8)<<16|((((c>>8)&255)*a+((d>>8)&255)*ia)>>8)<<8|(((c&255)*a+(d&255)*ia)>>8))>>>0;}}
+  t=now();ema('light',t-t0);
+  for(let c=0;c<NC;c++)CWS[c]+=(CWC[c]-CWS[c])*.1;
+  T.total=T.ground+T.tufts+T.inter+T.regrow+T.lifeU+T.lifeD+T.light;
+  if(view!=='normal')drawView(pc,vc);
+  ctx.putImageData(img,0,0);}
+const heat=v=>{v=clamp(v,0,1);return pack(v<.5?30+v*2*70:100+(v-.5)*2*155,v<.5?30+v*2*170:200-(v-.5)*2*120,v<.5?80+v*2*30:110-(v-.5)*2*90);};
+const dim=c=>pack((c&255)*.35,((c>>8)&255)*.35,((c>>16)&255)*.35);
+function drawView(pc,vc){
+  if(view==='inter'){for(let i=0;i<NP;i++){const t=TRP[i],v=CRU[t],p=PSH[t];out[i]=v>0||p>0?pack(40+v*215,30+p*200,90+v*60):dim(out[i]);}}
+  else if(view==='wear'){for(let i=0;i<NP;i++){const t=TRP[i],w=WEAR[t];out[i]=w>2?heat(w/255):dim(out[i]);if(w>PRM.wearDirt)out[i]=pack(240,220,160);}}
+  else if(view==='wind'){for(let i=0;i<NP;i++){const t=TRP[i],g=WH[t],l=WL[t];out[i]=pack(20+g*120,40+l*40,70+g*185);}
+    for(let ay=20;ay<H;ay+=40)for(let ax=20;ax<W;ax+=40){const L=3+windStr*9;for(let s=0;s<=L;s++)px(ax+wcx*s,ay+wcy*s,0xffffffff);px(ax+wcx*L-wcy*2-wcx*2,ay+wcy*L+wcx*2-wcy*2,0xffffffff);px(ax+wcx*L+wcy*2-wcx*2,ay+wcy*L-wcx*2-wcy*2,0xffffffff);}}
+  else if(view==='state'){for(let i=0;i<NP;i++){const c=CELL[i],ct=CT[c],x=i%W,y=(i/W)|0;let col;
+      if(BURN[c]===1)col=pack(240,80,40);else if(BURN[c]===2)col=pack(50,46,44);else if(ct===5)col=pack(40,70,130);else if(ct===4)col=pack(130,100,70);else if(ct===7)col=pack(80,80,90);
+      else if(!FUEL[ct])col=pack(60,60,60);else if(CRU[TRP[i]]>.25)col=pack(220,200,80);else if(HL[c]===3)col=pack(170,130,80);else if(HL[c]>0)col=pack(120,190,90);else col=hides(c)?pack(40,140,60):pack(80,120,70);
+      if(PATCH[c]>=0&&((x&7)===0||(y&7)===0))col=pack(30,90,40);if(c===pc)col=playerHidden?pack(255,255,255):pack(255,120,220);if(c===vc)col=V.sent?pack(120,220,255):pack(255,60,60);out[i]=col;}}
+  else if(view==='cost'){let mx=1;for(let c=0;c<NC;c++)if(CWS[c]>mx)mx=CWS[c];for(let i=0;i<NP;i++){const c=CELL[i],x=i%W,y=(i/W)|0;out[i]=heat(Math.sqrt(CWS[c]/mx));if((x&7)===0||(y&7)===0)out[i]=dim(out[i]);}}}
+const px=(x,y,c)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<W&&y<H)out[y*W+x]=c;};
+
+// ---------- step ----------
+let serverAcc=0,lastWx='';
+function updateStages(){for(let c=0;c<NC;c++){const st=sP>=1?7:clamp(Math.round((sP*1.6-PHEN[c]*.6)*7),0,7);if(st!==STG[c]){STG[c]=st;SEAC[c]=st>=4?sTo:sFrom;markBlock(c);fieldDirty=true;const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=y0;y<Math.min(H,y0+8);y++)STGP.fill(st,y*W+x0,y*W+x0+8);}}}
+function step(dt){simT+=dt;frame++;swayT=step5?Math.floor(simT*5)/5:simT;
+  if(tAuto)tod=(tod+dt/PRM.dayLen)%1;
+  if(sP<1){sP=Math.min(1,sP+dt/PRM.seasonLen);updateStages();}
+  serverAcc+=dt;if(serverAcc>=2){serverAcc-=2;const k=[windPre,windDir,Math.round(windStr*20),sTo,weather,phaseOf(tod)].join();if(k!==lastWx){netTx(PRM.netWx);lastWx=k;}}
+  if(!rm)gustPh+=gustSpeed*dt;envPh+=gustSpeed*.35*dt;windUpdate();
+  stepWalkers(dt);
+  let t0=performance.now();interUpdate(dt);let t=performance.now();ema('inter',t-t0);t0=t;
+  regAcc+=dt;while(regAcc>=1/PRM.regrowHz){regAcc-=1/PRM.regrowHz;regrowTick();}fireAcc+=dt;while(fireAcc>=.1){fireAcc-=.1;fireTick();}
+  t=performance.now();ema('regrow',t-t0);t0=t;
+  lifeUpdate(dt);for(const f of fx)f.t-=dt;fx=fx.filter(f=>f.t>0);t=performance.now();ema('lifeU',t-t0);}
+
+// ---------- loop and UI ----------
+let last=performance.now(),hudN=0,secT=0;
+const f2=v=>v.toFixed(2),hh=t=>{const m=Math.floor(t*1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
+const SN=['spring','summer','autumn','winter'];
+function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else windUpdate();render();
+  secT+=dt;if(secT>=1){secT-=1;netRate=netSec;netSec=0;stampRate=stampSec;stampSec=0;netFlat=flatCellsSec*PRM.netTile;flatCellsSec=0;threatSec=threatChecks;threatChecks=0;}
+  if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`].join(' · ');
+    const lifeS=[0,1,2,3,4,5,6,7,8,9].map(k=>`${['bfly','bee','dfly','gnat','moth','ffly','rabbit','frog','crick','drift'][k]} ${ALIVE[k]}/${KC[k]}`).join(' ');
+    const sea=sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo];
+    $('hud').innerHTML=`${sea} · ${phaseOf(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${windPre} ${Math.round(windStr*100)}% · ${weather==='rain'?'after rain':'clear'} · ${rmode==='tufts'?'per-tuft':'field layer'}, ${smooth?'smooth':'snapped'}${paused?' · paused':''}<br>${L} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · ${rmode==='tufts'?`tufts ${tuftsDrawn}/${TN}, settled ${settled}, flattened ${flatN}`:`field px ${tuftsDrawn}`} · stamps ${stampRate}/s · regrow ${regN} cells/tick (${regChanged} grew) · ground rebakes ${bakeN}<br>net ${netRate} B/s (${netTotal} B total) · trampling 0 B (sending each flatten would be ${netFlat} B/s) · you: ${playerHidden?'hidden, villager gets 0 B':P.reveal>0?'revealed':'in the open'} · villager: ${V.x<0?'away':villHidden?(V.sent?(leak&&!V.adj?'hidden but SENT (leak)':'hidden, seen up close'):'hidden, not sent'):'visible'}<br>${lifeS} · sleeping ${sleeping} · threat checks ${threatSec}/s · fireflies lit ${litN} · night ${nightRollName}`;
+    if(tAuto)syncTime();}
+  requestAnimationFrame(loop);}
+const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
+const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
+const setTool=v=>{tool=v;mark('#tools button','t',v);},setView=v=>{view=v;mark('#views button','v',v);};
+const setRmode=v=>{rmode=v;mark('#rmode button','r',v);fieldDirty=true;TKEY.fill(-1);},setSmooth=v=>{smooth=v==='smooth';mark('#smode button','s',v);TKEY.fill(-1);};
+function setWindPre(v){windPre=v;mark('#wpre button','w',v);const p=PRM.pre[v];windStr=p[0];gustSpeed=p[1];gustAmp=p[2];$('wstr').value=Math.round(windStr*100);$('wstrl').textContent=Math.round(windStr*100)+'%';}
+function setDir(d){windDir=d;wcx=Math.cos(d*Math.PI/180);wcy=Math.sin(d*Math.PI/180);$('wdir').value=d;$('wdirl').textContent=d+'°';}
+function setSeason(s,instant){s=+s;if(instant){sFrom=sTo=s;sP=1;STG.fill(7);SEAC.fill(s);STGP.fill(7);for(let c=0;c<NC;c++)markBlock(c);}else{if(s===sTo&&sP>=1)return;sFrom=sTo;sTo=s;sP=0;STG.fill(0);SEAC.fill(sFrom);STGP.fill(0);for(let c=0;c<NC;c++)markBlock(c);}lutDirty=true;fieldDirty=true;mark('#seas button','s',s);}
+function setWeather(v){weather=v;mark('#wx button[data-x]','x',v);lutDirty=true;for(let c=0;c<NC;c++)markBlock(c);}
+group('#tools button','t',setTool);group('#views button','v',setView);group('#rmode button','r',setRmode);group('#smode button','s',setSmooth);group('#wpre button','w',setWindPre);group('#seas button','s',v=>setSeason(v,false));group('#wx button[data-x]','x',setWeather);
+document.querySelectorAll('#life button').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;KON[k]^=1;b.classList.toggle('on',!!KON[k]);if(!KON[k]){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}});
+const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',get());b.onclick=()=>{set(!get());sy();};sy();return sy;};
+tog('inter',()=>interOn,v=>{interOn=v;if(!v){CRU.fill(0);PSH.fill(0);}});const syncWear=tog('wear',()=>wearOn,v=>{wearOn=v;for(let c=0;c<NC;c++)markBlock(c);fieldDirty=true;});
+tog('step5',()=>step5,v=>step5=v);tog('gusts',()=>gustsOn,v=>gustsOn=v);const syncSync=tog('sync',()=>syncF,v=>{syncF=v;const s=KS[5];for(let j=s;j<s+KC[5];j++){LT2[j]=-1;LT[j]=rnd();LC[j]=6;}});
+const syncRm=tog('rm',()=>rm,v=>rm=v);tog('leak',()=>leak,v=>leak=v);const syncPause=tog('pause',()=>paused,v=>paused=v);const syncAuto=tog('tauto',()=>tAuto,v=>tAuto=v);
+const syncTime=()=>{$('tod').value=Math.round(tod*1000)%1000;$('todl').textContent=hh(tod);};
+$('tod').oninput=e=>{tAuto=false;syncAuto();tod=+e.target.value/1000;syncTime();};
+$('wdir').oninput=e=>setDir(+e.target.value);
+$('wstr').oninput=e=>{windStr=+e.target.value/100;$('wstrl').textContent=e.target.value+'%';};
+$('dens').oninput=e=>{density=+e.target.value/100;$('densl').textContent=e.target.value+'%';};
+$('regs').oninput=e=>{regrowN=+e.target.value;$('regsl').textContent=regrowN+'/tick';};
+$('stress').oninput=e=>{stressN=+e.target.value;$('stressl').textContent=stressN+'x';buildTufts(stressN);};
+function reset(){HGT.fill(0);HL.fill(3);for(let c=0;c<NC;c++)if(FUEL[CT[c]]){HGT[c]=255;HL[c]=0;}BURN.fill(0);FIRE.fill(0);SHK.fill(0);CRU.fill(0);PSH.fill(0);WEAR.fill(0);WLV.fill(0);
+  for(let k=0;k<KD.length;k++){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}
+  lamps=LAMP0.map(([x,y])=>({x,y}));Object.assign(P,{x:186,y:146,lx:186,ly:146,hasT:false,mv:false,reveal:0,face:1});Object.assign(V,{x:-12,y:95,i:0,wait:4,mv:false,sent:false,lx:-12,ly:95});
+  SHEEP[0].x=276;SHEEP[0].y=132;SHEEP[1].x=298;SHEEP[1].y=156;SHEEP.forEach(s=>{s.st=0;s.t=rnd()*3;});
+  netTotal=0;netSec=0;fx=[];simT=0;gustPh=0;tAuto=true;syncAuto();tod=.56;syncTime();setWindPre('breeze');setDir(12);setWeather('clear');setSeason(1,true);
+  nightRoll=1;nightRollName='normal';lastPhase=phaseOf(tod);patchDirty=true;fieldDirty=true;TKEY.fill(-1);bakeAll();windUpdate();buildLUT();for(let k=0;k<TN;k++)tuftState(k);prefill();}
+$('reset').onclick=reset;
+document.querySelector('button[data-demo="showcase"]').onclick=showcase;
+function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal');paused=false;syncPause();rm=false;syncRm();interOn=true;wearOn=true;syncWear();
+  for(let k=0;k<KD.length;k++)KON[k]=1;document.querySelectorAll('#life button').forEach(b=>b.classList.add('on'));
+  syncF=false;syncSync();setWindPre('gusty');windStr=.42;$('wstr').value=42;$('wstrl').textContent='42%';setDir(12);
+  // late afternoon turning to dusk, a heavy firefly night
+  tAuto=false;syncAuto();tod=.728;syncTime();buildLUT();lastPhase='dusk';nightRoll=2;nightRollName='heavy';holdT=6;
+  // walk the traveller through the tall grass, left to right, so a trampled trail lies behind
+  V.x=-12;V.wait=30;Object.assign(P,{x:104,y:151,lx:104,ly:151});P.tx=178;P.ty=152;P.hasT=true;for(let n=0;n<4;n++)step(1/30);P.hideT=1;
+  // butterflies settling on flowers near the path
+  for(let j=KS[0];j<KS[0]+KC[0];j++)kill(j,0);const fls=FLW.filter(k=>tuftOK(k)&&TY[k]>112&&TY[k]<176&&TX[k]>112&&TX[k]<244&&Math.abs(TX[k]-P.x)>16&&Math.abs(TY[k]-P.y)>4);
+  for(let n=0;n<4&&fls.length;n++){const f=fls.splice(rnd()*fls.length|0,1)[0],j=alloc(0);if(j<0)break;LC[j]=n%3;if(n<3){LST[j]=1;LTG[j]=f;LT[j]=30;LX[j]=TX[f];LY[j]=TY[f];LZ[j]=TTOP[f]+1;}else{LX[j]=TX[f]-8;LY[j]=TY[f];LZ[j]=9;LT[j]=6;}}
+  // fireflies over meadow and wheat; about 20 timed to flash at the 2.5 s capture
+  for(let j=KS[5];j<KS[5]+KC[5];j++)kill(j,5);
+  for(let n=0;n<64;n++){const j=spawnAt(5,true);if(j<0)break;if(n%2===0){const y=LY[j];if(n%4===0){LX[j]=100+rnd()*124;LY[j]=20+rnd()*58;}else{LX[j]=112+rnd()*130;LY[j]=110+rnd()*64;}
+      const due=1.95+rnd()*.55;LT[j]=Math.max(0,1-due/LPH[j]);LANG[j]=.6+rnd()*.15;}else LT[j]=rnd()*.5;}
+  // a gust crest over the wheat when the thumbnail is taken (2.5 s after the click)
+  let im=0;for(let i=1;i<512;i++)if(GENV[i]>GENV[im])im=i;const pw=160*wcx+46*wcy,ahead=2.5;envPh=pw-im*4-gustSpeed*.35*ahead;gustPh=pw-gustSpeed*ahead;windUpdate();
+  render();}
+function canvasXY(e){const r=cv.getBoundingClientRect();return [clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1)];}
+let down=false,lastCut=[-99,-99];
+function useTool(e,first){const [x,y]=canvasXY(e);
+  if(tool==='walk'){P.tx=x;P.ty=y;P.hasT=true;return;}
+  if(tool==='cut'){if(first||Math.hypot(x-lastCut[0],y-lastCut[1])>5){cutAt(x,y);lastCut=[x,y];}}
+  else if(tool==='plant'){if(first||Math.hypot(x-lastCut[0],y-lastCut[1])>6){plantAt(x,y);lastCut=[x,y];}}
+  else if(!first)return;
+  else if(tool==='burn')ignite(x,y);
+  else if(tool==='lamp'){const k=lamps.findIndex(L=>Math.abs(L.x-x)<5&&Math.abs(L.y-5-y)<7);if(k>=0)lamps.splice(k,1);else if(lamps.length<12&&!blockedPx(x,Math.max(y,14)))lamps.push({x,y:Math.max(y,14)});}}
+cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}useTool(e,true);e.preventDefault();});
+cv.addEventListener('pointermove',e=>{if(down)useTool(e,false);});
+addEventListener('pointerup',()=>{down=false;});addEventListener('pointercancel',()=>{down=false;});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
+const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(k==='s'&&e.shiftKey){setSeason((sTo+1)%4,false);e.preventDefault();return;}
+  if(KM[k]){keys[KM[k]]=1;e.preventDefault();return;}
+  if(k>='1'&&k<='5')setTool(['walk','cut','burn','plant','lamp'][+k-1]);
+  else if(k==='t'){tAuto=!tAuto;syncAuto();}
+  else if(k==='v'){const Vs=['normal','inter','wear','wind','state','cost'];setView(Vs[(Vs.indexOf(view)+1)%Vs.length]);}
+  else if(k===' '){paused=!paused;syncPause();e.preventDefault();}});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;});
+addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
+function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
+buildTufts(1);reset();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
