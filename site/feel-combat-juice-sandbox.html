@@ -434,7 +434,7 @@ function sweep(p,T){const end=Math.min(T,p.tEnd);for(let t=p.checked;t<=end;t+=H
 function svProj(T){for(let i=SPROJ.length-1;i>=0;i--){const p=SPROJ[i];if(p.homing){if(p.hitT&&T>p.hitT+1500)SPROJ.splice(i,1);continue;}
   if(p.fin){if(T>p.hitT+1500)SPROJ.splice(i,1);continue;}if(T<p.t0)continue;const r=sweep(p,T);if(!r)continue;p.fin=r;
   if(r==='hit'){if(p.rew)NET.lastRewind=Math.round(REWIND());svDamage(p.owner,p.victim,p.dmg,{seq:p.seq,shove:p.kind==='fire'},p.hitT);}
-  else if(p.best&&p.bestD<TUNING.proj.whiffPx&&(p.owner===PL||p.best===PL)){const b=p.best;(p.owner===PL?downOwn:down)(p.hitT,4,()=>clWhiff(b));} // near miss after the projectile passed, caster and dodger only
+  else if(p.best&&p.bestD<TUNING.proj.whiffPx&&(p.owner===PL||p.best===PL)){const b=p.best;if(p.owner===PL)downOwn(p.hitT,4,()=>{if(PRED==='wait')clWhiff(b);});else down(p.hitT,4,()=>clWhiff(b));} // near miss after the projectile passed, caster and dodger only. With prediction on, the client lance already showed your own whiff
   if(p.seq)downOwn(p.hitT,TUNING.bytes.ack,()=>clDone(p.seq));}}
 function mkTele(t){const R=Math.ceil(t.shape==='circle'?t.r:t.len)+2;
   if(t.shape==='circle'){t.key='c'+t.r+t.team;t.box={w:R*2+1,h:R*2+1,ox:R,oy:R};t.inside=(x,y)=>{const d=Math.hypot(x,y);return d<=t.r?d/t.r:-1;};}

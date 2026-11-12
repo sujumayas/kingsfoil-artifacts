@@ -70,7 +70,7 @@ How to use this file:
   says 16 steps.
 - [x] **11.** `P4` Quake aim indicator and range ring are squashed by `*.75` (`:759`, impact ring `:771`). The
   decal and hitbox are round (`:436`, `:520`). Fix: drop the factor.
-- [ ] **12.** `P3` WHIFF shows and sounds twice on a near miss with prediction on (`:678` and `:433`). Fix: skip
+- [x] **12.** `P3` WHIFF shows and sounds twice on a near miss with prediction on (`:678` and `:433`). Fix: skip
   `clWhiff` for own projectiles when `PRED!=='wait'`.
 - [ ] **13.** `P5` Tibia classic preset. The hotbar shows skills ready while the 2 s group cooldown still blocks
   them. `:807` ignores `CCD['g_'+sk.grp]`.
