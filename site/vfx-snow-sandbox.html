@@ -89,7 +89,7 @@ code{font:13px "IBM Plex Mono",monospace;color:var(--warm)}
   </div>
 
   <div class="explain">
-    <div class="card"><h4>1 · One byte of depth per pixel</h4><p>The ground keeps a snow-depth map (<code>Uint8Array(320*180)</code>). Every frame, snowfall adds 1 unit at about 900 random pixels. Each pick is kept with probability equal to that pixel's <i>exposure</i>, so open ground fills first and sheltered ground fills last.</p></div>
+    <div class="card"><h4>1 · One byte of depth per pixel</h4><p>The ground keeps a snow-depth map (<code>Uint8Array(320*180)</code>). Every frame, snowfall adds 1 unit at about 900 random pixels. Each pick is kept with probability equal to that pixel's <i>exposure</i>, so open ground fills first and sheltered ground fills last. Snowfall stops adding once a pixel holds what its exposure allows, about 110 units in the open, so a long storm keeps its drifts and hollows.</p></div>
     <div class="card"><h4>2 · Dither-threshold coverage</h4><p>Every pixel has a fixed threshold: a 4×4 Bayer value plus noise, plus extra for grass tufts. Snow shows where <code>depth &gt; threshold</code>. Thin snow therefore appears as an ordered dusting, and melt pulls back as dithered patches. No tiles are swapped, so nothing pops.</p></div>
     <div class="card"><h4>3 · Shelter = cheap rays</h4><p>Exposure is baked once per wind bucket. Each ground pixel steps up to 28 pixels upwind; if it meets a tall object, it sits in that object's lee. Just past the lee there is a +12% drift band. Pixels under tree canopies and house eaves get a fixed shelter factor, so bare rings show under the trees.</p></div>
     <div class="card"><h4>4 · Footprints move snow, they don't paint it</h4><p>A boot sets the depth under it to 30% and pushes the rest into the rim, so total snow is conserved. The core is marked <i>packed</i>. New snowfall refills prints and erases the packed mark, which makes old trails soften and fade. Characters also sink into deep snow, and it slows them.</p></div>
@@ -142,7 +142,9 @@ const S=new Uint8Array(NP),B=new Uint8Array(NP),D=new Uint8Array(NP),P=new Uint8
 const E=new Float32Array(NP),SHL=new Float32Array(NP).fill(1),SH=new Uint8Array(NP),Hgt=new Uint8Array(NP),O=new Int16Array(NP).fill(-1);
 const WOB=new Uint8Array(NP),Cm=new Uint8Array(NP),thr=new Float32Array(NP),Lm=new Float32Array(NP),IDX=new Uint8Array(NP),SPR=new Uint8Array(NP);
 const holds=s=>s<SOLID, cls=s=>s<=ICE?1:s;
-const MAXD=200;
+const MAXD=200,SOFT=110;
+// how much snow a pixel can hold from snowfall: SOFT x exposure x a gentle noise, so a long storm settles into hummocks and keeps its hollows
+const LIMN=new Float32Array(NP);for(let y=0;y<H;y++)for(let x=0;x<W;x++)LIMN[y*W+x]=.8+.4*vnoise(x/9+30,y/7+11);
 
 // ground
 for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
@@ -218,7 +220,7 @@ function spawnFlake(f,k,top){f.x[k]=rnd()*(W+60)-30;f.y[k]=rnd()*(H+70);f.z[k]=t
 FL.forEach(f=>{for(let k=0;k<f.x.length;k++){spawnFlake(f,k,false);f.on[k]=1;}});
 
 // ---------- snow ops ----------
-function deposit(i,a){const s=S[i];if(!holds(s))return;if(Wt[i]>90&&rnd()<.6){Wt[i]-=3;return;}D[i]=Math.min(s===CANOPY?14:MAXD,D[i]+a);if(P[i])P[i]=P[i]>14?P[i]-14:0;}
+function deposit(i,a){const s=S[i];if(!holds(s))return;if(Wt[i]>90&&rnd()<.6){Wt[i]-=3;return;}const lim=s===CANOPY?14:Math.min(MAXD,(SOFT*E[i]*LIMN[i]+6)|0);if(D[i]>=lim)return;D[i]=Math.min(lim,D[i]+a);if(P[i])P[i]=P[i]>14?P[i]-14:0;}
 function stamp(x,y,w,h,keep,packV,spillAhead){x|=0;y|=0;let spill=0;
   for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const px=x+xx,py=y+yy;if(px<1||py<1||px>=W-1||py>=H-1)continue;const i=py*W+px;if(cls(S[i])!==1)continue; // feet only touch ground, path and ice, never a roof or canopy drawn in front
     const nd=(D[i]*keep)|0;spill+=D[i]-nd;D[i]=nd;if(nd>0||D[i]===0)P[i]=Math.max(P[i],packV);}
@@ -238,7 +240,7 @@ function simStep(sunF){
   for(let k=0;k<4000;k++){const i=W+1+ri(NP-2*W-2);const s=S[i];if(!holds(s))continue;const r=ri(4),j=r===0?i+1:r===1?i-1:r===2?i+W:i-W;
     if(s===CANOPY||!holds(S[j])||cls(S[j])!==cls(s))continue;if(D[i]>D[j]+3){D[i]--;D[j]++;}}
   // 3) wind transport: snow creeps downwind, stops against obstacles
-  const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind),n=(1400*wm)|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(D[i]<4||E[i]<.75||P[i]>100)continue;const j=i+dir;
+  const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind),n=(1400*wm)|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(D[i]<4||E[i]<.75*BASEE[S[i]]||P[i]>100)continue;const j=i+dir; // open ice counts as exposed, or snow blown onto the pond would pile up at its rim
     if(holds(S[j])&&cls(S[j])===cls(S[i])&&D[j]<=D[i]+2){D[i]--;D[j]++;}}}
   // 4) melt: temperature * sun * shade * packed * open-edge count
   if(temp>0){const n=(1500*Math.min(temp,6)/4*(.35+.65*sunF))|0;for(let k=0;k<n;k++){const i=ri(NP);if(!D[i])continue; // every row melts. A neighbour read past the canvas is undefined and counts as snow

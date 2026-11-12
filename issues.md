@@ -729,8 +729,14 @@ How to use this file:
   Done: a neighbour only counts when it has the same surface class. After an instant fill, 112 of 1,635
   snowy canopy pixels took the two darkest shadow colours, now 0. With the false shadow gone the pines were
   white on white, so the right flank of a canopy now takes the mid snow tone.
-- [ ] **138.** `P3` Manual Heavy snow reaches the depth cap everywhere in under 2 minutes and flattens the scene
+- [x] **138.** `P3` Manual Heavy snow reaches the depth cap everywhere in under 2 minutes and flattens the scene
   (`:220`, `MAXD` at `:144`).
+  Done: snowfall now stops at a per-pixel limit, 110 units times exposure times a gentle noise, so sheltered
+  ground and lee hollows stay lower for good. Add snow can still go to the cap. Wind transport also treats
+  open ice as exposed, or the pond rim collected bars of snow. Manual Heavy at speed 2: 94% of the ground
+  was at the cap after 2 min, and after 4 min every ground pixel drew the same snow colour (depth sd 0.9).
+  Now 0% at the cap after 8 min, depth sd 9.1, and 9% of the ground in highlight or shade tones. Card 1 says
+  so.
 - [ ] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
 - [ ] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
 - [ ] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
