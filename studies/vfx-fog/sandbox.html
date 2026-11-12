@@ -382,7 +382,7 @@ let costMs={};
 function render(){const now=performance.now;let t0=now.call(performance),t;
   if(Math.abs(tod-lutT)>.0015)buildLUT();
   IDX.set(GR);if(mode==='alpha')AL.fill(0);
-  const sh=rm?0:simT*1.2|0;for(let k=0;k<WLST.length;k++){const i=WLST[k],x=i%W,y=(i/W)|0;if(NT[(((y*3)&127)<<7)|((x+sh)&127)]>196)IDX[i]=A3;}
+  const sh=rm?0:simT*1.2|0;for(let k=0;k<WLST.length;k++){const i=WLST[k],x=i%W,y=(i/W)|0;if(!WALL[CELL[i]]&&NT[(((y*3)&127)<<7)|((x+sh)&127)]>196)IDX[i]=A3;}
   t=now.call(performance);const dDraw=t-t0;t0=t;
   shadowPass();t=now.call(performance);let dCl=t-t0;t0=t;
   if(!above)drawEnts(false);t=now.call(performance);let dDr2=t-t0;t0=t;

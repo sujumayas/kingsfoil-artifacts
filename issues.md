@@ -607,7 +607,8 @@ How to use this file:
   Done: the sun strength caps the shadow dither density, full above 0.5. Sweeping dusk under Overcast in
   0.24 s steps, the largest change in shadowed pixels was 43,932 (all of them at once) and is now 2,978, one
   Bayer level.
-- [ ] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
+- [x] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
+  Done: confirmed first: a walled stream cell showed 905 sparkle pixels over 60 frames, now 0.
 - [ ] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
 - [ ] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
 
