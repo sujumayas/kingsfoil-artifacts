@@ -356,10 +356,12 @@ function chart(id,o){
   if(!o.bands)s+='<rect x="'+pl+'" y="'+pt+'" width="'+pw+'" height="'+ph+'" fill="#1a1720"/>';
   var tk=o.log?logTicks(lo,hi):niceTicks(lo,hi,sm?4:5);
   tk.forEach(function(v){if(v<lo-1e-9||v>hi+1e-9)return;s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="#2a2433" stroke-width="1"/><text x="'+(pl-5)+'" y="'+(Y(v)+4).toFixed(1)+'" fill="#a59db3" font-size="'+fs+'" text-anchor="end">'+(o.yfmt||fmtNum)(v)+'</text>';});
-  (o.xt||[]).forEach(function(t){var x=X(t[0]);if(x<pl-1||x>W-pr+1)return;s+='<text x="'+x.toFixed(1)+'" y="'+(H-6)+'" fill="#6f6780" font-size="'+(fs-0.5)+'" text-anchor="middle">'+t[1]+'</text>';});
+  // an axis label that would run past the plot's left or right edge is anchored to that edge
+  (o.xt||[]).forEach(function(t){var x=X(t[0]);if(x<pl-1||x>W-pr+1)return;var half=String(t[1]).length*fs*0.29,anc="middle";if(x+half>W-1){anc="end";x=W-pr;}else if(x-half<pl-2){anc="start";x=pl;}
+    s+='<text x="'+x.toFixed(1)+'" y="'+(H-6)+'" fill="#6f6780" font-size="'+(fs-0.5)+'" text-anchor="'+anc+'">'+t[1]+'</text>';});
   if(o.bars){var bm=o.barMax,bh=ph*(o.barFrac||0.3);o.bars.forEach(function(b){var x0=X(b.x0),x1=X(b.x1),hh=b.v/bm*bh;s+='<rect x="'+(x0+0.5).toFixed(1)+'" y="'+(pt+ph-hh).toFixed(1)+'" width="'+Math.max(1,x1-x0-1).toFixed(1)+'" height="'+hh.toFixed(1)+'" fill="#7fd6a0" opacity=".32"><title>'+esc(b.tip)+'</title></rect>';});}
   (o.hl||[]).forEach(function(h){var y=Y(h.y).toFixed(1);s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+h.c+'" stroke-width="'+(h.w||1.2)+'"'+(h.dash?' stroke-dasharray="'+h.dash+'"':'')+'/>';if(h.t)s+='<text x="'+(h.left?pl+4:W-pr-3)+'" y="'+(+y-4)+'" fill="'+h.c+'" font-size="'+(fs-0.5)+'" text-anchor="'+(h.left?"start":"end")+'">'+h.t+'</text>';});
-  (o.vl||[]).forEach(function(v,i){var x=X(v.x).toFixed(1);s+='<line x1="'+x+'" x2="'+x+'" y1="'+pt+'" y2="'+(pt+ph)+'" stroke="'+v.c+'" stroke-width="1.2" stroke-dasharray="'+(v.dash||"3 3")+'"/>';if(v.t)s+='<text x="'+(+x+3)+'" y="'+(pt+11+(v.row||0)*12)+'" fill="'+v.c+'" font-size="'+(fs-1)+'">'+v.t+'</text>';});
+  (o.vl||[]).forEach(function(v,i){var x=X(v.x).toFixed(1);s+='<line x1="'+x+'" x2="'+x+'" y1="'+pt+'" y2="'+(pt+ph)+'" stroke="'+v.c+'" stroke-width="1.2" stroke-dasharray="'+(v.dash||"3 3")+'"/>';if(v.t)s+='<text x="'+(+x+3)+'" y="'+(o.vlTop?pt-6-(v.row||0)*12:pt+11+(v.row||0)*12)+'" fill="'+v.c+'" font-size="'+(fs-1)+'">'+v.t+'</text>';}); // vlTop: labels go in the top margin, clear of the data
   o.series.forEach(function(se){
     if(!se.noLine){var d="";se.pts.forEach(function(p,i){if(!isFinite(p[1]))return;d+=(d===""||(se.brk&&se.brk(p[0],i))?"M":"L")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1);});
       s+='<path d="'+d+'" fill="none" stroke="'+se.c+'" stroke-width="'+(se.w||2)+'"'+(se.dash?' stroke-dasharray="'+se.dash+'"':'')+(se.op?' opacity="'+se.op+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';}
@@ -388,7 +390,7 @@ function render(){
   series.push({pts:meas,c:"#7fd6a0",noLine:1,dots:1,hollow:1,r:4,tip:function(p){return "Measured, "+TIERS[p[2]]+" world "+(p[3]+1)+" boss: "+Math.round(p[0])+" s, scroll "+MEAS_SHARE[p[2]][p[3]]+" of range (story fights, 8 players)";}});
   chart("c-scroll",{label:"Scroll speed per real second over a run",x0:0,x1:600,y0:0,y1:Math.ceil(ymax*1.12/10)*10,series:series,
     xt:[[0,"0 s"],[120,"120"],[240,"240"],[360,"360"],[480,"480"],[600,"600 s"]],
-    vl:[{x:177,c:"#e8e2f0",t:"median run 177 s"},{x:369,c:"#a59db3",t:"p90 369 s",row:1}],
+    pt:32,vlTop:1,vl:[{x:177,c:"#e8e2f0",t:"median run 177 s"},{x:369,c:"#a59db3",t:"p90 369 s"}],
     bars:RUN_BARS.map(function(r){return {x0:r[0]-9,x1:r[0]+9,v:r[1],tip:r[1]+" story runs with median length "+Math.round(r[0])+" s (measured)"};}),barMax:171,barFrac:0.28});
   document.getElementById("lg-scroll").innerHTML=(first?'<span><i style="border-color:'+TCOL[1]+'"></i>First run</span>':TIERS.map(function(n,i){return '<span><i style="border-color:'+TCOL[i]+(i===t?'':';opacity:.55')+'"></i>'+n+' '+f2(C[i])+'</span>';}).join(""))+'<span><i class="d" style="border-color:var(--blue)"></i>Current build, '+(first?"first run":TIERS[t])+'</span>'+(first?'':'<span><b style="border:1.5px solid var(--green)"></b>Measured at boss start, gold and diamond</span>')+'<span><s style="background:var(--green)"></s>Story run lengths</span>';
   // share table

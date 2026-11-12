@@ -933,8 +933,13 @@ How to use this file:
   `S.every`.
   Done: the card used 12 where the model uses `DEPTH_EVERY`. At Every 6, 12 and 18 it read 73, 73 and 73
   encounters. Now 37, 73 and 110.
-- [ ] **175.** `P4` Scroll chart labels collide. "p90 369 s" sits on the boss labels on Diamond, unreadable at
+- [x] **175.** `P4` Scroll chart labels collide. "p90 369 s" sits on the boss labels on Diamond, unreadable at
   390 px, and the "600 s" axis label is cut at the right edge (`:391`, `:367`, `:390`, `:359`).
+  Done: the median and p90 labels sit in the chart's top margin, clear of the boss labels, and any axis
+  label that would pass the plot edge is anchored to it. Checked by bounding box on gold and diamond at 1280
+  and 390 px wide: "p90 369 s" overlapped B4 and B5 on diamond and "600 s" was cut at every size. Now no
+  overlap and nothing cut in any of the 6 charts. The same anchor rule fixed "0 s" and "run 1" sitting on
+  the y axis's 0.
 - [ ] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
   it by `n mod 12`. Depends on intent.
 - [ ] **177.** `P5` Landing watch text does not match the chart (`:114`).
