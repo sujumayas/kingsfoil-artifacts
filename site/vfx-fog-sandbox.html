@@ -255,7 +255,8 @@ const FV=new Uint8Array(NP),AL=new Uint8Array(NP),IDX=new Uint16Array(NP),BR=new
 const P={x:176,y:116,tx:0,ty:0,hasT:false,mv:false,at:0,cell:-1};
 const keys={l:0,r:0,u:0,d:0};
 const LAMP0=[[204,96],[246,100],[268,82],[163,121],[100,147],[161,52,1],[66,6,2]];
-let lamps=[];
+// the flame pixel of each lamp kind: post, cave torch, tower beacon. Halos and fog holes centre on it
+let lamps=[];const lampY=L=>L.y-(L.k===2?0:L.k===1?6:9);
 const beasts=[{x:296,y:80,r:[284,40,316,170]},{x:300,y:140,r:[284,40,316,170]},{x:150,y:62,r:[130,56,176,72]}];
 function radiation(t){return t>=.78?sm((t-.78)/.1):t<.29?1:1-sm((t-.29)/.13);}
 function calcFT(){const ce=WS.ce;for(let f=0;f<NF;f++){const th=Math.max(0,ce-HF4[f]);FT[f]=255*(1-Math.exp(-th/26))*(.5+.5*MF4[f]/255);}}
@@ -274,7 +275,7 @@ function fieldUpdate(){FA.set(FBf);MA.set(MB);
     FBf[f]=T1[f]*.84+(T1[l]+T1[r]+T1[u]+T1[d])*.04;MB[f]=T2[f]*.72+(T2[l]+T2[r]+T2[u]+T2[d])*.07;}
   const clear=(px,py,R,keep)=>{const x0=Math.max(0,((px-R)>>2)),x1=Math.min(FW-1,((px+R)>>2)),y0=Math.max(0,((py-R)>>2)),y1=Math.min(FH-1,((py+R)>>2));
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=Math.hypot(x*4+2-px,y*4+2-py);if(d<R)FBf[y*FW+x]*=keep+(1-keep)*sm(d/R);}};
-  clear(P.x,P.y-5,26,.12);for(const L of lamps)clear(L.x,L.y-9,10,.6);
+  clear(P.x,P.y-5,26,.12);for(const L of lamps)clear(L.x,lampY(L),10,.6);
   let ch=false;for(let c=0;c<NC;c++){const cx=c%GW,cy=(c/GW)|0,f=cy*2*FW+cx*2;const m=cy*2+1<FH?(MB[f]+MB[f+1]+MB[f+FW]+MB[f+FW+1])/4:MB[f];const o=m>120?1:0;if(o!==MOP[c]){MOP[c]=o;ch=true;}}
   if(ch)fovDirty=true;}
 const OCT=[[1,0,0,-1,-1,0,0,1],[0,1,-1,0,0,-1,1,0],[0,1,1,0,0,-1,-1,0],[1,0,0,1,-1,0,0,-1]],RAD=20;
@@ -341,7 +342,7 @@ const SPXa=Int32Array.from(SPX),SPVa=Uint8Array.from(SPV),SPKa=Uint8Array.from(S
 function atmosPass(){
   if(hazeDirty){const k=hazeOn?PRE[preset].hz*fogStr/100/255:0;for(let i=0;i<NP;i++)HZQ[i]=HZ0[i]*k;hazeDirty=false;}
   const lk=TP.l;
-  for(let n=0;n<lamps.length;n++){const L=lamps[n],cx=L.x,cy=L.y-9,f=clamp(cy>>2,0,FH-1)*FW+clamp(cx>>2,0,FW-1);
+  for(let n=0;n<lamps.length;n++){const L=lamps[n],cx=L.x,cy=lampY(L),f=clamp(cy>>2,0,FH-1)*FW+clamp(cx>>2,0,FW-1);
     const amb=Math.min(1,(FT[f]*densC/255+MB[f])/255*fogStr/100),r=Math.min(13,lk*(5+amb*9))*(rm?1:1+.04*Math.sin(simT*9+n*2.1));if(r<2.5)continue;
     const R=Math.ceil(r),inten=(1.1+amb*1.4)*Math.min(1,lk*1.4)*255;
     for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy);if(d>=r)continue;

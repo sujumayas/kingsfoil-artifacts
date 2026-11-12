@@ -588,8 +588,10 @@ How to use this file:
   Done: the alpha resolve blends fog into the lit colour, then applies the explored dim. Mean luminance of
   explored, unseen ground under thick fog at noon: 167.4 before against 96.6 in palette steps, 103.1 after.
   Visible ground stays at 170.
-- [ ] **109.** `P4` Lamp halos and fog holes are centred at `L.y-9` for every lamp kind (`:343`, `:277`). The cave
+- [x] **109.** `P4` Lamp halos and fog holes are centred at `L.y-9` for every lamp kind (`:343`, `:277`). The cave
   torch halo sits 3 px above its flame and the tower beacon halo is off the canvas.
+  Done: `lampY` gives the flame row per kind. Cave torch halo centre went from 3.4 px above the flame to on
+  it. The beacon halo went from 2 px at the canvas edge to 29 px around the flame.
 - [ ] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees
   (`:293`, `:199`, `:372`).
 - [ ] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
