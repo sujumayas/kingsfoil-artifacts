@@ -184,9 +184,10 @@ for(const k in TYPES){TYPES[k].c=hex(TYPES[k].col);if(TYPES[k].col2)TYPES[k].c2=
 const lights=[];function addLight(type,x,y,o={}){const T=TYPES[type];const L={type,x,y,T,R:T.R,h:T.h,seed:(rnd()*1e4)|0,dist:new Float32Array(256),dirty:true,on:true,I:1,...o};lights.push(L);return L;}
 const LA=[addLight('fireplace',59,47,{house:'A',indoor:1}),addLight('candle',80,57,{house:'A',indoor:1})];
 const wallT=[addLight('torch',48,82,{wall:[48,70]}),addLight('torch',71,82,{wall:[71,70]})];
-const LB=addLight('house',274,44,{house:'B'});const brazier=addLight('brazier',284,76,{flame:[284,68]});
+// own: the occluder a light sits on top of. Its rays pass through it
+const LB=addLight('house',274,44,{house:'B'});const brazier=addLight('brazier',284,76,{flame:[284,68],own:[280,72,288,74]});
 const lampL=LAMPS.map(([x,y],k)=>addLight('lamp',x,y+2,{lamp:k,head:[x,y-15],off:k*.35}));
-const camp=addLight('campfire',58,142,{flame:[58,139]});const crystal=addLight('magic',180,166,{});
+const camp=addLight('campfire',58,142,{flame:[58,139]});const crystal=addLight('magic',180,166,{own:[176,162,184,164]});
 const mush=addLight('mushroom',219,178,{night:1});
 const bulbs=[];for(let k=0;k<8;k++){const x=14+k*13+6,sag=Math.sin((k%1+.5)*Math.PI)*3;bulbs.push(addLight('bulb',x,159,{bulb:[x,150+2],night:1}));}
 const flies=[];for(let k=0;k<14;k++)flies.push(addLight('firefly',150+rnd()*160,120+rnd()*55,{fly:1,vx:0,vy:0,night:1,z:4+rnd()*8}));
@@ -196,8 +197,8 @@ function flicker(L,t){const s=L.seed;switch(L.T.fl){
   case 'candle':return .95+.03*n1(t*1.5,s)-(hash2((t*3)|0,s)<.02?.22*n1(t*20,s+2):0);case 'lantern':return .95+.03*n1(t*4,s);case 'lamp':return .97+.02*n1(t*2,s);
   case 'magic':return .72+.28*Math.sin(t*Math.PI*.9+s);case 'rune':return (hash2((t*12)|0,s)<.04||hash2((t*12)|0,s+1)<.02)?.08:1;
   case 'breath':return .55+.45*Math.sin(t*1.2+s);case 'blink':return Math.pow(Math.max(0,Math.sin(t*1.7+s)),6);default:return 1;}}
-function castRays(L){const lx=L.x,ly=L.y,R=Math.min(RMAX-1,L.R),thr=L.h*.6,start=L.carried?3:1;for(let a=0;a<256;a++){const an=a/256*2*Math.PI,dx=Math.cos(an),dy=Math.sin(an);let d=start;
-  for(;d<R;d+=1){const px=(lx+dx*d)|0,py=(ly+dy*d)|0;if(px<0||py<0||px>=W||py>=H)break;const j=py*W+px;if(OCC[j]>=thr||OCCD[j]>=thr)break;}L.dist[a]=d+1.5;}L.dirty=false;}
+function castRays(L){const lx=L.x,ly=L.y,R=Math.min(RMAX-1,L.R),thr=L.h*.6,start=L.carried?3:1,o=L.own;for(let a=0;a<256;a++){const an=a/256*2*Math.PI,dx=Math.cos(an),dy=Math.sin(an);let d=start;
+  for(;d<R;d+=1){const px=(lx+dx*d)|0,py=(ly+dy*d)|0;if(px<0||py<0||px>=W||py>=H)break;const j=py*W+px;if(o&&px>=o[0]&&px<=o[2]&&py>=o[1]&&py<=o[3])continue;if(OCC[j]>=thr||OCCD[j]>=thr)break;}L.dist[a]=d+1.5;}L.dirty=false;}
 
 // ---------- sun & sky ----------
 let hour=17.2,auto=true,speed=1,overcast=false,mode='banded',opts={shadows:true,sunsh:true,refl:true},view='normal',frameN=0,t=0,ms=0,raysFrame=0;

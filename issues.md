@@ -783,7 +783,10 @@ How to use this file:
   blocks a light of height 6. They still stop the traveller. Indoors at 21:00 the candle's shortest ray was
   2.5 px and the floor beside the table got 0 light. Now 17.5 px and 0.71. The floor beyond the bed gets
   0.21 from the fireplace, was 0.
-- [ ] **149.** `P4` The magic crystal shadows its own glow (`:188`, `:168`). The brazier has the same setup.
+- [x] **149.** `P4` The magic crystal shadows its own glow (`:188`, `:168`). The brazier has the same setup.
+  Done: each of the two lights names the occluder it sits on, and its rays pass through that one. Light 20
+  px above the crystal at night: 0.14 before, 0.95 after, against 1.24 below it. Above the brazier: 0
+  before, 1.46 after.
 - [ ] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
 - [ ] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
   room is near black at noon (`:301`).
