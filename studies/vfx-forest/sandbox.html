@@ -328,7 +328,9 @@ function render(){const t0=performance.now();
   drawnCount=visible.length;
   if(layers.birds){ctx.globalAlpha=1;for(const b of birds)if(b.state!=='perch')drawBirdFlying(b);}
   for(const p of parts){ctx.fillStyle=u32hex(p.col);ctx.fillRect(Math.round(p.x-camX),Math.round(p.y-p.z-camY),1,1);}
-  if(Math.floor(season+.5)%4===3){ctx.fillStyle='#f4f8ff';for(const f of snowFlakes){f[1]+=.25+f[2]*.35;f[0]+=wind*.5+Math.sin(time+f[2]*9)*.2;if(f[1]>VH){f[1]=0;f[0]=rnd()*VW;}if(f[0]>VW)f[0]-=VW;ctx.fillRect(f[0]|0,f[1]|0,f[2]>.7?2:1,1);}}
+  if(Math.floor(season+.5)%4===3){ctx.fillStyle='#f4f8ff';for(const f of snowFlakes){f[1]+=.25+f[2]*.35;f[0]+=wind*.5+Math.sin(time+f[2]*9)*.2;if(f[1]>VH){f[1]=0;f[0]=rnd()*VW;}if(f[0]>VW)f[0]-=VW;
+      // snow only falls where the ground takes snow: the same T < 0.62 test as genGround
+      if(BT[clamp(((camY+f[1])/CG)|0,0,CH-1)*CW+clamp(((camX+f[0])/CG)|0,0,CW-1)]<.62)ctx.fillRect(f[0]|0,f[1]|0,f[2]>.7?2:1,1);}}
   if(occluded&&occ==='silhouette'){ctx.globalAlpha=.75;ctx.drawImage(PSPR[player.dir+frameOf()+'2'],Math.round(player.x-3-camX),Math.round(player.y-11-camY));ctx.globalAlpha=1;}
   if(layers.grid){ctx.globalAlpha=.6;ctx.strokeStyle='#ffd27a';ctx.lineWidth=1;for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)ctx.strokeRect(gx*GS-camX+.5,gy*GS-camY+.5,GS,GS);ctx.globalAlpha=1;}
   frameMs=frameMs*.9+(performance.now()-t0)*.1;

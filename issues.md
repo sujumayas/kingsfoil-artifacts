@@ -862,8 +862,10 @@ How to use this file:
   position when it hops, lands or relocates. After 10 s of winter with no teleport: 0 of 28 crows before, 28
   of 28 after. After a walk into the rainforest: 0 parrots before, 7 after, the birds that had followed and
   landed there.
-- [ ] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
+- [x] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
   `:220`).
+  Done: a flake is drawn only where the ground under it takes snow, the same `T < 0.62` test the ground bake
+  uses. Winter flake pixels on screen: taiga 114 before and after, rainforest 114 before and 0 after.
 - [ ] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
   visible trees (`:285`). Shadows pop at the top edge (`:299`). The minimap rectangle is antialiased (`:326`).
 - [ ] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
