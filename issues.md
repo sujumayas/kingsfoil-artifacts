@@ -392,8 +392,11 @@ How to use this file:
 
 ## vfx-grass
 
-- [ ] **77.** `P4` Trample trails are near-black. The ground is darkened two steps (`:665`) on top of ground
+- [x] **77.** `P4` Trample trails are near-black. The ground is darkened two steps (`:665`) on top of ground
   already darkened (`:339`, `:340`). Card 5 says one step. Fix: one step, clamped at G1.
+  Done: one step at every crush level, never below G1 and never the outline black. A 2 s walk through tall
+  grass, 410 trail pixels: 211 black and 132 G0 before, 2 black and 63 G0 after (those were G0 or outline
+  already). Mean luminance 34.7 before, 60 after, against 69 untrampled.
 - [ ] **78.** `P3` Frogs marked for despawn freeze forever and fill the 5 slots. The `LST===9` test sits inside
   `if(LST[j]===0)` (`:535`). Rabbits have a rarer version (`:523` to `:532`).
 - [ ] **79.** `P4` Butterflies never bob and their wings freeze about half the time. `threat()` writes the flee

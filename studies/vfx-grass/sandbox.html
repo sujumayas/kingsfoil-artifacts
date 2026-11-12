@@ -663,7 +663,7 @@ function render(){const now=()=>performance.now();let t0=now(),t;
   CWC.fill(0);bakeN=0;let nb=0;while(dirtyList.length&&nb<240){bakeBlock(dirtyList.pop());nb++;}
   IDX.set(GROUND);if(smooth)AW.fill(255);
   if(snowOf(CELL[PCY*W+PCX])<.55){const sh=rm?0:simT*6|0;for(let k=0;k<WLA.length;k+=1){const i=WLA[k],x=i%W,y=(i/W)|0;const v=hash((x+sh)>>2,y,(simT*1.5)|0)&63;if(v===0)IDX[i]=A3;else if(v===1&&y&1)IDX[i]=A4;}}
-  if(interOn){for(let k=0;k<NTR;k++){const v=CRU[k];if(v<.235)continue;const x0=(k%TW)*4,y0=((k/TW)|0)*4;for(let y=y0;y<y0+4&&y<H;y++)for(let x=x0;x<x0+4;x++){if(v<.4&&((x+y)&1))continue;const i=y*W+x;if(PT[i]!==0)continue;IDX[i]=v>.67?DARKB[DARKB[IDX[i]]]:DARKB[IDX[i]];}}}
+  if(interOn){for(let k=0;k<NTR;k++){const v=CRU[k];if(v<.235)continue;const x0=(k%TW)*4,y0=((k/TW)|0)*4;for(let y=y0;y<y0+4&&y<H;y++)for(let x=x0;x<x0+4;x++){if(v<.4&&((x+y)&1))continue;const i=y*W+x;if(PT[i]!==0)continue;const g=IDX[i],d=DARKB[g];if(g!==G1&&d!==OUT)IDX[i]=d;}}}
   t=now();ema('ground',t-t0);t0=t;
   oscT1=swayT*256*PRM.idleHz[0];oscT2=swayT*256*PRM.idleHz[1];
   tuftsDrawn=0;settled=0;flatN=0;lifeDrawAcc=0;
