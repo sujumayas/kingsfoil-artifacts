@@ -487,8 +487,13 @@ How to use this file:
   sand at (194,150) for 25 s with a target set before. After, it floats again within 5 s and reaches the
   target. Auto tide from 255 down to 1 with the boat parked: aground for 3,500 of 3,600 frames and still
   aground before, 419 frames in short slides and afloat at the end after.
-- [ ] **95.** `P4` (taste) Pond heightfield shows large light and dark rectangles. The slope thresholds are
+- [x] **95.** `P4` (taste) Pond heightfield shows large light and dark rectangles. The slope thresholds are
   tiny next to the poke size (`:373`, `:287`).
+  Done: the slope is filtered per pixel with a Bayer dither, the thresholds went from 0.5 and 2 to 1.1 and
+  3.2, and the wave runs at about 22 px/s (42 before) with more damping. A stone now draws a ring with a
+  lit and a dark flank that fades in about 1.5 s. Pond pixels shaded 1 s after a stone, less the 6% that
+  lily pads and reflections always cover: 32% before, 9% after. Wading and fish pokes went from 2.5 and 3
+  to 4 and 5 so they still show.
 - [ ] **96.** `P6` (taste) Animated tiles still read as a fixed 8 px lattice with phase offset on (`:140`).
 
 ## vfx-fire

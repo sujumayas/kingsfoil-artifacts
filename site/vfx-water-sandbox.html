@@ -285,9 +285,9 @@ let simT=0,lastDt=0,paused=false,fishN=0,msgText='',msgT=0;const msg=s=>{msgText
 // pond heightfield (Hugo Elias, 2 px cells)
 const PX0=8,PY0=134,GW2=34,GH2=18;let HA=new Float32Array(GW2*GH2),HB=new Float32Array(GW2*GH2);const HM=new Uint8Array(GW2*GH2);
 for(let y=0;y<GH2;y++)for(let x=0;x<GW2;x++){const X=PX0+x*2+1,Y=PY0+y*2+1;if(X<W&&Y<H&&BODY[Y*W+X]===3)HM[y*GW2+x]=1;}
-let hfOn=false,hfAcc=0;
+let hfOn=false,hfAcc=0;const HFC2=.14;const HS=new Float32Array(GW2*GH2);
 const hfPoke=(x,y,a)=>{const gx=((x-PX0)>>1),gy=((y-PY0)>>1);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=gx+dx,Y=gy+dy;if(X>0&&Y>0&&X<GW2-1&&Y<GH2-1&&HM[Y*GW2+X])HA[Y*GW2+X]-=a*(dx||dy?.5:1);}};
-function updHF(dt){hfAcc+=dt;while(hfAcc>=1/30){hfAcc-=1/30;for(let y=1;y<GH2-1;y++)for(let x=1;x<GW2-1;x++){const k=y*GW2+x;HB[k]=HM[k]?((HA[k-1]+HA[k+1]+HA[k-GW2]+HA[k+GW2])*.5-HB[k])*.965:0;}const t=HA;HA=HB;HB=t;}}
+function updHF(dt){hfAcc+=dt;while(hfAcc>=1/30){hfAcc-=1/30;for(let y=1;y<GH2-1;y++)for(let x=1;x<GW2-1;x++){const k=y*GW2+x;HB[k]=HM[k]?(2*HA[k]-HB[k]+(HA[k-1]+HA[k+1]+HA[k-GW2]+HA[k+GW2]-4*HA[k])*HFC2)*.955:0;}const t=HA;HA=HB;HB=t;}}
 const inPondHF=(x,y)=>hfOn&&BODY[(y|0)*W+(x|0)]===3;
 function splash(x,y,size){const pond=inPondHF(x,y);if(pond)hfPoke(x,y,size*1.6);else{ring(x,y,13,.9,0,1);if(size>3)ring(x,y,10,1.1,.18,1);}
   for(let k=0;k<size;k++){const a=rnd()*6.283,s=6+rnd()*12;drop(x,y,Math.cos(a)*s,Math.sin(a)*s*.6,30+rnd()*35,k&1?FM:WH);}}
@@ -308,7 +308,7 @@ function updWalker(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy-
   wk.mv=m>0;if(wk.mv)wk.at+=dt;
   const rvx=dt?(wk.x-ox)/dt:0,rvy=dt?(wk.y-oy)/dt:0,sp=Math.hypot(rvx,rvy);
   if(wk.st!=='land'&&sp>3){wk.stepT+=dt;wk.wakeT+=dt;const pond=inPondHF(wk.x,wk.y);
-    if(wk.stepT>(wk.st==='swim'?.55:.3)){wk.stepT=0;if(pond)hfPoke(wk.x,wk.y,2.5);else ring(wk.x,wk.y-1,wk.st==='swim'?10:8,wk.st==='swim'?1:.75,0,2);}
+    if(wk.stepT>(wk.st==='swim'?.55:.3)){wk.stepT=0;if(pond)hfPoke(wk.x,wk.y,4);else ring(wk.x,wk.y-1,wk.st==='swim'?10:8,wk.st==='swim'?1:.75,0,2);}
     if(wk.wakeT>.07){wk.wakeT=0;wakePair(wk.x,wk.y,rvx,rvy,wk.st==='swim'?1.4:1.05);}}}
 const boat={on:false,x:0,y:0,vx:0,vy:0,tx:0,ty:0,face:1,wt:0};
 // least water under the bow, the middle and the stern. The boat floats in 10 or more
@@ -363,7 +363,7 @@ function updParticles(dt){
   for(let k=0;k<2;k++)if(rnd()<dt*30){const p=mists[mistN++%90];Object.assign(p,{x:FX0+rnd()*(FX1-FX0+1),y:44+rnd()*3,vx:(rnd()-.5)*18,vy:-4-rnd()*10,age:0,life:1+rnd()*1.2});}
   for(const p of mists){if(p.age>=p.life)continue;p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=1-dt;p.vy*=1-dt*.6;}
   for(const p of sparks){if(simT>p.dl+p.life||p.life===0){const L=WLIST.length+RLIST.length;if(!L)continue;const k=(rnd()*L)|0,i=k<WLIST.length?WLIST[k]:RLIST[k-WLIST.length];if(BODY[i]===3||(BODY[i]===1&&BAND[i]<1))continue;p.x=i;p.dl=simT+rnd()*1.5;p.life=.25+rnd()*.3;}}
-  plopT-=dt;if(plopT<0){plopT=1.8+rnd()*1.8;const i=POND[(rnd()*POND.length)|0];if(PVAL[i]<.8){const x=XS[i],y=YS[i];if(hfOn)hfPoke(x,y,3);else ring(x,y,7,1.1,0,1);drop(x,y,(rnd()-.5)*6,0,20,FM);}}
+  plopT-=dt;if(plopT<0){plopT=1.8+rnd()*1.8;const i=POND[(rnd()*POND.length)|0];if(PVAL[i]<.8){const x=XS[i],y=YS[i];if(hfOn)hfPoke(x,y,5);else ring(x,y,7,1.1,0,1);drop(x,y,(rnd()-.5)*6,0,20,FM);}}
   seaT-=dt;if(seaT<0){seaT=4+rnd()*5;for(let k=0;k<20;k++){const i=WLIST[(rnd()*WLIST.length)|0];if(i!==undefined&&BODY[i]===1&&BAND[i]>=3){ring(XS[i],YS[i],8,1.3,0,1);ring(XS[i],YS[i],6,1.2,.25,1);break;}}}
   postT-=dt;if(postT<0){postT=1.2+rnd()*1.6;const p=POSTS[(rnd()*POSTS.length)|0];if(WATER[p[1]*W+p[0]])ring(p[0],p[1],4,1.4,0,1);}
   if(msgT>0)msgT-=dt;}
@@ -384,8 +384,13 @@ const walkSpr=()=>{const f=wk.mv?[1,0,2,0][Math.floor(wk.at*8)&3]:0;return WALK[
 let surf='cycle',sync=false,caust=true,reflOn=true,view='normal',waterMs=0;
 function render(){const t0=performance.now(),t=simT;IDX.set(BASEIDX);
   const cyc=surf==='cycle',tfr=Math.floor(t*5);
+  // pond heightfield: one slope per 2 px cell, filtered per pixel so the cells do not show. The thresholds sit near a quarter
+  // of a fresh poke (4 to 10), so a ripple shades its two flanks and flat water stays plain
+  if(hfOn)for(let y=1;y<GH2-1;y++)for(let x=1;x<GW2-1;x++){const q=y*GW2+x;HS[q]=HM[q]?HA[q+1]-HA[q-1]+(HA[q+GW2]-HA[q-GW2])*.6:0;}
   for(let k=0;k<WLIST.length;k++){const i=WLIST[k],b=BODY[i],band=BAND[i],g=b===1?band:5+band;
-    if(b===3&&hfOn){const gx=(XS[i]-PX0)>>1,gy=(YS[i]-PY0)>>1;if(gx<1||gy<1||gx>=GW2-1||gy>=GH2-1)continue;const q=gy*GW2+gx,s=HA[q+1]-HA[q-1]+(HA[q+GW2]-HA[q-GW2])*.6;if(s>2)IDX[i]=SWH;else if(s>.5)IDX[i]=LIGHTM[IDX[i]];else if(s<-.5)IDX[i]=DARKM[IDX[i]];continue;}
+    if(b===3&&hfOn){const fx=clamp((XS[i]-PX0-1)/2,0,GW2-1.001),fy=clamp((YS[i]-PY0-1)/2,0,GH2-1.001),ix=fx|0,iy=fy|0,ux=fx-ix,uy=fy-iy,q=iy*GW2+ix;
+      const s=(HS[q]*(1-ux)+HS[q+1]*ux)*(1-uy)+(HS[q+GW2]*(1-ux)+HS[q+GW2+1]*ux)*uy+(BY[i]/16-.5)*.5;
+      if(s>3.2)IDX[i]=SWH;else if(s>1.1)IDX[i]=LIGHTM[IDX[i]];else if(s<-1.1)IDX[i]=DARKM[IDX[i]];continue;}
     if(cyc){const p=CYCPAT[i];if(p)IDX[i]=64+g*4+p-1;}
     else{const f=(tfr+(sync?0:PHC[CELL[i]]))&3,v=TILEF[f][((YS[i]&7)<<3)|(XS[i]&7)];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}}
   if(caust){const ax=(t*5)|0,ay=(t*3)|0,bx=(-t*4)|0,by=(t*6)|0;for(let k=0;k<SLIST.length;k++){const i=SLIST[k],x=XS[i],y=YS[i];
