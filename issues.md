@@ -62,9 +62,12 @@ How to use this file:
   Done: leaving the frame calls reset(). Pause, P, a click on the canvas, a touch skill button, and the
   movement, skill, Tab, Esc and Space keys all leave it. V and M do not, so the x-ray views can still
   inspect the frame. Showcase settings (juice 100%, 5 allies) stay, as after any preset.
-- [ ] **10.** `P4` Cleave smear and sword arc point in only 4 directions while the hit cone is free-aim (`:284` to
+- [x] **10.** `P4` Cleave smear and sword arc point in only 4 directions while the hit cone is free-aim (`:284` to
   `:287`, `:706`, `:736`). Card 4 says they rotate freely. Fix: bake the smear for 8 or 16 angles, or change the
   card.
+  Done: the swing and its smear follow the action's aim in 16 steps of 22.5°. Smears are baked on first
+  use and cached, 96 small canvases at most. The lance throw pose uses the exact aim angle. Card 4 now
+  says 16 steps.
 - [ ] **11.** `P4` Quake aim indicator and range ring are squashed by `*.75` (`:759`, impact ring `:771`). The
   decal and hitbox are round (`:436`, `:520`). Fix: drop the factor.
 - [ ] **12.** `P3` WHIFF shows and sounds twice on a near miss with prediction on (`:678` and `:433`). Fix: skip
