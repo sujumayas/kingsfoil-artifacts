@@ -750,7 +750,9 @@ How to use this file:
   Done: Add snow and the shovel's spill ring use the same cap as snowfall, 14 on a canopy. 20 strokes on a
   pine took its canopy to 112, now 14. Shovel sets depth to 0 where it left 2, which still drew as snow on
   low-threshold pixels: 48 of 49 pixels bare before, 49 of 49 after.
-- [ ] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
+- [x] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
+  Done: built every 6th drawn frame and compared with the last string. 60 writes per 60 frames before, 8
+  after.
 - [ ] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
 - [ ] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
   Uint8Array.
