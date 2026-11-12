@@ -609,7 +609,10 @@ How to use this file:
   Bayer level.
 - [x] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
   Done: confirmed first: a walled stream cell showed 905 sparkle pixels over 60 frames, now 0.
-- [ ] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
+- [x] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
+  Done: confirmed first: with Reduce motion on, the front moved from x -80 to 35 in 10 s. Now the front
+  counts as arrived, and the left, middle and right columns of the field rise together over about 2 s. Card
+  9 says so.
 - [ ] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
 
 ## vfx-acid

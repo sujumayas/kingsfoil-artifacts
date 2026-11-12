@@ -79,7 +79,7 @@ code{font:13px var(--mono);color:var(--cool)}
     <div class="card"><h4>6 · Atmosphere</h4><p>Haze tints high ground and the top of the screen toward the sky colour and lowers contrast. Lamps light dithered rings whose radius grows with the fog around them. At dawn 4 pre-drawn slanted shafts brighten the scene by one or two palette steps, with slow light bands drifting down them, using a cached pixel list. <b>Radial blur</b> is the expensive comparison: a bright pass blurred toward the sun with N samples per pixel.</p></div>
     <div class="card"><h4>7 · Fog of war</h4><p>Recursive shadowcasting on the 40 by 23 cell grid with radius 20. It reruns only when the traveller changes cell or an opaque cell changes. Visible cells fade in over 0.3 s. Corner values are bilinearly upsampled with a Bayer threshold. Fully visible 8 by 8 blocks are skipped. Explored cells are drawn dark and desaturated, and unknown cells are solid dark.</p></div>
     <div class="card"><h4>8 · Magic fog</h4><p>The fog cloud tool adds density to a second field that drifts with the wind and decays by 4.5 % per update, about 6 s. Any 8 px cell whose spell fog is over the threshold counts as opaque, so the FOV is recomputed and sight is blocked.</p></div>
-    <div class="card"><h4>9 · Palette and access</h4><p>Night, dawn, morning, day and dusk palettes blend smoothly. <b>Reduce motion</b> stops all drift, flicker and shaft pulsing while the fog keeps its shape. <b>Fog strength</b> thins the fog for low-vision players. The dither pattern is locked to world pixels, so it never swims.</p></div>
+    <div class="card"><h4>9 · Palette and access</h4><p>Night, dawn, morning, day and dusk palettes blend smoothly. <b>Reduce motion</b> stops all drift, flicker and shaft pulsing while the fog keeps its shape, and the coastal fog bank fades in where it would roll in. <b>Fog strength</b> thins the fog for low-vision players. The dither pattern is locked to world pixels, so it never swims.</p></div>
   </div>
   <p class="keys" style="margin-top:16px">Full research: <a href="vfx-fog-topdown-pixel.html">Top-down pixel fog study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="vfx-light-sandbox.html">Light</a> · <a href="vfx-fire-sandbox.html">Fire</a> · <a href="vfx-water-sandbox.html">Water</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
 </main>
@@ -305,7 +305,8 @@ function step(dt){simT+=dt;
   for(const b of beasts){if(!b.tx||Math.hypot(b.tx-b.x,b.ty-b.y)<2){b.tx=b.r[0]+rnd()*(b.r[2]-b.r[0]);b.ty=b.r[1]+rnd()*(b.r[3]-b.r[1]);}
     const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy)||1,nx=b.x+dx/d*10*dt,ny=b.y+dy/d*10*dt;if(!WALL[CELL[(ny|0)*W+(nx|0)]]){b.x=nx;b.y=ny;}else b.tx=0;b.at=(b.at||0)+dt;}
   fieldAcc+=dt;while(fieldAcc>=.1){fieldAcc-=.1;const t0=performance.now();fieldUpdate();fieldMsAcc+=performance.now()-t0;fieldN++;fieldTimes.push(performance.now());}
-  if(PRE[preset].front)frontX+=WS.wx*dt;
+  // with Reduce motion the fog bank does not roll in: the front counts as arrived and the field fades up in place
+  if(PRE[preset].front){if(rm)frontX=W+60;else frontX+=WS.wx*dt;}
   if(!rm){const wx=WS.wx,wy=WS.wy;ax-=wx*.45*dt;ay-=wy*.45*dt;bx-=(wx*.8+2.2)*dt;by-=(wy*.5-1.6)*dt;wxo+=1.5*dt;cox-=wx*dt;coy-=wy*dt;oox-=wx*1.9*dt;ooy-=wy*1.9*dt;}
   const rate=dt/.3*255;for(let c=0;c<NC;c++){const t=VT[c]*255;if(VC[c]<t)VC[c]=Math.min(t,VC[c]+rate);else if(VC[c]>t)VC[c]=Math.max(t,VC[c]-rate);}}
 
