@@ -820,7 +820,10 @@ How to use this file:
   Done: their pixels now take the same occlusion test as the character, for the traveller and the lantern-
   bearer. Behind house B's roof and behind a crown the torch handle drew on top, now it is hidden. In the
   open the lantern still draws.
-- [ ] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
+- [x] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
+  Done: confirmed first: at 22:00 the moon shadow points left, so the moon is on the right, and the glint
+  was at x 258, left of the pond centre at 272. The sign is flipped. Measured glint columns: 285 to 287 at
+  22:00, 258 to 259 at 02:00 when the moon has crossed over.
 - [ ] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
   cage hole (`:271`). Fireflies drift at about 0.6 px/s and read as static. Noon cobbles clip to white (taste).
 
