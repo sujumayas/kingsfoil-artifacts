@@ -1,0 +1,393 @@
+# Sandbox issues
+
+Todo list from the review of all 15 sandboxes on 2026-11-12. Each sandbox got a code read, a driven browser
+session, zoomed screenshots and frame-cost measurements at 1x and 6x CPU throttle.
+
+How to use this file:
+
+- Tick the box when a fix lands. Refer to issues by number in commits ("Fix #1, #26").
+- Line numbers refer to `studies/<slug>/sandbox.html` as of commit `6fa09b3`. They drift once fixes land.
+- After each fix, copy the sandbox to `site/<slug>-sandbox.html` (`site/<slug>-lab.html` for the curves labs).
+- Priority tags: `P1` crash or freeze, `P2` shared template fix, `P3` soft lock or broken behaviour,
+  `P4` visible visual defect, `P5` readout or text that disagrees with the code, `P6` perf and polish.
+- `(taste)` marks a judgement call. `(suspected)` means it comes from code reading and was not reproduced.
+  Everything else was reproduced or seen in a screenshot by the reviewer.
+- Re-checked by a second run: #1 (paused and in normal play), #24 and #116.
+
+## Shared across sandboxes
+
+- [ ] **1.** `P1` feel-combat-juice. Cooldown sweep crash. `SWEEP[Math.min(15,Math.floor((1-rem/tot)*16))]` (`:808`)
+  gets index -1 when `(now+cd)-now` rounds above `cd`. It happens when a cast and the next render share the same
+  clock value: a queued cast fired inside `step()` (`:866`), or any cast while paused. The rounding only occurs
+  when `now+cd` crosses a power of two, so the risky moments are just before 4.1 s, 8.2 s, 16.4 s, 32.8 s and
+  65.5 s of play. Fix: `Math.max(0,...)` on the index.
+- [ ] **2.** `P1` All canvas sandboxes. One exception freezes the page for good, because `render()` runs before
+  `requestAnimationFrame(loop)`. Seen in combat juice (`:875`), loot pickup (`:868`) and acid. Fix: request the
+  next frame first, or wrap step and render in try/finally.
+- [ ] **3.** `P2` Keyboard dies after touching a slider. The keydown handler returns for `INPUT` targets and range
+  inputs keep focus. Affects water (`:487`), fire (`:496`), fog (`:457`), grass (`:790`), magic (`:739`) and
+  npc-dialog (`:1011`). Fix: blur range inputs on `change` and `pointerup`, or only skip text inputs.
+- [ ] **4.** `P2` Key handler swallows keys everywhere. No target or modifier check, so arrow keys never reach
+  sliders or selects, and Cmd/Ctrl+S, A, D are blocked. No window `blur` reset, so a held key stays down.
+  Affects light (`:331`), forest (`:354`), acid (`:397`), rain (`:363`, suspected) and snow (`:385`, suspected).
+  Fix: return early for input and select targets or when a modifier is held, and clear `keys` on blur. Fog's
+  handler (`:457`, `:465`) already does both.
+- [ ] **5.** `P2` Non-integer canvas scale. `fit()` reads `main.clientWidth` including 36 px of padding, so
+  viewports 640 to 677 and 960 to 997 px give 1.94x or 2.94x. Affects combat juice (`:954`), npc-dialog (`:1026`),
+  grass (`:799`) and magic (`:750`). Water, fire and acid (`:20`) use `width:100%` with no fit at all (3.76x at
+  1280). Fog only snaps at 640 px and above (`:466`). Fix: subtract the padding, give the three older sandboxes
+  the same `fit()`, and use 1x below 640.
+- [ ] **6.** `P2` Tap-to-walk onto a blocked spot makes the character walk in place forever. Grass (`:558`, `:560`),
+  magic (`:575`) and fog (`:298`, suspected). Fix: set the moving flag only when the position changed, and clear
+  the walk target when blocked. Acid handles this case correctly.
+- [ ] **7.** `P6` Full render continues while paused and while the canvas is off-screen in every sandbox. Paused
+  costs about the same as running.
+- [ ] **8.** `P6` At 390 px the HUD covers the canvas. Rain (top 38 px), light (top quarter), forest (top third),
+  acid (43%, `:21`). On desktop the fog HUD covers the tower and its beacon (taste). Fix: fog's
+  `@media (max-width:640px){.hud{position:static}}` rule everywhere, and move the fog HUD below the canvas.
+
+## feel-combat-juice
+
+- [ ] **9.** `P3` Showcase leaves a broken world. After unpausing, a prop lance hangs in mid-air until Reset
+  (`:916`, `speed:0,range:999`), and every mob and ally has `cd=now+99999` so nobody attacks for about 100 s
+  (`:910` to `:912`). Movement and skill keys do not leave the frozen frame (`:932` vs `:945`). Fix: call `reset()`
+  when leaving `frozenShow`, and clear it on any keydown.
+- [ ] **10.** `P4` Cleave smear and sword arc point in only 4 directions while the hit cone is free-aim (`:284` to
+  `:287`, `:706`, `:736`). Card 4 says they rotate freely. Fix: bake the smear for 8 or 16 angles, or change the
+  card.
+- [ ] **11.** `P4` Quake aim indicator and range ring are squashed by `*.75` (`:759`, impact ring `:771`). The
+  decal and hitbox are round (`:436`, `:520`). Fix: drop the factor.
+- [ ] **12.** `P3` WHIFF shows and sounds twice on a near miss with prediction on (`:678` and `:433`). Fix: skip
+  `clWhiff` for own projectiles when `PRED!=='wait'`.
+- [ ] **13.** `P5` Tibia classic preset. The hotbar shows skills ready while the 2 s group cooldown still blocks
+  them. `:807` ignores `CCD['g_'+sk.grp]`.
+- [ ] **14.** `P4` (taste) The brawl jams against the back wall and right edge within 10 s. Goblins spawn on the
+  edge strips (`:366`, `:406`) and ally slot radius exceeds the goblin stand-off (`:451`, `:454`).
+- [ ] **15.** `P4` X-ray panels cover what they explain. The server panel hides the dummy and a pillar. The
+  timeline caption sits on the server lane (`:837`). Cost view rows alternate 7 and 8 px (`:841`).
+- [ ] **16.** `P5` "HIT CHECKS n/S" counts frames with a check, so it tops out at 60 (`:871`). (suspected)
+- [ ] **17.** `P5` Card 6 says the warden slam adds 0.6 trauma. The code passes .5 (`:685`) and
+  `TUNING.shake.slam` is unused. (suspected)
+- [ ] **18.** `P5` Card 5 promises an 8-frame freeze on a kill, but the death flash and squash keep running
+  during the victim's hitstop (`:691`). (suspected)
+- [ ] **19.** `P6` Debris ground height `gy` is never read (`:598` to `:604`), so chips bounce at chest height.
+  (suspected)
+- [ ] **20.** `P6` The canvas is never cleared and the background is drawn with the shake offset (`:847`), so the
+  uncovered edge strip keeps old pixels. (suspected)
+- [ ] **21.** `P6` Telegraph decal cache holds a 305 x 305 canvas per angle per fill step, cleared only above 900
+  entries (`:319`). Worst case is a few hundred MB. (suspected)
+- [ ] **22.** `P6` The HUD total under-reports by about a quarter in heavy mode. It leaves out the x-ray draw and
+  the DOM write.
+
+## feel-loot-pickup
+
+- [ ] **23.** `P1` Crash. PvP plus Round robin plus a container corpse style (the "Tibia classic" preset, or
+  "Bosses and deaths spill" off) freezes the sandbox about 5 s in. `corpse.tiers[1]` is undefined for a PvP
+  kill (`:476`, tiers replaced at `:437`). Fix: `corpse.tiers&&corpse.tiers[1]?corpse.tiers[1][1]:[it.owner]`.
+- [ ] **24.** `P3` "Clear items" cancels every pending respawn, including your own. `SV.pend.length=0` (`:904`)
+  wipes the shared server timer list. Fix: tag rain timers and remove only those.
+- [ ] **25.** `P4` Legendary beam is upside down. Solid at the top, fading to nothing at the item (`:349` to
+  `:351`). Fix: `up=y/h`.
+- [ ] **26.** `P4` Spill scatter is lopsided. A third of items land 6 to 9 px too high because of a signed shift
+  on a uint32 hash (`:468`). Fix: `(h>>>4)%3`.
+- [ ] **27.** `P3` Full prediction plus Loot all leaves ghost items and an inflated bag count. The client
+  predicts without an ownership check (`:581`) and the server skips silently (`:494`). Fix: roll back
+  unanswered predicted items in `clResult`, or filter with `canLoot` on the client.
+- [ ] **28.** `P3` With the default spill setting, PvP enemies never loot your death pile. PvP bots only look at
+  corpses with items (`:540` to `:547`).
+- [ ] **29.** `P4` PvP enemies respawn twice, at 5 s and again at 6 s (`:454` and `:538`).
+- [ ] **30.** `P3` After Showcase the allies never move (`:921`, `think=now+1e9`) and a staged gold pile stays as
+  a permanent ghost (`:925`, `:934`). Latency, Juice and "Alt: all labels" also stay changed after Reset.
+- [ ] **31.** `P3` A pickup in flight when you die stays pending forever (`:488` returns before the reply).
+- [ ] **32.** `P3` Reduce motion or Arcs off makes fresh drops reject as "early", then hop and shake. The client
+  `landT` (`:594`, `:657`) disagrees with the server `pickAt` (`:473`). Fix: gate on `ci.pickAt`.
+- [ ] **33.** `P5` Ownership view never shows the yellow public countdown. `TUNING.owner.groundPublicS` does not
+  exist (`:831`). The legend text also overflows its box (`:832`).
+- [ ] **34.** `P5` Server truth panel says "CORPSE 10 S OWNED" (`:827`). TUNING, the spec and card 2 say 15 s.
+- [ ] **35.** `P6` Race demo places the ring and bot with no bounds check (`:906`), off-canvas near the right
+  edge.
+- [ ] **36.** `P5` "Label filter" buttons do nothing in the default preset, and the Alt path ignores the filter
+  (`:756`).
+- [ ] **37.** `P6` Loot window title is cut to 9 characters, "GOBLIN CH" (`:800`).
+- [ ] **38.** `P6` Preset button stays highlighted after changing party mode, pickup mode, tiers, magnet radius
+  or filter (`:878` to `:883`).
+- [ ] **39.** `P6` Holding B spawns a boss drop on every key repeat (`:969`).
+- [ ] **40.** `P6` Phone control buttons are 30 px tall.
+- [ ] **41.** `P3` (suspected) Lowering the Allied players slider removes live goblins with `gs.pop()` (`:377`),
+  leaving stale targets.
+- [ ] **42.** `P3` (suspected) Magnet "far" rejects are meant to be silent, but `s.req=false` (`:618`) runs before
+  the `!s.req` test (`:623`), so "TOO FAR" pops and the magnet retries each frame.
+
+## feel-npc-dialog
+
+- [ ] **43.** `P3` Showcase leads to a dialog that hangs on "..." after Accept or Decline. The fake session
+  lacks `wait:'offer'` (`:997`, server check at `:609`).
+- [ ] **44.** `P3` Toggling Large text or dialog style mid-line blanks the box. `relayout()` keeps the old page
+  index (`:704`).
+- [ ] **45.** `P4` Letter "j" has a 2 px gap on its left, "cajas" reads "ca jas" (`:124`, glyph `40444444o`).
+- [ ] **46.** `P4` Bubble style. The advance arrow covers the last character (`:879`, width at `:872`).
+- [ ] **47.** `P4` (taste) Bubble style. The choice menu covers the NPC you are talking to (`:881`).
+- [ ] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
+- [ ] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
+- [ ] **50.** `P3` Crowd "wait your turn" never plays out. `s.heard` is read (`:791`) and never written.
+- [ ] **51.** `P3` Stack clutter mode pushes bubbles off the top of the canvas and still counts them (`:852`).
+  Priority mode never clears `b.capped` (`:848`), so a bubble capped once stays hidden.
+- [ ] **52.** `P4` Chat ranges view prints the SAY and YELL labels on top of each other (`:920`).
+- [ ] **53.** `P4` Server sessions view prints "?" for "@". The small font has no `@` (`:925`).
+- [ ] **54.** `P3` "Wait for server" mode repeats the dialog when E is pressed more than once in flight (`:723`).
+- [ ] **55.** `P6` Pause does not pause popups and emotes. They add a fixed 1/60 per frame (`:829`, `:833`, `:892`,
+  `:894`, `:899`, `:908`), so they also run 2x fast at 120 Hz.
+- [ ] **56.** `P6` A long word with no spaces overflows the chat log and bubble (`:166` to `:168`).
+- [ ] **57.** `P6` Typed text is parsed as markup. `[wave]` and `[c=key]` typed by the player take effect (`:726`).
+- [ ] **58.** `P6` Spanish accents are missing in capitals and in all small-font text, "MISION", "MANANA"
+  (`:124`, `:125`, `:131`).
+- [ ] **59.** `P4` (taste) Canvas fillText comparison mode places vector glyphs at bitmap advances, so words
+  split. `ctx.font` is set per glyph (`:147`), which inflates that mode's cost.
+
+## vfx-magic
+
+- [ ] **60.** `P3` Monster telegraphs, cast circles and missiles vanish when your own effects fill the 96 cap.
+  At spawn the telegraph competes with priority 399 (`:259` to `:261`) and only gets 999 once alive (`:263`).
+  Fix: use 999 at spawn for type 11.
+- [ ] **61.** `P4` Ribbon trails and afterimages take one sample per frame (`:410`), so they halve at 120 Hz and
+  shrink to a stub in Slow motion. Fix: sample every 1/60 s of sim time.
+- [ ] **62.** `P6` Animations driven by the `frame` counter ignore slow motion and run 2x at 120 Hz. Shocked
+  arcs (`:540`), beam end orb (`:488`), meteor tail (`:508`), dummy shake (`:548`), brazier light (`:634`).
+  (suspected)
+- [ ] **63.** `P3` Recasting on a field extends its duration but keeps its age, so it stays shrunk (`:380`).
+  Fix: `f.t=0;f.dur=dur`.
+- [ ] **64.** `P4` Server events view draws area boxes one tile too big, 8x8 for the 7x7 meteor (`:370`, `:377`,
+  `:672`).
+- [ ] **65.** `P4` Holding Beam while paused draws it to the top-left corner (`:396`, `:483`).
+- [ ] **66.** `P4` Shock particles keep jittering while paused and at full speed in slow motion (`:286`).
+- [ ] **67.** `P3` Each tap of Beam while paused stacks another beam effect (`:396`, `:413`).
+- [ ] **68.** `P3` The Beam button drops the beam while held if you tap, then press again within 600 ms. A stale
+  timer fires (`:717`).
+- [ ] **69.** `P4` Residue toggle leaves scorch and frost decals for up to 12 s (`:317` has no `residue` check).
+- [ ] **70.** `P4` (taste) Meteor rune circle is a 108 x 54 ellipse centred on the mage. The blast is 112 x 112
+  centred on the tile (`:448`, `:372`).
+- [ ] **71.** `P6` Beam damage numbers stack into an unreadable column (`:314`, `:600`).
+- [ ] **72.** `P6` Haste button stays lit after the timer runs out (`:703`).
+- [ ] **73.** `P5` HUD "evicted" also counts refused spawns, and "particles refused" counts overwritten live
+  particles (`:261`, `:274`).
+- [ ] **74.** `P6` `lightQ` calls for level up (`:704`) and heal (`:368`) are cleared before render, so those
+  lights never show.
+- [ ] **75.** `P6` Colour-blind mode leaves hostile impact particles and damage numbers in the element colour
+  (`:256`, `:375`, `:338`).
+- [ ] **76.** `P6` Reset does not unpause or clear the note, and the first haste afterimages flash at pre-reset
+  positions (`:720` to `:722`).
+
+## vfx-grass
+
+- [ ] **77.** `P4` Trample trails are near-black. The ground is darkened two steps (`:665`) on top of ground
+  already darkened (`:339`, `:340`). Card 5 says one step. Fix: one step, clamped at G1.
+- [ ] **78.** `P3` Frogs marked for despawn freeze forever and fill the 5 slots. The `LST===9` test sits inside
+  `if(LST[j]===0)` (`:535`). Rabbits have a rarer version (`:523` to `:532`).
+- [ ] **79.** `P4` Butterflies never bob and their wings freeze about half the time. `threat()` writes the flee
+  direction into `LVZ` and `LB` (`:428`), which butterflies use for vertical velocity and rest flag. `LPH` is
+  advanced while perched (`:468`). The same overwrite flattens some rabbit hops. Fix: give `threat()` its own
+  outputs (`TAX`, `TAY` at `:424` are declared and unused).
+- [ ] **80.** `P3` "One field layer" goes stale after Reset, for as long as the sim ran before it. `fieldBakeT`
+  is not reset (`:656`, `:755`). Cuts made while paused in this mode do not show either.
+- [ ] **81.** `P4` The hidden traveller in wheat is a headless dithered torso, and the overlay draws over trees
+  and sheep in front (`:678`, mask at `:575`).
+- [ ] **82.** `P4` (taste) Field-layer mode crops 6 of 11 sprite rows, leaving a floating head (`:613`, `:614`).
+- [ ] **83.** `P4` Grass freezes mid-lean with gust sheen stuck on when wind drops to Calm or Reduce motion
+  turns on. The settled shortcut returns a non-upright cached key (`:584`).
+- [ ] **84.** `P4` Changing season mid-transition pops to the full previous season in one frame (`:736`).
+- [ ] **85.** `P4` A firefly halo darkens lamp light where they overlap. `setL` keeps the higher level number,
+  not the brighter mix (`:574`, `:681`).
+- [ ] **86.** `P3` Showcase forces the interaction map on without syncing its button (`:759`).
+- [ ] **87.** `P5` HUD total leaves out `windUpdate`, the x-ray overlay and `putImageData`. Card 11 says "near
+  1 ms even with a 6x throttle". Measured default is 2.6 ms at 6x.
+- [ ] **88.** `P5` (suspected) HUD says "you: hidden, villager gets 0 B" even when the villager is adjacent or in
+  the same patch (`:673`).
+- [ ] **89.** `P5` A hidden villager is "not sent", yet the client keeps stamping its trail and rustle (`:384`).
+- [ ] **90.** `P6` (taste) Winter arrives as scattered single white pixels. Dawn and dusk snow is a flat salmon.
+  Burnt ground is fully covered by snow (`:345`).
+
+## vfx-water
+
+- [ ] **91.** `P3` Logs jam on the banks and under the bridge and are drawn over the bridge planks. They follow
+  the 8-direction cell flow (`:321` to `:327`, `:236`). Draw order at `:411`, `:412`. Fix: steer with the per-pixel
+  tangent `RTX/RTY` and blit logs before the deck.
+- [ ] **92.** `P3` Flow field at the river mouth is a radial starburst over dry beach, pointing upstream in
+  places (`:235`).
+- [ ] **93.** `P4` Palette-cycle highlights drift out to sea while the swash comes in (`:134`, `:143`). Fix:
+  `ramp[(k+step)&3]`.
+- [ ] **94.** `P3` The boat strands on sand at low tide and cannot be moved (`:315`).
+- [ ] **95.** `P4` (taste) Pond heightfield shows large light and dark rectangles. The slope thresholds are
+  tiny next to the poke size (`:373`, `:287`).
+- [ ] **96.** `P6` (taste) Animated tiles still read as a fixed 8 px lattice with phase offset on (`:140`).
+
+## vfx-fire
+
+- [ ] **97.** `P4` Heat haze shreds the flames into 1 px row slices. It is on by default and runs after the
+  flame pass (`:426` to `:428`, flames at `:402`). Fix: move the haze block before the flames.
+- [ ] **98.** `P3` Tools hit the ground cell behind the object you clicked. Clicking a tree crown ignites the
+  grass north of it (`:484`). Fix: use `OWN[]` for the clicked pixel.
+- [ ] **99.** `P4` Ground flames draw on top of houses and trees that stand in front of them (`:402` to `:404`).
+- [ ] **100.** `P3` Budget cap makes fire spread only north-west. The 3 ignitions per tick go to the lowest cell
+  indices (`:236`). Fix: sort candidates by a hash.
+- [ ] **101.** `P4` "Active cells" view flashes every cell that ever ignited. `FLASH` only decays inside the
+  x-ray draw (`:201`, `:439`).
+- [ ] **102.** `P3` Pause freezes the fire grid but not the sheep or fireballs (`:455` to `:457`, `:312`).
+- [ ] **103.** `P4` DOOM style shows no flame on the bottom cell row (`:279`).
+- [ ] **104.** `P4` Explosion ring fades in vertical stripes. It reads `BY` where it should read `BAY` (`:418`).
+- [ ] **105.** `P6` Light from the burning sheep and the fireball hops 8 px, one cell at a time (`:350`).
+- [ ] **106.** `P6` Fuel view calls `px('...')` three times per pixel (`:443`), 17.4 ms median at 6x. Hoist the
+  constants.
+- [ ] **107.** `P6` `Math.exp` runs for each of 57,600 pixels every frame, also when idle or paused (`:364`).
+
+## vfx-fog
+
+- [ ] **108.** `P4` Alpha blend mode paints full-brightness fog over explored ground that should be dimmed
+  (`:361`, `:390`).
+- [ ] **109.** `P4` Lamp halos and fog holes are centred at `L.y-9` for every lamp kind (`:343`, `:277`). The cave
+  torch halo sits 3 px above its flame and the tower beacon halo is off the canvas.
+- [ ] **110.** `P4` (taste) The traveller walks over house roofs and the cliff, and always draws on top of trees
+  (`:293`, `:199`, `:372`).
+- [ ] **111.** `P3` Field of view can be one cell stale while walking vertically. The trigger uses `P.y` and the
+  cast uses `P.y-2` (`:300`, `:290`).
+- [ ] **112.** `P6` Cloud shadows pop on and off at `TP.s<.15` where card 5 says they fade (`:328`).
+- [ ] **113.** `P6` (suspected) A wall placed on the stream still gets water sparkles (`:379`).
+- [ ] **114.** `P6` (suspected) The coastal fog front keeps advancing with Reduce motion on (`:304`).
+- [ ] **115.** `P6` (suspected) Cost view allocates a 57,600-entry array and a Float32Array every frame (`:404`).
+
+## vfx-acid
+
+- [ ] **116.** `P1` Crash. Killing a small slime with the sword writes NaN into the acid buffer. The HUD reads
+  "acid NaN u", and the canvas freezes once an item touches that pixel. `s.mass-=8` (`:270`) goes negative,
+  `rad()` takes its square root (`:235`), `spill()` adds NaN (`:186`), and `matIdx` indexes with it (`:193`). The
+  starting small slime triggers it every time. Fix: `Math.sqrt(Math.max(0,s.mass))` and clamp `si` in `matIdx`.
+- [ ] **117.** `P3` Standing on the NaN pixel locks the traveller in place (`:267`, `:280`). Fixed by #116.
+- [ ] **118.** `P4` All four flasks shatter on the first frame. The support check tests the gap between the table
+  legs (`:380`). Fix: test row `fl.y+4`.
+- [ ] **119.** `P3` "You dissolved…" stays on screen forever after Repair gear or Reset room during the death
+  pause (`:262`, `:277`).
+- [ ] **120.** `P3` Fumes pile up at the gate once the bars melt, and survive Reset room. Border cells are never
+  blurred or decayed (`:224`, `:197`), and reset clears `G` but not `G2`.
+- [ ] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
+- [ ] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
+- [ ] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
+  slime cap.
+- [ ] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
+
+## vfx-rain
+
+- [ ] **125.** `P3` The villager gets stuck on the fountain about 15 s after load and never moves again. A
+  waypoint leg passes through the fountain centre (`:177`, `:249`, `:259`).
+- [ ] **126.** `P4` (partly taste) Storm spray mist buries the plaza, the house and the player under a dense
+  checkerboard with hard rectangular edges (`:230`, `:329`).
+- [ ] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
+  returns to exactly 0 (`:283`, `:345`). Fix: `I>.02`.
+- [ ] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps
+  feeding evaporation mist (`:185`, `:115`, `:229`, `:231`).
+- [ ] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,
+  awning `SHL` at `:146`).
+- [ ] **130.** `P4` Streaks travel at twice the angle they are drawn at. Wind is applied to the ground point
+  (`:285`) and again from height (`:324`). Fix: delete the line at `:285`.
+- [ ] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
+- [ ] **132.** `P6` Sim speed 8 in a storm costs 82 ms per frame at 6x throttle. The catch-up loop allows 16
+  steps (`:348`).
+- [ ] **133.** `P4` (suspected) Rain curtains jump when the wind changes, more the longer the page is open
+  (`:180`, `wind*t*42`). Fix: integrate an offset.
+- [ ] **134.** `P6` The Intensity readout and HUD do not update while paused.
+
+## vfx-snow
+
+- [ ] **135.** `P3` Footprints appear on the roof, tree canopies and rock tops when the player or fox walks
+  behind them. `stamp()` and `depthAt()` accept any snow-holding pixel (`:222`, `:262`). Fix: require
+  `cls(S[i])===1`.
+- [ ] **136.** `P4` Snow on the top and bottom canvas rows never melts (`:243`).
+- [ ] **137.** `P4` Snow shading compares depth across surface boundaries, so the lit flank of every pine gets
+  the darkest shadow colour (`:336`). Fix: only use a neighbour of the same class.
+- [ ] **138.** `P3` Manual Heavy snow reaches the depth cap everywhere in under 2 minutes and flattens the scene
+  (`:220`, `MAXD` at `:144`).
+- [ ] **139.** `P6` The last fence post is 1 px wide (`:178`). Use `x<=201`.
+- [ ] **140.** `P6` (taste) Fence rails vanish under any snow, and rock caps have no edge against ground snow.
+- [ ] **141.** `P6` Walk bob is dead code, the terms cancel (`:325`).
+- [ ] **142.** `P6` "Add snow" ignores the canopy cap of 14 (`:229`). Shovel never exposes ground.
+- [ ] **143.** `P6` The HUD writes `textContent` every frame (`:362`).
+- [ ] **144.** `P6` Speed 16 in heavy snow costs 35 ms at 6x throttle. The loop allows 32 steps (`:372`).
+- [ ] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
+  Uint8Array.
+
+## vfx-light
+
+- [ ] **146.** `P4` Every object and both characters are in permanent sun shadow. A caster stamps its own base
+  row (`:217`, shading at `:302`, characters at `:263`).
+- [ ] **147.** `P4` Sunlight snaps off at 18:00 and on at 06:00, moonlight at about 18:23 and 05:37 (`:208`,
+  `:210`). With the default start it happens about 4 s after load. Fix: ramp by elevation.
+- [ ] **148.** `P3` Indoors with Light shadows on, the candle lights nothing and furniture acts like walls. The
+  candle (`:184`) sits inside the table occluder (`:138`), and the bed occluder (`:136`) beats the fireplace
+  threshold (`:198`).
+- [ ] **149.** `P4` The magic crystal shadows its own glow (`:188`, `:168`). The brazier has the same setup.
+- [ ] **150.** `P4` Placed lights have no sprite, only a glow (`:330`). `RUNE` is defined and never drawn.
+- [ ] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
+  room is near black at noon (`:301`).
+- [ ] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).
+- [ ] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
+  2.48 px (`:217`).
+- [ ] **154.** `P3` Indoor sun patches freeze when Sun shadows is off. The early return at `:213` skips
+  `SUNP.fill(0)` at `:219`.
+- [ ] **155.** `P5` "Your light's rays" view shows stale rays when Light shadows is off (`:284`, `:310`).
+- [ ] **156.** `P4` The carried lantern and torch handle draw through roofs and tree crowns (`:276` to `:278`).
+- [ ] **157.** `P4` (suspected) The moon glint is on the wrong side of the pond (`:291`).
+- [ ] **158.** `P6` String-light bulbs ignore the computed `sag` (`:190`). The lamp glass sits 1 px below the
+  cage hole (`:271`). Fireflies drift at about 0.6 px/s and read as static. Noon cobbles clip to white (taste).
+
+## vfx-forest
+
+- [ ] **159.** `P4` Winter bare trees are poles with a flat bar on top. Branches overflow the sprite and `y|0`
+  piles them into row 0 (`:136`, `:123`).
+- [ ] **160.** `P6` Each season change freezes the frame for 60 ms, 382 ms at 6x throttle. `genGround` redoes
+  1280 x 960 pixels (`:276`, `:211` to `:229`). Auto year hits it every 40 s. Fix: bake the four grounds once.
+- [ ] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,
+  phase is `time*wind`). Fix: accumulate a gust phase.
+- [ ] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
+- [ ] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
+  (`:253`, `:256`, `:351`).
+- [ ] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
+  `:220`).
+- [ ] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
+  visible trees (`:285`). Shadows pop at the top edge (`:299`). The minimap rectangle is antialiased (`:326`).
+- [ ] **166.** `P6` (suspected) Per-frame garbage. 4 arrays per tree (`:313`) and a hex string per litter pixel
+  and particle (`:301`, `:320`). The HUD writes on about 6 of every 18 frames (`:339`).
+- [ ] **167.** `P6` The Wind slider has no value readout.
+
+## curves-hearthguard
+
+- [ ] **168.** `P5` "Proposed sawtooth" does not reproduce the report. Chapter 4 starts at 0.85, the report says
+  0.92. The lab scales boss time by reference damage over current damage (`:140`), which
+  `notes/curves_model.py` does not. Fix: drop the factor, or regenerate the report numbers from the lab.
+- [ ] **169.** `P5` The Players slider changes hero level and run length (25.5 to 36.2 min at 3 players),
+  against the caption "Per-hero XP equals solo in co-op" (`:124`, `:140` to `:142`).
+- [ ] **170.** `P5` Dmg / lvl readout rounds to whole percent on a 0.005 step, so 0.085 and 0.09 both read "9%"
+  (`:190`, `:166`).
+- [ ] **171.** `P5` Report §12 lists sliders and plots the lab does not have (`waveGapS`, a per-chapter Hearth
+  term, mob counts, a target line).
+- [ ] **172.** `P6` "Current (b509a56)" stays highlighted when knobs it does not cover are changed (`:226`,
+  `:242`).
+- [ ] **173.** `P6` Hand-edited localStorage can blank the page. The load check accepts any 5-long array (`:186`).
+
+## curves-matchrpg
+
+- [ ] **174.** `P5` "Endless doubles every" card hardcodes 12 and ignores the Every slider (`:464`). Fix: use
+  `S.every`.
+- [ ] **175.** `P4` Scroll chart labels collide. "p90 369 s" sits on the boss labels on Diamond, unreadable at
+  390 px, and the "600 s" axis label is cut at the right edge (`:391`, `:367`, `:390`, `:359`).
+- [ ] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
+  it by `n mod 12`. Depends on intent.
+- [ ] **177.** `P5` Landing watch text does not match the chart (`:114`).
+- [ ] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
+  and 0.81 (`:155`).
+- [ ] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
+  `:422`). XP_PAST_LEVEL reads "9/24" at the 3/8 stop (`:255`). `REACH` is unused (`:160`).
+- [ ] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
+  would print NaN.
+
+## Not covered by the review
+
+- Real touch input on a phone, audio output, Firefox and Safari, displays above 60 Hz (120 Hz findings come
+  from stepping the sim at 1/120 s).
