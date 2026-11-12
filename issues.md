@@ -112,8 +112,14 @@ How to use this file:
   Done: confirmed in the code, not seen on screen. render() paints the frame ink before the shaken
   background whenever the camera offset is not zero. The arena's side borders are ink already, so the
   stale pixels could only show as a 1 to 2 px strip on the bottom row.
-- [ ] **21.** `P6` Telegraph decal cache holds a 305 x 305 canvas per angle per fill step, cleared only above 900
+- [x] **21.** `P6` Telegraph decal cache holds a 305 x 305 canvas per angle per fill step, cleared only above 900
   entries (`:319`). Worst case is a few hundred MB. (suspected)
+  Done: confirmed in the code. A line decal was a 305 x 305 canvas whatever its angle, and the cache was
+  cleared by entry count, so 900 entries could hold 335 MB. Line and aim decals are now baked in the
+  bounding box of the rotated strip, 9.1 times fewer pixels on average. The cache is cleared when it
+  passes 2 million px, which is 8 MB. All 2,056 decals compared (64 angles, both shapes, both teams, 4
+  fill steps, with and without colour-blind patterns, plus the circles) are pixel-identical to the old
+  ones.
 - [ ] **22.** `P6` The HUD total under-reports by about a quarter in heavy mode. It leaves out the x-ray draw and
   the DOM write.
 
