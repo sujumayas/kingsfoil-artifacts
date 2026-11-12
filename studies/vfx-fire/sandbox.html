@@ -398,6 +398,11 @@ function render(){
   for(const p of puffs){const f=p.a/375,R=1.2+4.6*f,al=.8*(1-f),cx=p.x,cy=p.y,ir=Math.ceil(R);
     for(let dy=-ir;dy<=ir;dy++)for(let dx=-ir;dx<=ir;dx++){const d2=(dx*dx+dy*dy)/(R*R);if(d2>1)continue;const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;
       if(al*(1.2-d2*.7)*16<=BY[i])continue;out[i]=lit(dy<-R*.3?S1:d2>.55&&dy>0?S3:S2,LR[i]*.9+.1,LG[i]*.9+.1,LB[i]*.9+.1);}}
+  // heat haze: sine row offsets above big fires. It runs before the flames, so it bends the scene and the smoke behind
+  // them and leaves the flame sprites, sparks, rain and damage numbers whole
+  if(haze){HZ.fill(0);let any=0;for(const c of active)if(STA[c]===BURN&&OBJ[c]&&!DEAD[c]){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<5;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
+    for(const c of fieldList)if(FLD[c]===3){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<3;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
+    if(any){tmp.set(out);for(let y=0;y<H;y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;for(let x=1;x<W-1;x++){const i=y*W+x;if(HZ[CELL[i]])out[i]=tmp[i+dx];}}}}
   // flames
   if(style==='sprite'){const L=[];flames((x,y,sz,key)=>L.push(x,y,sz,key));const idx=[];for(let k=0;k<L.length;k+=4)idx.push(k);idx.sort((a,b)=>L[a+1]-L[b+1]);
     for(const k of idx){const x=L[k],y=L[k+1],sz=L[k+2],key=L[k+3],per=sz>=3?640:sz===2?500:400,f=(((ms+x*3047+y*88+key*131)%per)/per*4)|0,[w,h]=FS[sz],a=SPR[sz][f];
@@ -422,10 +427,6 @@ function render(){
   for(const f of floaters){const str=String(f.v),x0=Math.round(f.x-str.length*2),y0=Math.round(f.y);if(f.a>36&&(f.a&2))continue;
     for(let n=0;n<str.length;n++){const g=FONT[+str[n]];for(let p=0;p<15;p++)if(g[p]==='1'){const x=x0+n*4+p%3,y=y0+(p/3|0);putE(x-1,y,BLK);putE(x+1,y,BLK);putE(x,y-1,BLK);putE(x,y+1,BLK);}
       for(let p=0;p<15;p++)if(g[p]==='1')putE(x0+n*4+p%3,y0+(p/3|0),f.a<6?WHITE:ORA);}}
-  // heat haze: sine row offsets above big fires
-  if(haze){HZ.fill(0);let any=0;for(const c of active)if(STA[c]===BURN&&OBJ[c]&&!DEAD[c]){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<5;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
-    for(const c of fieldList)if(FLD[c]===3){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<3;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
-    if(any){tmp.set(out);for(let y=0;y<H;y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;for(let x=1;x<W-1;x++){const i=y*W+x;if(HZ[CELL[i]])out[i]=tmp[i+dx];}}}}
   // palette lock: everything to Endesga 32 with ordered dither
   if(lock){if(!LUT)buildLUT();for(let i=0;i<NP;i++){const c=out[i],o=(BY[i]-7.5)*.9;const r=clamp(((c&255)+o)|0,0,255),g=clamp((((c>>8)&255)+o)|0,0,255),b=clamp((((c>>16)&255)+o)|0,0,255);out[i]=LUT[(r>>3)<<10|(g>>3)<<5|(b>>3)];}}
   if(view!=='normal')xray();

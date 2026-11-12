@@ -502,8 +502,11 @@ How to use this file:
 
 ## vfx-fire
 
-- [ ] **97.** `P4` Heat haze shreds the flames into 1 px row slices. It is on by default and runs after the
+- [x] **97.** `P4` Heat haze shreds the flames into 1 px row slices. It is on by default and runs after the
   flame pass (`:426` to `:428`, flames at `:402`). Fix: move the haze block before the flames.
+  Done: the haze block runs after the smoke and before the flames. Blaze demo, flame pixels inside the
+  haze area that the haze pass changed: 2,423 of 4,203 before, 0 after. Sparks, rain and damage numbers
+  are no longer shifted either.
 - [ ] **98.** `P3` Tools hit the ground cell behind the object you clicked. Clicking a tree crown ignites the
   grass north of it (`:484`). Fix: use `OWN[]` for the clicked pixel.
 - [ ] **99.** `P4` Ground flames draw on top of houses and trees that stand in front of them (`:402` to `:404`).
