@@ -329,6 +329,8 @@ function step60(){const dt=1/60;frameN++;tSec+=dt;
   for(let k=expl.length-1;k>=0;k--){const e=expl[k];e.a++;if(e.a===4)for(let q=0;q<5;q++)addSmoke(e.x+(q-2)*3,e.y-4-(q&1)*4,1.2,0);if(e.a>26)expl.splice(k,1);}
   for(let k=floaters.length-1;k>=0;k--){const f=floaters[k];f.a++;f.y-=.25;if(f.a>48)floaters.splice(k,1);}
   if(shake>0)shake--;
+  // ignition flash of the Active cells view. It decays here so it runs out in every view
+  for(let c=0;c<NC;c++)if(FLASH[c])FLASH[c]--;
   if(frameN&1){doomStep();smokeStep(1/30);}
 }
 
@@ -441,7 +443,7 @@ function xray(){
   if(view==='active'){for(let i=0;i<NP;i++){const c=out[i];out[i]=(255<<24|((((c>>16)&255)*.3)|0)<<16|((((c>>8)&255)*.3)|0)<<8|(((c&255)*.3)|0))>>>0;}
     const box=(c,col,fill)=>{const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=0;y<8;y++)for(let x=0;x<8;x++){if(!fill&&x&&y&&x<7&&y<7)continue;if(fill&&BY[(y0+y)*W+x0+x]>fill)continue;putE(x0+x,y0+y,col);}};
     for(const c of LAVAC)box(c,MAG,0);for(const c of fieldList)box(c,PINK,0);
-    for(let c=0;c<NC;c++){if(FLASH[c]){box(c,WHITE,FLASH[c]);FLASH[c]--;}else if(STEAM[c]>2)box(c,CYAN,6);}
+    for(let c=0;c<NC;c++){if(FLASH[c])box(c,WHITE,FLASH[c]);else if(STEAM[c]>2)box(c,CYAN,6);}
     for(const c of active){const s=STA[c];box(c,s===IGN?YEL:s===BURN?ORA:RED,0);if(s===IGN)box(c,YEL,5);}
     return;}
   for(let i=0;i<NP;i++){const c=CELL[i],x=i%W,y=(i/W)|0,edge=(x&7)===0||(y&7)===0;let col;

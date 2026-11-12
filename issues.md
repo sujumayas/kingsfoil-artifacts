@@ -527,8 +527,11 @@ How to use this file:
   the cap on. Burnt cells north and south of the start: 86 and 17 before, 51 and 51 after. Mean row
   offset: -4.31 cells before, 0.09 after. The bias was to the north. West and east were already even
   (47 and 53 before).
-- [ ] **101.** `P4` "Active cells" view flashes every cell that ever ignited. `FLASH` only decays inside the
+- [x] **101.** `P4` "Active cells" view flashes every cell that ever ignited. `FLASH` only decays inside the
   x-ray draw (`:201`, `:439`).
+  Done: the countdown moved from the x-ray draw to `step60()`. Blaze demo plus 20 ticks in the Normal
+  view: cells with a pending flash went from 237 (every cell that ever ignited) to 0 one tick after the
+  last ignition. A flash still lasts 12 frames.
 - [ ] **102.** `P3` Pause freezes the fire grid but not the sheep or fireballs (`:455` to `:457`, `:312`).
 - [ ] **103.** `P4` DOOM style shows no flame on the bottom cell row (`:279`).
 - [ ] **104.** `P4` Explosion ring fades in vertical stripes. It reads `BY` where it should read `BAY` (`:418`).
