@@ -946,7 +946,10 @@ How to use this file:
   landing is the relief after a wall, and walls are every 12. With Every 8 and Landing 3, encounters 13 to
   15 stayed at power 1.45 and the dip fell on 9 to 11. Now 13 to 15 drop to 1.0. At Every 12 nothing
   changes.
-- [ ] **177.** `P5` Landing watch text does not match the chart (`:114`).
+- [x] **177.** `P5` Landing watch text does not match the chart (`:114`).
+  Done: the old text said each elite stops being the first enemy of a new step. In the model and in report
+  A2 the wall keeps its step (encounter 12 at 1.45) and the 3 encounters after it drop back (13 to 15 at
+  1.00, 16 at 1.45). The text now says that.
 - [ ] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
   and 0.81 (`:155`).
 - [ ] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
