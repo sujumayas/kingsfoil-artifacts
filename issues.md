@@ -792,8 +792,11 @@ How to use this file:
   hanging lantern, crystal, rune lamp and mushroom. The rune lamp uses `RUNE` and goes grey during its
   blackouts. Changed pixels around a placed light went from 0 for every kind to between 3 (candle) and 16
   (lantern).
-- [ ] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
+- [x] **151.** `P4` Fireplace and candle flames burn all day while their lights are off (`:269`, `:247`), and the
   room is near black at noon (`:301`).
+  Done: the fireplace shows logs and the candle no flame while their lights are off. Indoor ambient goes
+  from 28% of the sky at night to 75% with the sun 20 degrees up. Floor light multiplier indoors at noon:
+  0.16 before, 0.43 after.
 - [ ] **152.** `P4` House fronts and roofs are lit in vertical stripes at night (`:299`, `:303`).
 - [ ] **153.** `P4` Lamp post and fence shadows are dashed at low sun. The stamp is 2 px wide and the step is
   2.48 px (`:217`).
