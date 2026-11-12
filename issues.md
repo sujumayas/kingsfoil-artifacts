@@ -256,7 +256,9 @@ How to use this file:
   Done: the menu opens 12 px to the side of the player, away from the NPC. Tested from every tile you can
   talk from, for the elder and Mara in both languages. The menu covered the NPC in 14 of 14 positions before
   and the player in 12. After, it covers neither in all 14 and stays on the canvas.
-- [ ] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
+- [x] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
+  Done: the tracker is not drawn while the trade panel is open. With two quest rows active, "Tell the elder"
+  started at x 246, y 15 and ran under the panel edge at x 272. The panel keeps its own gold counter.
 - [ ] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
 - [ ] **50.** `P3` Crowd "wait your turn" never plays out. `s.heard` is read (`:791`) and never written.
 - [ ] **51.** `P3` Stack clutter mode pushes bubbles off the top of the canvas and still counts them (`:852`).

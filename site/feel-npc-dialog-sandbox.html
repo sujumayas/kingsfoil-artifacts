@@ -896,7 +896,8 @@ function drawPanels(){const t=simT;
     if(v.q1===1)rows.push([IC.herb,v.herbs>=3?(LANG==='es'?'Vuelve con el anciano':'Return to the elder'):(LANG==='es'?'Hierbas ':'Herbs ')+Math.min(3,v.herbs)+'/3']);
     if(v.q2===1)rows.push([IC.bread,LANG==='es'?'Avisa al anciano':'Tell the elder']);if(v.q2===2)rows.push([IC.bread,LANG==='es'?'Vuelve con Mara':'Return to Mara']);
     rows.push([IC.coin,String(CL.gold)]);TR.flash=Math.max(0,TR.flash-1/60);
-    rows.forEach(([ic,s],i)=>{const tw=textW(F1,s),x=W-tw-16,y=4+i*11;B(ic,x,y);drawStr(F1,s,x+11,y,TR.flash>0&&i===0&&((t*10)|0)&1?P.o2:P.wh,2,P.ink);});}
+    // the trade panel has its own gold counter and covers the top right, so the tracker steps aside for it
+    if(!TRADE.on)rows.forEach(([ic,s],i)=>{const tw=textW(F1,s),x=W-tw-16,y=4+i*11;B(ic,x,y);drawStr(F1,s,x+11,y,TR.flash>0&&i===0&&((t*10)|0)&1?P.o2:P.wh,2,P.ink);});}
   if(CARD.on){CARD.t+=1/60;const q=QUESTS[CARD.q],e=RM?1:ease(Math.min(1,CARD.t/.2)),x=56,w=208,h=110,y=Math.round(24-(1-e)*24);
     nine(FR_CARD,8,x,y,w,h);const tt=str(q.id+'t');drawStr(F1,LANG==='es'?'MISIÓN':'QUEST',x+10,y+8,P.r1,0);drawStr(F1,tt,x+w-10-textW(F1,tt),y+8,P.w0,0);R(x+8,y+19,w-16,1,'#'+P.w3);
     const gl=parseRich(str(q.id+'d'));layout(gl,F1,w-20);drawRich(gl,F1,x+10,y+24,1,TH.card,1e9,0,9,t,null,null);
