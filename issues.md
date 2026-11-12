@@ -365,7 +365,9 @@ How to use this file:
 - [x] **71.** `P6` Beam damage numbers stack into an unreadable column (`:314`, `:600`).
   Done: a beam tick adds to the live number on its target and restarts the rise. After 1 s of beam on a
   dummy: three 5s at y 41, 45 and 48 before, one 25 after. Other damage keeps one number per hit.
-- [ ] **72.** `P6` Haste button stays lit after the timer runs out (`:703`).
+- [x] **72.** `P6` Haste button stays lit after the timer runs out (`:703`).
+  Done: the aura update syncs the button when the player's haste ends, and clamps the timer at 0 (it stopped
+  at -0.017 before). Button lit after expiry: yes before, no after.
 - [ ] **73.** `P5` HUD "evicted" also counts refused spawns, and "particles refused" counts overwritten live
   particles (`:261`, `:274`).
 - [ ] **74.** `P6` `lightQ` calls for level up (`:704`) and heal (`:368`) are cleared before render, so those

@@ -426,7 +426,7 @@ const STK=['burn','pois','froz','shock'];
 function updAura(dt){for(const e of ents){if(!e.act)continue;
     for(const k of STK)if(e[k]>0){e[k]-=dt;if(e[k]<=0){e[k]=0;ev('cond','COND #'+e.id+' '+k.toUpperCase()+' OFF',e.x,e.y,0,0);if(aurasOn)burst(3,e.stTier,EK[k],6,e.x,e.y-8,2,3,8,.4,.6,10);}}
     if(e.shield>0){e.shield-=dt;if(e.shield<=0){e.shield=0;ev('cond','COND #'+e.id+' SHIELD OFF',e.x,e.y,0,0);const g=spawn(7,e.shTier,1,.2);if(g){g.x=e.x;g.y=e.y-2;g.r=16;}}}
-    if(e.shHit>0)e.shHit-=dt;if(e.flash>0)e.flash-=dt;if(e.healT>0)e.healT-=dt;if(e.lvlT>0)e.lvlT-=dt;if(e.broke>0)e.broke-=dt;if(e.haste>0)e.haste-=dt;
+    if(e.shHit>0)e.shHit-=dt;if(e.flash>0)e.flash-=dt;if(e.healT>0)e.healT-=dt;if(e.lvlT>0)e.lvlT-=dt;if(e.broke>0)e.broke-=dt;if(e.haste>0){e.haste-=dt;if(e.haste<=0){e.haste=0;if(e===P)syHaste();}}
     if(e.burn>0||e.pois>0){e.dot+=dt;if(e.dot>=.5){e.dot=0;if(e.burn>0)hurt(e,2,0,e.stTier);if(e.pois>0)hurt(e,1,3,e.stTier);e.flash=0;}}
     if(!aurasOn||e.dead)continue;const t=e.stTier,pm=POL[t].pm*(rm?.5:1);e.em+=dt;
     if(e.em>=.07){e.em=0;
@@ -713,7 +713,7 @@ const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',!!get());b
 const syRes=tog('residue',()=>residue,v=>residue=v),syAur=tog('auras',()=>aurasOn,v=>aurasOn=v),syScr=tog('screen',()=>scrOn,v=>scrOn=v),syRf=tog('rflash',()=>redFlash,v=>redFlash=v),syRm=tog('rm',()=>rm,v=>rm=v),syCb=tog('cb',()=>cbOn,v=>{cbOn=v;buildRamps(v);});
 const syMgr=tog('mgr',()=>mgr,v=>{mgr=v;$('mgr').textContent=v?'Manager on':'Manager off';setPolicy();}),syMons=tog('mons',()=>monsOn,v=>monsOn=v),syPause=tog('pause',()=>paused,v=>paused=v),sySlow=tog('slow',()=>slow,v=>slow=v);
 const syPh=tog('inphase',()=>inPhase,v=>inPhase=v),sySf=tog('sfront',()=>sparkFront,v=>sparkFront=v),syDim=tog('dim',()=>dimOn,v=>dimOn=v);
-tog('haste',()=>P.haste>0,v=>P.haste=v?600:0);$('lvl').onclick=levelUp;
+const syHaste=tog('haste',()=>P.haste>0,v=>P.haste=v?600:0);$('lvl').onclick=levelUp;
 function levelUp(){P.lvlT=1.4;ev('effect','EFFECT '+tl(P.x,P.y)+' LEVELUP',P.x,P.y,0,0);burst(3,0,4,5,P.x,P.y-8,18,20,50,.5,.9,14);lightQ(P.x,P.y-8,5,4,1,0);}
 const setCrowd=v=>{crowdN=+v;$('crowd').value=v;$('crowdl').textContent=v;},setStress=v=>{stress=+v;$('stress').value=v;$('stressl').textContent=v+'x';};
 $('crowd').oninput=e=>setCrowd(e.target.value);$('stress').oninput=e=>setStress(e.target.value);
