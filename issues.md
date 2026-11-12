@@ -259,7 +259,9 @@ How to use this file:
 - [x] **48.** `P4` The quest tracker runs under the trade panel (`:889` to `:899`).
   Done: the tracker is not drawn while the trade panel is open. With two quest rows active, "Tell the elder"
   started at x 246, y 15 and ran under the panel edge at x 272. The panel keeps its own gold counter.
-- [ ] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
+- [x] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
+  Done: the panel is 153 px tall instead of 140 and starts 5 px higher. With all 7 kinds in the bag the last
+  row ended at y 146, 8 px past the separator at y 138. Now it ends at y 141 and the separator is at y 146.
 - [ ] **50.** `P3` Crowd "wait your turn" never plays out. `s.heard` is read (`:791`) and never written.
 - [ ] **51.** `P3` Stack clutter mode pushes bubbles off the top of the canvas and still counts them (`:852`).
   Priority mode never clears `b.capped` (`:848`), so a bubble capped once stays hidden.
