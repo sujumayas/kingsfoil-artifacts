@@ -471,8 +471,12 @@ How to use this file:
   the plunge pool by its outlet. They are drawn before the posts and the planks. 8 logs dropped from above
   the falls down to the mouth, 60 s: 1 reached the sea before, 8 after, the slowest in 14.7 s. A log
   under the bridge covered 35 deck pixels before, 0 after.
-- [ ] **92.** `P3` Flow field at the river mouth is a radial starburst over dry beach, pointing upstream in
+- [x] **92.** `P3` Flow field at the river mouth is a radial starburst over dry beach, pointing upstream in
   places (`:235`).
+  Done: the mouth flow follows the last river segment and fans out up to 35 degrees to each side, on sea
+  bed that the high tide covers. The flow view skips cells that are dry at the current tide. Sea flow
+  cells: 61 with 22 pointing upstream before, 35 with 0 upstream after. Arrows drawn on dry cells at tide
+  0, 128 and 255: 35, 26 and 14 before, none after.
 - [ ] **93.** `P4` Palette-cycle highlights drift out to sea while the swash comes in (`:134`, `:143`). Fix:
   `ramp[(k+step)&3]`.
 - [ ] **94.** `P3` The boat strands on sand at low tide and cannot be moved (`:315`).

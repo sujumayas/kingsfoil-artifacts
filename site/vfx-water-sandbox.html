@@ -232,7 +232,9 @@ const DXS=[1,.7071,0,-.7071,-1,-.7071,0,.7071],DYS=[0,.7071,1,.7071,0,-.7071,-1,
 const FDIR=new Uint8Array(NC),FSPD=new Uint8Array(NC);
 {const sx=new Float32Array(NC),sy=new Float32Array(NC),sn=new Float32Array(NC),ss=new Float32Array(NC);
   for(let i=0;i<NP;i++){const b=BODY[i],c=CELL[i];if(b===2){sx[c]+=RTX[i];sy[c]+=RTY[i];ss[c]+=RSPD[i];sn[c]++;}else if(b===4){sy[c]+=1;ss[c]+=3;sn[c]++;}
-    else if(b===1){const dx=XS[i]-198,dy=YS[i]-140,d=Math.hypot(dx,dy);if(d<36&&d>0){sx[c]+=dx/d;sy[c]+=dy/d;ss[c]+=1;sn[c]++;}}}
+    // river mouth: a jet along the last river segment that fans out to sea. Only sea bed that the high tide covers takes part
+    else if(b===1&&HGT[i]<148){const dx=XS[i]-198,dy=YS[i]-140,al=dx*.857+dy*.515,ac=dy*.857-dx*.515,hw=9+al*.6;
+      if(al>-6&&al<36&&Math.abs(ac)<hw){const k=ac/hw*.7,l=Math.hypot(1,k);sx[c]+=(.857-.515*k)/l;sy[c]+=(.515+.857*k)/l;ss[c]+=1;sn[c]++;}}}
   for(let c=0;c<NC;c++){if(sn[c]<3){FSPD[c]=0;continue;}FDIR[c]=((Math.round(Math.atan2(sy[c],sx[c])/(Math.PI/4))%8)+8)%8;FSPD[c]=clamp(Math.round(ss[c]/sn[c]),1,3);}
   const vx=c=>FSPD[c]?DXS[FDIR[c]]*FSPD[c]*9:0,vy=c=>FSPD[c]?DYS[FDIR[c]]*FSPD[c]*9:0;
   for(let i=0;i<NP;i++){if(!BODY[i])continue;const gx=clamp((XS[i]-4)/8,0,GW-1.001),gy=clamp((YS[i]-4)/8,0,GH-1.001),ix=gx|0,iy=gy|0,fx=gx-ix,fy=gy-iy,c=iy*GW+ix,c2=ix+1<GW?c+1:c,c3=iy+1<GH?c+GW:c,c4=iy+1<GH?c2+GW:c2;
@@ -446,7 +448,7 @@ function drawView(){
     if((x&7)===0||(y&7)===0)c=dim(c)|0xff000000;out[i]=c;}
     for(let c=0;c<NC;c++){const v=SD[c];if(v!==0)continue;const x=(c%GW)*8+3,y=((c/GW)|0)*8+3;if(y<H-1){out[y*W+x]=out[y*W+x+1]=out[(y+1)*W+x]=out[(y+1)*W+x+1]=rgb('ff8a3c');}}}
   else if(view==='flow'){for(let i=0;i<NP;i++)out[i]=dim(out[i]);const cols=[0,rgb('9fd8ff'),rgb('ffe060'),rgb('ff6a4a')];
-    for(let c=0;c<NC;c++){const s=FSPD[c];if(!s)continue;const x=(c%GW)*8+4,y=((c/GW)|0)*8+4,l=1+s,ex=x+DXS[FDIR[c]]*l,ey=y+DYS[FDIR[c]]*l;vline(x-DXS[FDIR[c]]*1.5,y-DYS[FDIR[c]]*1.5,ex,ey,cols[s]);vline(ex,ey,ex,ey,0xffffffff);}}
+    for(let c=0;c<NC;c++){const s=FSPD[c];if(!s||!KIND[c])continue;const x=(c%GW)*8+4,y=((c/GW)|0)*8+4,l=1+s,ex=x+DXS[FDIR[c]]*l,ey=y+DYS[FDIR[c]]*l;vline(x-DXS[FDIR[c]]*1.5,y-DYS[FDIR[c]]*1.5,ex,ey,cols[s]);vline(ex,ey,ex,ey,0xffffffff);}}
   else if(view==='auto'){for(let i=0;i<NP;i++)out[i]=dim(out[i]);const TW=GW-1;
     for(let ty=0;ty<GH-1;ty++)for(let tx=0;tx<TW;tx++){const cs=CASE[ty*TW+tx];if(cs===0)continue;const hue=cs*22.5*Math.PI/180,col=cs===15?rgb('203a70'):(255<<24|((Math.sin(hue+4.2)*.5+.5)*200+40)<<16|((Math.sin(hue+2.1)*.5+.5)*200+40)<<8|((Math.sin(hue)*.5+.5)*200+40))>>>0;
       for(let y=ty*8+4;y<ty*8+12&&y<H;y++)for(let x=tx*8+4;x<tx*8+12;x++){const i=y*W+x,e=(x&7)===4||(y&7)===4;if(cs===15){if(e)out[i]=col;continue;}out[i]=e?col:(BODY[i]===1&&WATER[i]?dim(col)|0xff000000:out[i]);
