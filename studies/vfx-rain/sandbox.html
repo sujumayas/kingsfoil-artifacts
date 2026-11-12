@@ -346,7 +346,7 @@ function render(){buildPalette();const sunny=weather==='sun',slot=(frameN>>3)*26
   if(view==='normal'){for(let i=0;i<NP;i++){const idx=IDX[i];out32[i]=(fl>0&&FIREL[i]*fl*22>BY[i]+3)?palFire[idx]:pal[idx];}}
   else{for(let i=0;i<NP;i++){let v=-1;const s=S[i];if(view==='wet')v=WET[i]/255;else if(view==='water')v=s===WATER?-1:Math.min(1,WAT[i]*3);else if(view==='ripple')v=(s===WATER||WAT[i]>.12)?.5+R0[i]*.15:-1;else if(view==='exp')v=EXP[i];else v=MI[((i/W|0)>>1)*GW+((i%W)>>1)]*1.2;
     out32[i]=(v<0||SPR[i])?pal[IDX[i]]:HEAT[Math.max(0,Math.min(255,(v*255)|0))];}}
-  ctx.putImageData(img,0,0);cv.style.transform=shake>0?`translate(${(rnd()-.5)*4*shake/.45}px,${(rnd()-.5)*3*shake/.45}px)`:'';}
+  ctx.putImageData(img,0,0);cv.style.transform=shake>0&&!paused?`translate(${(rnd()-.5)*4*shake/.45}px,${(rnd()-.5)*3*shake/.45}px)`:'';}
 const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const q=i/255;HEAT[i]=pack(q<.5?14+q*2*20:34+(q-.5)*2*200,q<.5?20+q*2*120:140+(q-.5)*2*110,q<.5?40+q*2*160:200+(q-.5)*2*50);}
 
 // ---------- loop & UI ----------

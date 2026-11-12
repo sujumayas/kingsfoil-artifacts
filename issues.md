@@ -694,7 +694,9 @@ How to use this file:
   (`:285`) and again from height (`:324`). Fix: delete the line at `:285`.
   Done: the wind push on the ground point is gone, the slant comes from height alone. At wind 0.6 a streak
   travelled at slope 0.66 and was drawn at 0.33. Both are 0.33 now.
-- [ ] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
+- [x] **131.** `P3` Thunder shake never stops while paused (`:335`, `:349`).
+  Done: the canvas offset is only applied while the sim runs. Paused mid-shake, 30 redraws gave 30 different
+  offsets, now none.
 - [ ] **132.** `P6` Sim speed 8 in a storm costs 82 ms per frame at 6x throttle. The catch-up loop allows 16
   steps (`:348`).
 - [ ] **133.** `P4` (suspected) Rain curtains jump when the wind changes, more the longer the page is open
