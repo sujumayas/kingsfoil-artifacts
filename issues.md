@@ -273,7 +273,9 @@ How to use this file:
   Done: a bubble stacked above y 1 is hidden and counted in "hidden". The capped flag is removed. With 30
   players over 50 s, Stack mode drew 6.4 bubbles per frame fully above the canvas, the highest at y -204.
   Now 0. In Priority mode 738 of 2,999 frames had free slots while capped bubbles stayed hidden. Now 0.
-- [ ] **52.** `P4` Chat ranges view prints the SAY and YELL labels on top of each other (`:920`).
+- [x] **52.** `P4` Chat ranges view prints the SAY and YELL labels on top of each other (`:920`).
+  Done: YELL is placed first, then SAY, then WHISPER, each at least 8 px under the one before. From the
+  start tile, YELL and SAY both drew at y 2. Now YELL is at y 2 and SAY at y 10.
 - [ ] **53.** `P4` Server sessions view prints "?" for "@". The small font has no `@` (`:925`).
 - [ ] **54.** `P3` "Wait for server" mode repeats the dialog when E is pressed more than once in flight (`:723`).
 - [ ] **55.** `P6` Pause does not pause popups and emotes. They add a fixed 1/60 per frame (`:829`, `:833`, `:892`,
