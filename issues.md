@@ -379,8 +379,11 @@ How to use this file:
   Done: the aura pass queues both lights each frame while the effect plays, fading with it. At night, holy
   lights in the queue one frame after the cast: 0 before, 1 after for each. Brightness gain around the mage:
   level up 16,053 before and 116,181 after, heal 17,166 and 47,003.
-- [ ] **75.** `P6` Colour-blind mode leaves hostile impact particles and damage numbers in the element colour
+- [x] **75.** `P6` Colour-blind mode leaves hostile impact particles and damage numbers in the element colour
   (`:256`, `:375`, `:338`).
+  Done: part() and the damage number in hurt() apply the same hostile rule as spawn(). A hostile arcane hit
+  with the palette on: 10 arcane particles and an arcane number before, 10 in the orange danger ramp and an
+  orange number after.
 - [ ] **76.** `P6` Reset does not unpause or clear the note, and the first haste afterimages flash at pre-reset
   positions (`:720` to `:722`).
 

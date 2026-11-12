@@ -269,7 +269,7 @@ function clarityPass(){const t0=now();TC[0]=TC[1]=TC[2]=TC[3]=0;while(fxHi>0&&!F
 const PX=new Float32Array(NPART),PY=new Float32Array(NPART),PVX=new Float32Array(NPART),PVY=new Float32Array(NPART),PL=new Float32Array(NPART),PM=new Float32Array(NPART),PK=new Uint8Array(NPART),PE=new Uint8Array(NPART),PTR=new Uint8Array(NPART);
 const PS0=[0,1000,3200,7000],PS1=[1000,3200,7000,8000],PCUR=PS0.slice(),PHI=PS0.slice();let liveP=0;
 // kinds: 0 spark, 1 rising tongue, 2 gather, 3 bubble, 4 shard, 5 mote, 6 smoke, 7 zap
-function part(L,tier,el,k,x,y,vx,vy,life){if(mgr&&tier===2&&liveP>=PRM.cap.parts){partDrop++;return;}
+function part(L,tier,el,k,x,y,vx,vy,life){if(cbOn&&tier===3)el=0;if(mgr&&tier===2&&liveP>=PRM.cap.parts){partDrop++;return;}
   const s=PS0[L],e=PS1[L];let i=PCUR[L];for(let n=0;n<6&&PL[i]>0;n++){i++;if(i>=e)i=s;}
   if(PL[i]<=0)liveP++;else partOver++;PX[i]=x;PY[i]=y;PVX[i]=vx;PVY[i]=vy;PL[i]=PM[i]=life;PK[i]=k;PE[i]=el;PTR[i]=tier;PCUR[L]=i+1>=e?s:i+1;if(i>=PHI[L])PHI[L]=i+1;}
 function burst(L,tier,el,k,x,y,n,s0,s1,l0,l1,upv){const v=n*POL[tier].pm*(rm?.5:1);let m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--){const a=rnd()*6.2832,s=s0+rnd()*(s1-s0);part(L,tier,el,k,x,y,Math.cos(a)*s,Math.sin(a)*s*.7-(upv||0),l0+rnd()*(l1-l0));}}
@@ -336,7 +336,7 @@ const hand=c=>c.x+c.face*6;
 const EK={burn:0,froz:1,shock:2,pois:3},EKP={burn:1,froz:4,shock:7,pois:3};
 function cond(e,k,dur,tier){if(e.dead)return;if(e[k]<=0){ev('cond','COND #'+e.id+' '+k.toUpperCase()+' ON',e.x,e.y,0,0);if(aurasOn)burst(3,tier,EK[k],EKP[k],e.x,e.y-8,5,10,34,.2,.4,6);}e[k]=Math.max(e[k],dur);e.stTier=e===P?3:tier;}
 function hurt(e,d,el,tier,sx,sy,sum){if(e.dead)return;if(e.shield>0){e.shHit=.24;e.shAng=sx==null?.75:Math.atan2(sy-(e.y-8),sx-e.x)/6.2832;d=Math.ceil(d*.3);}
-  e.hp-=d;e.flash=.09;if(e.kind!==4&&(tier!==2||!mgr||e===P))dmgNum(e.x-3,e.y-24,d,RAMP[el][4],sum?e:null);
+  e.hp-=d;e.flash=.09;if(e.kind!==4&&(tier!==2||!mgr||e===P))dmgNum(e.x-3,e.y-24,d,RAMP[cbOn&&tier===3?0:el][4],sum?e:null);
   if(e===P&&d>=5)reqEdge(el);
   if(e.hp<=0){if(e.kind===3){e.dead=1;e.resp=3;burst(2,tier,5,0,e.x,e.y-6,14,20,60,.3,.6,10);if(target===e)target=null;}else{e.hp=e.mx;if(e.kind===2)e.broke=.5;if(e===P)note='you fell and were restored';}}}
 function cast(c,si,tg,px,py,force){const S=SPELLS[si];if(c.dead||c.froz>0||(!force&&(c.cd>0||c.castT>0)))return false;const tier=tierOf(c);
