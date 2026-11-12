@@ -668,8 +668,12 @@ How to use this file:
   villager also sidesteps for 0.9 s on the free side, which covers the run to the awning. Over 150 s of the
   auto cycle the longest stall while walking was 133.7 s, now 0. Shelter runs from all 9 waypoints arrive in
   1.6 to 5.8 s.
-- [ ] **126.** `P4` (partly taste) Storm spray mist buries the plaza, the house and the player under a dense
+- [x] **126.** `P4` (partly taste) Storm spray mist buries the plaza, the house and the player under a dense
   checkerboard with hard rectangular edges (`:230`, `:329`).
+  Done: three changes. The spray source is the hard-surface mask blurred twice, so it has no rectangle
+  edges. A noise table that drifts with the wind breaks it into wisps. The veil threshold mixes Bayer with a
+  per-pixel hash, so thin mist is no longer a regular lattice. After 40 s of storm the plaza was 19% tinted
+  and 37% solid mist. Now 13% tinted and 1% solid, and the plaza, the house and the player stay readable.
 - [ ] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
   returns to exactly 0 (`:283`, `:345`). Fix: `I>.02`.
 - [ ] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps

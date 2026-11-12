@@ -170,6 +170,12 @@ function computeExposure(w){const dir=Math.sign(w),mag=Math.abs(w);for(let y=0;y
   if((S[i]<=SAND||S[i]===WOOD)&&mag>.15){for(let d=1;d<=26;d++){const sx=x-dir*d;if(sx<0||sx>=W)break;const h=WOB[y*W+sx];if(h>0){const L=h*.9*mag+1.5;if(d<L){const f=d/L;e*=.08+.92*f*f;}break;}}}EXP[i]=e;}}
 for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){let h=0;for(let k=0;k<4;k++){const i=(cy*2+(k>>1))*W+cx*2+(k&1);const s=S[i];h+=(s===STONE||s===ROOF||s===WOOD||s===METAL||s===SOLID)?1:s===WATER?.8:s===DIRT?.4:.15;}HARD[cy*GW+cx]=h/4;}
 
+// spray mist source: the hard-surface mask blurred twice so the haze has no rectangle edges, times a drifting noise so it comes in wisps
+const HARDS=new Float32Array(GW*GH),MNZ=new Float32Array(GW*GH),MTH=new Float32Array(NP);let mistOff=0;
+{let a=Float32Array.from(HARD),b=new Float32Array(GW*GH);for(let p=0;p<2;p++){for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){let s=0,n=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=GW||Y>=GH)continue;s+=a[Y*GW+X];n++;}b[y*GW+x]=s/n;}const q=a;a=b;b=q;}HARDS.set(a);
+  for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const u=x/GW,n=vnoise(x/11,y/8+50)*(1-u)+vnoise((x-GW)/11,y/8+50)*u;MNZ[y*GW+x]=Math.max(0,n-.25)*2.4;}
+  for(let i=0;i<NP;i++)MTH[i]=2+BY[i]*.5+HS[i]*8;}
+
 // ---------- state ----------
 const LEVELS={sun:0,overcast:0,drizzle:.12,light:.3,moderate:.5,heavy:.75,storm:1};
 let lastBolt=-9,weather='overcast',auto=true,I=0,targetI=0,wind=.3,windT=.3,speed=1,paused=false,view='normal',frameN=0,simMs=0,t=0,roof=0,awn=0,flash=0,shake=0,thunderT=-1,boltT=0,bolt=null,lastRain=-999;
@@ -228,8 +234,9 @@ function simStep(sunny){
   barrel.fill=Math.min(1.05,barrel.fill+I*.00006);if(sunny)barrel.fill=Math.max(0,barrel.fill-.000004);if(barrel.fill>1){barrel.fill=1;WAT[81*W+120]+=.05;}
   // mist: spray haze from heavy rain on hard surfaces + evaporation mist when the sun returns
   if(frameN%10===0)for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const i=cy*2*W+cx*2;CWET[cy*GW+cx]=(WET[i]+WET[i+1]+WET[i+W]+WET[i+W+1])/1020;}
-  const spray=Math.max(0,I-.45)*Math.max(0,I-.45)*.05,evap=sunny?.0045:0;
-  for(let c=0;c<GW*GH;c++)MI[c]+=spray*HARD[c]+evap*CWET[c]*CWET[c];
+  const spray=Math.max(0,I-.45)*.03,evap=sunny?.0045:0;mistOff+=wind*.25;const mo=((mistOff|0)%GW+GW)%GW;
+  if(spray>0)for(let cy=0;cy<GH;cy++){const r=cy*GW;for(let cx=0;cx<GW;cx++){let k=cx+mo;if(k>=GW)k-=GW;MI[r+cx]+=spray*HARDS[r+cx]*MNZ[r+k];}}
+  if(evap>0)for(let c=0;c<GW*GH;c++)MI[c]+=evap*CWET[c]*CWET[c];
   const wx=wind*.25;for(let y=1;y<GH-1;y++)for(let x=1;x<GW-1;x++){const c=y*GW+x;const src=sunny?MI[c+GW]*.25+MI[c]*.75:MI[c];const sx=wx>0?MI[c-1]:MI[c+1];
     MI2[c]=((src*(1-Math.abs(wx))+sx*Math.abs(wx))*4+MI[c-1]+MI[c+1]+MI[c-GW]+MI[c+GW])/8*.985;}
   const tm=MI;MI=MI2;MI2=tm;for(let x=0;x<GW;x++){MI[x]=0;MI[(GH-1)*GW+x]=0;}for(let y=0;y<GH;y++){MI[y*GW]=0;MI[y*GW+GW-1]=0;}
@@ -332,7 +339,7 @@ function render(){buildPalette();const sunny=weather==='sun',slot=(frameN>>3)*26
   // lightning bolt
   if(boltT>0&&bolt){for(const [a,b,c,d] of bolt){line(a+1,b,c+1,d,BOLT[1]);}for(const [a,b,c,d] of bolt)line(a,b,c,d,BOLT[0]);}
   // mist veil
-  for(let y=0;y<H;y++){const gr=(y>>1)*GW;for(let x=0;x<W;x++){const m=MI[gr+(x>>1)];if(m<.03)continue;const i=y*W+x;if(m*12>BY[i]+2&&IDX[i]<N*2)IDX[i]=(IDX[i]%N)+2*N;if(m>.75&&BY[i]<(m-.75)*40)IDX[i]=MIST;}}
+  for(let y=0;y<H;y++){const gr=(y>>1)*GW;for(let x=0;x<W;x++){const m=MI[gr+(x>>1)];if(m<.03)continue;const i=y*W+x;if(m*12>MTH[i]&&IDX[i]<N*2)IDX[i]=(IDX[i]%N)+2*N;if(m>.75&&BY[i]<(m-.75)*40)IDX[i]=MIST;}}
   // palette pass (+ dithered firelight)
   const fl=fire.on?fire.F*(.85+.15*Math.sin(frameN*.4)):0;
   if(view==='normal'){for(let i=0;i<NP;i++){const idx=IDX[i];out32[i]=(fl>0&&FIREL[i]*fl*22>BY[i]+3)?palFire[idx]:pal[idx];}}
