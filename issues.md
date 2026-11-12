@@ -240,8 +240,11 @@ How to use this file:
   lacks `wait:'offer'` (`:997`, server check at `:609`).
   Done: the fake session carries wait:'offer' and q:'herbs'. Accept now sets q1 to 1 and plays the accept
   line, Decline plays the decline line. Before, both left the box on "..." for good.
-- [ ] **44.** `P3` Toggling Large text or dialog style mid-line blanks the box. `relayout()` keeps the old page
+- [x] **44.** `P3` Toggling Large text or dialog style mid-line blanks the box. `relayout()` keeps the old page
   index (`:704`).
+  Done: relayout(true) finds the page that holds the first glyph of the page being read. On the elder's
+  Spanish greeting, page 2 of 2 in Large text became page 2 of 1 with 0 glyphs when Large text went off. Now
+  it lands on page 1 of 1 with all 56 glyphs.
 - [ ] **45.** `P4` Letter "j" has a 2 px gap on its left, "cajas" reads "ca jas" (`:124`, glyph `40444444o`).
 - [ ] **46.** `P4` Bubble style. The advance arrow covers the last character (`:879`, width at `:872`).
 - [ ] **47.** `P4` (taste) Bubble style. The choice menu covers the NPC you are talking to (`:881`).

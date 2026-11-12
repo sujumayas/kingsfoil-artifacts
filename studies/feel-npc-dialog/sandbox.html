@@ -701,7 +701,9 @@ function onDlg(r){const n=NPCS[r.npc];
   if(D.state==='wait'||D.state==='idle')nextLine();}
 function openDlg(n){Object.assign(D,{on:true,closing:false,open:RM?1:0,npc:n,style:styleFor(n),state:'wait',q:[],gl:null,opts:null,pOpts:null,pCmd:null,pEnd:false,pRew:null,kw:n.kind==='kw',expr:'happy',hold:0,page:0});n.face=PL;if(D.style!=='chat')sfx('open');}
 function closeDlg(){if(!D.on)return;if(D.style==='chat'||RM){D.on=false;D.state='off';}else{D.closing=true;D.state='close';sfx('close');}if(D.npc)D.npc.face=null;}
-function relayout(){const s=BIG?2:1;D.s=s;const wmax=D.style==='box'?Math.floor(254/s):(BIG?118:140);D.L=layout(D.gl,F1,wmax);D.lpp=BIG?2:3;D.pages=Math.ceil(D.L.lines/D.lpp);}
+// keep=true re-flows the line on screen: the page is recomputed from the first glyph of the page being read
+function relayout(keep){const at=keep&&D.L?pageStart(D.page):-1,s=BIG?2:1;D.s=s;const wmax=D.style==='box'?Math.floor(254/s):(BIG?118:140);D.L=layout(D.gl,F1,wmax);D.lpp=BIG?2:3;D.pages=Math.ceil(D.L.lines/D.lpp);
+  if(at>=0)D.page=clamp(Math.floor(D.gl[Math.min(at,D.gl.length-1)].line/D.lpp),0,D.pages-1);}
 const pageStart=p=>{const i=D.gl.findIndex(g=>g.line>=p*D.lpp);return i<0?D.gl.length:i;};
 const pageEnd=p=>pageStart(p+1);
 function nextLine(){
@@ -962,7 +964,7 @@ function syncChips(){let l=[];if(D.on&&D.state==='opts')l=D.opts.map(o=>plain(st
 // ---------- UI ----------
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
 const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
-const setStyle=v=>{STYLE=v;mark('#styles button','s',v);if(D.on&&!D.closing){D.style=styleFor(D.npc);if(D.gl)relayout();}};
+const setStyle=v=>{STYLE=v;mark('#styles button','s',v);if(D.on&&!D.closing){D.style=styleFor(D.npc);if(D.gl)relayout(true);}};
 const setView=v=>{VIEW=v;mark('#views button','v',v);};
 const setClut=v=>{CLUT=v;mark('#clut button','c',v);};
 const setCps=v=>{CPS=+v;$('cps').value=Math.min(120,CPS);$('cpsl').textContent=CPS>=999?'instant':CPS;mark('#spd button','v',CPS);};
@@ -971,7 +973,7 @@ group('#styles button','s',setStyle);group('#views button','v',setView);group('#
 group('#ren button','r',v=>{REN=v;mark('#ren button','r',v);});group('#focus button','f',v=>{FOCUS=v;mark('#focus button','f',v);SV.foc={f:null,q:[],last:0};SV.priv={};});
 $('cps').oninput=e=>setCps(e.target.value);
 const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',get());b.onclick=()=>{set(!get());sy();};return sy;};
-tog('auto',()=>AUTO,v=>AUTO=v);tog('big',()=>BIG,v=>{BIG=v;if(D.gl)relayout();});const syncRm=tog('rm',()=>RM,v=>RM=v);tog('blip',()=>SND,v=>SND=v);
+tog('auto',()=>AUTO,v=>AUTO=v);tog('big',()=>BIG,v=>{BIG=v;if(D.gl)relayout(true);});const syncRm=tog('rm',()=>RM,v=>RM=v);tog('blip',()=>SND,v=>SND=v);
 tog('opt',()=>OPTIM,v=>OPTIM=v);tog('lock',()=>LOCK,v=>LOCK=v);const syncPause=tog('pause',()=>paused,v=>paused=v);
 $('logb').onclick=()=>{LOGV.on=!LOGV.on;LOGV.scroll=0;};
 $('sims').oninput=e=>{NSIM=+e.target.value;$('simsl').textContent=NSIM;};
