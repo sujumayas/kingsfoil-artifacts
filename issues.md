@@ -262,7 +262,12 @@ How to use this file:
 - [x] **49.** `P4` The Sell tab overflows with 7 item kinds. The 7th row draws over the gold counter (`:903`).
   Done: the panel is 153 px tall instead of 140 and starts 5 px higher. With all 7 kinds in the bag the last
   row ended at y 146, 8 px past the separator at y 138. Now it ends at y 141 and the separator is at y 146.
-- [ ] **50.** `P3` Crowd "wait your turn" never plays out. `s.heard` is read (`:791`) and never written.
+- [x] **50.** `P3` Crowd "wait your turn" never plays out. `s.heard` is read (`:791`) and never written.
+  Done: kwSay tags the reply with its entry and the simulated player stores it on arrival, in shared and
+  private focus. A player who gave up the wait and is still within 3 tiles also resumes when called. Over 10
+  minutes with 30 players, queued players sent 1,385 keywords the server ignored and none ever waited.
+  After, 0 ignored keywords, 29 of 30 players were seen waiting, and 68 of 73 players called with "your
+  turn" finished their talk, up from 62 of 137.
 - [ ] **51.** `P3` Stack clutter mode pushes bubbles off the top of the canvas and still counts them (`:852`).
   Priority mode never clears `b.capped` (`:848`), so a bubble capped once stays hidden.
 - [ ] **52.** `P4` Chat ranges view prints the SAY and YELL labels on top of each other (`:920`).

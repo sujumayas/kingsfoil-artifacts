@@ -616,9 +616,9 @@ function svHandle(from,m){const s=SV.sess[from.id];
   else if(m.t==='chat'){const rcv=heard(from,PL,m.ch);netSend('down',3+utf8(m.text),()=>{if(rcv)showChat(from,m.text,m.ch);else NET.lost++;},PL);}}
 function kwFind(text){const t=text.toLowerCase().trim(),w=t.split(/[\s,.!?¿¡]+/);for(const e of KW.sailor){if(e.k[0][0]==='@')continue;for(const k of e.k)if(t===k||w.includes(k))return e;}return null;}
 const kwSpecial=k=>KW.sailor.find(e=>e.k[0]==='@'+k);
-function kwSay(to,e){const r={t:'dlg',npc:'sailor',kw:true,lines:[{id:e.id,spk:'Brannoc',ex:e.k[0]==='@busy'?'angry':e.k[0]==='bye'?'happy':'neutral'}],opts:[],args:{name:to.name},end:e.k[0]==='bye'||e.k[0]==='@gone'};
+function kwSay(to,e){const r={t:'dlg',npc:'sailor',kw:true,lines:[{id:e.id,spk:'Brannoc',ex:e.k[0]==='@busy'?'angry':e.k[0]==='bye'?'happy':'neutral'}],opts:[],args:{name:to.name},key:e.k[0],end:e.k[0]==='bye'||e.k[0]==='@gone'};
   r.pub=FOCUS==='shared';NPCS.sailor.face=FOCUS==='shared'?(SV.foc.f||to):((Object.values(SV.priv)[0]||{}).who||to);
-  if(to===PL||r.pub)reply(to,r);else{SV.privShown++;netSend('down',lineBytes(r)[0],()=>{},to);}}
+  if(to===PL||r.pub)reply(to,r);else{SV.privShown++;netSend('down',lineBytes(r)[0],()=>{to.heard=r.key;},to);}}
 function svKw(from,text){const e=kwFind(text),hi=e&&e.k[0]==='hi',bye=e&&e.k[0]==='bye';
   if(dist(from,NPCS.sailor)>3)return;
   if(FOCUS==='private'){const p=SV.priv[from.id];if(hi){SV.priv[from.id]={last:ms(),who:from};kwSay(from,e);}else if(p){p.last=ms();kwSay(from,e||kwSpecial('fallback'));if(bye)delete SV.priv[from.id];}return;}
@@ -691,7 +691,8 @@ function clientRecv(r){if(r.v){CL.v=r.v;CL.gold=r.gold;CL.inv=r.inv;}
   if(r.t==='inv'){sfx(r.ok?'coin':'deny');if(r.ok)TR.flash=1;return;}
   if(r.t==='pick'){if(r.ok){CLH[r.i]=false;pop(PLANT[r.i][0]*16+8,PLANT[r.i][1]*16,'+1',P.g4);TR.flash=1;sfx('pick');}return;}
   if(r.t==='dlg'){if(r.to===PL)onDlg(r);else othersLine(r);}}
-function othersLine(r){const n=NPCS[r.npc];if(!heard(n,PL,'say')){NET.lost++;return;}for(const l of r.lines){const txt=fmt(str(l.id),r.args);bubble(n,txt,'npc',dist(n,PL)<5?2:3);logAdd(npcName(n),txt,'npc');}}
+// a simulated player learns what the sailor answered when the line reaches it: @busy makes it wait, @next resumes it
+function othersLine(r){const n=NPCS[r.npc];if(r.key&&r.to)r.to.heard=r.key;if(!heard(n,PL,'say')){NET.lost++;return;}for(const l of r.lines){const txt=fmt(str(l.id),r.args);bubble(n,txt,'npc',dist(n,PL)<5?2:3);logAdd(npcName(n),txt,'npc');}}
 function onDlg(r){const n=NPCS[r.npc];
   if(r.leave){for(const l of r.lines){const t=fmt(str(l.id),r.args);bubble(n,t,'npc',0);logAdd(npcName(n),t,'npc');hist(npcName(n),t);}if(D.on&&D.npc===n)closeDlg();return;}
   if(D.on&&D.npc!==n)return;
@@ -789,9 +790,10 @@ function updSims(dt,n){
     moveEnt(s,dt);s.ct-=dt;s.npcCd-=dt;
     if(s.ct<=0){s.ct=s.spam?.4+rnd()*.7:3+rnd()*6;const y=rnd()<.08;const t=y?pick(YELL):pick(CHAT);if(limiter(s))netSend('up',3+t.length,()=>svHandle(s,{t:'chat',text:t,ch:y?'yell':'say'}),s);if(rnd()<.05)emote(s,pick(['heart','?','!']));}
     if(s.mv>0||(s.path&&s.path.length))continue;
+    if(s.st==='idle'&&s.heard==='@next'&&s.seq&&s.k<s.seq.length&&dist(s,NPCS.sailor)<=3){s.st='talk';s.t=.5;} // called after giving up the wait, and still close by
     if(s.st==='idle'){s.t-=dt;if(s.t<=0){if(s.npcCd<=0&&rnd()<.35){s.st='go';s.path=bfs(s.tx,s.ty,nearSailor)||[];s.npcCd=25+rnd()*30;}else{const tx=clamp(s.tx+ri(13)-6,2,27),ty=clamp(s.ty+ri(9)-4,5,13);s.path=bfs(s.tx,s.ty,(x,y)=>x===tx&&y===ty)||[];s.t=1+rnd()*4;}}}
     else if(s.st==='go'){if(nearSailor(s.tx,s.ty)){s.st='talk';s.seq=['hi',pick(['job','travel','name']),pick(['travel','yes','job']),'bye'];s.k=0;s.t=.3;s.heard=null;s.wt=0;}else s.st='idle';}
-    else if(s.st==='talk'){s.d=dirTo(s,NPCS.sailor);if(s.heard==='@busy'){s.wt+=dt;if(s.wt>14){s.st='idle';s.t=1;}continue;}s.t-=dt;
+    else if(s.st==='talk'){s.d=dirTo(s,NPCS.sailor);if(s.heard==='@gone'){s.st='idle';s.t=1;continue;}if(s.heard==='@busy'){s.wt+=dt;if(s.wt>14){s.st='idle';s.t=1;}continue;}s.t-=dt;
       if(s.t<=0){const t=s.seq[s.k++];if(limiter(s,'npc'))netSend('up',3+t.length,()=>{svHandle(s,{t:'chat',text:t,ch:'say'});svHandle(s,{t:'kw',text:t});},s);s.t=2.2+rnd()*2;if(s.k>=s.seq.length){s.st='idle';s.t=1+rnd()*2;}}}}}
 function updPlayer(dt){const lock=(LOCK&&D.on&&D.style!=='chat')||TRADE.on||CARD.on||LOGV.on;
   if(!lock&&PL.mv===0){const k=keys.l?'l':keys.r?'r':keys.u?'u':keys.d?'d':null;if(k){PL.path=null;PL.after=null;PL.d=k;const [dx,dy]=DV[k];if(passable(PL.tx+dx,PL.ty+dy)){PL.fx=PL.tx;PL.fy=PL.ty;PL.tx+=dx;PL.ty+=dy;PL.mv=1;}}}
