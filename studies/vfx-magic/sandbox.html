@@ -735,6 +735,10 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){const[x,y]=can
 function demoStop(){if(demoT>0){demoT=0;for(const f of FX)if(f.on&&f.dur>1e5)f.dur=f.t+4;}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'},VS=['normal','tiers','bounds','cost','glow','log'],GS=['ramp','add','buf','off'];
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
   if(KM[k]){keys[KM[k]]=1;demoStop();e.preventDefault();return;}
   if(k==='7'){if(!e.repeat){demoStop();keys.beam=1;beamStart(P,null);}}

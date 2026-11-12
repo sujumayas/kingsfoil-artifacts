@@ -1007,6 +1007,10 @@ cv.addEventListener('pointerdown',e=>{ensureAudio();const [x,y]=canvasXY(e);e.pr
 cv.addEventListener('wheel',e=>{if(LOGV.on){LOGV.scroll=Math.max(0,LOGV.scroll+(e.deltaY<0?1:-1));e.preventDefault();}},{passive:false});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;ensureAudio();const k=e.key.toLowerCase(),dir=KM[k];
   if(LOGV.on){if(dir==='u')LOGV.scroll++;else if(dir==='d')LOGV.scroll=Math.max(0,LOGV.scroll-1);else if(k==='l'||k==='escape'||k==='e'||k===' '||k==='enter')LOGV.on=false;e.preventDefault();return;}
   if(TRADE.on){const n=TRADE.list().length;if(dir==='u')TRADE.sel=(TRADE.sel+n-1)%Math.max(1,n);else if(dir==='d')TRADE.sel=(TRADE.sel+1)%Math.max(1,n);else if(dir==='l'||dir==='r'||k==='tab'){TRADE.tab=TRADE.tab==='buy'?'sell':'buy';TRADE.sel=0;}else if(k==='e'||k===' '||k==='enter')TRADE.doSel();else if(k==='escape')TRADE.close();if(dir)sfx('tick');e.preventDefault();return;}

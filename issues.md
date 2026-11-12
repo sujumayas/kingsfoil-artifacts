@@ -24,7 +24,7 @@ How to use this file:
 - [x] **2.** `P1` All canvas sandboxes. One exception freezes the page for good, because `render()` runs before
   `requestAnimationFrame(loop)`. Seen in combat juice (`:875`), loot pickup (`:868`) and acid. Fix: request the
   next frame first, or wrap step and render in try/finally.
-- [ ] **3.** `P2` Keyboard dies after touching a slider. The keydown handler returns for `INPUT` targets and range
+- [x] **3.** `P2` Keyboard dies after touching a slider. The keydown handler returns for `INPUT` targets and range
   inputs keep focus. Affects water (`:487`), fire (`:496`), fog (`:457`), grass (`:790`), magic (`:739`) and
   npc-dialog (`:1011`). Fix: blur range inputs on `change` and `pointerup`, or only skip text inputs.
 - [ ] **4.** `P2` Key handler swallows keys everywhere. No target or modifier check, so arrow keys never reach
