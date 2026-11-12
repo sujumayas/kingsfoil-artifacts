@@ -382,8 +382,13 @@ document.querySelectorAll('#tbtns [data-t]').forEach(b=>b.onclick=()=>{tool=b.da
 document.querySelectorAll('#vbtns [data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll('#vbtns [data-v]').forEach(x=>x.classList.toggle('on',x===b));});
 document.getElementById('reset').onclick=()=>{D.fill(0);P.fill(0);Wt.fill(0);};
 document.getElementById('fill').onclick=()=>{for(let i=0;i<NP;i++)if(holds(S[i]))D[i]=Math.min(S[i]===CANOPY?14:MAXD,(70*E[i]+hash2(i,3)*6)|0);};
-addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}});
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.length===1?e.key.toLowerCase():e.key;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}});
 addEventListener('keyup',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;keys[k]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 let down=false;const toCell=e=>{const r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*W),Math.floor((e.clientY-r.top)/r.height*H)];};
 const act=e=>{const [x,y]=toCell(e);if(tool==='walk'){player.tx=x;player.ty=y;}else brush(x,y,tool==='shovel'?5:6,tool);};
 cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);act(e);});

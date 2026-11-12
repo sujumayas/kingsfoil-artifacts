@@ -394,8 +394,13 @@ cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId
   if(tool==='walk'){player.tx=x;player.ty=y;const near=slimes.some(s=>Math.hypot(s.x-x,s.y-y)<rad(s)+4&&Math.hypot(s.x-player.x,s.y-player.y)<22);if(near){player.tx=null;const dx=x-player.x,dy=y-player.y;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');attack();}}
   else if(tool==='slime')slimes.push(newSlime(x,y,16));else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
 cv.addEventListener('pointermove',e=>{lastPt=toCell(e);});cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercancel',()=>down=false);
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}if(k===' '||k==='j'){attack();e.preventDefault();}});
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}if(k===' '||k==='j'){attack();e.preventDefault();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 document.querySelectorAll('#tbtns [data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;document.querySelectorAll('#tbtns [data-t]').forEach(x=>x.classList.toggle('on',x===b));});
 document.querySelectorAll('#vbtns [data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll('#vbtns [data-v]').forEach(x=>x.classList.toggle('on',x===b));});
 const spEl=document.getElementById('speed');spEl.oninput=()=>{simSpeed=+spEl.value;document.getElementById('speedv').textContent=simSpeed+'×';};

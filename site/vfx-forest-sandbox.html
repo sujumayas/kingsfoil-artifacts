@@ -350,9 +350,14 @@ BIOMES.forEach((bm,bi)=>{let best=null,bs=-1;for(let k=0;k<4000;k++){const x=40+
 function teleport(x,y){for(let r=0;r<80;r+=4)for(let a=0;a<6.28;a+=.5){const nx=x+Math.cos(a)*r,ny=y+Math.sin(a)*r;if(!blocked(nx,ny)){player.x=nx;player.y=ny;player.tx=null;camX=clamp(Math.round(player.x-VW/2),0,WW-VW);camY=clamp(Math.round(player.y-VH/2-8),0,WH-VH);spawnBirds();return;}}}
 mini.addEventListener('pointerdown',e=>{const r=mini.getBoundingClientRect();teleport((e.clientX-r.left)/r.width*WW,(e.clientY-r.top)/r.height*WH);});
 cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();player.tx=camX+(e.clientX-r.left)/r.width*VW;player.ty=camY+(e.clientY-r.top)/r.height*VH;});
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}
   if(k==='e'){let best=null,bd=26*26;nearby(player.x,player.y,26,t=>{if(t.u)return;const dx=t.x-player.x,dy=t.y-player.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=t;}});if(best){best.shake=1;leafBurst(best,10);}}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 spawnBirds();requestAnimationFrame(loop);
 })();
 </script>

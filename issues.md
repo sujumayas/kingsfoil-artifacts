@@ -27,7 +27,7 @@ How to use this file:
 - [x] **3.** `P2` Keyboard dies after touching a slider. The keydown handler returns for `INPUT` targets and range
   inputs keep focus. Affects water (`:487`), fire (`:496`), fog (`:457`), grass (`:790`), magic (`:739`) and
   npc-dialog (`:1011`). Fix: blur range inputs on `change` and `pointerup`, or only skip text inputs.
-- [ ] **4.** `P2` Key handler swallows keys everywhere. No target or modifier check, so arrow keys never reach
+- [x] **4.** `P2` Key handler swallows keys everywhere. No target or modifier check, so arrow keys never reach
   sliders or selects, and Cmd/Ctrl+S, A, D are blocked. No window `blur` reset, so a held key stays down.
   Affects light (`:331`), forest (`:354`), acid (`:397`), rain (`:363`, suspected) and snow (`:385`, suspected).
   Fix: return early for input and select targets or when a modifier is held, and clear `keys` on blur. Fog's
