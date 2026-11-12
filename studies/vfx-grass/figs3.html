@@ -1,0 +1,123 @@
+<!--FIG drawcalls-->
+<figure class="fig" data-demo="drawcalls" id="fig-drawcalls">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Separate draws, MultiMesh rows or one instanced draw set the tuft budget</h4><span class="illu">Bars are estimates from the §6a rates</span></div>
+  <div class="stage"><canvas width="240" height="135" aria-label="A field of thousands of small grass tufts swaying in a wind wave; with batches shown, each separate draw lights up in its own colour, each row band in one of two colours, or the whole field in one colour; past 16,384 separate draws the bottom of the field is missing below a red dotted line"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="How the tufts are drawn"><button type="button" class="on" data-v="sep">N separate draws</button><button type="button" data-v="rows">MultiMesh rows</button><button type="button" data-v="inst">One instanced draw</button></div>
+    <label class="rng">Tufts <input type="range" data-k="n" min="500" max="20000" step="500" value="8000"><output data-o="n"></output></label>
+    <label><input type="checkbox" data-k="show"> Show batches</label>
+    <label><input type="checkbox" data-k="phone"> Low-end phone</label>
+  </div>
+  <svg class="chart" viewBox="0 0 600 160" role="img" aria-label="Estimated milliseconds per frame for the three ways of drawing the tufts, on a log scale, with the 2 ms grass budget and the 16.7 ms frame marked"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every tuft is the same three-blade sprite from one atlas. Godot's Compatibility renderer batches 2D draws and the Vulkan renderers do not [V, S98]. A MultiMesh is one draw, culled as one rect [V, S168]. Godot ignores canvas commands past 16,384 per viewport update [V, S97], so push separate draws past that and the bottom of the field vanishes at the red line. The bars use the report's two rates, about 1.6 µs wall per WebGL draw call and about 7 ns per tuft inside one draw, which take 8,000 tufts from 0.056 ms to 13.1 ms on the M4 [V, S12]. Tick the phone box for the 5x to 10x a low-end phone may add [I, note 11]. Giving each 8 px row its own MultiMesh keeps y-sort between rows for 17 draws here [I]. Lights are the second limit. An item takes at most 15, so a PointLight2D per firefly pops [V, S103]. On one Android phone, packing 250 loose sprites into 4 atlases cut draw calls from 240 to 38 and raised the frame rate from 31 to 60 fps [V, self-reported, S165].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG seasons-->
+<figure class="fig" data-demo="seasons" id="fig-seasons">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Seasons by palette swap, with a per-tile offset so the field turns patch by patch</h4><span class="illu">Ramps and offset weights are our picks</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A meadow with a ridge at the top, a dirt path and a pond at the bottom right; as the date moves, tiles change season one by one, ridges first, with a dithered seam, from spring green with flowers to summer, straw or orange fall and dormant winter with an iced pond"></canvas><div class="hud" data-hud></div></div>
+  <div class="h3-strip" data-strip aria-label="The four season ramps, anchor hue in degrees"></div>
+  <div class="ctl">
+    <label class="rng">Date, season_t <input type="range" data-k="t" min="0" max="399" step="any" value="140"></label>
+    <label><input type="checkbox" data-k="play" checked> Play the year</label>
+    <label><input type="checkbox" data-k="off" checked> Per-tile offsets</label>
+    <div class="seg" data-seg="fall" role="group" aria-label="Fall ramp"><button type="button" class="on" data-v="st">Straw fall</button><button type="button" data-v="sd">Stardew fall</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each 8 px tile reads its season from <code>season = floor(t + p)</code>, with <code>p = hash(x,y)*0.25 + elevation + moisture</code> [I]. Here elevation is weighted 0.3 and moisture −0.2, so the ridge at the top turns first and the wet hollow by the pond lags. Tufts take the tile of their root, which hides the tile grid. A Bayer crossfade covers the first 0.05 of each season. The ramps sit on Stardew's colours, spring (60,180,58) at hue 119, summer (110,190,24) at hue 89 and fall (219,102,58) at hue 16 [V, S37]. Real grass goes to straw at hue 40 to 50, not orange, so straw is the default fall here. Shadows lean toward teal and highlights toward yellow [V, S154, S155]. Winter grass is dormant, as in Stardew since 1.6 [V, S38]. Untick the offsets and the whole field flips in one frame, which reads as a bug [I]. Spring really does arrive about 4 days later per degree north [V, S144]. The report also advises fewer days on green-up than on browning, and this demo keeps the seasons equal.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wetsnow-->
+<figure class="fig" data-demo="wetsnow" id="fig-wetsnow">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Ramp swaps against an alpha wash for rain, drought, frost and snow</h4><span class="illu">Ramps, frost tint and wash colours are our picks</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="96" aria-label="Grass with a dirt path and stones drawn with ramp swaps: darker and more vivid after rain with tiny glints on tuft tips, straw yellow in drought, pale tips in frost, or snow with dark tuft tips poking through"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Ramp swap</b>, one lookup per pixel.</p></div>
+    <div><div class="stage"><canvas width="160" height="96" aria-label="The same field with a translucent colour wash laid over the normal grass for each weather state"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Alpha wash</b> over the normal field.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="w" role="group" aria-label="Weather"><button type="button" data-v="normal">Normal</button><button type="button" class="on" data-v="wet">After rain</button><button type="button" data-v="dry">Drought</button><button type="button" data-v="frost">Frost</button><button type="button" data-v="snow">Snow</button></div>
+    <label class="rng" data-for="snow" hidden>Snow depth <input type="range" data-k="d" min="0" max="6" value="4"><output data-o="d"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Wet rough surfaces darken because the water film traps light, and measured sand albedo fell from 0.182 to 0.091 [V, S147, S148]. Wet grass also looks more vivid, because the film smooths the blade. So the recipe drops grass shadows one ramp step, adds 10% saturation, drops dirt two steps and flashes 1 px glints on tuft tips for 1 to 3 frames, only after rain [I]. Drought gets its own desaturated straw ramp, not a brown tint of green [I]. In snow, tufts taller than the depth show their top 1 to 3 px as dark dots, and deeper snow hides them. That is the best winter read at 320x180 [I, note 08]. Drag the depth and watch the short tufts go under first. The right panel lays a translucent wash over the normal field instead. Compare the contrast and saturation in the corners. The wash muddies the palette and loses the tips [U, note 08]. Puddles belong to the rain study [S4].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG biomecolor-->
+<figure class="fig" data-demo="biomecolor" id="fig-biomecolor">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Biome colour from a temperature and moisture table, snapped to six ramps</h4><span class="illu">Zones, ramps and corner colours are our picks</span></div>
+  <div class="h3-two">
+    <div><div class="stage click"><canvas width="64" height="64" aria-label="A square table: temperature rises to the right, moisture rises upward; the upper left triangle is hatched as unreachable; the lower right triangle is split into six coloured biome zones, with a white cross marking the picked point and a dashed box around it"></canvas></div><p class="h3-ax">Temperature → right, moisture ↑ up. Drag the cross.</p></div>
+    <div><div class="stage"><canvas width="128" height="80" aria-label="A patch of ground with a stream along the bottom, drawn for the picked biome: dense meadow tufts, short steppe tufts, thin savanna tufts on red dirt, desert scrub on sand, swamp reeds by the water or flat tundra mats"></canvas></div><p class="h3-ax">The patch inside the dashed box, tile by tile.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Colour rule"><button type="button" class="on" data-v="ramp">Pick one ramp</button><button type="button" data-v="cont">Continuous tint</button></div>
+    <label class="rng">Temperature <input type="range" data-k="tp" min="0" max="100" value="60"><output data-o="tp"></output></label>
+    <label class="rng">Downfall <input type="range" data-k="dp" min="0" max="100" value="57"><output data-o="dp"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Minecraft looks grass colour up in a 256x256 <code>grass.png</code> by temperature and downfall, both clamped to 0 to 1. It multiplies downfall by temperature, so samples stay in a triangle [V, S66, S65], and the hatched corner is never reached. The patch on the right samples the table per tile across the dashed box, so a biome edge can cross it. For pixel art the study picks one of six to eight ramps instead and lets moisture set density. Meadow gets 3 to 4 tufts per tile, savanna 1 to 2 tall thin tufts with dirt showing, swamp reeds within 1 to 2 tiles of water, tundra flat mats, and desert 0 to 1 scrub with no sway [I]. Grassland NDVI runs 0.2 to 0.5 against 0.6 to 0.9 for forest, which is why soil shows through sparse grass [V, S146]. Switch to the continuous tint and count the colours. The blend looks believable and breaks palette discipline [I]. The server sends two bytes per region, and the lookup is one table read per tile at bake time [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG reducemotion-->
+<figure class="fig" data-demo="reducemotion" id="fig-reducemotion">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Reduce motion, plus separate toggles for decoration, wind and walker reaction</h4><span class="illu">Scene and creature counts illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A meadow with flowers and butterflies; a traveller walks a dirt loop and the tufts beside the feet bend away and spring back; some tufts sway one pixel in the wind"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="red"> Reduce motion</label>
+    <label><input type="checkbox" data-k="deco" checked> Grass decoration</label>
+    <label><input type="checkbox" data-k="wind" checked> Wind</label>
+    <label><input type="checkbox" data-k="react" checked> Walker reaction</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Creatures <input type="range" data-k="dens" min="0" max="100" value="60"><output data-o="dens"></output></label>
+    <label class="rng">Tufts that sway <input type="range" data-k="sway" min="0" max="100" value="30"><output data-o="sway"></output></label>
+  </div>
+  <ul class="h3-cost" data-costs aria-label="What each toggle removes, measured figures from section 6a">
+    <li data-c="deco">Decoration off drops the tuft draws. 2,000 tufts cost 0.012 ms of GPU in one draw, or 1.62 ms on a canvas with one <code>drawImage</code> each.</li>
+    <li data-c="wind">Wind off freezes the shader, and the whole field shift pass is 0.0021 ms.</li>
+    <li data-c="react">Walker reaction off skips the 80x45 trail map, 0.0023 ms (0.014 ms throttled).</li>
+    <li data-c="dens">Fewer creatures save little. 1,000 butterflies update in 0.012 ms (0.071 ms throttled).</li>
+  </ul>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Guidelines ask for an option to hide background movement at the intermediate level, and they flag moving repeated patterns over 25% of the screen at the basic level [V, S161, S162, S163]. 117 HD ships wind displacement and character displacement as two toggles, both on by default [V, S28]. RuneScape has a ground decoration switch for things "like stones and long grass", and ClassicUO hides the statics listed in a user-editable <code>vegetation.txt</code> [V, S32, S33, S34, S35]. The restraint rule is idle sway of 1 px on at most 30 to 50% of tufts, phase from a hash [I]. Push the sway slider up and watch the screen share cross 25%. Reduce motion sets sway to 0, slows the butterflies and shortens the trample bend [I]. The list under the scene gives what each toggle saves, from §6a [V, S12]. Turning off trample feedback hides information, and a vegetation toggle in PvP is fair only if the server decides hiding (E4) [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Every row of §6a on one log scale, against the 16.7 ms frame</h4><span class="illu">Desktop numbers, no phone measured</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="v" role="group" aria-label="Table"><button type="button" class="on" data-v="gpu">GPU passes</button><button type="button" data-v="cpu">CPU work in JS</button></div>
+  </div>
+  <div class="ctl" data-for="gpu">
+    <div class="seg" data-seg="res" role="group" aria-label="Configuration"><button type="button" class="on" data-v="1">320×180, M4</button><button type="button" data-v="2">720p, M4</button><button type="button" data-v="3">320×180, SwiftShader</button></div>
+  </div>
+  <div class="ctl" data-for="cpu" hidden>
+    <label><input type="checkbox" data-k="thr"> 6x CPU throttle</label>
+    <button type="button" class="btn ghost" data-b="run">Run the CPU rows on this device</button>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 400" role="img" aria-label="Log-scale bars of the measured costs in section 6a with the 2 ms grass budget and the 16.7 ms frame marked"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a measured row of §6a, on an Apple M4 Pro with Chromium 153 and WebGL2 [V, S12]. GPU rows are ANGLE Metal timer-query time per frame. Every pass blends, so Apple's hidden-surface removal cannot cull it [V, S167]. SwiftShader is software GL, a bound for a device with no GPU. CPU rows are single-threaded JavaScript on a software-raster canvas, and the 6x throttle is the DevTools low-end proxy. The dashed lines are the 2 ms grass budget of a 16.7 ms frame (§6e) and the frame itself. Draw calls dominate, at about 7 ns per tuft inside one instanced draw against about 1.6 µs wall per separate draw. Simulation is never the problem at game counts, and firefly sync is the one loop to watch. <b>Run the CPU rows</b> times our re-implementations of the same tasks on your device, so you can see how far it sits from the M4. A phone, Godot itself and real texture uploads were not measured [I, note 11].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">All 40 profiles by Speed and by Pixel taste plus Mood</h4></div>
+  <svg class="chart mx-chart" viewBox="0 0 600 300" role="img" aria-label="Scatter of the 40 technique profiles: speed on the vertical axis, pixel taste plus mood on the horizontal axis"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one profile at its §4 ratings, the same placement as the §6b table. Dots that share a cell are packed side by side. Hover or tap a dot to read it, and follow the link to its card. The top right corner is the build-first list: flowers in clumps (B5), flap-hop butterflies (F1), synced fireflies (G1), halo sprites (G2), season palettes (H1) and weather ramps (H2). All six score 10 of 10 on taste plus mood and 5 on speed. Only per-tuft sprites (B3) drop to Speed 4, for the batching they break. The hollow marks on the bottom row are the Speed 2 costs §6b names that no profile recommends, one draw per tuft at 8,000, canvas row slicing and a full re-bake per trample.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sortable scorecard with a radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar, and the oldest pick drops off. Ratings are author judgement for top-down pixel art on web Godot, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. Sort by Speed and the column barely moves. 39 of 40 rows score a 5, and the one 4 is per-tuft sprites (B3), whose broken batching costs 3.27 ms for 2,000 tufts [V, S12]. Taste, mood and interaction decide. Rustle (D4) wins at 24, and Pokémon grass (A1) and flap-hop butterflies (F1) follow at 23. The sum is a crude total. The TFS leak (E5) is cheap and wrong, and batching (H4) is invisible but decides whether the rest fits a phone [I].</figcaption>
+</figure>
+<!--/FIG-->

@@ -205,6 +205,10 @@
      "label": "Fog, mist & clouds"
     },
     {
+     "id": "grass",
+     "label": "Grass, wind & small life"
+    },
+    {
      "id": "enemy-ai",
      "label": "Enemy AI"
     },
@@ -410,6 +414,26 @@
      "id": "cloud-shadow",
      "label": "Cloud shadows",
      "desc": "Thresholded world-locked noise that darkens the ground by one palette step"
+    },
+    {
+     "id": "trail-map",
+     "label": "Trail maps",
+     "desc": "Low-res map stamped by walkers that bends grass and fades back"
+    },
+    {
+     "id": "random-tick",
+     "label": "Random ticks",
+     "desc": "A few random cells per tick advance growth, spread or decay"
+    },
+    {
+     "id": "pulse-sync",
+     "label": "Pulse-coupled sync",
+     "desc": "Oscillators nudge their phase on a neighbour's flash until they flash together"
+    },
+    {
+     "id": "ambient-spawn",
+     "label": "Ambient spawn tables",
+     "desc": "Cosmetic critters spawned by biome, season, hour and weather from fixed pools"
     },
     {
      "id": "fsm",

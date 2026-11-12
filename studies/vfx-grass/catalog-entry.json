@@ -1,0 +1,70 @@
+{
+ "id": "vfx-grass",
+ "type": "study",
+ "path": "/vfx-grass-topdown-pixel.html",
+ "title": "Top-down pixel grass: tiny algorithms for trampled grass, swaying fields, butterflies, fireflies and small life",
+ "short": "Grass, wind & small life",
+ "nav": "Grass",
+ "summary": "Tall grass that hides the lower body, gust waves in whole pixels, trail maps that flatten and recover, regrowth by random ticks, server-side hiding, butterflies, fireflies that sync, and critters that flee, with measured costs for every layer.",
+ "series": {
+  "id": "vfx",
+  "number": 9
+ },
+ "date": "2026-11-11",
+ "updated": "2026-11-11",
+ "thumb": "/thumbs/vfx-grass.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "rendering"
+  ],
+  "concept": [
+   "grass"
+  ],
+  "technique": [
+   "band-sway",
+   "trail-map",
+   "random-tick",
+   "pulse-sync",
+   "ambient-spawn",
+   "palette-lut",
+   "autotile-dual-grid",
+   "footprint-stamp",
+   "occlusion-fade",
+   "spatial-grid"
+  ]
+ },
+ "stats": {
+  "words": 20046,
+  "techniques": 40,
+  "figures": 40,
+  "games": 26,
+  "sources": 168
+ },
+ "pair": "vfx-grass-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel grass Sandbox (playable)",
+  "path": "/vfx-grass-sandbox.html"
+ }
+}

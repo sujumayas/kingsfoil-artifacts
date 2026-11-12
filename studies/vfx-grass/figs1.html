@@ -1,0 +1,217 @@
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of grass and small-life techniques, 1966 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event. The axis is compressed before 1990 so Lloyd's 1966 firefly timing fits, and zoomed for 2021 to 2026 so Gen 3 stays readable. Gen 0 is the science the game techniques borrow from: firefly clocks, trampling trials, trail models and wind primitives.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG emerald-->
+<figure class="fig" data-demo="emerald" id="fig-emerald">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pokémon tall grass: one priority bit hides the legs, a 16×16 rustle plays frames 1 to 4 and rests</h4><span class="illu">Tiles and walker drawn for this page</span></div>
+  <div class="stage mid"><canvas width="128" height="56" aria-label="A row of six 16 pixel grass tiles between dirt; a walker steps into the grass, each tile it enters plays a parting rustle, and the grass is drawn over the walker's legs"></canvas></div>
+  <div class="frames pixgrid" aria-label="The five rustle frames, 0 to 4"><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Grass type"><button type="button" class="on" data-v="tall">Tall grass</button><button type="button" data-v="long">Long grass</button></div>
+    <button type="button" class="btn ghost" data-b="step">Step</button>
+    <button type="button" class="btn ghost" data-b="reset">Back to start</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="cover" checked> Cover the lower body</label>
+    <label><input type="checkbox" data-k="auto" checked> Auto-walk</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion ×¼</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Crystal sets <code>IN_GRASS_F</code> on anything standing in grass, and that flag ORs in the GBC "background over object" bit, so every non-zero grass pixel draws over the walker [V, S16]. Emerald's <code>sAnim_TallGrass</code> plays frames 1, 2, 3 and 4 for 10 ticks each, then rests on frame 0 for 10 ticks: 50 ticks, about 0.83 s at 59.73 fps [V, S13]. Long grass is faster, 26 ticks or about 0.43 s, wobbling twice between frames 0 and 3; the split of those 26 ticks here is illustrative. From the second step into long grass, the walker's bottom half gets priority 3 and sorts behind the background, so its lower 16 px vanish [V, S15]. Untick <b>Cover</b> to see what the bit saves you from drawing. In Godot it is one y-sorted strip per occupied tile, inside the 0.005 ms an instanced draw of 500 tufts measured on the M4 GPU [V, S12; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG zeldacut-->
+<figure class="fig" data-demo="zeldacut" id="fig-zeldacut">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Zelda cut grass: swap one tile, puff four leaves, and drop loot only past two coin flips and a sprite cap</h4><span class="illu">Tiles, timings and table contents illustrative</span></div>
+  <div class="stage click mid"><canvas width="128" height="80" aria-label="A field of thick grass tiles; each cut swaps a tile to short stubble, plays a four-piece leaf puff, and sometimes drops a rupee or a heart"></canvas><span class="tagl">Tap a tile to cut it</span></div>
+  <div class="lab2"><span>Counter slots, <code>subst_ctr++ &amp; 7</code></span></div>
+  <div class="steps" aria-label="The eight counter slots, contents illustrative"><span>rupee</span><span>empty</span><span>heart</span><span>rupee</span><span>empty</span><span>rupee</span><span>heart</span><span>empty</span></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="mow">Mow a row</button>
+    <button type="button" class="btn ghost" data-b="regrow">Regrow</button>
+    <label><input type="checkbox" data-k="cap" checked> No drop when 4 or more sprites are active</label>
+    <label><input type="checkbox" data-k="auto" checked> Keep cutting</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>In A Link to the Past, thick grass (attribute 0x37E) swaps to map16 tile 0xDC5 and only that tile is redrawn; the change is memorised for the area [V, S17, S19]. <code>Ancilla3F_BushPoof</code> draws a 4-piece 16×16 puff over 4 steps, spreading 2 px on the last. The drop code exits half the time on <code>GetRandomNumber() &amp; 1</code>, gives nothing if 4 or more sprites are active, picks the item from a rotating counter, then an outdoor <code>&amp; 8</code> gate takes another 50% [V, S18]. That is why mowing feels like "every few bushes something pops out", never a flood: at most about 25% [I]. Untick the cap and mow fast to see what an MMO field would spawn. The counter slot contents and the puff step length are ours. Per cut it costs one tile write, one puff and two random numbers, and on an MMO server one 9-byte tile update [V, S17; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tibiadecay-->
+<figure class="fig" data-demo="tibiadecay" id="fig-tibiadecay">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tibia grass is an item with a timer: cut it and the server turns it back by itself</h4><span class="illu">Clock compressed; tiles drawn for this page</span></div>
+  <div class="stage click mid"><canvas width="112" height="34" aria-label="Three jungle grass tiles and three wheat tiles with their item ids printed under them and a bar for each decay timer"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Clock speed"><button type="button" data-v="20">×20</button><button type="button" class="on" data-v="60">×60</button><button type="button" data-v="120">×120</button></div>
+    <label><input type="checkbox" data-k="auto" checked> Harvest when ready</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tap a tile to use the machete or the scythe. The ids are the TFS <code>items.xml</code> ones [V, S20]. Jungle grass 2782 becomes cut grass 2781 under the machete, and 2781 has <code>decayTo 2782, duration 300</code>, so it grows back in 5 minutes. Wheat 2737 becomes 2738 after 240 s and 2739 after another 240 s: two visible stages, 8 minutes in all. The scythe turns ripe 2739 back into stubble and creates a bunch of wheat [V, S21, S27]. The server keeps one decay entry per changed item and touches it once per second [V, S22]; grass nobody cut costs nothing. Each change is about 9 bytes of payload to viewers [I, note 03, from S23]. The weak side is that the field is static, with no rustle or sway [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stardew-->
+<figure class="fig" data-demo="stardew" id="fig-stardew">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Stardew tufts sleep until touched, then shake and settle in under a second: smooth rotation against three baked lean frames</h4><span class="illu">Tufts drawn for this page</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="96" height="52" aria-label="Tufts rotated smoothly at native resolution as a walker passes; the rotated pixels break into jagged mixels"></canvas><span class="tagl">Smooth rotation</span></div></div>
+    <div><div class="stage"><canvas width="96" height="52" aria-label="The same tufts using three baked frames, lean left 1 pixel, upright, lean right 1 pixel"></canvas><span class="tagl">3 lean frames</span></div></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each tile holds 4 tufts offset by −2 to +2 px and flipped half the time, seeded per tile so the layout never changes [V, S37]. They never sway in wind. Touched, a tuft rotates back and forth at <code>π/80</code> per tick while its maximum, <code>π/8</code>, shrinks by <code>π/350</code> per tick; then the rotation halves each tick and below 0.01 rad the tuft stops updating [V, S36]. Each tuft divides by <code>1 + r</code>, r in [0, 1), so neighbours bend 50% to 100% as much. That is a 22.5° peak and about 44 ticks, 0.73 s at 60 ticks/s [I]. Left, the rotation at native resolution: the pixels jitter into mixels, fine at Stardew's 4× but not at 320×180 [I]. Right, the same state machine picks one of three frames, left 1 px, upright or right 1 px (C5). As one instanced batch, 2,000 tufts measured 0.012 ms on the M4 GPU at 320×180 (§6a; the A4 profile quotes the 0.015 ms wall figure) [V, S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG highgrass-->
+<figure class="fig" data-demo="highgrass" id="fig-highgrass">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Roguelike high grass blocks sight like a wall; step in and it tramples flat and the view opens</h4><span class="illu">Map drawn for this page</span></div>
+  <div class="stage click mid"><canvas width="160" height="96" aria-label="A dungeon room of 8 pixel cells with patches of high grass; the hero's field of view stops at the grass, and every cell the hero steps on becomes short grass"></canvas><span class="tagl">Tap a cell to walk there</span></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="auto" checked> Explore on its own</label>
+    <label><input type="checkbox" data-k="regrow"> Brogue regrowth, 1% per turn</label>
+    <button type="button" class="btn ghost" data-b="reset">Regrow everything</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Shattered Pixel Dungeon defines <code>HIGH_GRASS = PASSABLE | LOS_BLOCKING | FLAMABLE</code>, and each cell's <code>losBlocking</code> feeds the same shadowcaster as walls [V, S73, S74]. Stepping in sets plain grass and bursts 4 leaf particles; the game recomputes the FOV only if that cell is in the hero's view [V, S72]. Brogue's foliage promotes on step to trampled foliage that regrows at 1% per turn, about 100 turns on average [V, S75]. So you hide behind grass, never inside it, and the trampled cells show where you went [I]. Our view uses a simple ray test with radius 8, not SPD's shadowcaster. In an MMO each step would change FOV for everyone near, so use the server rule of E4 there [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hashvar-->
+<figure class="fig" data-demo="hashvar" id="fig-hashvar">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A hash of the tile position picks the variant and the mirroring, so the grid disappears and every client paints the same meadow</h4><span class="illu">Tiles and ramps drawn for this page</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Client A's view of a grass field built from four tile variants"></canvas><span class="tagl">Client A</span></div></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Client B's view of the same part of the field"></canvas><span class="tagl">Client B</span></div></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="How tiles are chosen"><button type="button" data-v="one">One tile</button><button type="button" class="on" data-v="hash">Hash and flips</button><button type="button" data-v="rnd">Engine random</button></div>
+    <button type="button" class="btn ghost" data-b="rejoin">Client B reconnects</button>
+    <label><input type="checkbox" data-k="mood" checked> Mood map, 3 ramps</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Four 16×16 variants: nearly flat, light clusters, dense clusters and an occasional flower tile, with clusters that wrap at the tile edges, as Slynyrd advises [V, S149, S150]. "A good texture may only need a few simple clusters." <code>hash(x, y)</code> picks the variant and whether to mirror it, like Stardew's per-tile seed [V, S37]. Godot terrain painting picks matching variants at random, unseeded by a user function, so in an MMO each client could paint a different field [V, S107; I, note 08]: switch to <b>Engine random</b> and reconnect client B. The mood map is a slow world-space noise that picks ramp A, B or C per pixel, with world-locked Bayer at the seams (Fog C1) [V, S112; I, note 08]. Drag to pan; the pattern stays on the ground. Baked into the tilemap it costs nothing per frame; as a shader it is one hash and one palette lookup per pixel, comparable to the 0.0021 ms full-screen pass at 320×180 on the M4 GPU [V, S12]. Zero network bytes.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cornerset-->
+<figure class="fig" data-demo="cornerset" id="fig-cornerset">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A 16-tile corner set: paint the corners and the grass, dirt and water edges resolve themselves</h4><span class="illu">Tiles drawn for this page</span></div>
+  <div class="stage click mid"><canvas width="128" height="80" aria-label="A small map of grass, a dirt patch and a pond; each 16 pixel tile is chosen from its four corners, grass overlaps the dirt with a darker lip, and the ground near the water is darker"></canvas><span class="tagl">Tap or drag on corners</span></div>
+  <div class="lab2"><span>Grass over dirt, tiles 0 to 15 (lit: used on the map)</span></div>
+  <div class="atlas pixgrid" aria-label="The 16 grass over dirt tiles">
+    <canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas><canvas width="16" height="16"></canvas>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tool" role="group" aria-label="Paint"><button type="button" class="on" data-v="2">Grass</button><button type="button" data-v="1">Dirt</button><button type="button" data-v="0">Water</button></div>
+    <label><input type="checkbox" data-k="grid" checked> Show corners and tile numbers</label>
+    <button type="button" class="btn ghost" data-b="clear">All grass</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A 2-corner Wang set has 2⁴ = 16 tiles; the blob set is a 47-tile subset of the 256-case set [V, S152, S153]. Each tile here looks only at its four corners, and its edge noise repeats every 16 px, so any neighbours join. Grass is a partial layer over a dirt base that loops on all four sides [V, S151], with a 1 px darker lip over the dirt and a 1 to 2 px band of darker grass at the water [I]. Water sits under dirt, dirt under grass. It costs nothing per frame, it is the tilemap. The real cost is art: 16 corner tiles × 2 variants is 32 tiles per pair, a blob set with 2 variants is 94 [I]. Wear stages for desire paths (D5) can reuse the same set.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tuftcover-->
+<figure class="fig" data-demo="tuftcover" id="fig-tuftcover">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tuft sprites sorted with the walker by their bottom edge, and a grass-front strip over the lower body</h4><span class="illu">Scene drawn for this page</span></div>
+  <div class="stage mid"><canvas width="128" height="72" aria-label="A walker circles through a patch of tall grass tufts; tufts in front of the walker's feet draw over the legs"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Draw order"><button type="button" class="on" data-v="tuft">Per-tuft y-sort</button><button type="button" data-v="batch">One batch</button><button type="button" data-v="rows">Row bands</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="strip" checked> Grass-front strip</label>
+    <label class="rng">Strip height <input type="range" data-k="sh" min="4" max="14" value="8"><output data-o="sh"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tall grass, wheat and flowers are small sprites sorted with characters by their bottom edge, so front tufts draw over anyone standing in them [I]. A single Godot MultiMesh is one canvas item at one depth and cannot interleave with a character: pick <b>One batch</b> and the walker floats on top [V, S102; I, note 02]. One MultiMeshInstance2D per tile row with its z from y gave 1100 FPS on an RX 5700 [V, self-reported, S102]; at 32 px tiles a 180 px view shows 7 to 8 rows, so about 8 draws. The strip is the bottom 10 to 14 px of a 32 px tile with its sort origin at the tile's bottom edge; keep it under 40% of the character's height [I]. This walker is 24 px, so the slider turns red past 9 px. On the M4 GPU, 2,000 tufts cost 0.012 ms as one instanced draw and 3.27 ms wall as 2,000 separate draws, which is why per-node materials that break batching are the expensive branch [V, S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fieldlayer-->
+<figure class="fig" data-demo="fieldlayer" id="fig-fieldlayer">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Per-tuft sprites, one field layer in row bands, or pixel writes: the same field on three canvas paths, timed live</h4><span class="illu">Field illustrative; ms timed live and measured in §6a</span></div>
+  <div class="stage mid"><canvas width="160" height="90" aria-label="A field of wheat and tall grass swaying in a gust wave, drawn by the selected method"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Drawing method"><button type="button" class="on" data-v="sprite">Per-tuft drawImage</button><button type="button" data-v="bands">Field layer, row bands</button><button type="button" data-v="pixels">Pixel writes</button></div>
+    <button type="button" class="btn ghost" data-b="bench">Time all three now</button>
+  </div>
+  <div class="ctl">
+    <label class="rng">Tufts <input type="range" data-k="n" min="250" max="8000" step="250" value="2000"><output data-o="n"></output></label>
+  </div>
+  <div class="fl-bars" data-bars></div>
+  <div class="legend-mini"><span><i style="background:var(--lamp)"></i>timed on your device, this tuft count</span><span><i style="background:#6f7a62"></i>measured on the M4 Pro, 2,000 tufts (§6a)</span></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Three ways to draw grass on a Canvas 2D path, the fallback when there is no GPU batching. One <code>drawImage</code> per tuft from 5 pre-baked shear frames measured 1.62 ms for 2,000 tufts on the M4 Pro and 10.1 ms throttled. A pre-rendered field layer drawn as 2 px row bands costs the same whatever the count, 0.11 ms, because every tuft in a band moves together: that is the wave through wheat, but no single tuft can bend away from a walker. Pixel writes into one buffer plus one <code>putImageData</code> measured 0.051 ms for 2,000, about 30× faster than <code>drawImage</code> [V, S12]. Re-baking the whole layer after trampling cost 4.8 ms for 8,000 tufts, so re-bake only dirty 8×8 cells [V, S12]. Bars are on a log scale. On a GPU all three collapse into one instanced draw or one field shader, 0.012 ms or 0.0021 ms at 320×180 [V, S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flowers-->
+<figure class="fig" data-demo="flowers" id="fig-flowers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flowers in clumps with Poisson spacing look planted; the same count at random looks like noise. They close at dusk.</h4><span class="illu">Opening hour and closing ramp illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Flowers in patches, evenly spaced inside each patch, one species dominant"></canvas><span class="tagl">Patches + Poisson</span></div></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="The same number of flowers scattered uniformly at random"></canvas><span class="tagl">Uniform random</span></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Poisson radius <input type="range" data-k="r" min="3" max="10" value="4"><output data-o="r"></output></label>
+    <button type="button" class="btn ghost" data-b="seed">New field</button>
+  </div>
+  <div class="ctl">
+    <label class="rng">Hour <input type="range" data-k="h" min="0" max="95" value="40"><output data-o="h"></output></label>
+    <label><input type="checkbox" data-k="run" checked> Run the day</label>
+    <label><input type="checkbox" data-k="rain"> Rainy day</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Patch areas come from a low-res value noise thresholded near 0.6, then Poisson-disc dots inside, 6 to 10 px apart for dots baked into tile variants, with one species dominant at about 70% [I]. Bridson's sampling runs in O(N) [V, S125]. The right side scatters the same number of flowers uniformly, and the closest pair shows why it reads as noise. Dandelion heads close in the evening, often starting between 15:00 and 17:00, and may stay shut on rainy days [V, S143]. Here each patch picks its closing time in that window and plays a 3-frame sprite, open, half and closed; one integer per flower type drives it [I]. The 08:00 opening is ours. Placement is offline; per frame, flowers are tufts with another atlas frame, inside the 0.012 ms of 2,000 instanced tufts (§6a) [V, S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rowshear-->
+<figure class="fig" data-demo="rowshear" id="fig-rowshear">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sway in whole pixels, root fixed, tip 2 px: against smooth sub-pixel sway, which smears at 320×180</h4><span class="illu">Tufts drawn for this page, zoomed</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="40" height="18" aria-label="Zoomed tufts sheared row by row in whole pixels; only palette colours appear"></canvas><span class="tagl">Whole-pixel rows</span></div></div>
+    <div><div class="stage"><canvas width="40" height="18" aria-label="The same tufts moved by fractions of a pixel; edges blur into in-between colours"></canvas><span class="tagl">Smooth sub-pixel</span></div></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="step"> Stepped at 5 fps (C5)</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left, each row slides by a whole pixel: 0 px at the root, ±1 px in the middle, ±2 px at the tip, never rotated [I]. A shader gets this by quantising per texel row, <code>offset_px = round(amp * f(row, t))</code>, or with <code>floor(local_uv * region_size_px) / region_size_px</code> through <code>REGION_RECT</code> on an atlas [V, S110, S111]. Right, the same motion in fractions of a pixel, which is what a sheared quad in <code>vertex()</code> samples: transform snapping rounds node positions, not a shear inside the shader [V, S97; I, note 02]. Count the colours to see the smear. Tick <b>Stepped</b> for Dynamic 2D Grass's <code>framerate = 5.0</code> with <code>quantised = true</code> [V, S108]. Our tuft shader snaps per row with <code>texelFetch</code>: 8,000 tufts cost 0.056 ms in one draw on the M4 GPU. On the CPU, slicing each tuft into 8 rows costs 12 ms for 2,000 tufts, against 1.62 ms for pre-baked frames and 0.051 ms for pixel writes [V, S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cosinewave-->
+<figure class="fig" data-demo="cosinewave" id="fig-cosinewave">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Terraria's grass wave: one cosine with phase x·0.5 per column on top of the wind, gated when calm</h4><span class="illu">Gate threshold and wind-to-period curve illustrative</span></div>
+  <div class="stage mid"><canvas width="240" height="48" aria-label="A row of fifteen 16 pixel grass tiles leaning with the wind while a wave of lean travels across them"></canvas></div>
+  <div class="stage mid" style="margin-top:6px"><canvas width="240" height="40" aria-label="Plot of the cosine wave across the columns with the crest marked and an arrow for its direction"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Wind <input type="range" data-k="w" min="-100" max="100" value="25"><output data-o="w"></output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="ph" role="group" aria-label="Phase"><button type="button" class="on" data-v="ter">Terraria phase</button><button type="button" data-v="ast">Asterion: crests go downwind</button></div>
+    <label><input type="checkbox" data-k="gate" checked> Wind gate</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Terraria computes <code>phase = x*0.5 + (y/100)*0.5</code> and <code>s = cos(counter*2π + phase) * 0.5 + WindForVisuals</code>, then scales by <code>lerp01(0.08..0.18, |wind|)</code> [V, S52]. From those numbers: a calm period of 180 frames (3.0 s) and a storm period of 36 frames (0.6 s), a wavelength of 12.6 tiles (about 201 px at 16 px tiles), and crests that move about 67 px/s calm and 335 px/s in a storm [I]. The <code>+0.5x</code> term moves crests toward −x whatever the wind's sign: set the wind positive and watch the crest go upwind. For Asterion use <code>phase = dot(tile, wind_dir) * k − ωt</code> so crests travel downwind (§7) [I]. Below a threshold Terraria keeps sway nearly zero; our gate fades in between |wind| 0.06 and 0.2, a value we picked. Our tufts lean in whole pixels instead of Terraria's float rotation. As a shader term it is part of the 0.0021 ms field pass or the instanced tuft draw [V, S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG gusts-->
+<figure class="fig" data-demo="gusts" id="fig-gusts">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Gusts from two scrolling noise tables, stiffness per material and a little variation per tuft</h4><span class="illu">Field and table scales illustrative; ms timed live</span></div>
+  <div class="stage click mid"><canvas width="160" height="80" aria-label="A field of wheat, tall grass and short grass leaning in whole pixels as slow gust patches and a fast flutter cross it; tap to send a blast that flattens grass outward"></canvas><span class="tagl">Tap for a blast</span></div>
+  <div class="duo" style="margin-top:6px">
+    <div><div class="stage"><canvas width="64" height="10" aria-label="The slow, strong gust table scrolling downwind"></canvas><span class="tagl">Gust: slow, strong</span></div></div>
+    <div><div class="stage"><canvas width="64" height="10" aria-label="The fast, weak flutter table"></canvas><span class="tagl">Flutter: fast, weak</span></div></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Wind <input type="range" data-k="s" min="0" max="120" value="60"><output data-o="s"></output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="g" checked> Gust table</label>
+    <label><input type="checkbox" data-k="f" checked> Flutter table</label>
+    <label><input type="checkbox" data-k="v" checked> Per-tuft variation</label>
+    <label><input type="checkbox" data-k="d"> Per-tuft noise directions</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Habel's 2007 grass shifts the texture lookup by scrolling noise with the bottom fixed: low-frequency, high-amplitude noise gives gusts, high-frequency, low-amplitude noise gives turbulence [V, S120]. Sample once per tuft at its root, not per vertex, so the sprite stays intact and draws stay few [V, S86]. Stiffness comes from 117 HD's 3-bit flag, multipliers from 0.25 to 2.0 [V, S31, S29]; we give short grass 0.25, mid 0.75, tall 1.0, flowers 1.25 and wheat 2.0. Each tuft then divides by Stardew's <code>1 + r</code> [V, S36]. Tick <b>Per-tuft noise directions</b> for what one Godot developer called "dancing" grass; one global direction read as real gusts [V, S90, S88]. A tap sends a blast, one of Perbet and Cani's wind primitives; a server record of about 12 bytes per primitive lets every client evaluate it [V, S121; I, note 09]. Our tuft shader reads a 128×128 wind texture per instance: 2,000 tufts measured 0.012 ms on the M4 GPU at 320×180 [V, S12].</figcaption>
+</figure>
+<!--/FIG-->

@@ -298,5 +298,23 @@
   "title": "Loot and pickup in a top-down pixel MMORPG Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-11"
+ },
+ {
+  "path": "/thumbs/vfx-grass.png",
+  "title": "Thumbnail vfx-grass.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/vfx-grass-topdown-pixel.html",
+  "title": "Top-down pixel grass: tiny algorithms for trampled grass, swaying fields, butterflies, fireflies and small life",
+  "description": "Tall grass that hides the lower body, gust waves in whole pixels, trail maps that flatten and recover, regrowth by random ticks, server-side hiding, butterflies, fireflies that sync, and critters that flee, with measured costs for every layer.",
+  "date": "2026-11-11"
+ },
+ {
+  "path": "/vfx-grass-sandbox.html",
+  "title": "Top-down pixel grass Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-11"
  }
 ]
