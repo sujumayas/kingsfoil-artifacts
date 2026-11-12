@@ -279,7 +279,8 @@ function flames(cb){
 function doomStep(){const wsh=windX*windV/10,wpi=(Math.abs(wsh)*.6*256)|0,ws=wsh>0?1:-1;
   for(let x=0;x<W;x++)for(let y=1;y<H;y++){const src=y*W+x,p=DB[src];if(p===0){DB[src-W]=0;continue;}
     const r=rb();let off=(r&3)===0?-1:(r&3)===3?1:0;if(((r>>>2)&255)<wpi)off+=ws;if(x+off<0||x+off>=W)off=0;const nv=p-DEC[(r>>>10)&7];DB[src-W+off]=nv>0?nv:0;DZ[src-W+off]=DZ[src];}
-  flames((fx,fy,sz,key,d)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1||fy>=H)return;
+  // the bottom cell row is cut at y 180, its flame bases lie below the canvas: seed them on the last pixel row
+  flames((fx,fy,sz,key,d)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1)return;if(fy>=H)fy=H-1;
     for(let k=0;k<w;k++){const x=fx-(w>>1)+k;if(x<0||x>=W)continue;const e=(k===0||k===w-1)?7:0,v=base-e-(rb()&7);const i=fy*W+x;if(v>DB[i]){DB[i]=v;DZ[i]=d+1;}}});
 }
 function smokeStep(dt){

@@ -537,7 +537,11 @@ How to use this file:
   then the tick, so one step moves the whole scene 0.25 s. Test: 60 paused frames with an input on
   each. Sheep moved 14.75 px before and 0 after. A fireball cast while paused flew and landed before.
   Now it waits and flies on resume or step. One step moves the sheep 3.75 px (0 before).
-- [ ] **103.** `P4` DOOM style shows no flame on the bottom cell row (`:279`).
+- [x] **103.** `P4` DOOM style shows no flame on the bottom cell row (`:279`).
+  Done: `doomStep()` clamps flame seeds below the canvas to the last pixel row, where it used to drop
+  them. Test: burn each of the 38 ground cells of row 22 alone and count heat pixels above it after 40
+  buffer steps. Cells with no flame: 20 before, 0 after. Mean heat pixels: 28.8 before, 122.3 after
+  (row 21 has 97.8).
 - [ ] **104.** `P4` Explosion ring fades in vertical stripes. It reads `BY` where it should read `BAY` (`:418`).
 - [ ] **105.** `P6` Light from the burning sheep and the fireball hops 8 px, one cell at a time (`:350`).
 - [ ] **106.** `P6` Fuel view calls `px('...')` three times per pixel (`:443`), 17.4 ms median at 6x. Hoist the
