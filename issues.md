@@ -940,8 +940,12 @@ How to use this file:
   and 390 px wide: "p90 369 s" overlapped B4 and B5 on diamond and "600 s" was cut at every size. Now no
   overlap and nothing cut in any of the 6 charts. The same anchor rule fixed "0 s" and "run 1" sitting on
   the y axis's 0.
-- [ ] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
+- [x] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
   it by `n mod 12`. Depends on intent.
+  Done: report A2 says `n mod 12`, the lab used `n mod DEPTH_EVERY`. Intent settled by the report: the
+  landing is the relief after a wall, and walls are every 12. With Every 8 and Landing 3, encounters 13 to
+  15 stayed at power 1.45 and the dip fell on 9 to 11. Now 13 to 15 drop to 1.0. At Every 12 nothing
+  changes.
 - [ ] **177.** `P5` Landing watch text does not match the chart (`:114`).
 - [ ] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
   and 0.81 (`:155`).

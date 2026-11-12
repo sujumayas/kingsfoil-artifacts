@@ -170,7 +170,8 @@ function clocks(S){return [0.65,S.silver,1.1,1.25];}
 // ---------- model ----------
 function dp(n,S){
   var E=S.every,P=S.power,top=Math.floor(180/E),st=Math.floor(n/E);
-  if(n<=180){if(S.landing>0&&n>E){var r=n%E;if(r>=1&&r<=S.landing)st-=1;}return 1+P*st;}
+  // landing, as in report A2: the first LANDING encounters after each wall (walls are every 12) sit one step lower
+  if(n<=180){if(S.landing>0&&n>12){var r=n%12;if(r>=1&&r<=S.landing&&st>0)st-=1;}return 1+P*st;}
   return (1+top*P)*Math.pow(1+S.endless,st-top);
 }
 function slot(n){var w=Math.floor((n-1)/36),p=(n-1)%36+1;return {w:w,p:p,kind:p===36?"boss":(p===12||p===24)?"elite":"normal"};}
