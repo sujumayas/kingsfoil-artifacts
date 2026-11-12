@@ -1,0 +1,1548 @@
+{
+ "info": {
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "cores": 14
+ },
+ "results": [
+  {
+   "name": "baseline c2d: ground drawImage + 1x1 sync",
+   "median_ms": 0.1929,
+   "p10_ms": 0.1884,
+   "p90_ms": 0.2
+  },
+  {
+   "name": "baseline imagedata: ground copy + putImageData + 1x1 sync",
+   "median_ms": 0.0122,
+   "p10_ms": 0.012,
+   "p90_ms": 0.0123
+  },
+  {
+   "name": "q1 sim SoA pool swap-remove N=500 (no draw)",
+   "median_ms": 0.0011,
+   "p10_ms": 0.0011,
+   "p90_ms": 0.0011
+  },
+  {
+   "name": "q1 sim AoS objects, new array per frame N=500 (no draw)",
+   "median_ms": 0.0022,
+   "p10_ms": 0.0021,
+   "p90_ms": 0.0022
+  },
+  {
+   "name": "q1 sim AoS immutable vectors + filter N=500 (no draw)",
+   "median_ms": 0.0046,
+   "p10_ms": 0.0046,
+   "p90_ms": 0.0047
+  },
+  {
+   "name": "q1 c2d fillRect per particle, fillStyle each N=500",
+   "median_ms": 0.3565,
+   "p10_ms": 0.3333,
+   "p90_ms": 0.3773
+  },
+  {
+   "name": "q1 c2d fillRect grouped by colour (5 fillStyle) N=500",
+   "median_ms": 0.3522,
+   "p10_ms": 0.32,
+   "p90_ms": 0.3636
+  },
+  {
+   "name": "q1 c2d rect() path per colour + 5 fill() N=500",
+   "median_ms": 0.2793,
+   "p10_ms": 0.27,
+   "p90_ms": 0.332
+  },
+  {
+   "name": "q1 c2d drawImage per particle N=500",
+   "median_ms": 0.7273,
+   "p10_ms": 0.7083,
+   "p90_ms": 0.7545
+  },
+  {
+   "name": "q1 imagedata particle writes N=500",
+   "median_ms": 0.014,
+   "p10_ms": 0.0137,
+   "p90_ms": 0.0142
+  },
+  {
+   "name": "q1 imagedata sim SoA + particle writes N=500",
+   "median_ms": 0.016,
+   "p10_ms": 0.0155,
+   "p90_ms": 0.0162
+  },
+  {
+   "name": "q1 sim SoA pool swap-remove N=2000 (no draw)",
+   "median_ms": 0.0069,
+   "p10_ms": 0.0068,
+   "p90_ms": 0.007
+  },
+  {
+   "name": "q1 sim AoS objects, new array per frame N=2000 (no draw)",
+   "median_ms": 0.0115,
+   "p10_ms": 0.0113,
+   "p90_ms": 0.0116
+  },
+  {
+   "name": "q1 sim AoS immutable vectors + filter N=2000 (no draw)",
+   "median_ms": 0.0191,
+   "p10_ms": 0.0187,
+   "p90_ms": 0.0195
+  },
+  {
+   "name": "q1 c2d fillRect per particle, fillStyle each N=2000",
+   "median_ms": 0.6917,
+   "p10_ms": 0.6833,
+   "p90_ms": 0.7455
+  },
+  {
+   "name": "q1 c2d fillRect grouped by colour (5 fillStyle) N=2000",
+   "median_ms": 0.6833,
+   "p10_ms": 0.6615,
+   "p90_ms": 0.7
+  },
+  {
+   "name": "q1 c2d rect() path per colour + 5 fill() N=2000",
+   "median_ms": 0.4,
+   "p10_ms": 0.3905,
+   "p90_ms": 0.56
+  },
+  {
+   "name": "q1 c2d drawImage per particle N=2000",
+   "median_ms": 2.375,
+   "p10_ms": 2.325,
+   "p90_ms": 2.5
+  },
+  {
+   "name": "q1 imagedata particle writes N=2000",
+   "median_ms": 0.0199,
+   "p10_ms": 0.0196,
+   "p90_ms": 0.0205
+  },
+  {
+   "name": "q1 imagedata sim SoA + particle writes N=2000",
+   "median_ms": 0.0267,
+   "p10_ms": 0.0264,
+   "p90_ms": 0.0271
+  },
+  {
+   "name": "q1 sim SoA pool swap-remove N=8000 (no draw)",
+   "median_ms": 0.0283,
+   "p10_ms": 0.0282,
+   "p90_ms": 0.0286
+  },
+  {
+   "name": "q1 sim AoS objects, new array per frame N=8000 (no draw)",
+   "median_ms": 0.0402,
+   "p10_ms": 0.0396,
+   "p90_ms": 0.0406
+  },
+  {
+   "name": "q1 sim AoS immutable vectors + filter N=8000 (no draw)",
+   "median_ms": 0.0748,
+   "p10_ms": 0.0727,
+   "p90_ms": 0.0762
+  },
+  {
+   "name": "q1 c2d fillRect per particle, fillStyle each N=8000",
+   "median_ms": 2.275,
+   "p10_ms": 2.2,
+   "p90_ms": 2.45
+  },
+  {
+   "name": "q1 c2d fillRect grouped by colour (5 fillStyle) N=8000",
+   "median_ms": 2.125,
+   "p10_ms": 2.075,
+   "p90_ms": 2.175
+  },
+  {
+   "name": "q1 c2d rect() path per colour + 5 fill() N=8000",
+   "median_ms": 0.9444,
+   "p10_ms": 0.9222,
+   "p90_ms": 1.35
+  },
+  {
+   "name": "q1 c2d drawImage per particle N=8000",
+   "median_ms": 9.3,
+   "p10_ms": 9,
+   "p90_ms": 9.8
+  },
+  {
+   "name": "q1 imagedata particle writes N=8000",
+   "median_ms": 0.0432,
+   "p10_ms": 0.0428,
+   "p90_ms": 0.0437
+  },
+  {
+   "name": "q1 imagedata sim SoA + particle writes N=8000",
+   "median_ms": 0.0714,
+   "p10_ms": 0.0708,
+   "p90_ms": 0.073
+  },
+  {
+   "name": "q1 sim SoA pool swap-remove N=32000 (no draw)",
+   "median_ms": 0.1141,
+   "p10_ms": 0.1127,
+   "p90_ms": 0.1157
+  },
+  {
+   "name": "q1 sim AoS objects, new array per frame N=32000 (no draw)",
+   "median_ms": 0.1538,
+   "p10_ms": 0.1404,
+   "p90_ms": 0.1653
+  },
+  {
+   "name": "q1 sim AoS immutable vectors + filter N=32000 (no draw)",
+   "median_ms": 0.405,
+   "p10_ms": 0.3952,
+   "p90_ms": 0.4526
+  },
+  {
+   "name": "q1 c2d fillRect per particle, fillStyle each N=32000",
+   "median_ms": 8.3,
+   "p10_ms": 8,
+   "p90_ms": 8.5
+  },
+  {
+   "name": "q1 c2d fillRect grouped by colour (5 fillStyle) N=32000",
+   "median_ms": 7.7,
+   "p10_ms": 7.5,
+   "p90_ms": 8.05
+  },
+  {
+   "name": "q1 c2d rect() path per colour + 5 fill() N=32000",
+   "median_ms": 3.8333,
+   "p10_ms": 3.5,
+   "p90_ms": 5.1
+  },
+  {
+   "name": "q1 c2d drawImage per particle N=32000",
+   "median_ms": 36.5,
+   "p10_ms": 35.9,
+   "p90_ms": 37.9
+  },
+  {
+   "name": "q1 imagedata particle writes N=32000",
+   "median_ms": 0.1429,
+   "p10_ms": 0.1404,
+   "p90_ms": 0.1455
+  },
+  {
+   "name": "q1 imagedata sim SoA + particle writes N=32000",
+   "median_ms": 0.2581,
+   "p10_ms": 0.2531,
+   "p90_ms": 0.2613
+  },
+  {
+   "name": "q2 c2d flipbook drawImage normal 32x32 N=30",
+   "median_ms": 0.2531,
+   "p10_ms": 0.2424,
+   "p90_ms": 0.2862,
+   "px_effect": 5265,
+   "px_rect": 30720,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage lighter 32x32 N=30",
+   "median_ms": 0.2531,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.2828,
+   "px_effect": 5265,
+   "px_rect": 30720,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp blit 32x32 N=30",
+   "median_ms": 0.0356,
+   "p10_ms": 0.0349,
+   "p90_ms": 0.0367,
+   "px_effect": 5265,
+   "px_rect": 30720,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp-add index layer + resolve 32x32 N=30",
+   "median_ms": 0.0741,
+   "p10_ms": 0.0727,
+   "p90_ms": 0.0755,
+   "px_effect": 5265,
+   "px_rect": 30720,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage normal 32x32 N=120",
+   "median_ms": 0.3565,
+   "p10_ms": 0.328,
+   "p90_ms": 0.3727,
+   "px_effect": 21165,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage lighter 32x32 N=120",
+   "median_ms": 0.3609,
+   "p10_ms": 0.328,
+   "p90_ms": 0.3682,
+   "px_effect": 21165,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp blit 32x32 N=120",
+   "median_ms": 0.1708,
+   "p10_ms": 0.1667,
+   "p90_ms": 0.1761,
+   "px_effect": 21165,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp-add index layer + resolve 32x32 N=120",
+   "median_ms": 0.25,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.25,
+   "px_effect": 21165,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage normal 32x32 N=480",
+   "median_ms": 0.7818,
+   "p10_ms": 0.7455,
+   "p90_ms": 0.83,
+   "px_effect": 84660,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage lighter 32x32 N=480",
+   "median_ms": 0.7636,
+   "p10_ms": 0.7273,
+   "p90_ms": 0.7909,
+   "px_effect": 84660,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp blit 32x32 N=480",
+   "median_ms": 0.4,
+   "p10_ms": 0.3905,
+   "p90_ms": 0.4368,
+   "px_effect": 84660,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp-add index layer + resolve 32x32 N=480",
+   "median_ms": 0.8,
+   "p10_ms": 0.7909,
+   "p90_ms": 0.84,
+   "px_effect": 84660,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage normal 64x64 N=30",
+   "median_ms": 0.2581,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.2793,
+   "px_effect": 21196,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage lighter 64x64 N=30",
+   "median_ms": 0.2531,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.2893,
+   "px_effect": 21196,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp blit 64x64 N=30",
+   "median_ms": 0.1096,
+   "p10_ms": 0.1025,
+   "p90_ms": 0.125,
+   "px_effect": 21196,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp-add index layer + resolve 64x64 N=30",
+   "median_ms": 0.2222,
+   "p10_ms": 0.2162,
+   "p90_ms": 0.2382,
+   "px_effect": 21196,
+   "px_rect": 122880,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage normal 64x64 N=120",
+   "median_ms": 0.3609,
+   "p10_ms": 0.3333,
+   "p90_ms": 0.4,
+   "px_effect": 85380,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage lighter 64x64 N=120",
+   "median_ms": 0.3636,
+   "p10_ms": 0.3417,
+   "p90_ms": 0.415,
+   "px_effect": 85380,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp blit 64x64 N=120",
+   "median_ms": 0.405,
+   "p10_ms": 0.381,
+   "p90_ms": 0.4211,
+   "px_effect": 85380,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp-add index layer + resolve 64x64 N=120",
+   "median_ms": 0.82,
+   "p10_ms": 0.7909,
+   "p90_ms": 0.85,
+   "px_effect": 85380,
+   "px_rect": 491520,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage normal 64x64 N=480",
+   "median_ms": 0.84,
+   "p10_ms": 0.7,
+   "p90_ms": 0.9222,
+   "px_effect": 341520,
+   "px_rect": 1966080,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 c2d flipbook drawImage lighter 64x64 N=480",
+   "median_ms": 0.85,
+   "p10_ms": 0.6917,
+   "p90_ms": 0.9333,
+   "px_effect": 341520,
+   "px_rect": 1966080,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp blit 64x64 N=480",
+   "median_ms": 1.64,
+   "p10_ms": 1.6,
+   "p90_ms": 1.82,
+   "px_effect": 341520,
+   "px_rect": 1966080,
+   "screen_px": 57600
+  },
+  {
+   "name": "q2 imagedata flipbook ramp-add index layer + resolve 64x64 N=480",
+   "median_ms": 2.65,
+   "p10_ms": 2.6,
+   "p90_ms": 2.9,
+   "px_effect": 341520,
+   "px_rect": 1966080,
+   "screen_px": 57600
+  },
+  {
+   "name": "q3 c2d full-screen effects layer composite source-over",
+   "median_ms": 0.1905,
+   "p10_ms": 0.186,
+   "p90_ms": 0.1976
+  },
+  {
+   "name": "q3 c2d full-screen effects layer composite lighter",
+   "median_ms": 0.1952,
+   "p10_ms": 0.1818,
+   "p90_ms": 0.2077
+  },
+  {
+   "name": "q3 c2d glow halos 32x32 (16x16 scaled 2x) lighter N=60",
+   "median_ms": 0.2562,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.2759
+  },
+  {
+   "name": "q3 c2d glow halos 32x32 (16x16 scaled 2x) source-over N=60",
+   "median_ms": 0.25,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.27
+  },
+  {
+   "name": "q3 c2d glow halos 32x32 (16x16 scaled 2x) lighter N=240",
+   "median_ms": 0.4882,
+   "p10_ms": 0.4316,
+   "p90_ms": 0.5
+  },
+  {
+   "name": "q3 c2d glow halos 32x32 (16x16 scaled 2x) source-over N=240",
+   "median_ms": 0.4824,
+   "p10_ms": 0.4706,
+   "p90_ms": 0.5062
+  },
+  {
+   "name": "q3 c2d glow halos 32x32 (16x16 scaled 2x) lighter N=960",
+   "median_ms": 1.2571,
+   "p10_ms": 1.2286,
+   "p90_ms": 1.3333
+  },
+  {
+   "name": "q3 c2d glow halos 32x32 (16x16 scaled 2x) source-over N=960",
+   "median_ms": 1.2714,
+   "p10_ms": 1.2286,
+   "p90_ms": 1.3429
+  },
+  {
+   "name": "q3 glow buffer 80x45 stage: clear + max-splat 2000 particles + 120 impact disks (raw)",
+   "median_ms": 0.011,
+   "p10_ms": 0.0109,
+   "p90_ms": 0.0142
+  },
+  {
+   "name": "q3 glow buffer 80x45 stage: 3x3 block-sum blur (raw)",
+   "median_ms": 0.003,
+   "p10_ms": 0.0029,
+   "p90_ms": 0.003
+  },
+  {
+   "name": "q3 glow buffer 80x45 stage: Bayer palette select to 320x180 (raw)",
+   "median_ms": 0.0643,
+   "p10_ms": 0.0635,
+   "p90_ms": 0.065
+  },
+  {
+   "name": "q3 glow buffer 80x45 whole frame (splat + blur + select + present)",
+   "median_ms": 0.0964,
+   "p10_ms": 0.0952,
+   "p90_ms": 0.0976
+  },
+  {
+   "name": "q3 glow buffer 160x90 stage: clear + max-splat 2000 particles + 120 impact disks (raw)",
+   "median_ms": 0.044,
+   "p10_ms": 0.041,
+   "p90_ms": 0.0465
+  },
+  {
+   "name": "q3 glow buffer 160x90 stage: 3x3 block-sum blur (raw)",
+   "median_ms": 0.0257,
+   "p10_ms": 0.0255,
+   "p90_ms": 0.0259
+  },
+  {
+   "name": "q3 glow buffer 160x90 stage: Bayer palette select to 320x180 (raw)",
+   "median_ms": 0.087,
+   "p10_ms": 0.086,
+   "p90_ms": 0.0879
+  },
+  {
+   "name": "q3 glow buffer 160x90 whole frame (splat + blur + select + present)",
+   "median_ms": 0.1653,
+   "p10_ms": 0.1633,
+   "p90_ms": 0.1687
+  },
+  {
+   "name": "q4 imagedata trail ring L=8 Bresenham M=60",
+   "median_ms": 0.0181,
+   "p10_ms": 0.0175,
+   "p90_ms": 0.0188,
+   "segments": 420
+  },
+  {
+   "name": "q4 imagedata trail ring L=12 Bresenham M=60",
+   "median_ms": 0.0206,
+   "p10_ms": 0.0202,
+   "p90_ms": 0.0211,
+   "segments": 660
+  },
+  {
+   "name": "q4 imagedata trail ring L=16 Bresenham M=60",
+   "median_ms": 0.0208,
+   "p10_ms": 0.0205,
+   "p90_ms": 0.0209,
+   "segments": 900
+  },
+  {
+   "name": "q4 c2d trail stroked path per missile L=12 M=60",
+   "median_ms": 0.2531,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.3
+  },
+  {
+   "name": "q4 c2d trail one path for all missiles L=12 M=60",
+   "median_ms": 0.25,
+   "p10_ms": 0.2286,
+   "p90_ms": 0.2793
+  },
+  {
+   "name": "q4 c2d afterimages 4 ghosts + head, pre-faded sprites M=60",
+   "median_ms": 0.5533,
+   "p10_ms": 0.5188,
+   "p90_ms": 0.6
+  },
+  {
+   "name": "q4 c2d afterimages 4 ghosts + head, globalAlpha M=60",
+   "median_ms": 0.5714,
+   "p10_ms": 0.5467,
+   "p90_ms": 0.6462
+  },
+  {
+   "name": "q4 imagedata afterimages 4 ghosts + head M=60",
+   "median_ms": 0.0348,
+   "p10_ms": 0.0339,
+   "p90_ms": 0.0367
+  },
+  {
+   "name": "q4 imagedata feedback buffer fade every frame M=60",
+   "median_ms": 0.0485,
+   "p10_ms": 0.0476,
+   "p90_ms": 0.0491
+  },
+  {
+   "name": "q4 imagedata feedback buffer fade every 4th frame M=60",
+   "median_ms": 0.0571,
+   "p10_ms": 0.0563,
+   "p90_ms": 0.058
+  },
+  {
+   "name": "q4 c2d feedback canvas destination-out fade M=60",
+   "median_ms": 0.2677,
+   "p10_ms": 0.2613,
+   "p90_ms": 0.2963
+  },
+  {
+   "name": "q4 imagedata trail ring L=8 Bresenham M=240",
+   "median_ms": 0.0339,
+   "p10_ms": 0.0335,
+   "p90_ms": 0.0345,
+   "segments": 1680
+  },
+  {
+   "name": "q4 imagedata trail ring L=12 Bresenham M=240",
+   "median_ms": 0.0437,
+   "p10_ms": 0.0432,
+   "p90_ms": 0.0444,
+   "segments": 2640
+  },
+  {
+   "name": "q4 imagedata trail ring L=16 Bresenham M=240",
+   "median_ms": 0.0468,
+   "p10_ms": 0.0462,
+   "p90_ms": 0.0476,
+   "segments": 3600
+  },
+  {
+   "name": "q4 c2d trail stroked path per missile L=12 M=240",
+   "median_ms": 0.3565,
+   "p10_ms": 0.3375,
+   "p90_ms": 0.4556
+  },
+  {
+   "name": "q4 c2d trail one path for all missiles L=12 M=240",
+   "median_ms": 0.2828,
+   "p10_ms": 0.2759,
+   "p90_ms": 0.3154
+  },
+  {
+   "name": "q4 c2d afterimages 4 ghosts + head, pre-faded sprites M=240",
+   "median_ms": 1.5,
+   "p10_ms": 1.4333,
+   "p90_ms": 1.55
+  },
+  {
+   "name": "q4 c2d afterimages 4 ghosts + head, globalAlpha M=240",
+   "median_ms": 1.62,
+   "p10_ms": 1.5667,
+   "p90_ms": 1.68
+  },
+  {
+   "name": "q4 imagedata afterimages 4 ghosts + head M=240",
+   "median_ms": 0.1025,
+   "p10_ms": 0.1,
+   "p90_ms": 0.1053
+  },
+  {
+   "name": "q4 imagedata feedback buffer fade every frame M=240",
+   "median_ms": 0.0667,
+   "p10_ms": 0.064,
+   "p90_ms": 0.0672
+  },
+  {
+   "name": "q4 imagedata feedback buffer fade every 4th frame M=240",
+   "median_ms": 0.0909,
+   "p10_ms": 0.0889,
+   "p90_ms": 0.0964
+  },
+  {
+   "name": "q4 c2d feedback canvas destination-out fade M=240",
+   "median_ms": 0.32,
+   "p10_ms": 0.2964,
+   "p90_ms": 0.3375
+  },
+  {
+   "name": "q4 imagedata trail ring L=8 Bresenham M=960",
+   "median_ms": 0.1,
+   "p10_ms": 0.0988,
+   "p90_ms": 0.1013,
+   "segments": 6720
+  },
+  {
+   "name": "q4 imagedata trail ring L=12 Bresenham M=960",
+   "median_ms": 0.1397,
+   "p10_ms": 0.1379,
+   "p90_ms": 0.1421,
+   "segments": 10560
+  },
+  {
+   "name": "q4 imagedata trail ring L=16 Bresenham M=960",
+   "median_ms": 0.16,
+   "p10_ms": 0.1569,
+   "p90_ms": 0.1667,
+   "segments": 14400
+  },
+  {
+   "name": "q4 c2d trail stroked path per missile L=12 M=960",
+   "median_ms": 0.9333,
+   "p10_ms": 0.7545,
+   "p90_ms": 1.05
+  },
+  {
+   "name": "q4 c2d trail one path for all missiles L=12 M=960",
+   "median_ms": 0.4421,
+   "p10_ms": 0.4368,
+   "p90_ms": 0.6
+  },
+  {
+   "name": "q4 c2d afterimages 4 ghosts + head, pre-faded sprites M=960",
+   "median_ms": 5.95,
+   "p10_ms": 5.8,
+   "p90_ms": 6.25
+  },
+  {
+   "name": "q4 c2d afterimages 4 ghosts + head, globalAlpha M=960",
+   "median_ms": 6.3,
+   "p10_ms": 6.1,
+   "p90_ms": 6.6
+  },
+  {
+   "name": "q4 imagedata afterimages 4 ghosts + head M=960",
+   "median_ms": 0.3636,
+   "p10_ms": 0.3565,
+   "p90_ms": 0.3818
+  },
+  {
+   "name": "q4 imagedata feedback buffer fade every frame M=960",
+   "median_ms": 0.1194,
+   "p10_ms": 0.1191,
+   "p90_ms": 0.1231
+  },
+  {
+   "name": "q4 imagedata feedback buffer fade every 4th frame M=960",
+   "median_ms": 0.1379,
+   "p10_ms": 0.1356,
+   "p90_ms": 0.1397
+  },
+  {
+   "name": "q4 c2d feedback canvas destination-out fade M=960",
+   "median_ms": 0.4611,
+   "p10_ms": 0.4556,
+   "p90_ms": 0.4722
+  },
+  {
+   "name": "q5 bolt generate only lv=5 N=10 (raw)",
+   "median_ms": 0.0017,
+   "p10_ms": 0.0016,
+   "p90_ms": 0.0017,
+   "segments": 480
+  },
+  {
+   "name": "q5 imagedata bolts lv=5 regen every 1 N=10",
+   "median_ms": 0.0331,
+   "p10_ms": 0.0319,
+   "p90_ms": 0.036,
+   "segments": 480
+  },
+  {
+   "name": "q5 imagedata bolts lv=5 regen every 3 N=10",
+   "median_ms": 0.0245,
+   "p10_ms": 0.0242,
+   "p90_ms": 0.0245,
+   "segments": 480
+  },
+  {
+   "name": "q5 c2d bolts stroke 3px + 1px lv=5 regen every 1 N=10",
+   "median_ms": 0.2382,
+   "p10_ms": 0.2353,
+   "p90_ms": 0.25,
+   "segments": 480
+  },
+  {
+   "name": "q5 c2d bolts stroke 3px + 1px lv=5 regen every 3 N=10",
+   "median_ms": 0.2353,
+   "p10_ms": 0.2314,
+   "p90_ms": 0.2455,
+   "segments": 480
+  },
+  {
+   "name": "q5 bolt generate only lv=5 N=40 (raw)",
+   "median_ms": 0.0066,
+   "p10_ms": 0.0065,
+   "p90_ms": 0.0067,
+   "segments": 1920
+  },
+  {
+   "name": "q5 imagedata bolts lv=5 regen every 1 N=40",
+   "median_ms": 0.0952,
+   "p10_ms": 0.0941,
+   "p90_ms": 0.0988,
+   "segments": 1920
+  },
+  {
+   "name": "q5 imagedata bolts lv=5 regen every 3 N=40",
+   "median_ms": 0.0667,
+   "p10_ms": 0.0656,
+   "p90_ms": 0.0678,
+   "segments": 1920
+  },
+  {
+   "name": "q5 c2d bolts stroke 3px + 1px lv=5 regen every 1 N=40",
+   "median_ms": 0.2963,
+   "p10_ms": 0.2893,
+   "p90_ms": 0.3952,
+   "segments": 1920
+  },
+  {
+   "name": "q5 c2d bolts stroke 3px + 1px lv=5 regen every 3 N=40",
+   "median_ms": 0.3154,
+   "p10_ms": 0.2893,
+   "p90_ms": 0.4421,
+   "segments": 1920
+  },
+  {
+   "name": "q5 bolt generate only lv=5 N=160 (raw)",
+   "median_ms": 0.0261,
+   "p10_ms": 0.0259,
+   "p90_ms": 0.0264,
+   "segments": 7680
+  },
+  {
+   "name": "q5 imagedata bolts lv=5 regen every 1 N=160",
+   "median_ms": 0.3478,
+   "p10_ms": 0.3417,
+   "p90_ms": 0.3636,
+   "segments": 7680
+  },
+  {
+   "name": "q5 imagedata bolts lv=5 regen every 3 N=160",
+   "median_ms": 0.2857,
+   "p10_ms": 0.2828,
+   "p90_ms": 0.2929,
+   "segments": 7680
+  },
+  {
+   "name": "q5 c2d bolts stroke 3px + 1px lv=5 regen every 1 N=160",
+   "median_ms": 0.6231,
+   "p10_ms": 0.5786,
+   "p90_ms": 1,
+   "segments": 7680
+  },
+  {
+   "name": "q5 c2d bolts stroke 3px + 1px lv=5 regen every 3 N=160",
+   "median_ms": 0.5467,
+   "p10_ms": 0.5333,
+   "p90_ms": 0.7273,
+   "segments": 7680
+  },
+  {
+   "name": "q5 bolt generate only lv=6 N=10 (raw)",
+   "median_ms": 0.0026,
+   "p10_ms": 0.0026,
+   "p90_ms": 0.0026,
+   "segments": 800
+  },
+  {
+   "name": "q5 imagedata bolts lv=6 regen every 1 N=10",
+   "median_ms": 0.0379,
+   "p10_ms": 0.0376,
+   "p90_ms": 0.0386,
+   "segments": 800
+  },
+  {
+   "name": "q5 imagedata bolts lv=6 regen every 3 N=10",
+   "median_ms": 0.029,
+   "p10_ms": 0.0286,
+   "p90_ms": 0.0295,
+   "segments": 800
+  },
+  {
+   "name": "q5 bolt generate only lv=6 N=40 (raw)",
+   "median_ms": 0.0102,
+   "p10_ms": 0.0101,
+   "p90_ms": 0.0104,
+   "segments": 3200
+  },
+  {
+   "name": "q5 imagedata bolts lv=6 regen every 1 N=40",
+   "median_ms": 0.1212,
+   "p10_ms": 0.1194,
+   "p90_ms": 0.1266,
+   "segments": 3200
+  },
+  {
+   "name": "q5 imagedata bolts lv=6 regen every 3 N=40",
+   "median_ms": 0.087,
+   "p10_ms": 0.086,
+   "p90_ms": 0.089,
+   "segments": 3200
+  },
+  {
+   "name": "q5 bolt generate only lv=6 N=160 (raw)",
+   "median_ms": 0.0402,
+   "p10_ms": 0.0398,
+   "p90_ms": 0.0404,
+   "segments": 12800
+  },
+  {
+   "name": "q5 imagedata bolts lv=6 regen every 1 N=160",
+   "median_ms": 0.4368,
+   "p10_ms": 0.4316,
+   "p90_ms": 0.4444,
+   "segments": 12800
+  },
+  {
+   "name": "q5 imagedata bolts lv=6 regen every 3 N=160",
+   "median_ms": 0.3773,
+   "p10_ms": 0.3682,
+   "p90_ms": 0.3857,
+   "segments": 12800
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage N=148",
+   "median_ms": 0.3905,
+   "p10_ms": 0.3682,
+   "p90_ms": 0.41,
+   "px_effect": 6547,
+   "px_rect": 37888
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage lighter N=148",
+   "median_ms": 0.3857,
+   "p10_ms": 0.3652,
+   "p90_ms": 0.41,
+   "px_effect": 6547,
+   "px_rect": 37888
+  },
+  {
+   "name": "q6 imagedata tile effects 16x16 ramp blit N=148",
+   "median_ms": 0.0442,
+   "p10_ms": 0.043,
+   "p90_ms": 0.0447,
+   "px_effect": 6547,
+   "px_rect": 37888
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage N=220",
+   "median_ms": 0.4611,
+   "p10_ms": 0.4368,
+   "p90_ms": 0.4722,
+   "px_effect": 9751,
+   "px_rect": 56320
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage lighter N=220",
+   "median_ms": 0.4421,
+   "p10_ms": 0.4316,
+   "p90_ms": 0.4667,
+   "px_effect": 9751,
+   "px_rect": 56320
+  },
+  {
+   "name": "q6 imagedata tile effects 16x16 ramp blit N=220",
+   "median_ms": 0.0606,
+   "p10_ms": 0.0584,
+   "p90_ms": 0.062,
+   "px_effect": 9751,
+   "px_rect": 56320
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage N=592",
+   "median_ms": 0.83,
+   "p10_ms": 0.81,
+   "p90_ms": 0.86,
+   "px_effect": 26344,
+   "px_rect": 151552
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage lighter N=592",
+   "median_ms": 0.87,
+   "p10_ms": 0.83,
+   "p90_ms": 0.9111,
+   "px_effect": 26344,
+   "px_rect": 151552
+  },
+  {
+   "name": "q6 imagedata tile effects 16x16 ramp blit N=592",
+   "median_ms": 0.1429,
+   "p10_ms": 0.1404,
+   "p90_ms": 0.1538,
+   "px_effect": 26344,
+   "px_rect": 151552
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage N=1110",
+   "median_ms": 1.3667,
+   "p10_ms": 1.3333,
+   "p90_ms": 1.4,
+   "px_effect": 49387,
+   "px_rect": 284160
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage lighter N=1110",
+   "median_ms": 1.3667,
+   "p10_ms": 1.3143,
+   "p90_ms": 1.4167,
+   "px_effect": 49387,
+   "px_rect": 284160
+  },
+  {
+   "name": "q6 imagedata tile effects 16x16 ramp blit N=1110",
+   "median_ms": 0.2667,
+   "p10_ms": 0.2455,
+   "p90_ms": 0.2857,
+   "px_effect": 49387,
+   "px_rect": 284160
+  },
+  {
+   "name": "q6 c2d tile effects 32x32 drawImage N=1110",
+   "median_ms": 1.4667,
+   "p10_ms": 1.4167,
+   "p90_ms": 1.6,
+   "px_effect": 195750,
+   "px_rect": 1136640
+  },
+  {
+   "name": "q6 imagedata tile effects 32x32 ramp blit N=1110",
+   "median_ms": 1.0375,
+   "p10_ms": 1.0125,
+   "p90_ms": 1.0625,
+   "px_effect": 195750,
+   "px_rect": 1136640
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage N=2190",
+   "median_ms": 2.7667,
+   "p10_ms": 2.6667,
+   "p90_ms": 2.8333,
+   "px_effect": 97447,
+   "px_rect": 560640
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage lighter N=2190",
+   "median_ms": 2.7667,
+   "p10_ms": 2.6,
+   "p90_ms": 2.8667,
+   "px_effect": 97447,
+   "px_rect": 560640
+  },
+  {
+   "name": "q6 imagedata tile effects 16x16 ramp blit N=2190",
+   "median_ms": 0.4882,
+   "p10_ms": 0.4611,
+   "p90_ms": 0.4941,
+   "px_effect": 97447,
+   "px_rect": 560640
+  },
+  {
+   "name": "q6 c2d tile effects 32x32 drawImage N=2190",
+   "median_ms": 2.8667,
+   "p10_ms": 2.7333,
+   "p90_ms": 3.0667,
+   "px_effect": 386235,
+   "px_rect": 2242560
+  },
+  {
+   "name": "q6 imagedata tile effects 32x32 ramp blit N=2190",
+   "median_ms": 1.68,
+   "p10_ms": 1.66,
+   "p90_ms": 2.025,
+   "px_effect": 386235,
+   "px_rect": 2242560
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage N=2368",
+   "median_ms": 2.7667,
+   "p10_ms": 2.7,
+   "p90_ms": 3,
+   "px_effect": 105376,
+   "px_rect": 606208
+  },
+  {
+   "name": "q6 c2d tile effects 16x16 drawImage lighter N=2368",
+   "median_ms": 2.8333,
+   "p10_ms": 2.7333,
+   "p90_ms": 3.1,
+   "px_effect": 105376,
+   "px_rect": 606208
+  },
+  {
+   "name": "q6 imagedata tile effects 16x16 ramp blit N=2368",
+   "median_ms": 0.525,
+   "p10_ms": 0.5125,
+   "p90_ms": 0.5467,
+   "px_effect": 105376,
+   "px_rect": 606208
+  },
+  {
+   "name": "q7 c2d screen flash fillRect rgba 0.6",
+   "median_ms": 0.2025,
+   "p10_ms": 0.1884,
+   "p90_ms": 0.2132
+  },
+  {
+   "name": "q7 c2d screen flash fillRect lighter",
+   "median_ms": 0.1905,
+   "p10_ms": 0.186,
+   "p90_ms": 0.2
+  },
+  {
+   "name": "q7 c2d vignette drawImage of pre-rendered gradient",
+   "median_ms": 0.1929,
+   "p10_ms": 0.186,
+   "p90_ms": 0.2051
+  },
+  {
+   "name": "q7 imagedata screen flash 50% white (bit trick)",
+   "median_ms": 0.0635,
+   "p10_ms": 0.063,
+   "p90_ms": 0.0645
+  },
+  {
+   "name": "q7 imagedata vignette (dithered mask, 2 levels)",
+   "median_ms": 0.0678,
+   "p10_ms": 0.0661,
+   "p90_ms": 0.0702
+  },
+  {
+   "name": "q7 imagedata palette LUT pass rgb555 -> 32768-entry LUT",
+   "median_ms": 0.0779,
+   "p10_ms": 0.0769,
+   "p90_ms": 0.0792
+  },
+  {
+   "name": "q7 imagedata indexed frame resolve (Uint8 index -> palette)",
+   "median_ms": 0.0708,
+   "p10_ms": 0.0696,
+   "p90_ms": 0.0721
+  },
+  {
+   "name": "q7 imagedata indexed resolve through colormap (level, index)",
+   "median_ms": 0.0769,
+   "p10_ms": 0.0762,
+   "p90_ms": 0.0777
+  },
+  {
+   "name": "q7 imagedata shockwave ring r=40 incl. frame copy",
+   "median_ms": 0.0266,
+   "p10_ms": 0.0261,
+   "p90_ms": 0.0281
+  },
+  {
+   "name": "q7 imagedata frame copy only (57,600 px)",
+   "median_ms": 0.0151,
+   "p10_ms": 0.015,
+   "p90_ms": 0.0153
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, no tint C=30",
+   "median_ms": 0.5125,
+   "p10_ms": 0.4941,
+   "p90_ms": 0.525,
+   "draws": 270
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, tint (a) pre-tinted cached sprite C=30",
+   "median_ms": 0.5333,
+   "p10_ms": 0.5,
+   "p90_ms": 0.5533,
+   "draws": 270
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, tint per frame via source-atop on a temp canvas C=30",
+   "median_ms": 2.4,
+   "p10_ms": 2.325,
+   "p90_ms": 2.5,
+   "draws": 270
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, tint (b) per frame getImageData remap + putImageData C=30",
+   "median_ms": 9,
+   "p10_ms": 8.2,
+   "p90_ms": 9.3,
+   "draws": 270
+  },
+  {
+   "name": "q8 imagedata auras back+front+6 orbiters+char, no tint C=30",
+   "median_ms": 0.0398,
+   "p10_ms": 0.0392,
+   "p90_ms": 0.0406
+  },
+  {
+   "name": "q8 imagedata auras back+front+6 orbiters+char, tint (b) palette swap C=30",
+   "median_ms": 0.0402,
+   "p10_ms": 0.0394,
+   "p90_ms": 0.041
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, no tint C=120",
+   "median_ms": 1.45,
+   "p10_ms": 1.4,
+   "p90_ms": 1.65,
+   "draws": 1080
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, tint (a) pre-tinted cached sprite C=120",
+   "median_ms": 1.3667,
+   "p10_ms": 1.3,
+   "p90_ms": 1.5,
+   "draws": 1080
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, tint per frame via source-atop on a temp canvas C=120",
+   "median_ms": 8.5,
+   "p10_ms": 8.05,
+   "p90_ms": 9.7,
+   "draws": 1080
+  },
+  {
+   "name": "q8 c2d auras back+front+6 orbiters+char, tint (b) per frame getImageData remap + putImageData C=120",
+   "median_ms": 32.6,
+   "p10_ms": 28.2,
+   "p90_ms": 35.9,
+   "draws": 1080
+  },
+  {
+   "name": "q8 imagedata auras back+front+6 orbiters+char, no tint C=120",
+   "median_ms": 0.1194,
+   "p10_ms": 0.1176,
+   "p90_ms": 0.1231
+  },
+  {
+   "name": "q8 imagedata auras back+front+6 orbiters+char, tint (b) palette swap C=120",
+   "median_ms": 0.1209,
+   "p10_ms": 0.1176,
+   "p90_ms": 0.1231
+  },
+  {
+   "name": "q9 scene imagedata load 1x clarity=off",
+   "median_ms": 0.2581,
+   "p10_ms": 0.2562,
+   "p90_ms": 0.2613,
+   "load": {
+    "mult": 1,
+    "clarity": false,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 1300,
+    "bolts": 4,
+    "glowImpacts": 30,
+    "glowParticles": 1300
+   }
+  },
+  {
+   "name": "q9 scene c2d load 1x clarity=off",
+   "median_ms": 1.2,
+   "p10_ms": 1.1714,
+   "p90_ms": 1.2857,
+   "load": {
+    "mult": 1,
+    "clarity": false,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 1300,
+    "bolts": 4,
+    "glowImpacts": 30,
+    "glowParticles": 1300
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 1x clarity=off per-layer mean ms",
+   "layers": {
+    "ground": 0.0055,
+    "tiles": 0.0295,
+    "auras": 0.0285,
+    "missiles+trails": 0.0025,
+    "impacts": 0.026,
+    "particles": 0.0105,
+    "lightning": 0.007,
+    "glow": 0.07,
+    "screen": 0.045,
+    "present": 0.01
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 1x clarity=on",
+   "median_ms": 0.1951,
+   "p10_ms": 0.1905,
+   "p90_ms": 0.1952,
+   "load": {
+    "mult": 1,
+    "clarity": true,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 546,
+    "bolts": 4,
+    "glowImpacts": 1,
+    "glowParticles": 43
+   }
+  },
+  {
+   "name": "q9 scene c2d load 1x clarity=on",
+   "median_ms": 1.0125,
+   "p10_ms": 0.9333,
+   "p90_ms": 1.05,
+   "load": {
+    "mult": 1,
+    "clarity": true,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 546,
+    "bolts": 4,
+    "glowImpacts": 1,
+    "glowParticles": 43
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 1x clarity=on per-layer mean ms",
+   "layers": {
+    "ground": 0.0035,
+    "tiles": 0.042,
+    "auras": 0.0295,
+    "missiles+trails": 0.004,
+    "impacts": 0.016,
+    "particles": 0.003,
+    "lightning": 0.0035,
+    "glow": 0.016,
+    "screen": 0.072,
+    "present": 0.007
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 4x clarity=off",
+   "median_ms": 0.6154,
+   "p10_ms": 0.6,
+   "p90_ms": 0.6231,
+   "load": {
+    "mult": 4,
+    "clarity": false,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 5200,
+    "bolts": 16,
+    "glowImpacts": 120,
+    "glowParticles": 5200
+   }
+  },
+  {
+   "name": "q9 scene c2d load 4x clarity=off",
+   "median_ms": 4.15,
+   "p10_ms": 4.05,
+   "p90_ms": 4.4,
+   "load": {
+    "mult": 4,
+    "clarity": false,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 5200,
+    "bolts": 16,
+    "glowImpacts": 120,
+    "glowParticles": 5200
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 4x clarity=off per-layer mean ms",
+   "layers": {
+    "ground": 0.0065,
+    "tiles": 0.124,
+    "auras": 0.113,
+    "missiles+trails": 0.0265,
+    "impacts": 0.094,
+    "particles": 0.0315,
+    "lightning": 0.022,
+    "glow": 0.123,
+    "screen": 0.0665,
+    "present": 0.0115
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 4x clarity=on",
+   "median_ms": 0.5062,
+   "p10_ms": 0.4941,
+   "p90_ms": 0.525,
+   "load": {
+    "mult": 4,
+    "clarity": true,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 2184,
+    "bolts": 16,
+    "glowImpacts": 4,
+    "glowParticles": 173
+   }
+  },
+  {
+   "name": "q9 scene c2d load 4x clarity=on",
+   "median_ms": 3.6,
+   "p10_ms": 3.4,
+   "p90_ms": 3.8333,
+   "load": {
+    "mult": 4,
+    "clarity": true,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 2184,
+    "bolts": 16,
+    "glowImpacts": 4,
+    "glowParticles": 173
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 4x clarity=on per-layer mean ms",
+   "layers": {
+    "ground": 0.0035,
+    "tiles": 0.128,
+    "auras": 0.104,
+    "missiles+trails": 0.026,
+    "impacts": 0.0915,
+    "particles": 0.0125,
+    "lightning": 0.0235,
+    "glow": 0.029,
+    "screen": 0.071,
+    "present": 0.007
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 16x clarity=off",
+   "median_ms": 2.075,
+   "p10_ms": 2,
+   "p90_ms": 2.1,
+   "load": {
+    "mult": 16,
+    "clarity": false,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 20800,
+    "bolts": 64,
+    "glowImpacts": 480,
+    "glowParticles": 20800
+   }
+  },
+  {
+   "name": "q9 scene c2d load 16x clarity=off",
+   "median_ms": 15.6,
+   "p10_ms": 14.7,
+   "p90_ms": 16.5,
+   "load": {
+    "mult": 16,
+    "clarity": false,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 20800,
+    "bolts": 64,
+    "glowImpacts": 480,
+    "glowParticles": 20800
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 16x clarity=off per-layer mean ms",
+   "layers": {
+    "ground": 0.002,
+    "tiles": 0.532,
+    "auras": 0.436,
+    "missiles+trails": 0.097,
+    "impacts": 0.3995,
+    "particles": 0.155,
+    "lightning": 0.1025,
+    "glow": 0.2215,
+    "screen": 0.072,
+    "present": 0.0095
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 16x clarity=on",
+   "median_ms": 1.72,
+   "p10_ms": 1.68,
+   "p90_ms": 1.74,
+   "load": {
+    "mult": 16,
+    "clarity": true,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 8736,
+    "bolts": 64,
+    "glowImpacts": 16,
+    "glowParticles": 693
+   }
+  },
+  {
+   "name": "q9 scene c2d load 16x clarity=on",
+   "median_ms": 11.9,
+   "p10_ms": 11.7,
+   "p90_ms": 12.5,
+   "load": {
+    "mult": 16,
+    "clarity": true,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 8736,
+    "bolts": 64,
+    "glowImpacts": 16,
+    "glowParticles": 693
+   }
+  },
+  {
+   "name": "q9 scene imagedata load 16x clarity=on per-layer mean ms",
+   "layers": {
+    "ground": 0.0035,
+    "tiles": 0.5035,
+    "auras": 0.4375,
+    "missiles+trails": 0.0935,
+    "impacts": 0.372,
+    "particles": 0.0625,
+    "lightning": 0.1015,
+    "glow": 0.051,
+    "screen": 0.079,
+    "present": 0.0095
+   }
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "metal",
+ "console_errors_and_warnings": []
+}

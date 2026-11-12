@@ -1,0 +1,70 @@
+{
+ "id": "vfx-magic",
+ "type": "study",
+ "path": "/vfx-magic-topdown-pixel.html",
+ "title": "Top-down pixel magic: tiny algorithms for spell projectiles, auras, hit sparks and readable spell feedback",
+ "short": "Magic & spell VFX",
+ "nav": "Magic",
+ "summary": "Missiles that fly in 150 x sqrt(tiles) ms, hit sparks on a 75 ms clock, auras in back and front slots, chain lightning, rune circles, and a clarity manager that keeps 30 casters readable, with measured costs for every layer.",
+ "series": {
+  "id": "vfx",
+  "number": 10
+ },
+ "date": "2026-11-12",
+ "updated": "2026-11-12",
+ "thumb": "/thumbs/vfx-magic.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "vfx"
+  ],
+  "concept": [
+   "magic"
+  ],
+  "technique": [
+   "stateless-effects",
+   "ribbon-trail",
+   "area-masks",
+   "effect-tiers",
+   "flash-limiter",
+   "midpoint-displacement",
+   "sprite-atlas",
+   "palette-lut",
+   "dither-threshold",
+   "light-map"
+  ]
+ },
+ "stats": {
+  "words": 20102,
+  "techniques": 36,
+  "figures": 41,
+  "games": 28,
+  "sources": 142
+ },
+ "pair": "vfx-magic-sandbox",
+ "_sandbox": {
+  "title": "Top-down pixel magic Sandbox (playable)",
+  "path": "/vfx-magic-sandbox.html"
+ }
+}

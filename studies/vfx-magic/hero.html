@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel magic: tiny algorithms for spell projectiles, auras, hit sparks and readable spell feedback</h1>
+      <p class="deck">A spell is a few bytes and a clock. Tibia sends an effect as an id and a tile, and the client plays a flipbook at 75 ms per frame. Its missiles pick one of 9 pre-drawn frames and fly for <code>150 x sqrt(tiles)</code> ms. Pokémon Emerald draws 355 moves from 192 small sprite sheets and a 48-command script. This study collects those rules, adds trails, chain lightning, hit sparks, auras, cast circles and element ramps, and measures what each one costs. A fight of 30 casters fits in 1.5 ms on our phone proxy, if the draw path is right and a clarity manager decides whose spells you see in full. Aimed at Godot 4 on the web and a server-authoritative MMO.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-magic-sandbox.html">Play the Spell Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage"><canvas width="320" height="180" aria-label="Live courtyard at 320 by 180 pixels: a mage stands on a rune circle and casts a fire bolt with a ribbon trail that bursts on a training dummy, chain lightning jumps between two dummies, a heal rises around the mage, and a crowd of other casters fires reduced spells"></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Spells"><button type="button" data-t="0">Fire bolt</button><button type="button" data-t="1">Chain</button><button type="button" data-t="2">Heal</button><button type="button" data-t="3" aria-pressed="false">Crowd</button></div>
+      <figcaption>Live, and timed on your device. The mage casts on a rune circle that draws in by angle (D5). The fire bolt is one of 8 pre-drawn frames (B1), flies for <code>150 x sqrt(tiles)</code> ms (A2) with a ring-buffer ribbon (B5), and ends in a 5-frame spark at 75 ms per frame (A1, C1). Chain lightning is midpoint displacement, re-rolled every 50 ms (B7). The heal rises in the holy ramp (D2). Crowd adds eight other casters whose spells draw reduced, at about 40% opacity by ordered dither, with shorter trails and no white frame (F1). The HUD shows the JavaScript cost of the whole frame, the live effects and the bytes per second the server would send each viewer, at 8 per cast, 11 per missile and 9 per effect (§6c). In our benchmark the 30-caster scene cost 0.26 / 1.5 ms as a pixel buffer (§6a). Colours, sprites and the scene are illustrative.</figcaption>
+    </figure>
+  </div>
+</header>

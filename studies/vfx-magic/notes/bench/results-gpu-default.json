@@ -1,0 +1,1322 @@
+{
+ "info": {
+  "vendor": "Google Inc. (Google)",
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+  "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+  "timer_query": false,
+  "blend": "always on: every draw is SRC_ALPHA,ONE_MINUS_SRC_ALPHA with alpha < 1, or SRC_ALPHA,ONE (additive). Framebuffer copies use blitFramebuffer."
+ },
+ "results": [
+  {
+   "name": "g0 gpu baseline: ground quad 320x180",
+   "median_ms": 0.0491,
+   "p10_ms": 0.0483,
+   "p90_ms": 0.0495,
+   "K": 978,
+   "sync_ms": 0.3
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=500 320x180",
+   "median_ms": 6.6727,
+   "p10_ms": 6.5182,
+   "p90_ms": 6.9,
+   "K": 12,
+   "sync_ms": 6.9
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=500 320x180",
+   "median_ms": 6.7545,
+   "p10_ms": 6.6909,
+   "p90_ms": 6.8455,
+   "K": 12,
+   "sync_ms": 7.1
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=500 320x180",
+   "median_ms": 6.8,
+   "p10_ms": 6.5727,
+   "p90_ms": 6.9,
+   "K": 12,
+   "sync_ms": 6.9
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=2000 320x180",
+   "median_ms": 26.8333,
+   "p10_ms": 26.0333,
+   "p90_ms": 28.3,
+   "K": 4,
+   "sync_ms": 27.9
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=2000 320x180",
+   "median_ms": 27.5333,
+   "p10_ms": 25.3,
+   "p90_ms": 29.2667,
+   "K": 4,
+   "sync_ms": 26.9
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=2000 320x180",
+   "median_ms": 27.3667,
+   "p10_ms": 25.7667,
+   "p90_ms": 27.9,
+   "K": 4,
+   "sync_ms": 27.2
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=8000 320x180",
+   "median_ms": 107.4,
+   "p10_ms": 106.5667,
+   "p90_ms": 109.8667,
+   "K": 4,
+   "sync_ms": 109.3
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=8000 320x180",
+   "median_ms": 108.5333,
+   "p10_ms": 106.8333,
+   "p90_ms": 109.7333,
+   "K": 4,
+   "sync_ms": 108.8
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=8000 320x180",
+   "median_ms": 108.4667,
+   "p10_ms": 103.6,
+   "p90_ms": 108.8667,
+   "K": 4,
+   "sync_ms": 108.1
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=32000 320x180",
+   "median_ms": 431.8667,
+   "p10_ms": 429.3333,
+   "p90_ms": 433.0333,
+   "K": 4,
+   "sync_ms": 435.3
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=32000 320x180",
+   "median_ms": 432.8667,
+   "p10_ms": 428.5,
+   "p90_ms": 437.7,
+   "K": 4,
+   "sync_ms": 435
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=32000 320x180",
+   "median_ms": 432.5,
+   "p10_ms": 418.7,
+   "p90_ms": 435.8667,
+   "K": 4,
+   "sync_ms": 435.9
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 32x32 N=30 320x180",
+   "median_ms": 0.4082,
+   "p10_ms": 0.4,
+   "p90_ms": 0.4138,
+   "K": 196,
+   "sync_ms": 0.6,
+   "px_effect": 5265,
+   "px_rect": 30720
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 32x32 N=30 320x180",
+   "median_ms": 0.41,
+   "p10_ms": 0.4084,
+   "p90_ms": 0.4158,
+   "K": 191,
+   "sync_ms": 0.6,
+   "px_effect": 5265,
+   "px_rect": 30720
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 32x32 N=120 320x180",
+   "median_ms": 1.6239,
+   "p10_ms": 1.5978,
+   "p90_ms": 1.6522,
+   "K": 47,
+   "sync_ms": 1.8,
+   "px_effect": 21165,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 32x32 N=120 320x180",
+   "median_ms": 1.6294,
+   "p10_ms": 1.5431,
+   "p90_ms": 1.6627,
+   "K": 52,
+   "sync_ms": 1.8,
+   "px_effect": 21165,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 32x32 N=480 320x180",
+   "median_ms": 6.4909,
+   "p10_ms": 6.3909,
+   "p90_ms": 6.6636,
+   "K": 12,
+   "sync_ms": 6.8,
+   "px_effect": 84660,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 32x32 N=480 320x180",
+   "median_ms": 6.4667,
+   "p10_ms": 6.3417,
+   "p90_ms": 6.625,
+   "K": 13,
+   "sync_ms": 6.5,
+   "px_effect": 84660,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 64x64 N=30 320x180",
+   "median_ms": 0.3204,
+   "p10_ms": 0.3012,
+   "p90_ms": 0.3248,
+   "K": 251,
+   "sync_ms": 0.5,
+   "px_effect": 21196,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 64x64 N=30 320x180",
+   "median_ms": 0.3278,
+   "p10_ms": 0.3139,
+   "p90_ms": 0.3308,
+   "K": 238,
+   "sync_ms": 0.5,
+   "px_effect": 21196,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 64x64 N=120 320x180",
+   "median_ms": 1.2703,
+   "p10_ms": 1.2141,
+   "p90_ms": 1.3188,
+   "K": 65,
+   "sync_ms": 1.4,
+   "px_effect": 85380,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 64x64 N=120 320x180",
+   "median_ms": 1.3129,
+   "p10_ms": 1.3,
+   "p90_ms": 1.3387,
+   "K": 63,
+   "sync_ms": 1.6,
+   "px_effect": 85380,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 64x64 N=480 320x180",
+   "median_ms": 5.0667,
+   "p10_ms": 4.9,
+   "p90_ms": 5.1467,
+   "K": 16,
+   "sync_ms": 5.2,
+   "px_effect": 341520,
+   "px_rect": 1966080
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 64x64 N=480 320x180",
+   "median_ms": 5.1643,
+   "p10_ms": 5.0786,
+   "p90_ms": 5.4429,
+   "K": 15,
+   "sync_ms": 5.3,
+   "px_effect": 341520,
+   "px_rect": 1966080
+  },
+  {
+   "name": "g3 gpu separable 9-tap blur at 320x180 + additive composite (blur only, static source)",
+   "median_ms": 0.9526,
+   "p10_ms": 0.9289,
+   "p90_ms": 0.9684,
+   "K": 77,
+   "sync_ms": 1.2
+  },
+  {
+   "name": "g3 gpu low-res glow 80x45: 120 impacts redrawn + blur + composite to 320x180",
+   "median_ms": 1.9293,
+   "p10_ms": 1.8463,
+   "p90_ms": 1.9829,
+   "K": 42,
+   "sync_ms": 2.1
+  },
+  {
+   "name": "g3 gpu low-res glow 160x90: 120 impacts redrawn + blur + composite to 320x180",
+   "median_ms": 2.0811,
+   "p10_ms": 2.0243,
+   "p90_ms": 2.1081,
+   "K": 38,
+   "sync_ms": 2.3
+  },
+  {
+   "name": "g3 gpu glow as 240 additive halo quads 32x32 320x180",
+   "median_ms": 3.225,
+   "p10_ms": 3.1167,
+   "p90_ms": 3.2958,
+   "K": 25,
+   "sync_ms": 3.5
+  },
+  {
+   "name": "g4 gpu trail ribbon segments L=12, upload M=60 320x180",
+   "median_ms": 8.6625,
+   "p10_ms": 8.2625,
+   "p90_ms": 8.9875,
+   "K": 9,
+   "sync_ms": 8.9,
+   "instances": 660
+  },
+  {
+   "name": "g4 gpu afterimages 4 ghosts + head batch M=60 320x180",
+   "median_ms": 4.1056,
+   "p10_ms": 3.9944,
+   "p90_ms": 4.2556,
+   "K": 19,
+   "sync_ms": 4.5,
+   "instances": 300
+  },
+  {
+   "name": "g4 gpu feedback buffer (fade pass + heads + composite) M=60 320x180",
+   "median_ms": 0.9247,
+   "p10_ms": 0.9082,
+   "p90_ms": 0.9494,
+   "K": 86,
+   "sync_ms": 1.2
+  },
+  {
+   "name": "g4 gpu trail ribbon segments L=12, upload M=240 320x180",
+   "median_ms": 34.4667,
+   "p10_ms": 34.2,
+   "p90_ms": 35.9667,
+   "K": 4,
+   "sync_ms": 34.5,
+   "instances": 2640
+  },
+  {
+   "name": "g4 gpu afterimages 4 ghosts + head batch M=240 320x180",
+   "median_ms": 16.6,
+   "p10_ms": 15.975,
+   "p90_ms": 16.725,
+   "K": 5,
+   "sync_ms": 16.7,
+   "instances": 1200
+  },
+  {
+   "name": "g4 gpu feedback buffer (fade pass + heads + composite) M=240 320x180",
+   "median_ms": 3.45,
+   "p10_ms": 3.2708,
+   "p90_ms": 3.625,
+   "K": 25,
+   "sync_ms": 3.6
+  },
+  {
+   "name": "g4 gpu trail ribbon segments L=12, upload M=960 320x180",
+   "median_ms": 139.1667,
+   "p10_ms": 133.8,
+   "p90_ms": 143.8667,
+   "K": 4,
+   "sync_ms": 139.6,
+   "instances": 10560
+  },
+  {
+   "name": "g4 gpu afterimages 4 ghosts + head batch M=960 320x180",
+   "median_ms": 66.0333,
+   "p10_ms": 64.6667,
+   "p90_ms": 67,
+   "K": 4,
+   "sync_ms": 65.9,
+   "instances": 4800
+  },
+  {
+   "name": "g4 gpu feedback buffer (fade pass + heads + composite) M=960 320x180",
+   "median_ms": 13.46,
+   "p10_ms": 13.18,
+   "p90_ms": 13.72,
+   "K": 6,
+   "sync_ms": 13.5
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 1 N=10 320x180",
+   "median_ms": 12.8,
+   "p10_ms": 12.44,
+   "p90_ms": 13.58,
+   "K": 6,
+   "sync_ms": 13,
+   "instances": 960
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 3 N=10 320x180",
+   "median_ms": 12.84,
+   "p10_ms": 12.48,
+   "p90_ms": 13.44,
+   "K": 6,
+   "sync_ms": 13.4,
+   "instances": 960
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 1 N=40 320x180",
+   "median_ms": 51.1333,
+   "p10_ms": 49.8333,
+   "p90_ms": 52.9333,
+   "K": 4,
+   "sync_ms": 51.6,
+   "instances": 3840
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 3 N=40 320x180",
+   "median_ms": 51.3333,
+   "p10_ms": 50.7333,
+   "p90_ms": 52.5,
+   "K": 4,
+   "sync_ms": 51.7,
+   "instances": 3840
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 1 N=160 320x180",
+   "median_ms": 207.3667,
+   "p10_ms": 204.7,
+   "p90_ms": 209.9667,
+   "K": 4,
+   "sync_ms": 206.1,
+   "instances": 15360
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 3 N=160 320x180",
+   "median_ms": 205.7667,
+   "p10_ms": 203.9667,
+   "p90_ms": 211.5333,
+   "K": 4,
+   "sync_ms": 205.6,
+   "instances": 15360
+  },
+  {
+   "name": "g6 gpu tile effects 16x16 batch N=148 320x180",
+   "median_ms": 2.0278,
+   "p10_ms": 2.0139,
+   "p90_ms": 2.0528,
+   "K": 37,
+   "sync_ms": 2.3,
+   "px_rect": 37888
+  },
+  {
+   "name": "g6 gpu tile effects 16x16 batch N=1110 320x180",
+   "median_ms": 15.125,
+   "p10_ms": 14.6,
+   "p90_ms": 15.675,
+   "K": 5,
+   "sync_ms": 15.3,
+   "px_rect": 284160
+  },
+  {
+   "name": "g6 gpu tile effects 32x32 batch N=1110 320x180",
+   "median_ms": 15,
+   "p10_ms": 14.775,
+   "p90_ms": 15.225,
+   "K": 5,
+   "sync_ms": 15.1,
+   "px_rect": 1136640
+  },
+  {
+   "name": "g6 gpu tile effects 16x16 batch N=2190 320x180",
+   "median_ms": 29.9667,
+   "p10_ms": 29.6333,
+   "p90_ms": 30.3333,
+   "K": 4,
+   "sync_ms": 30.3,
+   "px_rect": 560640
+  },
+  {
+   "name": "g6 gpu tile effects 32x32 batch N=2190 320x180",
+   "median_ms": 29.4667,
+   "p10_ms": 28.7,
+   "p90_ms": 30.0667,
+   "K": 4,
+   "sync_ms": 29.5,
+   "px_rect": 2242560
+  },
+  {
+   "name": "g7 gpu screen flash quad 320x180",
+   "median_ms": 0.0182,
+   "p10_ms": 0.018,
+   "p90_ms": 0.0184,
+   "K": 2000,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "g7 gpu vignette shader 320x180",
+   "median_ms": 0.0273,
+   "p10_ms": 0.0267,
+   "p90_ms": 0.0279,
+   "K": 1760,
+   "sync_ms": 0.2
+  },
+  {
+   "name": "g7 gpu framebuffer copy only (blitFramebuffer) + flash 320x180",
+   "median_ms": 0.1343,
+   "p10_ms": 0.1317,
+   "p90_ms": 0.1348,
+   "K": 587,
+   "sync_ms": 0.6
+  },
+  {
+   "name": "g7 gpu shockwave distortion incl. framebuffer copy 320x180",
+   "median_ms": 0.1986,
+   "p10_ms": 0.1933,
+   "p90_ms": 0.2007,
+   "K": 419,
+   "sync_ms": 0.7
+  },
+  {
+   "name": "g7 gpu palette LUT pass incl. framebuffer copy 320x180",
+   "median_ms": 0.2148,
+   "p10_ms": 0.2126,
+   "p90_ms": 0.2178,
+   "K": 326,
+   "sync_ms": 0.5
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, no tint C=30 320x180",
+   "median_ms": 3.79,
+   "p10_ms": 3.725,
+   "p90_ms": 3.83,
+   "K": 21,
+   "sync_ms": 3.9,
+   "instances": 270
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as vertex attribute, 1 draw C=30 320x180",
+   "median_ms": 3.7619,
+   "p10_ms": 3.6667,
+   "p90_ms": 3.7952,
+   "K": 22,
+   "sync_ms": 4,
+   "instances": 270
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as per-sprite uniform, C+2 draws C=30 320x180",
+   "median_ms": 3.7381,
+   "p10_ms": 3.6524,
+   "p90_ms": 3.781,
+   "K": 22,
+   "sync_ms": 3.9,
+   "instances": 270
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, no tint C=120 320x180",
+   "median_ms": 14.9,
+   "p10_ms": 13.225,
+   "p90_ms": 15.15,
+   "K": 5,
+   "sync_ms": 15,
+   "instances": 1080
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as vertex attribute, 1 draw C=120 320x180",
+   "median_ms": 14.95,
+   "p10_ms": 14.55,
+   "p90_ms": 15.25,
+   "K": 5,
+   "sync_ms": 14.8,
+   "instances": 1080
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as per-sprite uniform, C+2 draws C=120 320x180",
+   "median_ms": 14.95,
+   "p10_ms": 14.375,
+   "p90_ms": 15.15,
+   "K": 5,
+   "sync_ms": 15.2,
+   "instances": 1080
+  },
+  {
+   "name": "g9 gpu scene load 1x clarity=off 320x180 + 4x upscale",
+   "median_ms": 35.0333,
+   "p10_ms": 34.5,
+   "p90_ms": 36.2,
+   "K": 4,
+   "sync_ms": 35.3,
+   "load": {
+    "mult": 1,
+    "clarity": false,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 1300,
+    "bolts": 4,
+    "glowImpacts": 30,
+    "glowParticles": 1300
+   }
+  },
+  {
+   "name": "g9 gpu scene load 1x clarity=on 320x180 + 4x upscale",
+   "median_ms": 25.5,
+   "p10_ms": 24.1333,
+   "p90_ms": 26.4333,
+   "K": 4,
+   "sync_ms": 25.2,
+   "load": {
+    "mult": 1,
+    "clarity": true,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 546,
+    "bolts": 4,
+    "glowImpacts": 1,
+    "glowParticles": 43
+   }
+  },
+  {
+   "name": "g9 gpu scene load 4x clarity=off 320x180 + 4x upscale",
+   "median_ms": 138.9,
+   "p10_ms": 136.9333,
+   "p90_ms": 141.1333,
+   "K": 4,
+   "sync_ms": 140.1,
+   "load": {
+    "mult": 4,
+    "clarity": false,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 5200,
+    "bolts": 16,
+    "glowImpacts": 120,
+    "glowParticles": 5200
+   }
+  },
+  {
+   "name": "g9 gpu scene load 4x clarity=on 320x180 + 4x upscale",
+   "median_ms": 96.5333,
+   "p10_ms": 94.7,
+   "p90_ms": 99.2,
+   "K": 4,
+   "sync_ms": 95.8,
+   "load": {
+    "mult": 4,
+    "clarity": true,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 2184,
+    "bolts": 16,
+    "glowImpacts": 4,
+    "glowParticles": 173
+   }
+  },
+  {
+   "name": "g9 gpu scene load 16x clarity=off 320x180 + 4x upscale",
+   "median_ms": 556.4,
+   "p10_ms": 533,
+   "p90_ms": 571.8,
+   "K": 4,
+   "sync_ms": 556,
+   "load": {
+    "mult": 16,
+    "clarity": false,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 20800,
+    "bolts": 64,
+    "glowImpacts": 480,
+    "glowParticles": 20800
+   }
+  },
+  {
+   "name": "g9 gpu scene load 16x clarity=on 320x180 + 4x upscale",
+   "median_ms": 385.4667,
+   "p10_ms": 381.1333,
+   "p90_ms": 388.0333,
+   "K": 4,
+   "sync_ms": 383.4,
+   "load": {
+    "mult": 16,
+    "clarity": true,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 8736,
+    "bolts": 64,
+    "glowImpacts": 16,
+    "glowParticles": 693
+   }
+  },
+  {
+   "name": "g0 gpu baseline: ground quad 1280x720",
+   "median_ms": 0.5252,
+   "p10_ms": 0.5094,
+   "p90_ms": 0.5394,
+   "K": 128,
+   "sync_ms": 0.9
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=500 1280x720",
+   "median_ms": 6.8273,
+   "p10_ms": 6.4455,
+   "p90_ms": 7.0091,
+   "K": 12,
+   "sync_ms": 7
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=500 1280x720",
+   "median_ms": 6.9,
+   "p10_ms": 6.7364,
+   "p90_ms": 7,
+   "K": 12,
+   "sync_ms": 7.1
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=500 1280x720",
+   "median_ms": 6.7636,
+   "p10_ms": 6.4,
+   "p90_ms": 7.0636,
+   "K": 12,
+   "sync_ms": 6.9
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=2000 1280x720",
+   "median_ms": 27.5333,
+   "p10_ms": 26.7667,
+   "p90_ms": 28.3667,
+   "K": 4,
+   "sync_ms": 27.9
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=2000 1280x720",
+   "median_ms": 27.7667,
+   "p10_ms": 26.9667,
+   "p90_ms": 28.0667,
+   "K": 4,
+   "sync_ms": 28
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=2000 1280x720",
+   "median_ms": 27.5333,
+   "p10_ms": 26.2667,
+   "p90_ms": 28.1667,
+   "K": 4,
+   "sync_ms": 27.9
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=8000 1280x720",
+   "median_ms": 111.2,
+   "p10_ms": 109.9667,
+   "p90_ms": 114.0333,
+   "K": 4,
+   "sync_ms": 111.6
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=8000 1280x720",
+   "median_ms": 111.1,
+   "p10_ms": 109.1,
+   "p90_ms": 112.3333,
+   "K": 4,
+   "sync_ms": 110.9
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=8000 1280x720",
+   "median_ms": 110.3,
+   "p10_ms": 109.4,
+   "p90_ms": 111.5333,
+   "K": 4,
+   "sync_ms": 109.9
+  },
+  {
+   "name": "g1 gpu particles instanced, per-frame buffer upload N=32000 1280x720",
+   "median_ms": 444.5333,
+   "p10_ms": 443.6333,
+   "p90_ms": 446.2667,
+   "K": 4,
+   "sync_ms": 444.9
+  },
+  {
+   "name": "g1 gpu particles instanced, upload + JS sim N=32000 1280x720",
+   "median_ms": 443.7667,
+   "p10_ms": 437.2,
+   "p90_ms": 453.2333,
+   "K": 4,
+   "sync_ms": 444.6
+  },
+  {
+   "name": "g1 gpu particles stateless (vertex shader from seed, age) N=32000 1280x720",
+   "median_ms": 440.0333,
+   "p10_ms": 425.3667,
+   "p90_ms": 449.6,
+   "K": 4,
+   "sync_ms": 443.3
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 32x32 N=30 1280x720",
+   "median_ms": 0.5967,
+   "p10_ms": 0.5911,
+   "p90_ms": 0.6057,
+   "K": 124,
+   "sync_ms": 0.8,
+   "px_effect": 5265,
+   "px_rect": 30720
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 32x32 N=30 1280x720",
+   "median_ms": 0.5405,
+   "p10_ms": 0.532,
+   "p90_ms": 0.5523,
+   "K": 154,
+   "sync_ms": 0.8,
+   "px_effect": 5265,
+   "px_rect": 30720
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 32x32 N=120 1280x720",
+   "median_ms": 2.4,
+   "p10_ms": 2.3656,
+   "p90_ms": 2.4625,
+   "K": 33,
+   "sync_ms": 2.6,
+   "px_effect": 21165,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 32x32 N=120 1280x720",
+   "median_ms": 2.1833,
+   "p10_ms": 2.15,
+   "p90_ms": 2.2111,
+   "K": 37,
+   "sync_ms": 2.4,
+   "px_effect": 21165,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 32x32 N=480 1280x720",
+   "median_ms": 9.5286,
+   "p10_ms": 9.4286,
+   "p90_ms": 9.6571,
+   "K": 8,
+   "sync_ms": 9.7,
+   "px_effect": 84660,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 32x32 N=480 1280x720",
+   "median_ms": 8.7,
+   "p10_ms": 8.65,
+   "p90_ms": 8.8125,
+   "K": 9,
+   "sync_ms": 8.9,
+   "px_effect": 84660,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 64x64 N=30 1280x720",
+   "median_ms": 1.9,
+   "p10_ms": 1.8902,
+   "p90_ms": 1.922,
+   "K": 42,
+   "sync_ms": 2.3,
+   "px_effect": 21196,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 64x64 N=30 1280x720",
+   "median_ms": 1.6583,
+   "p10_ms": 1.6375,
+   "p90_ms": 1.6729,
+   "K": 49,
+   "sync_ms": 2,
+   "px_effect": 21196,
+   "px_rect": 122880
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 64x64 N=120 1280x720",
+   "median_ms": 7.6556,
+   "p10_ms": 7.6,
+   "p90_ms": 12.4111,
+   "K": 10,
+   "sync_ms": 8.2,
+   "px_effect": 85380,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 64x64 N=120 1280x720",
+   "median_ms": 6.6727,
+   "p10_ms": 6.6,
+   "p90_ms": 6.7273,
+   "K": 12,
+   "sync_ms": 7.3,
+   "px_effect": 85380,
+   "px_rect": 491520
+  },
+  {
+   "name": "g2 gpu flipbook batch alpha 64x64 N=480 1280x720",
+   "median_ms": 30.5667,
+   "p10_ms": 30.2333,
+   "p90_ms": 33.4333,
+   "K": 4,
+   "sync_ms": 31.4,
+   "px_effect": 341520,
+   "px_rect": 1966080
+  },
+  {
+   "name": "g2 gpu flipbook batch additive 64x64 N=480 1280x720",
+   "median_ms": 26.2333,
+   "p10_ms": 25.7667,
+   "p90_ms": 27.3,
+   "K": 4,
+   "sync_ms": 27.2,
+   "px_effect": 341520,
+   "px_rect": 1966080
+  },
+  {
+   "name": "g3 gpu separable 9-tap blur at 1280x720 + additive composite (blur only, static source)",
+   "median_ms": 10.55,
+   "p10_ms": 10.4,
+   "p90_ms": 10.85,
+   "K": 7,
+   "sync_ms": 10.8
+  },
+  {
+   "name": "g3 gpu low-res glow 80x45: 120 impacts redrawn + blur + composite to 1280x720",
+   "median_ms": 3.0038,
+   "p10_ms": 2.6,
+   "p90_ms": 3.1231,
+   "K": 27,
+   "sync_ms": 3.2
+  },
+  {
+   "name": "g3 gpu low-res glow 160x90: 120 impacts redrawn + blur + composite to 1280x720",
+   "median_ms": 3.1917,
+   "p10_ms": 3.0542,
+   "p90_ms": 4.1875,
+   "K": 25,
+   "sync_ms": 3.4
+  },
+  {
+   "name": "g3 gpu low-res glow 320x180: 120 impacts redrawn + blur + composite to 1280x720",
+   "median_ms": 3.78,
+   "p10_ms": 3.675,
+   "p90_ms": 5.085,
+   "K": 21,
+   "sync_ms": 3.8
+  },
+  {
+   "name": "g3 gpu glow as 240 additive halo quads 32x32 1280x720",
+   "median_ms": 4.4647,
+   "p10_ms": 4.3353,
+   "p90_ms": 4.9,
+   "K": 18,
+   "sync_ms": 4.7
+  },
+  {
+   "name": "g4 gpu trail ribbon segments L=12, upload M=60 1280x720",
+   "median_ms": 8.9875,
+   "p10_ms": 8.7625,
+   "p90_ms": 9.1125,
+   "K": 9,
+   "sync_ms": 9.1,
+   "instances": 660
+  },
+  {
+   "name": "g4 gpu afterimages 4 ghosts + head batch M=60 1280x720",
+   "median_ms": 4.1111,
+   "p10_ms": 4.0722,
+   "p90_ms": 4.1667,
+   "K": 19,
+   "sync_ms": 4.3,
+   "instances": 300
+  },
+  {
+   "name": "g4 gpu feedback buffer (fade pass + heads + composite) M=60 1280x720",
+   "median_ms": 2.4516,
+   "p10_ms": 2.3452,
+   "p90_ms": 2.6032,
+   "K": 32,
+   "sync_ms": 2.5
+  },
+  {
+   "name": "g4 gpu trail ribbon segments L=12, upload M=240 1280x720",
+   "median_ms": 35.6333,
+   "p10_ms": 34.7,
+   "p90_ms": 35.9667,
+   "K": 4,
+   "sync_ms": 35.4,
+   "instances": 2640
+  },
+  {
+   "name": "g4 gpu afterimages 4 ghosts + head batch M=240 1280x720",
+   "median_ms": 16.325,
+   "p10_ms": 16.05,
+   "p90_ms": 16.8,
+   "K": 5,
+   "sync_ms": 16.8,
+   "instances": 1200
+  },
+  {
+   "name": "g4 gpu feedback buffer (fade pass + heads + composite) M=240 1280x720",
+   "median_ms": 5.0733,
+   "p10_ms": 4.92,
+   "p90_ms": 5.1267,
+   "K": 16,
+   "sync_ms": 5.2
+  },
+  {
+   "name": "g4 gpu trail ribbon segments L=12, upload M=960 1280x720",
+   "median_ms": 142.1667,
+   "p10_ms": 140.1333,
+   "p90_ms": 144.2333,
+   "K": 4,
+   "sync_ms": 141.3,
+   "instances": 10560
+  },
+  {
+   "name": "g4 gpu afterimages 4 ghosts + head batch M=960 1280x720",
+   "median_ms": 66.3333,
+   "p10_ms": 60.4667,
+   "p90_ms": 67.9333,
+   "K": 4,
+   "sync_ms": 66.7,
+   "instances": 4800
+  },
+  {
+   "name": "g4 gpu feedback buffer (fade pass + heads + composite) M=960 1280x720",
+   "median_ms": 15.225,
+   "p10_ms": 15.075,
+   "p90_ms": 15.525,
+   "K": 5,
+   "sync_ms": 15.7
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 1 N=10 1280x720",
+   "median_ms": 13.22,
+   "p10_ms": 12.94,
+   "p90_ms": 13.52,
+   "K": 6,
+   "sync_ms": 13.3,
+   "instances": 960
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 3 N=10 1280x720",
+   "median_ms": 13.2,
+   "p10_ms": 13.04,
+   "p90_ms": 13.32,
+   "K": 6,
+   "sync_ms": 13.4,
+   "instances": 960
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 1 N=40 1280x720",
+   "median_ms": 53.1,
+   "p10_ms": 52.4667,
+   "p90_ms": 53.5,
+   "K": 4,
+   "sync_ms": 53.1,
+   "instances": 3840
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 3 N=40 1280x720",
+   "median_ms": 52.9,
+   "p10_ms": 52.3333,
+   "p90_ms": 53.7667,
+   "K": 4,
+   "sync_ms": 53.4,
+   "instances": 3840
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 1 N=160 1280x720",
+   "median_ms": 211.6667,
+   "p10_ms": 204.7667,
+   "p90_ms": 213.7,
+   "K": 4,
+   "sync_ms": 209.8,
+   "instances": 15360
+  },
+  {
+   "name": "g5 gpu bolts lv=5 halo+core segment quads, regen every 3 N=160 1280x720",
+   "median_ms": 208.9333,
+   "p10_ms": 204.5,
+   "p90_ms": 212.3333,
+   "K": 4,
+   "sync_ms": 210.5,
+   "instances": 15360
+  },
+  {
+   "name": "g6 gpu tile effects 16x16 batch N=148 1280x720",
+   "median_ms": 1.6383,
+   "p10_ms": 1.6149,
+   "p90_ms": 1.6766,
+   "K": 48,
+   "sync_ms": 1.8,
+   "px_rect": 37888
+  },
+  {
+   "name": "g6 gpu tile effects 16x16 batch N=1110 1280x720",
+   "median_ms": 12.3,
+   "p10_ms": 12.0333,
+   "p90_ms": 12.55,
+   "K": 7,
+   "sync_ms": 12.1,
+   "px_rect": 284160
+  },
+  {
+   "name": "g6 gpu tile effects 32x32 batch N=1110 1280x720",
+   "median_ms": 22.3667,
+   "p10_ms": 21.4333,
+   "p90_ms": 22.6,
+   "K": 4,
+   "sync_ms": 22.4,
+   "px_rect": 1136640
+  },
+  {
+   "name": "g6 gpu tile effects 16x16 batch N=2190 1280x720",
+   "median_ms": 23.9,
+   "p10_ms": 23.6667,
+   "p90_ms": 24.8667,
+   "K": 4,
+   "sync_ms": 24.1,
+   "px_rect": 560640
+  },
+  {
+   "name": "g6 gpu tile effects 32x32 batch N=2190 1280x720",
+   "median_ms": 42.9,
+   "p10_ms": 42.3,
+   "p90_ms": 44.3333,
+   "K": 4,
+   "sync_ms": 43.6,
+   "px_rect": 2242560
+  },
+  {
+   "name": "g7 gpu screen flash quad 1280x720",
+   "median_ms": 0.1945,
+   "p10_ms": 0.1929,
+   "p90_ms": 0.1957,
+   "K": 326,
+   "sync_ms": 0.5
+  },
+  {
+   "name": "g7 gpu vignette shader 1280x720",
+   "median_ms": 0.3403,
+   "p10_ms": 0.3301,
+   "p90_ms": 0.35,
+   "K": 187,
+   "sync_ms": 0.9
+  },
+  {
+   "name": "g7 gpu framebuffer copy only (blitFramebuffer) + flash 1280x720",
+   "median_ms": 1.6208,
+   "p10_ms": 1.5958,
+   "p90_ms": 1.6313,
+   "K": 49,
+   "sync_ms": 1.7
+  },
+  {
+   "name": "g7 gpu shockwave distortion incl. framebuffer copy 1280x720",
+   "median_ms": 2.3121,
+   "p10_ms": 2.2485,
+   "p90_ms": 2.3818,
+   "K": 34,
+   "sync_ms": 2.5
+  },
+  {
+   "name": "g7 gpu palette LUT pass incl. framebuffer copy 1280x720",
+   "median_ms": 2.5226,
+   "p10_ms": 2.3871,
+   "p90_ms": 3.6065,
+   "K": 32,
+   "sync_ms": 2.9
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, no tint C=30 1280x720",
+   "median_ms": 3.3783,
+   "p10_ms": 3.3348,
+   "p90_ms": 3.4913,
+   "K": 24,
+   "sync_ms": 3.6,
+   "instances": 270
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as vertex attribute, 1 draw C=30 1280x720",
+   "median_ms": 3.4636,
+   "p10_ms": 3.4091,
+   "p90_ms": 3.6045,
+   "K": 23,
+   "sync_ms": 3.7,
+   "instances": 270
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as per-sprite uniform, C+2 draws C=30 1280x720",
+   "median_ms": 3.5045,
+   "p10_ms": 2.8364,
+   "p90_ms": 3.6091,
+   "K": 23,
+   "sync_ms": 3.5,
+   "instances": 270
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, no tint C=120 1280x720",
+   "median_ms": 13.88,
+   "p10_ms": 13.36,
+   "p90_ms": 14.28,
+   "K": 6,
+   "sync_ms": 14,
+   "instances": 1080
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as vertex attribute, 1 draw C=120 1280x720",
+   "median_ms": 13.88,
+   "p10_ms": 13.54,
+   "p90_ms": 14.1,
+   "K": 6,
+   "sync_ms": 14.1,
+   "instances": 1080
+  },
+  {
+   "name": "g8 gpu auras back+front+6 orbiters+char, tint (c) as per-sprite uniform, C+2 draws C=120 1280x720",
+   "median_ms": 14.06,
+   "p10_ms": 13.6,
+   "p90_ms": 14.28,
+   "K": 6,
+   "sync_ms": 13.9,
+   "instances": 1080
+  },
+  {
+   "name": "g9 gpu scene load 1x clarity=off native 1280x720",
+   "median_ms": 47.7667,
+   "p10_ms": 46.7,
+   "p90_ms": 49.0333,
+   "K": 4,
+   "sync_ms": 48.5,
+   "load": {
+    "mult": 1,
+    "clarity": false,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 1300,
+    "bolts": 4,
+    "glowImpacts": 30,
+    "glowParticles": 1300
+   }
+  },
+  {
+   "name": "g9 gpu scene load 1x clarity=on native 1280x720",
+   "median_ms": 36.7667,
+   "p10_ms": 35.8667,
+   "p90_ms": 37.6333,
+   "K": 4,
+   "sync_ms": 37.4,
+   "load": {
+    "mult": 1,
+    "clarity": true,
+    "casters": 30,
+    "missiles": 30,
+    "impacts": 30,
+    "tiles": 148,
+    "particles": 546,
+    "bolts": 4,
+    "glowImpacts": 1,
+    "glowParticles": 43
+   }
+  },
+  {
+   "name": "g9 gpu scene load 4x clarity=off native 1280x720",
+   "median_ms": 150.1,
+   "p10_ms": 148.6667,
+   "p90_ms": 152.4333,
+   "K": 4,
+   "sync_ms": 150.9,
+   "load": {
+    "mult": 4,
+    "clarity": false,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 5200,
+    "bolts": 16,
+    "glowImpacts": 120,
+    "glowParticles": 5200
+   }
+  },
+  {
+   "name": "g9 gpu scene load 4x clarity=on native 1280x720",
+   "median_ms": 106.4,
+   "p10_ms": 104.5333,
+   "p90_ms": 109.9333,
+   "K": 4,
+   "sync_ms": 107.5,
+   "load": {
+    "mult": 4,
+    "clarity": true,
+    "casters": 120,
+    "missiles": 120,
+    "impacts": 120,
+    "tiles": 592,
+    "particles": 2184,
+    "bolts": 16,
+    "glowImpacts": 4,
+    "glowParticles": 173
+   }
+  },
+  {
+   "name": "g9 gpu scene load 16x clarity=off native 1280x720",
+   "median_ms": 566.7333,
+   "p10_ms": 560.3667,
+   "p90_ms": 567.4333,
+   "K": 4,
+   "sync_ms": 568.5,
+   "load": {
+    "mult": 16,
+    "clarity": false,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 20800,
+    "bolts": 64,
+    "glowImpacts": 480,
+    "glowParticles": 20800
+   }
+  },
+  {
+   "name": "g9 gpu scene load 16x clarity=on native 1280x720",
+   "median_ms": 389.7667,
+   "p10_ms": 384.7333,
+   "p90_ms": 398.9667,
+   "K": 4,
+   "sync_ms": 389.1,
+   "load": {
+    "mult": 16,
+    "clarity": true,
+    "casters": 480,
+    "missiles": 480,
+    "impacts": 480,
+    "tiles": 2368,
+    "particles": 8736,
+    "bolts": 64,
+    "glowImpacts": 16,
+    "glowParticles": 693
+   }
+  }
+ ],
+ "browser_version": "153.0.8010.12",
+ "config": "default",
+ "console_errors_and_warnings": [
+  "[.WebGL-0x12c00432400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "[.WebGL-0x12c00432400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "[.WebGL-0x12c00432400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "[.WebGL-0x12c00432400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+ ]
+}

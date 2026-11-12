@@ -1,0 +1,226 @@
+<!--FIG trails-->
+<figure class="fig" data-demo="trails" id="fig-trails">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Three trails behind the same missile: ribbon, afterimages, particle wake</h4><span class="illu">Path, speed and ghost spacing illustrative</span></div>
+  <div class="stage"><canvas width="192" height="112" aria-label="Three lanes on a stone floor. In each a missile flies to a training dummy. The top one drags a tapering ribbon, the middle one leaves five darker copies of itself, the bottom one drops sparks, embers and smoke"></canvas><div class="hud" data-hud="a"></div><div class="hud" data-hud="b" style="top:35%"></div><div class="hud" data-hud="c" style="top:67%"></div></div>
+  <div class="ctl">
+    <label class="rng">Ribbon length <input type="range" data-k="n" min="4" max="12" step="1" value="8"><output data-o="n"></output></label>
+    <label class="rng">Missile speed <input type="range" data-k="sp" min="60" max="340" step="20" value="160"><output data-o="sp"></output></label>
+    <label><input type="checkbox" data-k="curve" checked> Curved path</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The ribbon is a ring buffer of points pushed once per tick and joined by Bresenham lines, with stepped widths of 3, 2, 1 and 1 px and palette steps instead of alpha [I]. Mindustry ships 7 and 9 points, 117 and 150 ms, and after the bullet dies the trail shortens over <code>length x 1.4</code> ticks, which you can watch at each hit [V, S71, S76]. The afterimages follow Terraria, which caches 5 old positions and tints copy <code>k</code> by <code>(n - k) / n</code> [V, S80]. Here the tint is a step down the ramp. The wake copies the three emitter lives of Noita's Spark Bolt as the Sandbox uses them, 0.1, 0.6 and 1.4 s [V, S86]. The live times are 240 repeats of each trail drawn as pixel writes on your machine. The slow path in the report is afterimages through <code>drawImage</code>, which this page does not use.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG beam-->
+<figure class="fig" data-demo="beam" id="fig-beam">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A beam is three stacked lines: 5, 3 and 1 px, dark outside and light inside</h4><span class="illu">Colours and cap art illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="80" aria-label="A mage fires a pink beam at a training dummy. The beam has a dark wide halo, a brighter middle line and a thin light core, with a glow at the hand and a splash at the target"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Beam kind"><button type="button" class="on" data-v="one">One shot</button><button type="button" data-v="chan">Channel</button></div>
+    <label><input type="checkbox" data-k="halo" checked> Halo, 5 px</label>
+    <label><input type="checkbox" data-k="mid" checked> Middle, 3 px</label>
+    <label><input type="checkbox" data-k="core" checked> Core, 1 px</label>
+    <label><input type="checkbox" data-k="caps" checked> End caps</label>
+    <label><input type="checkbox" data-k="fl" checked> 20 Hz flicker (channel)</label>
+    <label class="rng">One-shot life <input type="range" data-k="life" min="250" max="500" step="1" value="267"><output data-o="life"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mindustry's laser draws three colours from the outside in, each about half the width of the last. It lives 16 ticks, 267 ms, grows to full length over the first 20% of its life and shrinks its width to 0 [V, S74]. The pixel version uses layers of 5, 3 and 1 px in palette colours, a 2-frame start cap and a 3-frame end splash that hide the line ends [I]. Untick the halo and the beam turns into a thin scratch. Untick the core and it loses its heat. A channel holds its width and re-casts its length every frame, as Mindustry's continuous laser does [V, S75]. One-shot beams of 250 to 500 ms match Mindustry and Shattered Pixel Dungeon's 0.5 s DeathRay [V, S74, S66]. The cost is 3 lines and 2 sprites per beam [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lightning-->
+<figure class="fig" data-demo="lightning" id="fig-lightning">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Chain lightning: split each segment, push the midpoint, halve the push</h4><span class="illu">Jaggedness and branch angles illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="96" aria-label="A mage sends a jagged violet bolt to one training dummy, and a second bolt hops on to another dummy. Short dimmer branches leave the main bolts"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Generations <input type="range" data-k="g" min="1" max="5" step="1" value="5"><output data-o="g"></output></label>
+    <label class="rng">Re-roll every <input type="range" data-k="n" min="1" max="12" step="1" value="3"><output data-o="n"></output></label>
+    <label><input type="checkbox" data-k="core" checked> Core pass</label>
+    <label><input type="checkbox" data-k="halo" checked> Halo pass</label>
+    <label><input type="checkbox" data-k="br" checked> Branches</label>
+    <label><input type="checkbox" data-k="cons"> Show the step before</label>
+    <label><input type="checkbox" data-k="hold"> Hold this seed</label>
+    <label><input type="checkbox" data-k="pulse"> 300 ms casts</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Start with a straight line. Each generation splits every segment and moves the new midpoint along the perpendicular by <code>random(-offset, offset)</code>, then halves the offset. 5 generations give 32 segments. A branch leaves a midpoint at 0.7 of the length and is drawn dimmer [V, S87]. Tick "Hold this seed" and "Show the step before", then drag the generations slider. The grey line is the generation before and the gold dots are the new midpoints. The server sends only the target ids and one seed byte, and every client builds the same bolt [I]. Re-rolled every 3 frames it crackles, and every frame it looks like noise [I]. The halo stays a mid value, because a bright halo that changes shape 20 times a second is a large flicker, and a real cast lives 300 ms or less [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timing-->
+<figure class="fig" data-demo="timing" id="fig-timing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Timing: where the peak sits, and how long each frame is held</h4><span class="illu">Brightness values, wind-up art and the front-loaded split illustrative</span></div>
+  <div class="stage"><canvas width="192" height="64" aria-label="A mage throws a fire bolt at a training dummy. A damage number pops up at the hit while a five-frame burst plays, with its brightest frame early or late depending on the setting"></canvas><div class="hud" data-hud></div></div>
+  <svg class="chart" style="max-width:600px;margin-top:8px" viewBox="0 0 400 128" role="img" aria-label="Bar chart of the five frames of the effect. Bar height is brightness, bar width is how long the frame is held. The white bar is the peak. A dashed line shows the current time"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="tm" role="group" aria-label="Frame clock"><button type="button" class="on" data-v="fixed">75 ms frames</button><button type="button" data-v="front">Front-loaded</button></div>
+    <label class="rng">Peak on <input type="range" data-k="pk" min="1" max="5" step="1" value="1"><output data-o="pk"></output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each bar is one frame. Its height is how bright and large the art is, and its width is how long it is held. Move the peak to frame 4 or 5, or click a bar. The effect now spends most of its life winding up on top of the dummy, and the flash lands long after the damage number. With the peak on frame 1 the climax and the number arrive together and the rest is a short tail. Riot asks for "anticipation and dissipation" and says "We intentionally minimize an effect's linger duration", but gives no percentages [V, S104]. The rule that the peak falls "within the first quarter" comes from VFX Apprentice's summary, not from Riot's guide [V, S101]. In the Sandbox the wind-up is the cast circle, so the spark itself can open on its peak. An effect may hide the target for 100 to 150 ms, 2 frames at 75 ms [I]. The front-loaded clock cuts that to 66 ms with the same five drawings.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sparkanatomy-->
+<figure class="fig" data-demo="sparkanatomy" id="fig-sparkanatomy">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hit spark anatomy: flash, core, sparks, smoke</h4><span class="illu">Art and the strong spark's tail split illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="80" height="60" aria-label="A training dummy is hit by a fire spark that opens with a white star, shrinks to an orange core, throws short spark lines and ends in grey smoke"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>The spark.</b> It opens with its biggest, brightest shape.</p></div>
+    <div><div class="stage"><canvas width="130" height="63" aria-label="A film strip of every frame of the chosen spark with the current frame outlined in gold, and below it a bar that shows how long each frame is held"></canvas></div><p class="pl"><b>Every frame.</b> The bar below shows how long each one is held.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="v" role="group" aria-label="Spark strength"><button type="button" data-v="light">Light</button><button type="button" class="on" data-v="med">Medium</button><button type="button" data-v="strong">Strong</button><button type="button" data-v="clock">5 x 75 ms</button></div>
+    <label><input type="checkbox" data-k="flash" checked> Flash frame</label>
+    <label><input type="checkbox" data-k="core" checked> Core</label>
+    <label><input type="checkbox" data-k="sparks" checked> Sparks</label>
+    <label><input type="checkbox" data-k="smoke" checked> Smoke</label>
+    <label><input type="checkbox" data-k="play" checked> Play</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion</label>
+    <button type="button" class="btn ghost" data-b="step">Step one frame</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>MUGEN 1.1's stock sparks give the frame counts. Light is 6 frames in 12 ticks (200 ms), medium is 5 in 10 (167 ms) and strong is 10 entries in 13 ticks (217 ms), with 5 frames at 1 tick and then a slower tail [V, S102]. The ms assume 60 ticks per second [I]. Strength changes the art and the easing more than the length. Press "Step one frame" to walk through it. The white flash is one frame only, the core shrinks and darkens down the ramp, the sparks fly out and shorten, and the smoke is the only part left at the end. On the Tibia clock the same spark is 3 to 5 frames at 75 ms [I]. A spark longer than about 280 ms starts to look like a shockwave or a super [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stateless-->
+<figure class="fig" data-demo="stateless" id="fig-stateless">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">An explosion as a pure function of seed and time, beside a stored pool</h4><span class="illu">Sizes scaled up, colours and the pool's drag illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="80" aria-label="An explosion on a stone floor: a yellow ring, five smoke discs and four spark lines, drawn from a seed and a time with nothing stored"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Stateless.</b> Every shape is derived again from <code>(seed, t)</code> each frame.</p></div>
+    <div><div class="stage"><canvas width="96" height="80" aria-label="The same explosion drawn from a pool of stored particles that are moved a step at a time"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Stored pool.</b> Positions and velocities live in arrays and step forward only.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Time t <input type="range" data-k="t" min="0" max="20" step="1" value="0"><output data-o="t"></output></label>
+    <label class="rng">Seed <input type="range" data-k="seed" min="0" max="255" step="1" value="42"><output data-o="seed"></output></label>
+    <label class="rng">Shapes <input type="range" data-k="mul" min="1" max="6" step="1" value="1"><output data-o="mul"></output></label>
+    <label><input type="checkbox" data-k="play" checked> Play</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A Mindustry effect is a function of id, time, lifetime, position, rotation and colour. <code>randLenVectors(seed, amount, length)</code> re-seeds its generator and returns the same directions every frame, <code>fin()</code> is <code>time / lifetime</code> and <code>fout()</code> is <code>1 - fin</code> [V, S77, S79]. This is <code>flakExplosion</code>. It lives 20 ticks (333 ms), its yellow ring lives 6 ticks through a nested shorter life, 5 smoke discs shrink from radius 3.5 to 0.5 and 4 spark lines fly out [V, S77, S76]. Drag the time slider backward. The left side just evaluates the earlier time. The pool has to respawn and step forward again, and the readout counts those steps. Raise the shape count and the pool's memory grows while the stateless side stays at about 16 bytes per effect [I]. The catch is that stateless sparks cannot bounce or collide, which nobody notices under 1 s [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ringwave-->
+<figure class="fig" data-demo="ringwave" id="fig-ringwave">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One area mask, fired in phase and ring by ring</h4><span class="illu">Tile art and 8 px tiles illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="96" aria-label="A mage in the middle of a circle of floor tiles. Every tile bursts into fire in the same frame"></canvas></div><p class="pl"><b>In phase.</b> Tibia starts every tile on the same frame, so the area pops in at once.</p></div>
+    <div><div class="stage"><canvas width="96" height="96" aria-label="The same circle of tiles. The fire starts at the mage and rolls outward one ring of tiles at a time"></canvas></div><p class="pl"><b>Ring by ring.</b> Each ring of tiles starts a moment after the one inside it.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mask" role="group" aria-label="Mask size"><button type="button" data-v="37">37 tiles</button><button type="button" class="on" data-v="73">73 tiles</button></div>
+    <label class="rng">Delay per ring <input type="range" data-k="ring" min="0" max="75" step="1" value="55"><output data-o="ring"></output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both sides play the same 8-frame tile effect at 75 ms per frame on the same mask, <code>AREA_CIRCLE3X3</code> with 37 tiles or the 73-tile <code>AREA_CIRCLE5X5</code> [V, S24]. The right side buckets tiles by rounded distance from the caster and delays each ring by 55 ms, under one 75 ms frame so neighbours overlap. 5 rings take 275 ms from centre to edge [I]. Canary's chain spells use a floor of 50 ms per hop [V, S28] and Mindustry's <code>shockwaveDust</code> fires ring <code>i</code> after <code>i x 3.5</code> ticks, 58 ms [V, S77]. The tile draws are the same, spread over more frames, so fewer tiles are on their bright first frames at once. Sent as one event with a mask id and a ring delay, the area is about 11 bytes instead of one message per tile [I]. Damage still lands on the server tick, not on ring arrival [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG shockwave-->
+<figure class="fig" data-demo="shockwave" id="fig-shockwave">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A shockwave ring that thins and breaks up, beside one that keeps its thickness</h4><span class="illu">Colours and scene illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="112" height="104" aria-label="A mage sends out a ring that grows at a steady speed and stays three pixels thick until it vanishes"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Keeps its thickness.</b> Linear growth and 3 px to the end. It looks like a solid hoop.</p></div>
+    <div><div class="stage"><canvas width="112" height="104" aria-label="The same ring, but it grows fast and then slows, thins from three pixels to one and breaks into dots before it vanishes"></canvas></div><p class="pl"><b>Thins and breaks up.</b> Fast, then slow, 3 to 1 px, then dots. It looks like pressure.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Life <input type="range" data-k="life" min="100" max="400" step="1" value="200"><output data-o="life"></output></label>
+    <label class="rng">Radius <input type="range" data-k="r" min="16" max="48" step="1" value="40"><output data-o="r"></output></label>
+    <label><input type="checkbox" data-k="ease" checked> Ease-out radius</label>
+    <label><input type="checkbox" data-k="bayer" checked> Bayer break-up</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mindustry's <code>shockwave</code> lives 10 ticks, 167 ms. Its radius grows from 0 to 28 units while the stroke falls from 2.2 to 0.2 [V, S76]. The pixel ring on the right is a midpoint circle with an ease-out radius. It is 3 px thick, then 2 at 40% and 1 at 75% of the life, and in the last 40% a Bayer threshold drops pixels so it breaks into dots [I]. The Sandbox uses 200 ms. A ring that keeps its thickness looks like a solid object and a thinning ring looks like pressure [I]. The thinning ring also writes fewer pixels, since a ring of radius 48 px touches about 300 pixels per pixel of thickness [I]. Tick "Slow motion" to see the steps. The dummies flinch as the ring passes.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG residue-->
+<figure class="fig" data-demo="residue" id="fig-residue">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Residue: capped decals that fade, and a fire field that steps down</h4><span class="illu">Decal art, default cap of 16 and the 15% fade illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="108" aria-label="A stone floor with dark scorch marks and pale frost patches that fade after a few seconds, and one tile of fire that shrinks in three stages. A mage and a training dummy stand on top of the marks"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="kind" role="group" aria-label="What a click leaves"><button type="button" class="on" data-v="scorch">Scorch</button><button type="button" data-v="frost">Frost</button><button type="button" data-v="field">Fire field</button></div>
+    <label class="rng">Cap <input type="range" data-k="cap" min="4" max="64" step="1" value="16"><output data-o="cap"></output></label>
+    <label class="rng">Decal life <input type="range" data-k="life" min="8" max="15" step="1" value="12"><output data-o="life"></output></label>
+    <button type="button" class="btn" data-b="spam">Spam 24 hits</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A decal is decoration, so it is dim, capped and never synced. Mindustry's scorch marks live 60 s on their own layer under units, fade only in the last 2% of the life, come in 10 sizes and 3 variants and turn in 90 degree steps [V, S77, S78]. The rule here is 8 to 15 s for a hit scorch, a ring buffer of 64, and a new decal on a tile with the same kind refreshes the old one [I]. Press "Spam 24 hits" with the cap at 16. The oldest marks vanish to make room and the evicted counter climbs. The fire field follows Tibia, where field 1487 burns 120 s, decays to 1488, then 1489, then nothing, animated at 500 ms per frame [V, S25, S17]. The stage is <code>floor(3 x elapsed / total)</code> [I]. This page compresses it to 3 stages of 4 s, as the Sandbox does. Fields draw at full opacity for everyone because they hurt, with a border that tells friend from foe [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG slots-->
+<figure class="fig" data-demo="slots" id="fig-slots">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Back and front slots: the aura wraps the body and sorts with it</h4><span class="illu">Aura art and overlay frame counts illustrative</span></div>
+  <div class="stage click"><canvas width="192" height="96" aria-label="A mage with a golden ring aura walks around a stone pillar. Half of the ring passes behind the mage and half in front, and the pillar hides both when the mage walks behind it. A healer with the same aura stands nearby"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Where the aura is drawn"><button type="button" class="on" data-v="split">Back and front</button><button type="button" data-v="top">All in front</button><button type="button" data-v="under">All behind</button></div>
+    <label><input type="checkbox" data-k="back" checked> Back slot</label>
+    <label><input type="checkbox" data-k="front" checked> Front slot</label>
+    <label><input type="checkbox" data-k="start" checked> Start overlay</label>
+    <label><input type="checkbox" data-k="end" checked> End overlay</label>
+    <label><input type="checkbox" data-k="auto" checked> Cycle the state</label>
+    <button type="button" class="btn ghost" data-b="tog">Toggle the state now</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Diablo II gives each state four overlays, used as front, back, start and end. Bone Armor is a 12-frame cast, then 24-frame front and back loops [V, S60, S61]. OTClient walks a creature's effect list twice and each effect checks an <code>onTop</code> bit [V, S29]. The draw order is the ground pass for everyone, then for each y-sorted character back, body, front [I]. Switch to "All in front" and the ring becomes a sticker across the mage's legs. Switch to "All behind" and the mage stands on top of it. With both halves the character stands inside the effect, and the pillar still covers the whole group when the mage walks behind it. The two halves are two sprites in the same y-sorted batch, so the split costs nothing extra [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG orbit-->
+<figure class="fig" data-demo="orbit" id="fig-orbit">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Orbiting motes, heal sparkles and haste ghosts</h4><span class="illu">Sliders, colours and sparkle paths illustrative</span></div>
+  <div class="stage"><canvas width="160" height="72" aria-label="Three mages. Pink motes circle the first on a flat ellipse and pass behind and in front of the body. Gold sparkles rise around the second. The third walks back and forth and leaves blue ghost copies behind"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Orbit radius <input type="range" data-k="rx" min="10" max="22" step="1" value="16"><output data-o="rx"></output></label>
+    <label class="rng">Orbit period <input type="range" data-k="per" min="0.6" max="3" step="0.1" value="1.6"><output data-o="per"></output></label>
+    <label class="rng">Motes <input type="range" data-k="n" min="1" max="6" step="1" value="3"><output data-o="n"></output></label>
+    <label class="rng">Ghosts <input type="range" data-k="g" min="3" max="5" step="1" value="4"><output data-o="g"></output></label>
+    <label><input type="checkbox" data-k="show"> Show the 24 positions</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The orbit is a table of 24 whole-pixel positions on an ellipse with rx 14 to 18 px and ry 6 to 8 px. A mote is in front of the body when <code>sin(angle) &gt; 0</code>, and the back motes are one palette step dimmer. A turn takes 1.2 to 2.0 s [I]. Slide the period under 1 s and the orbit looks frantic and competes with attacks [I]. Six buffs must not mean six orbits, so add one mote per buff to a single orbit, 4 at most [I]. The heal is 4 to 6 sparkles that rise 12 to 16 px over 400 to 600 ms [I], and VFX Apprentice paces heals under 60 beats per minute [V, S105]. The haste ghosts capture the body frame every 4 frames into a ring of 3 to 5 and draw them in the back slot in darker palette steps, only while the character moves [I]. The moving parts are table lookups and blits, with no trigonometry per frame.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG shield-->
+<figure class="fig" data-demo="shield" id="fig-shield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Shields: a rim you can see through, a flash where the hit lands, a ring when it breaks</h4><span class="illu">Art, hit points and timings illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage click"><canvas width="72" height="64" aria-label="A mage inside a solid blue bubble that hides most of the body. When a fire bolt hits, the whole bubble flashes"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Filled bubble.</b> It hides the character and its facing, and a hit lights all of it.</p></div>
+    <div><div class="stage click"><canvas width="72" height="64" aria-label="A mage inside a thin blue outline. When a fire bolt hits, only the part of the outline facing the bolt flashes white"></canvas></div><p class="pl"><b>Rim only.</b> The body stays readable and the flash points at the attacker.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Shield holds <input type="range" data-k="hits" min="2" max="6" step="1" value="4"><output data-o="hits"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click anywhere around either mage to throw a bolt from that side. Riot's guide makes the border of Leona's shield its primary element, because players must read the radius, and gives defensive spells low saturation and a clear silhouette [V, S104]. Diablo II's Energy Shield has 8 directional hit overlays of 9 frames each, and hits 3, 4 and 5 are drawn behind the body [V, S61]. Here hits from the north side flash behind the mage in the same way. On break, Shattered Pixel Dungeon scales its halo from 1x to 2x radius over about 1 s while it fades [V, S81], which is the dotted ring you see when the last hit lands. Tibia draws no bubble at all and plays one spark per absorbed hit [V, S23, S30]. I would ship the rim for the owner and the party, and Tibia's hit-only spark for everyone else.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG statustint-->
+<figure class="fig" data-demo="statustint" id="fig-statustint">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Status looks: one tint by priority, plus one small overlay</h4><span class="illu">Tint values, priority order and overlays illustrative</span></div>
+  <div class="stage"><canvas width="192" height="96" aria-label="One large mage on the left tinted by its status, with a small icon over its head. On the right a crowd of thirty small characters, some tinted orange, green, blue or violet"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="burn" checked> Burning</label>
+    <label><input type="checkbox" data-k="pois" checked> Poisoned</label>
+    <label><input type="checkbox" data-k="froz"> Frozen</label>
+    <label><input type="checkbox" data-k="shock"> Shocked</label>
+    <div class="seg" data-seg="mode" role="group" aria-label="How statuses combine"><button type="button" class="on" data-v="pri">One tint by priority</button><button type="button" data-v="mul">Multiply them all</button></div>
+    <button type="button" class="btn ghost" data-b="shuf">Shuffle the crowd</button>
+    <button type="button" class="btn" data-b="rb">Measure the readback path</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ragnarok uses one multiply colour per entity. Frozen is 0.0, 0.4, 0.8 with the pose held and poison is 0.9, 0.4, 0.8. Tints multiply, so stacked statuses go dark [V, S45]. Diablo II lets one tint win by <code>colorpri</code> [V, S60]. Tick three or four statuses and switch between the two rules. With priority the mage always shows one clear state. Multiplied, it turns to mud. The plan gives each status one motion as well. Burning flickers between two orange rows at 6 to 8 fps with 2 small flames, poisoned pulses at 1 Hz with a drip per second, shocked blinks one white frame at 2 to 3 Hz and frozen holds the pose [I]. Every shocked character here blinks on one shared clock, because out-of-phase blinks add up to a large flickering area [I]. A pre-tinted cached sprite costs nothing extra per frame. Remapping pixels through <code>getImageData</code> every frame cost 9 ms for 30 characters in our measurement [V, S13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG castcircle-->
+<figure class="fig" data-demo="castcircle" id="fig-castcircle">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A cast circle that draws itself in, turns slowly and charges the hand</h4><span class="illu">Glyphs, draw-in order and particle counts illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A mage stands on a flattened ring of runes that draws itself in while small lights gather at the raised hand. When the ring is complete the mage fires a missile and the ring fades"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="el" role="group" aria-label="Element"><button type="button" class="on" data-v="0">Fire</button><button type="button" data-v="1">Ice</button><button type="button" data-v="2">Energy</button><button type="button" data-v="4">Holy</button></div>
+    <div class="seg" data-seg="size" role="group" aria-label="Circle size"><button type="button" data-v="20">40 px</button><button type="button" class="on" data-v="40">5 tiles</button><button type="button" data-v="56">7 tiles</button></div>
+    <label class="rng">Cast time <input type="range" data-k="dur" min="0.2" max="3" step="0.1" value="1.5"><output data-o="dur"></output></label>
+    <label class="rng">Turn rate <input type="range" data-k="rot" min="0" max="120" step="5" value="40"><output data-o="rot"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ragnarok's cast packet carries the skill, the target, the cast time and an element code. The element picks the colour [V, S46]. Its ground marker is one texture drawn before entities, turning at 40 degrees per second, 9 s per turn, sized from a per-skill table of 1, 5, 7 or 13 tiles [V, S47]. The circle here is built in code. It has an outer ring, 8 to 12 glyphs of 3x3 px, an inner ring and a polygon chosen by the element, flattened 2 to 1. It turns by moving the glyphs between 32 precomputed positions, never by rotating a bitmap [I]. The draw-in is the cast bar. Other players read who is casting, which element, how large and for how long. The orb at the hand climbs the ramp from dark to light as the cast fills and turns white only on the release frame. Slow rotation reads as charging and fast rotation reads as threat. A cast under 300 ms has no time for a draw-in [I].</figcaption>
+</figure>
+<!--/FIG-->

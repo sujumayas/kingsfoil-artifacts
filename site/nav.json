@@ -137,6 +137,22 @@
     "href": "vfx-fog-topdown-pixel.html",
     "name": "#8 Fog"
    },
+   "next": {
+    "href": "vfx-magic-topdown-pixel.html",
+    "name": "#10 Magic"
+   }
+  },
+  "vfx-magic-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#10 Magic",
+   "short": "Magic",
+   "pair": "vfx-magic-sandbox.html",
+   "prev": {
+    "href": "vfx-grass-topdown-pixel.html",
+    "name": "#9 Grass"
+   },
    "next": null
   },
   "vfx-snow-sandbox.html": {
@@ -274,6 +290,22 @@
    "prev": {
     "href": "vfx-fog-sandbox.html",
     "name": "#8 Fog"
+   },
+   "next": {
+    "href": "vfx-magic-sandbox.html",
+    "name": "#10 Magic"
+   }
+  },
+  "vfx-magic-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#10 Magic",
+   "short": "Magic",
+   "pair": "vfx-magic-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-grass-sandbox.html",
+    "name": "#9 Grass"
    },
    "next": null
   },

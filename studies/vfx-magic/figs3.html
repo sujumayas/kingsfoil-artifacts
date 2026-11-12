@@ -1,0 +1,226 @@
+<!--FIG ramps-->
+<figure class="fig" data-demo="ramps" id="fig-ramps">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A ramp of 3 to 5 hard steps, and an outline that survives any ground</h4><span class="illu">Ramp colours and grounds are our picks</span></div>
+  <div class="stage"><canvas width="192" height="96" aria-label="Three copies of one spell bolt fly left to right across dark flagstones, green grass and pale sand; depending on the outline setting the bolt keeps a dark rim, a double rim or a dark patch under it, or melts into the sand"></canvas><div class="hud" data-hud></div></div>
+  <div class="m3-sw" data-sw aria-label="The steps of the current ramp from edge to core, with the value of each"></div>
+  <div class="ctl">
+    <div class="seg" data-seg="el" role="group" aria-label="Element"><button type="button" class="on" data-v="0">Fire</button><button type="button" data-v="1">Ice</button><button type="button" data-v="2">Poison</button><button type="button" data-v="3">Holy</button></div>
+    <label class="rng">Ramp steps <input type="range" data-k="steps" min="3" max="5" step="1" value="5"><output data-o="steps"></output></label>
+    <label><input type="checkbox" data-k="hue" checked> Shift hue as value drops</label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="out" role="group" aria-label="Outline"><button type="button" data-v="none">No outline</button><button type="button" class="on" data-v="dark">Dark outline</button><button type="button" data-v="double">Double outline</button><button type="button" data-v="under">Dark underlay</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Energy is drawn as 3 to 5 hard colour steps, and the hue shifts as the value drops. "The color starts white hot and fades to warm hues, then to gray" [V, S99]. The top step is an off-white tinted to the element, because pure white belongs to the one-frame flash [V, S104; I, note 13]. Untick the hue shift and the ramp turns into one colour at five brightnesses, which reads flat. The readout measures the value step across the bolt's silhouette on each ground. Pick "No outline" with Holy or Fire and watch the number on sand collapse. A double outline, one dark and one bright, reads on any background [V, S99, S100]. Keep ground tiles in the middle values so spells own the bright end [I, note 06]. The 15% line where the readout turns red is our threshold.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG elements-->
+<figure class="fig" data-demo="elements" id="fig-elements">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Nine elements told apart by ramp, shape and motion</h4><span class="illu">Author judgement, approximate colour-blind simulation</span></div>
+  <div class="m3-el" data-grid role="img" aria-label="Nine small looping effects in a grid, one per element: fire tongues that rise, ice shards that snap in and hold, a jagged energy fork that jumps, poison bubbles that drift up and pop, holy rays that fall with small stars, an arcane circle that turns with orbiting motes, earth chunks that burst up and fall, death wisps that sink into a dark core, and a single grey physical slash"></div>
+  <div class="ctl">
+    <div class="seg" data-seg="cb" role="group" aria-label="Colour vision"><button type="button" class="on" data-v="n">Normal</button><button type="button" data-v="d">Deuteranopia</button><button type="button" data-v="p">Protanopia</button><button type="button" data-v="t">Tritanopia</button></div>
+    <label><input type="checkbox" data-k="grey"> Shapes only, no hue</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>This is the §6f table running. Fire rises in tongues and leaves embers. Ice snaps in as straight shards and then holds still. Energy jumps with no in-between frames. Poison drifts as bubbles and has no white flash. Holy falls straight and ends in 4-point stars. Arcane is clean geometry that turns. Earth bursts up and falls with gravity. Death drifts inward to a near-black core with a pale rim. Physical is one grey arc and one smear. The table is author judgement built from genre convention [I, notes 04, 06]. Hue is the weakest channel, since red-green difficulty affects "around 8-10% of males" [V, S116]. Switch the simulation and the readout lists the ramp pairs that move closest together, with the colliding cells outlined in red. Then tick "Shapes only". All nine still read, because each has its own silhouette and its own motion. The simulation applies the Machado 2009 matrices to sRGB, which is an approximation.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tiers-->
+<figure class="fig" data-demo="tiers" id="fig-tiers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Thirty casters, four tiers and three opacity sliders</h4><span class="illu">Scene and cast rates illustrative</span></div>
+  <div class="stage"><canvas width="240" height="135" aria-label="A courtyard fight seen from above: one blue mage at the bottom, four party members beside it and twenty-two other players in a ring cast bolts at a large monster and two small ones; other players' spells are drawn faint and dithered, and red warning rings from the monsters stay solid on top"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="pre" role="group" aria-label="Other players' effects"><button type="button" data-v="full">Others full</button><button type="button" class="on" data-v="red">Others reduced</button><button type="button" data-v="min">Others minimal</button></div>
+    <label><input type="checkbox" data-k="tv"> Colour by tier</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Own spells <input type="range" data-k="own" min="0" max="100" step="5" value="100"><output data-o="own"></output></label>
+    <label class="rng">Other players <input type="range" data-k="oth" min="0" max="100" step="5" value="40"><output data-o="oth"></output></label>
+    <label class="rng">Monsters <input type="range" data-k="mon" min="0" max="100" step="5" value="100"><output data-o="mon"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every effect knows whose it is. The scene has 1 own caster, 4 in the party, 22 others and 3 hostile monsters. Tibia teased three spell opacity sliders on 2025-10-22, for own spells, other players and monsters, 0 to 100% [V, S31]. The sliders here are those three. "Others reduced" is the Sandbox rule: 40% opacity by ordered dither, 50% of particles, no white first frame, the small spark, every second area tile and no decals [S12; I]. "Minimal" drops particles and trails as well. The party loses 30% of its particles. Drag the monsters slider to zero and the red telegraph rings stay, because a tier may cut cosmetic layers only and a hostile telegraph is gameplay [I, note 07; V, S106]. Tick "Colour by tier" to see own in green, party in blue, others in grey and hostile in red.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG budget-->
+<figure class="fig" data-demo="budget" id="fig-budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A cap of 96 effects, with priority eviction and a same-tile merge</h4><span class="illu">Cast mix, residue life and hit spread illustrative</span></div>
+  <div class="stage"><canvas width="240" height="120" aria-label="A crowd of mages throws bolts at one large monster; impacts pile up on the same few tiles and leave dark scorch marks, and red warning rings appear under players"></canvas><div class="hud" data-hud></div></div>
+  <div class="m3-strip"><canvas width="288" height="12" aria-label="A strip of 96 slots; each lit slot shows the tier colour of the effect that holds it on top and the kind of effect below"></canvas></div>
+  <div class="m3-keys"><span><i style="background:#60f080"></i>own</span><span><i style="background:#ff4040"></i>hostile</span><span><i style="background:#50a0ff"></i>party</span><span><i style="background:#b4b4b4"></i>others</span><span>Lower row: <i style="background:#f2eeff;margin-left:4px"></i>missile<i style="background:#ffd040;margin-left:8px"></i>spark<i style="background:#f07818;margin-left:8px"></i>area tile<i style="background:#7a6a5a;margin-left:8px"></i>residue<i style="background:#ff4040;margin-left:8px"></i>telegraph</span></div>
+  <div class="ctl">
+    <label class="rng">Casts <input type="range" data-k="rate" min="5" max="200" step="5" value="40"><output data-o="rate"></output></label>
+    <label><input type="checkbox" data-k="cap" checked> Cap of 96</label>
+    <label><input type="checkbox" data-k="merge" checked> Same-tile merge</label>
+    <button type="button" class="btn ghost" data-b="reset">Reset counters</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The strip shows the 96 slots of the Sandbox's effect array [S12; I]. When a spawn finds them full, the client scans once for the least important effect that is closest to finishing. Priority runs own, hostile, party, others, residue goes before missiles, and a hostile telegraph is never evicted. If nothing ranks lower than the newcomer, the newcomer is refused. Untick the merge and push the slider up. Grey residue floods the strip, then eviction starts and the green and red slots stay put. With the merge on, a second spark of the same kind on a tile within 150 ms is dropped and its scorch refreshes the one already there. In a 30-player fight on one boss most impacts land on the same one to four tiles, so the merge removes most of the load [I, note 07]. Here 85% of bolts aim at four tiles. Tibia servers send every effect to every spectator with no rate limit, merge or priority, so the client must carry the budget [V, S23, S21]. A cap must never change who got hit [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG screenfx-->
+<figure class="fig" data-demo="screenfx" id="fig-screenfx">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Screen feedback for what happens to you: edge tint, slow pulse, one flash</h4><span class="illu">Scene illustrative, 30% pulse threshold from the Sandbox</span></div>
+  <div class="stage mid"><canvas width="160" height="90" aria-label="A small game view with a blue mage, a healer and a large monster; when the monster's bolt lands the screen edge tints red for a third of a second, at low health the edge pulses slowly, and the mage's own meteor storm gives one pale full-screen flash"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Health <input type="range" data-k="hp" min="0" max="100" step="1" value="70"><output data-o="hp"></output></label>
+    <label class="rng">Hit size <input type="range" data-k="dmg" min="5" max="60" step="5" value="20"><output data-o="dmg"></output></label>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="hit">Take a hit</button>
+    <button type="button" class="btn" data-b="storm">Cast meteor storm, one flash</button>
+    <label><input type="checkbox" data-k="auto" checked> Monster attacks every 4 s</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Luanti tints the screen red with an alpha of <code>95 + 64 x (damage / max HP)</code>, capped at 127 of 255, and lets it decay at 384 units per second, so the tint is gone in 0.25 to 0.33 s [V, S82]. The readout runs that rule for the hit size you pick. The demo draws it as a dithered edge tint, as the Sandbox does, at 50% for 0.3 s [S12]. Drag health under 30% and the edge pulses at 0.5 Hz. Veloren pulses a frame at 0.23 to 0.53 Hz under 10% health [V, S84]. The meteor storm gives one pale full-screen flash, and only for the player's own cast. Shipped damage flashes are weaker and shorter than most people guess [I, note 13]. Screen feedback from 30 casters would be a strobe, so the rule is "only what happens to me" [I, note 07]. Combat juice owns hitstop, shake and damage numbers [S11].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flashlimit-->
+<figure class="fig" data-demo="flashlimit" id="fig-flashlimit">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The flash limiter holds bright frames to three in any second</h4><span class="illu">Scene illustrative, limiter on by default</span></div>
+  <div class="stage"><canvas width="320" height="180" aria-label="Spell impacts land around a monster at the chosen rate; with the limiter on only three per second show their bright frame and the rest start on their second frame; a dashed 40 by 40 box in the corner marks the 1,600 pixel exemption"></canvas><div class="hud" data-hud></div></div>
+  <div class="m3-strip"><canvas width="320" height="14" aria-label="The last two seconds of flash requests as ticks: tall yellow when the bright frame was shown, short grey when it was dropped, tall blue when the flash was small enough to be exempt, orange when it became a border"></canvas></div>
+  <div class="m3-keys"><span><i style="background:#ffd040"></i>bright frame shown</span><span><i style="background:#5a5470"></i>dropped, starts on frame 2</span><span><i style="background:#50b0ec"></i>under 1,600 px, exempt</span><span><i style="background:#f07818"></i>border instead</span><span>The strip is the last 2 s</span></div>
+  <div class="ctl">
+    <label class="rng">Flash rate asked <input type="range" data-k="hz" min="0.5" max="7.5" step="0.5" value="2"><output data-o="hz"></output></label>
+    <label class="rng">Flash area <input type="range" data-k="area" min="400" max="14400" step="400" value="6400"><output data-o="area"></output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="rf"> Reduce flashing</label>
+    <button type="button" class="btn ghost m3-warn" data-b="unlim">Warning, rapid flashing. Run 3 s without the limiter</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>WCAG 2.3.1 says nothing may flash more than three times in any one second, unless the flash is below the size and luminance thresholds [V, S118]. The limiter keeps a ring buffer of the bright frames of the last 1,000 ms. At three, the next effect starts on its second frame, so the hit still reads [I, note 07; S12]. Raise the rate toward 7.5 per second, the rate the report gives for the Ether spell in Zelda 3, and watch the grey ticks. The dashed box is 1,600 px, the 320x180 share of the 21,824 px that WCAG technique G176 passes at 1024x768 [V, S119; I, lead]. Drag the area under it and every flash turns blue and exempt. "Reduce flashing" swaps each bright frame for a 3 px border, the option God of War Ragnarök ships by that name [V, S122]. Thirty impacts 100 ms apart on neighbouring tiles is ten flashes per second, so the limiter must count concurrent area [I, note 07]. The warning button runs three seconds unlimited and then turns the limiter back on. It stays off if your system asks for reduced motion.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG drawpaths-->
+<figure class="fig" data-demo="drawpaths" id="fig-drawpaths">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same sparks through one draw call each and through one pixel buffer</h4><span class="illu">Two bars are live on this device, the rest are the report's</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="160" height="90" aria-label="Hundreds of small spell sparks of six elements animating over flagstones, each drawn with its own drawImage call"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>One drawImage per effect</b> from a pre-drawn atlas.</p></div>
+    <div><div class="stage"><canvas width="160" height="90" aria-label="The same sparks at the same places, written into one pixel buffer and put on the canvas in one call"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>One pixel buffer</b>, ramp blits and one putImageData.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Sparks <input type="range" data-k="n" min="100" max="4000" step="100" value="500"><output data-o="n"></output></label>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 330" role="img" aria-label="Log-scale bars of milliseconds per frame: the two live draw paths on this device, then the report's measured CPU and GPU rows, with the 2 ms effect budget and the 16.7 ms frame marked"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both canvases show the same sparks at the same frame of a 75 ms flipbook. The left one issues a <code>drawImage</code> per spark and the right one writes ramp colours into a buffer and uploads it once. The first two bars are timed on your device. The purple bars are the report's CPU rows and the gold bars its GPU rows, measured on an Apple M4 Pro [V, S13]. One instanced draw of 32,000 particles costs 0.26 ms there. Godot's lesson is the same count. In the Compatibility renderer "meshes can't be batched, so always create a new batch" covers mesh, MultiMesh and particles commands [V, S130], so every particle node is a draw. GPUParticles2D runs on transform feedback there, and trails, sub-emitters and manual emission are not supported [V, S127, S128]. One default GPUParticles2D "needs around 2 seconds to load" on web [V, self-reported, S129]. Spell bodies should be pooled flipbook sprites on one atlas, with loose sparks in one MultiMesh (§7).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG glow-->
+<figure class="fig" data-demo="glow" id="fig-glow">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Glow three ways: additive, palette ramp and a low-res buffer</h4><span class="illu">Light sizes and paths illustrative</span></div>
+  <div class="m3-tri">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Coloured spell lights drift over dark flagstones around a mage, each with a soft additive halo that blends smoothly and turns pale where two overlap"></canvas></div><p><b>Additive halos</b><span data-m></span></p></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="The same lights with halos made of hard ramp steps and dither, no transparency, and a brighter step where two overlap"></canvas></div><p><b>Palette ramp</b><span data-m></span></p></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="The same lights with a blocky dithered glow taken from a quarter-size blurred buffer"></canvas></div><p><b>Low-res buffer</b><span data-m></span></p></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="crowd"> Crowd, 10 lights</label>
+    <label><input type="checkbox" data-k="sand"> Bright sand ground</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left, a bright sprite is added on top. Godot's docs say additive sprites "are much faster to render" than lights [V, S133]. It is soft, it makes many in-between colours, and it clips to white on snow and sand [I, note 06]. Tick the sand ground to see the halos vanish. Middle, the frame stores ramp steps and a 6-entry table colours them, and where two effects overlap the step climbs by one, a palette form of additive [I, note 12]. It adds no colours outside the ramps and it still reads on sand, because the ramp carries its own dark edge. Right, emitters are max-splatted into a quarter-size buffer, blurred with a 3x3 block sum, and each screen pixel picks a glow level through a Bayer threshold [V, S13; S3]. The report would ship the ramp as the default and keep the buffer as an option for dusk and night. A <code>PointLight2D</code> per spell fails, because one item receives 15 lights at most [V, S131].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG particles-->
+<figure class="fig" data-demo="particles" id="fig-particles">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Reeves emission into a struct-of-arrays pool, against objects that allocate</h4><span class="illu">Emitter shape, speeds and lifetimes illustrative</span></div>
+  <div class="stage"><canvas width="192" height="108" aria-label="A mage holds a staff that throws a fountain of small coloured particles up and outward; they arc, fall and fade down a colour ramp"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Mean per frame <input type="range" data-k="mean" min="0" max="200" step="1" value="24"><output data-o="mean"></output></label>
+    <label class="rng">Variance <input type="range" data-k="var" min="0" max="100" step="1" value="12"><output data-o="var"></output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="tier" role="group" aria-label="Owner tier"><button type="button" class="on" data-v="own">Own, 100%</button><button type="button" data-v="party">Party, 70%</button><button type="button" data-v="others">Others, 50%</button></div>
+    <div class="seg" data-seg="pool" role="group" aria-label="Pool drawn"><button type="button" class="on" data-v="soa">Draw struct of arrays</button><button type="button" data-v="obj">Draw objects</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Reeves' 1983 particle system runs five steps per frame: generate, assign attributes, kill, move, render. The count born each frame is <code>NParts = MeanParts + Rand() x VarParts</code> [V, S91]. The two sliders are those two terms, and the owner tier scales the result, as the Sandbox does for party and others [S12]. Both pools run every frame with the same births. One keeps six typed arrays and removes a dead particle by copying the last one into its slot. The other keeps objects with fresh position and velocity vectors each step and drops the dead with <code>filter()</code>. The readout times both updates on your device. Push the mean up and the gap grows, and garbage collection adds spikes that the average hides. The cheapest form stores nothing at all, a seeded burst whose positions are a closed-form function of time [U, S92; I, note 09], shown in the stateless explosion figure.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG feedback-->
+<figure class="fig" data-demo="feedback" id="fig-feedback">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Three demoscene buffers that work as spells</h4><span class="illu">Buffer sizes and the 20 steps per second are our picks</span></div>
+  <div class="m3-tri">
+    <div><div class="stage"><canvas width="64" height="48" aria-label="Two small ice missiles loop around the canvas and leave fading blue trails that drift upward"></canvas></div><p><b>Feedback buffer</b><span data-m></span></p></div>
+    <div><div class="stage"><canvas width="64" height="48" aria-label="A mage stands inside a flickering aura of pixel fire that rises from the feet"></canvas></div><p><b>DOOM-fire aura</b><span data-m></span></p></div>
+    <div><div class="stage"><canvas width="64" height="48" aria-label="An oval arcane portal on the floor whose pink and violet bands spiral without any pixel moving"></canvas></div><p><b>Palette cycling</b><span data-m></span></p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Decay per step <input type="range" data-k="dec" min="1" max="3" step="1" value="1"><output data-o="dec"></output></label>
+    <label><input type="checkbox" data-k="up" checked> Shift up 1 px per step</label>
+    <label><input type="checkbox" data-k="rd"> Random decay</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Fire source heat <input type="range" data-k="heat" min="3" max="10" step="1" value="7"><output data-o="heat"></output></label>
+    <label class="rng">Palette steps <input type="range" data-k="sp" min="2" max="16" step="1" value="8"><output data-o="sp"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left, a small indexed buffer. Each step subtracts a decay from every cell and shifts the frame, then the missiles stamp the top ramp step where they are. The trail costs nothing per missile [I, note 09]. Tick "Random decay" and the decay becomes <code>rand &amp; 1</code>, which is the DOOM fire with a different source. Middle, the PlayStation DOOM fire itself, <code>firePixels[to] = firePixels[from] - (rand &amp; 1)</code> with a sideways jitter [V, S1], in a 16x24 buffer whose source row is shaped like a character's feet. The Fire study covers the algorithm [S7]. Right, Canvas Cycle's trick. The index image never changes and only 8 palette slots rotate [V, S95]. The buffer is screen-locked, so the last frame must shift when the camera scrolls, and the report did not measure that [I, note 12]. Thirty 64x64 buffers would be two full screens, so share one buffer per spell type [I, note 09]. The Sandbox does not build the fire aura [S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sigil-->
+<figure class="fig" data-demo="sigil" id="fig-sigil">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A sigil from a seed, drawn in by angle and dissolved two ways</h4><span class="illu">Layout rules, timings and the polygon mapping are our picks</span></div>
+  <div class="stage mid"><canvas width="160" height="96" aria-label="Left, a round magic circle on a dark panel made of two rings, small glyphs and a star polygon, drawing itself clockwise with a white tip; right, the same circle squashed flat on flagstones under a mage; after a hold both dissolve by a dither pattern or by scattered single pixels"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Points, n <input type="range" data-k="n" min="3" max="8" step="1" value="5"><output data-o="n"></output></label>
+    <label class="rng">Skip, k <input type="range" data-k="k" min="1" max="3" step="1" value="2"><output data-o="k"></output></label>
+    <button type="button" class="btn" data-b="seed">New seed</button>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="dis" role="group" aria-label="Dissolve"><button type="button" class="on" data-v="bayer">Bayer dissolve</button><button type="button" data-v="fizz">Fizzlefade</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The circle is two midpoint circles, a star polygon {n/k}, an inner ring or polygon and 6 to 12 glyph stamps, all picked by one seed and drawn once into an atlas [I, note 09]. The left half is that atlas copy. The right half is the same recipe with a 2 to 1 squash for the floor. Each pixel stores an angle, and it shows when <code>((ANG - start) &amp; 255) &lt; progress * 256</code>, so the circle draws itself and its white tip shows cast progress with no extra UI. The Bayer dissolve needs no state. Fizzlefade is Wolfenstein 3D's 17-bit LFSR with taps <code>0x00012000</code>, which visits every pixel of 320x200 exactly once [V, S97]. This canvas is smaller, so most steps land outside it. The side counts suggest an element, 3 for fire, 4 for earth, 5 for arcane, 6 for ice and 8 for holy, and that mapping is our suggestion, not a cited convention [I, note 09]. The Sandbox uses ordered dither for opacity and does not build fizzlefade [S12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Every row of §6a on one log scale, against the 16.7 ms frame</h4><span class="illu">Desktop numbers, no phone measured</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="v" role="group" aria-label="Table"><button type="button" class="on" data-v="scene">Whole 30-caster scene</button><button type="button" data-v="cpu">CPU work in JS</button><button type="button" data-v="gpu">GPU passes</button></div>
+  </div>
+  <div class="ctl" data-for="scene">
+    <div class="seg" data-seg="load" role="group" aria-label="Load"><button type="button" class="on" data-v="0">1x load</button><button type="button" data-v="1">4x</button><button type="button" data-v="2">16x</button></div>
+  </div>
+  <div class="ctl" data-for="gpu" hidden>
+    <div class="seg" data-seg="res" role="group" aria-label="Resolution"><button type="button" class="on" data-v="2">320x180, M4 wall</button><button type="button" data-v="3">1280x720, M4 wall</button></div>
+  </div>
+  <svg class="chart costs-chart" viewBox="0 0 600 300" role="img" aria-label="Log-scale bars of the measured costs in section 6a, with the 2 ms effect budget and the 16.7 ms frame marked"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a measured row of §6a, on an Apple M4 Pro with Chromium 153, at 320x180 unless stated, as median ms per frame [V, S13]. The darker bar under a row is the same test under the DevTools 6x CPU throttle. That throttle is a low-end proxy, not a phone, and no phone was measured. GPU numbers are wall-clock times on ANGLE Metal, and every draw blends, so Apple's hidden-surface removal cannot cull it. The dashed lines are the 2 ms effect budget carried over from the fog and grass studies [S9, S10] and the 16.7 ms frame. The hard case fits. The whole 1x scene costs 1.5 ms on the proxy as a pixel buffer and 0.090 ms as one WebGL2 batch. The rows that break the frame are the ones that issue a Canvas2D call per item, and software GL. Godot itself, meaning per-node cost, <code>CPUParticles2D</code>, <code>GPUParticles2D</code>, MultiMesh uploads and GDScript, was not measured [I, note 12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wire-->
+<figure class="fig" data-demo="wire" id="fig-wire">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bytes on the wire for one viewer of a 30-caster fight</h4><span class="illu">Area, cast and proposal sizes are illustrative</span></div>
+  <div class="stage"><canvas width="240" height="132" aria-label="A ring of mages casts at a large monster in the middle; under the scene a dark lane fills with coloured pixels that scroll left, one pixel per 8 bytes sent to this viewer: a thin scatter for bolts or for one area event, a dense orange band when an area is sent one effect per tile"></canvas><div class="hud" data-hud></div></div>
+  <div class="m3-keys"><span><i style="background:#50b0ec"></i>missile, 11 bytes</span><span><i style="background:#ffd040"></i>effect, 9 bytes</span><span><i style="background:#f07818"></i>one effect per tile, 9 bytes each</span><span><i style="background:#78cc28"></i>one area event, 11 bytes</span><span>Lane: 1 px is 8 bytes, time runs left</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Spell"><button type="button" class="on" data-v="bolt">Targeted bolt</button><button type="button" data-v="a37">37-tile area</button><button type="button" data-v="a73">73-tile area</button></div>
+    <div class="seg" data-seg="send" role="group" aria-label="How an area is sent"><button type="button" class="on" data-v="tile">One effect per tile</button><button type="button" data-v="event">One area event</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Casters <input type="range" data-k="n" min="1" max="60" step="1" value="30"><output data-o="n"></output></label>
+    <label class="rng">Casts each <input type="range" data-k="r" min="0.2" max="3" step="0.1" value="1"><output data-o="r"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>In the current Tibia protocol an effect is 9 bytes and a missile 11 [V, S21, S20]. Thirty players casting one targeted spell per second is 30 x (11 + 9) = 600 bytes per second per viewer, and 18 KB per second of server output for 30 viewers [I, notes 01, 07]. Switch to the 37-tile area. Sent tile by tile it is 333 bytes per cast, and the lane fills. One area event of about 11 bytes replaces the 333, and the client expands the mask into the same tiles [I; S12]. The 73-tile mask is Tibia's real UE, 511 to 730 bytes per spectator in the protocols the report read, because the protocol has no area message [V, S18, S26; I]. This figure uses 9 bytes per tile, which gives 657. The picture on screen is the same either way. Here the client keeps one effect per tile, so thirty overlapping areas draw as one wave. Byte counts are for one event to one viewer, opcode included, transport framing excluded.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sortable scorecard with a radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar, and the oldest pick drops off. Ratings are author judgement, in the order Simplicity · Speed · Pixel taste · Mood · Readability. Sort by Speed and the column barely moves, because 33 of 36 rows score a 5 [V, S13]. The three 4s grow without a cap: tiles for area masks (A3), bytes for fat packets (A6) and pixels for shared buffers (H2). Timing (E1) wins at 25, and hit sparks (C1), ramps (E2) and element language (E3) follow at 24. All four are art rules that cost nothing at run time. The radar starts on E1 against two plumbing rows, budgets (F2) and draw paths (G1). They score low on mood and they decide whether the top rows survive a 30-player fight on a phone [I].</figcaption>
+</figure>
+<!--/FIG-->
