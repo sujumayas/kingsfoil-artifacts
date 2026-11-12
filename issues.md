@@ -203,7 +203,10 @@ How to use this file:
   changes: the filter applies all the time and Alt overrides it to show every label. Counted labels over 120
   rain items with Labels off and Alt held. Before: 108 for every filter. After: 108 for Show all, 91 for
   Hide junk, 10 for Only rare+. Card 7 describes both cases.
-- [ ] **37.** `P6` Loot window title is cut to 9 characters, "GOBLIN CH" (`:800`).
+- [x] **37.** `P6` Loot window title is cut to 9 characters, "GOBLIN CH" (`:800`).
+  Done: the name is drawn in full. When it is wider than the 38 px left of ALL, the title bar grows to the
+  left by the difference, 9 px for GOBLIN CHIEF. The slots, ALL and X stay where they were, so the click
+  targets did not move. Checked in a screenshot.
 - [ ] **38.** `P6` Preset button stays highlighted after changing party mode, pickup mode, tiers, magnet radius
   or filter (`:878` to `:883`).
 - [ ] **39.** `P6` Holding B spawns a boss drop on every key repeat (`:969`).

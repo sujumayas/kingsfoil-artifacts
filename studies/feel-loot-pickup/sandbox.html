@@ -803,7 +803,8 @@ function drawHUD(){
   for(const e of ENTS){if(e.sdead)continue;R(mx+Math.floor(e.x/8),my+Math.floor(e.y/8),1,1,e===PL?'#ffffff':e.team==='me'?HX('a3'):e.team==='foe'?HX('r3'):HX('s1'));}
   for(const ci of CL.items.values())if(ci.tier===4&&ci.landed&&!ci.pred){const x=mx+Math.floor(ci.x/8),y=my+Math.floor(ci.y/8),b=(FC>>3)&1;R(x,y-1,1,3,HX('t4'));R(x-1,y,3,1,HX('t4'));if(b){R(x,y-2,1,1,HX('o2'));R(x,y+2,1,1,HX('o2'));R(x-2,y,1,1,HX('o2'));R(x+2,y,1,1,HX('o2'));}}
   // loot window
-  if(CL.open){const o=CL.open,W0=254,Y0=46,rows=Math.max(1,Math.ceil(Math.max(o.items.length,4)/4)),h=13+rows*SLOT+2;box(W0,Y0,62,h);R(W0,Y0,62,1,HX('o1'));txt(F2,o.name.slice(0,9),W0+3,Y0+3,P.o2,0);txt(F2,'ALL',W0+44,Y0+3,P.g4,0);txt(F2,'X',W0+57,Y0+3,P.r3,0);
+  if(CL.open){const o=CL.open,W0=254,Y0=46,rows=Math.max(1,Math.ceil(Math.max(o.items.length,4)/4)),h=13+rows*SLOT+2;// a name wider than the 38 px left of ALL grows the title bar to the left
+    const ext=Math.max(0,textW(F2,o.name)-38);if(ext)box(W0-ext,Y0,ext,11);box(W0,Y0,62,h);R(W0-ext,Y0,62+ext,1,HX('o1'));txt(F2,o.name,W0+3-ext,Y0+3,P.o2,0);txt(F2,'ALL',W0+44,Y0+3,P.g4,0);txt(F2,'X',W0+57,Y0+3,P.r3,0);
     for(let i=0;i<rows*4;i++){const [cx,cy]=slotXY(i);R(cx-6,cy-6,12,12,HX('ink'));R(cx-5,cy-5,10,10,HX('dk'));}
     o.items.forEach((s,i)=>{if(s.pred)return;let [cx,cy]=slotXY(i);if(s.hop>0&&now-s.hop<180){const k=(now-s.hop)/180;cy-=Math.round(TUNING.cosmetic.hopPx*4*k*(1-k));}if(s.shake>0&&now-s.shake<TUNING.cosmetic.shakeMs)cx+=((FC>>1)&1?1:-1)*TUNING.cosmetic.shakePx;const dim=!canLoot(PL.id,s,now);B(itemImg(artOf(s.def,s.n),s.tier,dim),cx-5,cy-5);if(s.n>1&&!ITEMS[s.def].gold||ITEMS[s.def].gold&&s.n>1)txt(F2,String(s.n>99?'99+':s.n),cx+5-textW(F2,String(s.n>99?'99+':s.n)),cy+1,P.wh,2,P.ink);if(s.pend&&!s.cos&&(FC>>3)&1)R(cx-1,cy-1,2,2,HX('wh'));});
     if(now-o.t<TUNING.corpseOpen)0;}
