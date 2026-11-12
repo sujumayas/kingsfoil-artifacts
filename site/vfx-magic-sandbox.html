@@ -488,7 +488,7 @@ function drawBeam(f){const c=f.own,rp=RAMP[5],x0=hand(c),y0=c.y-11,x1=c.bx,y1=c.
   const ph=rm?0:simT*16,pi=(ph*2)|0;
   for(let s=0;s<=len;s++){const px=x0+ux*s,py=y0+uy*s;fp(Math.round(px+nx*2),Math.round(py+ny*2),rp[1]);fp(Math.round(px-nx*2),Math.round(py-ny*2),rp[1]);fp(Math.round(px+nx),Math.round(py+ny),rp[3]);fp(Math.round(px-nx),Math.round(py-ny),rp[3]);}
   for(let s=0;s<=len;s++){const px=x0+ux*s,py=y0+uy*s,o=Math.sin(s*.42-ph)*3.4;fp(Math.round(px),Math.round(py),((s-pi)&15)<3?rp[4]:rp[5]);fp(Math.round(px+nx*o),Math.round(py+ny*o),rp[4]);fp(Math.round(px-nx*o),Math.round(py-ny*o),rp[2]);}
-  orb(Math.round(x1),Math.round(y1),2+((frame>>2)&1),rp);for(let k=0;k<4;k++){const a=ph*.3+k*1.5708;fp(Math.round(x0+Math.cos(a)*5),Math.round(y0+Math.sin(a)*3),rp[4]);}
+  orb(Math.round(x1),Math.round(y1),2+(((simT*15)|0)&1),rp);for(let k=0;k<4;k++){const a=ph*.3+k*1.5708;fp(Math.round(x0+Math.cos(a)*5),Math.round(y0+Math.sin(a)*3),rp[4]);}
   for(let s=0;s<len;s+=20)lightQ(x0+ux*s,y0+uy*s,2.4,5,.4,f.tier);lightQ(x1,y1,3.5,5,.8,f.tier);}
 
 // ---------- draw: layer 5 impacts and areas ----------
@@ -508,7 +508,7 @@ function drawTile(f){const rp=RAMP[f.el],pol=POL[f.tier],x=f.x,y=f.y+2,FALL=.22,
   if(f.t<st){const p=f.t/FALL,q=1-p,sx=(7+(f.seed%9))*f.a,sy=46*f.a,hx=Math.round(x+q*sx),hy=Math.round(y-q*sy),sr=(5-p*3)|0,l=Math.hypot(sx,sy),ux=sx/l,uy=-sy/l,tl_=5+(f.seed>>4)%5;
     for(let i=-sr;i<=sr;i++){dk(x+i,y,150);if(Math.abs(i)<sr-1){dk(x+i,y+1,170);dk(x+i,y-1,185);}}
     // tapering tail: 3 px wide next to the head, 1 px at the end
-    for(let k=tl_;k>=2;k--){const tx=Math.round(hx+ux*k),ty=Math.round(hy+uy*k),c=rp[k<4?4:k<7?3:2];if(k>tl_-2&&(k+frame)&1)continue;fp(tx,ty,c);if(k<5){fp(tx+1,ty,rp[3]);fp(tx-1,ty,rp[k<3?3:2]);}}
+    for(let k=tl_;k>=2;k--){const tx=Math.round(hx+ux*k),ty=Math.round(hy+uy*k),c=rp[k<4?4:k<7?3:2];if(k>tl_-2&&(k+((simT*60)|0))&1)continue;fp(tx,ty,c);if(k<5){fp(tx+1,ty,rp[3]);fp(tx-1,ty,rp[k<3?3:2]);}}
     orb(hx,hy,(f.seed&1)?2.2:1.7,rp);lightQ(hx,hy,2,f.el,.4,f.tier);}
   else{let fr=sparkFr((f.t-st)*1000);if((pol.red||pol.mini)&&fr<1)fr=1;blit((pol.mini||pol.red?SPKS:SPK)[f.el][fr],x,y-fr,rp);lightQ(x,y,3.5,f.el,1-fr*.2,f.tier);}}
 // ice: a 1-frame flash, 6 straight shards at fixed angles, then 3 shards stuck in the ground for 300 ms
@@ -540,7 +540,7 @@ function auraFront(e){const cx=e.x|0,fy=e.y|0,tv=view==='tiers';
       lightQ(cx,fy-8,2.5,1,h?.7:.2,e.shTier);}}
   cOp=POL[e.stTier].op;cTint=tv?TCOL[e.stTier]:0;
   if(e.froz>0){const rp=RAMP[1];line(cx-7,fy,cx-4,fy-7,rp[4]);line(cx-4,fy-7,cx-2,fy,rp[3]);line(cx+1,fy,cx+4,fy-9,rp[4]);line(cx+4,fy-9,cx+6,fy,rp[3]);line(cx-2,fy,cx,fy-5,rp[5]);line(cx,fy-5,cx+2,fy,rp[3]);fp(cx-4,fy-7,rp[5]);fp(cx+4,fy-9,rp[5]);for(let x=-7;x<=6;x++)fp(cx+x,fy+1,rp[1]);}
-  if(e.shock>0){const rp=RAMP[2],q=frame/3|0;for(let k=0;k<2;k++){let ax=cx-6,ay=fy-13+(hash(q+k,e.id)*10|0);for(let s=0;s<3;s++){const bx_=ax+4,by_=fy-14+(hash(q*5+s+k*9,e.id)*12|0);line(ax,ay,bx_,by_,(q+s)&1?rp[5]:rp[3]);ax=bx_;ay=by_;}}}
+  if(e.shock>0){const rp=RAMP[2],q=(simT*20)|0;for(let k=0;k<2;k++){let ax=cx-6,ay=fy-13+(hash(q+k,e.id)*10|0);for(let s=0;s<3;s++){const bx_=ax+4,by_=fy-14+(hash(q*5+s+k*9,e.id)*12|0);line(ax,ay,bx_,by_,(q+s)&1?rp[5]:rp[3]);ax=bx_;ay=by_;}}}
   if(e.healT>0){const p=1-e.healT/.9;cOp=POL[e.healTier].op;cTint=tv?TCOL[e.healTier]:0;ell(cx,fy-p*17,7,3,RAMP[4][p<.2?5:4],0,.5);}
   if(e.lvlT>0){const p=1-e.lvlT/1.4,rp=RAMP[4];cOp=8;cTint=0;for(let k=0;k<7;k+=2){const x=cx-10+k*3,hk=(12+hash(k,3)*20)*Math.min(1,p*3),y0=fy-(p>.5?(p-.5)*2*hk:0);for(let y=y0;y>fy-hk;y--)fp(x,y|0,rp[y<fy-hk+4?4:5]);}cOp=16;}
   cOp=16;cTint=0;
@@ -548,7 +548,7 @@ function auraFront(e){const cx=e.x|0,fy=e.y|0,tv=view==='tiers';
 function drawEnt(e){const cx=e.x|0,fy=e.y|0;let t0=now(),t;
   for(let j=-1;j<=1;j++)for(let i=-5;i<=5;i++)if(i*i/30+j*j/2.2<1){const q=(fy+j)*W+cx+i;if(cx+i>=0&&cx+i<W&&fy+j>=0&&fy+j<H)out[q]=mulc(out[q],165);}
   t=now();A.world+=t-t0;t0=t;if(aurasOn){auraBack(e);t=now();A.aura+=t-t0;t0=t;}
-  let s,ox=0,oy=0;if(e.kind===2){s=e.spr;if(e.broke>0)ox=((frame>>1)&1)*2-1;}else if(e.kind===3){s=e.spr;oy=-2-Math.round(Math.sin(simT*4+e.id));}else s=e.spr[e.castT>0||e.beamOn?2:e.mv?((e.wf*7)|0)&1:0];
+  let s,ox=0,oy=0;if(e.kind===2){s=e.spr;if(e.broke>0)ox=(((simT*30)|0)&1)*2-1;}else if(e.kind===3){s=e.spr;oy=-2-Math.round(Math.sin(simT*4+e.id));}else s=e.spr[e.castT>0||e.beamOn?2:e.mv?((e.wf*7)|0)&1:0];
   const wk=e.kind===4&&mgr&&others!=='full';let tc=0,ta=0;if(e.flash>0){tc=WHITE;ta=wk?70:225;}else if(e.froz>0)s=tinted(s,0,wk);else if(e.shock>0&&(((simT*6)|0)&1))s=tinted(s,1,wk);else if(e.burn>0)s=tinted(s,2,wk);else if(e.pois>0)s=tinted(s,3,wk);
   sprite(s,cx+ox,fy+oy,e.face<0,tc,ta);t=now();A.world+=t-t0;t0=t;
   if(aurasOn){auraFront(e);A.aura+=now()-t0;}}
@@ -635,7 +635,7 @@ function render(dt){let t0=now(),t;const tv=view==='tiers';
   ORD.sort((a,b)=>(a.kind===undefined?a[1]:a.y)-(b.kind===undefined?b[1]:b.y));
   t=now();A.world+=t-t0;
   for(const o of ORD){if(o.kind!==undefined){drawEnt(o);continue;}t0=now();
-    if(o[1]===48||o[1]===152)sprite(SP_PIL,o[0],o[1],false,0,0);else{sprite(SP_BRAZ,o[0],o[1],false,0,0);tongues(o[0]-3,o[1]-8,3,3,7,RAMP[0],o[0],ep,10);lightQ(o[0],o[1]-8,5,0,.5+hash(frame>>3,o[0])*.12,0);}
+    if(o[1]===48||o[1]===152)sprite(SP_PIL,o[0],o[1],false,0,0);else{sprite(SP_BRAZ,o[0],o[1],false,0,0);tongues(o[0]-3,o[1]-8,3,3,7,RAMP[0],o[0],ep,10);lightQ(o[0],o[1]-8,5,0,.5+hash((simT*7.5)|0,o[0])*.12,0);}
     A.world+=now()-t0;}
   t0=now();
   // layer 4: missiles, beams, chains

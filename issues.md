@@ -324,9 +324,12 @@ How to use this file:
   Done: one trail point per 1/60 s of sim time, interpolated along the frame's move, plus a closing segment
   from the newest point to the head. Ice shard trail measured mid-flight: 49.4 px at 60 Hz before, 25.4 at
   120 Hz, 98.4 at 30 Hz and 12.4 in Slow motion. Now 49.4 px in all four.
-- [ ] **62.** `P6` Animations driven by the `frame` counter ignore slow motion and run 2x at 120 Hz. Shocked
+- [x] **62.** `P6` Animations driven by the `frame` counter ignore slow motion and run 2x at 120 Hz. Shocked
   arcs (`:540`), beam end orb (`:488`), meteor tail (`:508`), dummy shake (`:548`), brazier light (`:634`).
   (suspected)
+  Done: confirmed and fixed. All five read simT at their 60 Hz rate (arcs 20/s, beam orb 15/s, meteor tail
+  60/s, dummy shake 30/s, brazier 7.5/s). Dummy shake flips per second of sim time: 30 at 60 Hz and 60 at
+  120 Hz before, 30 and 29 after. In Slow motion it flipped 30 times per real second, now 7.
 - [ ] **63.** `P3` Recasting on a field extends its duration but keeps its age, so it stays shrunk (`:380`).
   Fix: `f.t=0;f.dur=dur`.
 - [ ] **64.** `P4` Server events view draws area boxes one tile too big, 8x8 for the 7x7 meteor (`:370`, `:377`,
