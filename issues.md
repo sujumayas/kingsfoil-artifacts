@@ -174,7 +174,11 @@ How to use this file:
   inspect the frame. Checked four exits with latency set to 200 ms beforehand. Each came back to 200 ms, 80%
   and labels off, all 3 allies moved, and no staged item was left. The other showcase settings (Asterion
   preset, PvE, 3 allies, tick 100) stay, as after any preset.
-- [ ] **31.** `P3` A pickup in flight when you die stays pending forever (`:488` returns before the reply).
+- [x] **31.** `P3` A pickup in flight when you die stays pending forever (`:488` returns before the reply).
+  Done: a dead player's request is answered, with a reject for a single take. The death message clears each
+  item's prediction mark, so the late rollback cannot take the pending count below 0. Died one frame after a
+  grab in three cases. Cosmetic: the dots clear. Full prediction: the item comes back. Loot all with 9
+  predicted items: all 9 come back. All three were stuck before.
 - [ ] **32.** `P3` Reduce motion or Arcs off makes fresh drops reject as "early", then hop and shake. The client
   `landT` (`:594`, `:657`) disagrees with the server `pickAt` (`:473`). Fix: gate on `ci.pickAt`.
 - [ ] **33.** `P5` Ownership view never shows the yellow public countdown. `TUNING.owner.groundPublicS` does not

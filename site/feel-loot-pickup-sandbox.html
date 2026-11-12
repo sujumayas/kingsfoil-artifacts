@@ -485,8 +485,8 @@ function svTakeOne(p,it,T,res,magnet){
     if(T<(it.pickAt||0)-30){res.rej.push({id:it.id,why:'early'});NET.rej.early++;return false;}}
   if(!bagAdd(p,it)){res.rej.push({id:it.id,why:'full'});NET.rej.full++;res.full=true;return false;}
   res.taken.push({id:it.id,def:it.def,tier:it.tier,n:it.n,x:it.x,y:it.y,cont:it.cont});NET.acc++;svRemove(it,T,'taken',p.id);return true;}
-function svAction(p,act,T){const res={taken:[],rej:[],full:false,seq:act.seq,kind:act.k};if(p.sdead)return res;
-  if(act.k==='take')svTakeOne(p,SV.items.get(act.id)||{id:act.id},T,res,act.magnet);
+function svAction(p,act,T){const res={taken:[],rej:[],full:false,seq:act.seq,kind:act.k};if(p.sdead){if(act.k==='take')res.rej.push({id:act.id,why:'dead'});}// a dead player still gets an answer, so the client can settle what it sent
+  else if(act.k==='take')svTakeOne(p,SV.items.get(act.id)||{id:act.id},T,res,act.magnet);
   else if(act.k==='open'){const c=SV.corpses.get(act.cid);if(c&&cheb(p.x,p.y,c.x,c.y)<=TUNING.reach){c.viewers.add(p.id);res.open={cid:c.id,name:c.name,items:c.items.map(id=>SV.items.get(id)).filter(it=>it&&(!it.personal||it.owner===p.id)).map(snapOf),player:c.player};netLog(TUNING.bytes.open+res.open.items.length*4);}else res.rej.push({id:act.cid,why:'far'});}
   else{// quick loot, loot all
     let corpses=[...SV.corpses.values()].filter(c=>cheb(p.x,p.y,c.x,c.y)<=1&&c.items.length);let max=act.k==='quick'?999:TUNING.lootAll.maxItems;
@@ -515,7 +515,7 @@ function svPlayerDie(T,killer){if(PL.sdead)return;PL.sdead=true;const D=TUNING.d
   if(drops.length)placeItems(corpse,{owner:null,items:drops},T,HYBRID?DROPDELAY:0,false,{list:[]});
   for(const id of corpse.items){const it=SV.items.get(id);if(it){it.origOwner=PL.id;it.tiers=corpse.tiers;it.ownUntil=corpse.ownUntil;}}
   const cs={id:corpse.id,x:corpse.x,y:corpse.y,img:corpse.img,name:corpse.name,isBag:false,player:true,stage:0,rotAt:corpse.rotAt,hasPack:corpse.items.length>0,prio,prioUntil:corpse.ownUntil};
-  const bs={slots:PL.bag.list.length,gold:PL.bag.gold};downMe(T,0,()=>{CL.sbag=bs;CL.pendSlots=CL.pendGold=0;CL.open=null;clDie(PL,cs);chat('YOU DIED'+(killer?' (KILLED BY '+killer.name+')':'')+'. '+why,P.r3);toast('YOU DIED',P.r3);});
+  const bs={slots:PL.bag.list.length,gold:PL.bag.gold};downMe(T,0,()=>{CL.sbag=bs;for(const ci of CL.items.values())ci.predAdded=0;if(CL.open)for(const s of CL.open.items)s.predAdded=0;CL.pendSlots=CL.pendGold=0;CL.open=null;clDie(PL,cs);chat('YOU DIED'+(killer?' (KILLED BY '+killer.name+')':'')+'. '+why,P.r3);toast('YOU DIED',P.r3);});
   later(T+D.respawnMs,()=>{PL.x=24;PL.y=72;PL.hp=PL.mhp;PL.sdead=false;downMe(now,0,()=>{PL.dead=false;PL.dieT=-1;PL.respawned=now;});});}
 // ---------- server: tick ----------
 function svTick(T){SV.ticks++;
