@@ -124,17 +124,20 @@ function PB(w,h){const d=new Uint32Array(w*h);return {w,h,d,
 const F1C="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~áéíóúüñ¡¿",F1D="ciiuiii00siisiis00cigggic00siiiiis00uggsggu00uggsggg00cigmiie00iiiuiii00s88888s0062222ic00iikokii00ggggggu00hrllhhh00iqqmmii00ciiiiic00siisggg00ciiiika00siiskii00cigc2ic00v44444400iiiiiic00hhhaa4400hhhllrh00hha4ahh00hha444400u248ggu0000c2eie00ggsiiis0000cgggc0022eiiie0000ciuge00c8s88880000eiiie2cggsiiii00g0ggggg0080888888gggikoki00gggggg80000ullll0000kqiii0000ciiic0000siiisgg00eiiie2200koggg0000egc2s0008s88840000iiiie0000hhaa40000hhlla0000iicii0000iiiie2c00u48gu00cimiqic008o8888s00ci248gu00ci2c2ic004ckku4400ugs22ic00cggsiic00u24488800ciiciic00ciie22c00ggggg0g00kk00000000avava0004fke5u400pp248jj008kk8mic00gg00000008ggggg800g88888g000k8k00000008s800000000008g00000s0000000000g0044888gg00000g00g000008008g0048g84000000s0s0000g848g000ci2480800ehnlnge00ogggggo00gg8884400o88888o008k00000000000000u0g80000000c88g88c00ggggggg00o88488o00000ak000048c2eie0048ciuge008gggggg0048ciiic0048iiiie00i0iiiie00aksiiii00g0ggggg004048gic00";
 const F2C="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.,'\"-+:;()/*=#%&_¡¿<>",F2D="8kskk0okoko0cgggc0okkko0sgogs0sgogg0cgkkc0kkskk0s888s0444k80kkokk0ggggs0hrlhh0hpljh08kkk80okogg08kkoc0okokk0cg84o0s88880kkkks0kkk880hhlrh0kk8kk0kk8880s48gs0skkks08o88s0o48gs0o484o0kks440sgo4o0cgsks0s48880sksks0sks4o0ggg0g0o480800000g00000gggg0000kk000000o00008s8000g0g000g0gg08ggg80g888g0448gg0k8k0000s0s00ksksk0k48gk08k8kc00000s0g0ggg0808gc048g840g848g0";
 const FONTS={};
-function mkFont(id,chars,data,rows,lh,sp){const g={};const N=[...chars].length;let i=0;
+// accented capitals are composed: the base letter plus a mark in the 2 rows above the cap line (TOP).
+// marks per font are [acute, tilde, diaeresis], each 2 rows of base-32 bits
+const STRIP={'Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U','Ñ':'N'},TOP=2;
+function mkFont(id,chars,data,rows,lh,sp,marks){const g={};let i=0;
   for(const ch of chars){let w=0;const rr=[];for(let r=0;r<rows;r++){const v=parseInt(data[i*rows+r],32);rr.push(v);for(let c=0;c<5;c++)if(v&(16>>c))w=Math.max(w,c+1);}g[ch]={i,w,rr};i++;}
-  return FONTS[id]={id,g,rows,lh,sp,N,cache:{}};}
-const F1=mkFont(1,F1C,F1D,9,10,3),F2=mkFont(2,F2C,F2D,6,7,2);
-const STRIP={'Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U','Ñ':'N'};
-function glyphOf(F,ch){let G=F.g[ch];if(G)return G;if(F===F2){const u=ch.toUpperCase();G=F.g[STRIP[u]||u];if(G)return G;}else if(STRIP[ch]&&F.g[STRIP[ch]])return F.g[STRIP[ch]];return F.g['?'];}
+  for(const ch in STRIP){const b=g[STRIP[ch]],top=[...marks[ch==='Ñ'?1:ch==='Ü'?2:0]].map(c=>parseInt(c,32));let w=b.w;for(const v of top)for(let c=0;c<5;c++)if(v&(16>>c))w=Math.max(w,c+1);g[ch]={i:i++,w,rr:b.rr,top};}
+  return FONTS[id]={id,g,rows,lh,sp,N:i,cache:{}};}
+const F1=mkFont(1,F1C,F1D,9,10,3,['48','ak','i0']),F2=mkFont(2,F2C,F2D,6,7,2,['40','e0','k0']);
+function glyphOf(F,ch){let G=F.g[ch];if(G)return G;if(F===F2){const u=ch.toUpperCase();G=F.g[u]||F.g[STRIP[u]];if(G)return G;}else if(STRIP[ch]&&F.g[STRIP[ch]])return F.g[STRIP[ch]];return F.g['?'];}
 const adv=(F,ch)=>ch===' '?F.sp:glyphOf(F,ch).w+1;
-function atlas(F,fg,eff,ec){const k=fg+eff+ec;let a=F.cache[k];if(a)return a;const ch=F.rows+2,pb=PB(F.N*7,ch),cf=C(fg),ce=C(ec);
+function atlas(F,fg,eff,ec){const k=fg+eff+ec;let a=F.cache[k];if(a)return a;const ch=F.rows+2+TOP,pb=PB(F.N*7,ch),cf=C(fg),ce=C(ec);
   for(let pass=0;pass<2;pass++)for(const c in F.g){const G=F.g[c],ox=G.i*7+1;
-    for(let r=0;r<F.rows;r++)for(let x=0;x<5;x++)if(G.rr[r]&(16>>x)){
-      if(pass===1)pb.s(ox+x,1+r,cf);else if(eff===1)pb.s(ox+x,2+r,ce);else if(eff===2){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)pb.s(ox+x+dx,1+r+dy,ce);}}}
+    for(let r=-TOP;r<F.rows;r++)for(let x=0;x<5;x++)if((r<0?G.top?G.top[r+TOP]:0:G.rr[r])&(16>>x)){const y=1+TOP+r;
+      if(pass===1)pb.s(ox+x,y,cf);else if(eff===1)pb.s(ox+x,y+1,ce);else if(eff===2){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)pb.s(ox+x+dx,y+dy,ce);}}}
   return F.cache[k]=pb.cv();}
 // ---------- per frame stats and cost rects ----------
 const ST={glyphs:0,blits:0,bub:0,hid:0};let VIEW='normal',LAYER=0;const COSTR=[];
@@ -147,7 +150,7 @@ function drawCh(F,ch,x,y,s,fg,eff,ec){if(ch===' ')return;ST.glyphs++;ST.blits++;
   if(REN==='fill'){ctx.font=(F===F1?9:7)*s+'px ui-monospace,Menlo,monospace';ctx.textBaseline='top';
     if(eff===2){ctx.strokeStyle='#'+ec;ctx.lineWidth=2;ctx.strokeText(ch,x,y);ST.blits++;}else if(eff===1){ctx.fillStyle='#'+ec;ctx.fillText(ch,x,y+s);ST.blits++;}
     ctx.fillStyle='#'+fg;ctx.fillText(ch,x,y);return;}
-  const G=glyphOf(F,ch);ctx.drawImage(atlas(F,fg,eff,ec),G.i*7,0,7,F.rows+2,x-s,y-s,7*s,(F.rows+2)*s);}
+  const G=glyphOf(F,ch);ctx.drawImage(atlas(F,fg,eff,ec),G.i*7,0,7,F.rows+2+TOP,x-s,y-(1+TOP)*s,7*s,(F.rows+2+TOP)*s);}
 // ---------- rich text: [c=key] [wave] [shake] [p=N] [spd=N] [e=expr] ----------
 const PUN_L=10,PUN_S=5; // punctuation pauses in glyph-times
 function parseRich(src){const out=[];let cc=null,fx=0,spd=1,k0=-1,ex=null,pend=0;

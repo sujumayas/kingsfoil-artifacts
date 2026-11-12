@@ -297,8 +297,12 @@ How to use this file:
   Done: esc() doubles every [ in typed text and parseRich reads [[ as a literal bracket. "[wave]hi[/wave]
   [c=key]job[/c] [shake]x" showed as "hi job x" with 3 animated glyphs and 3 keyword links. Now it shows as
   typed with none. The server still gets the raw text.
-- [ ] **58.** `P6` Spanish accents are missing in capitals and in all small-font text, "MISION", "MANANA"
+- [x] **58.** `P6` Spanish accents are missing in capitals and in all small-font text, "MISION", "MANANA"
   (`:124`, `:125`, `:131`).
+  Done: each font builds Á É Í Ó Ú Ü Ñ from the base letter and a mark drawn in 2 new rows above the cap
+  line, so capitals keep their full height. The atlas cell grows 2 px, from 7x11 to 7x13 in the main font.
+  All 7 fell back to the bare letter in both fonts before, none do now. With an outline, a mark can touch a
+  descender on the line above.
 - [ ] **59.** `P4` (taste) Canvas fillText comparison mode places vector glyphs at bitmap advances, so words
   split. `ctx.font` is set per glyph (`:147`), which inflates that mode's cost.
 
