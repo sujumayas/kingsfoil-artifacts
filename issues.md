@@ -433,8 +433,10 @@ How to use this file:
   Done: a pick during a turn is queued. The running turn finishes at 3x speed, then the queued one starts.
   Winter picked halfway through summer to autumn: 920 of 920 cells changed look in one frame before, 0
   after. Winter is complete 9.4 s after the click, 8 s before.
-- [ ] **85.** `P4` A firefly halo darkens lamp light where they overlap. `setL` keeps the higher level number,
+- [x] **85.** `P4` A firefly halo darkens lamp light where they overlap. `setL` keeps the higher level number,
   not the brighter mix (`:574`, `:681`).
+  Done: setL and ring() compare LMIX, so the brighter mix wins. A lit firefly at the lamp head at night: 33 of
+  81 lamp-lit pixels got darker before, 0 after.
 - [ ] **86.** `P3` Showcase forces the interaction map on without syncing its button (`:759`).
 - [ ] **87.** `P5` HUD total leaves out `windUpdate`, the x-ray overlay and `putImageData`. Card 11 says "near
   1 ms even with a 6x throttle". Measured default is 2.6 ms at 6x.

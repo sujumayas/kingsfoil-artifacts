@@ -572,7 +572,8 @@ function stepWalkers(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)i
 const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};
 let flatN=0,tuftsDrawn=0,settled=0,lifeDrawAcc=0,playerHidden=false,villHidden=false;
 const ip=(x,y,c)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=c;if(smooth)AW[i]=255;}};
-const setL=(x,y,l)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x,cur=(IDX[i]>>7)&7;if(l>cur)IDX[i]=(IDX[i]&127)|(l<<7);}};
+// light levels are not ordered by brightness (1 to 3 lamp, 4 and 5 firefly, 6 fire), so the brighter LMIX wins
+const setL=(x,y,l)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x,cur=(IDX[i]>>7)&7;if(LMIX[l]>LMIX[cur])IDX[i]=(IDX[i]&127)|(l<<7);}};
 // mask: the see-through overlay of a hidden walker. Every other pixel, and only over grass and wheat colours,
 // so trees, sheep and anything else standing in front keep covering the walker
 function blitS(S,x0,y0,flip,crop,mask){const w=S.w,h=S.h-(crop||0),p=S.p;for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+(flip?w-1-x:x)];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;const i=Y*W+X;if(mask){if((X+Y)&1)continue;const g=IDX[i]&127;if(g<G0||g>W4)continue;}IDX[i]=v-1;if(smooth)AW[i]=255;}}}
@@ -648,7 +649,7 @@ let litN=0;function drawFlyers(){litN=0;const dk=TP.l,shadowOK=dk<.6;
     if(TP.l>.2)ring(cx+4,cy+4,9,3);if(TP.l>.2)setL(cx+4,cy+4,6);}
   // scythe arcs
   for(const f of fx){const a0=Math.PI*(1.1-f.t*4);for(let a=0;a<8;a++){const an=a0+a*.18;ip(Math.round(f.x+Math.cos(an)*7),Math.round(f.y+Math.sin(an)*4),a<6?GL:S1);}}}
-function ring(cx,cy,r,mx){const R=Math.ceil(r);for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy*1.4);if(d>=r)continue;const i=y*W+x;const u=d/r+(BY[i]-128)/2048;let lv=mx-Math.floor(u*mx);if(lv>mx)lv=mx;if(lv<=0)continue;const cur=(IDX[i]>>7)&7;if(lv>cur)IDX[i]=(IDX[i]&127)|(lv<<7);CWC[CELL[i]]+=.3;}}}
+function ring(cx,cy,r,mx){const R=Math.ceil(r);for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy*1.4);if(d>=r)continue;const i=y*W+x;const u=d/r+(BY[i]-128)/2048;let lv=mx-Math.floor(u*mx);if(lv>mx)lv=mx;if(lv<=0)continue;const cur=(IDX[i]>>7)&7;if(LMIX[lv]>LMIX[cur])IDX[i]=(IDX[i]&127)|(lv<<7);CWC[CELL[i]]+=.3;}}}
 // field layer: all grass in one pass (a shader would do this)
 let FC=new Uint8Array(NP),FR=new Uint8Array(NP),FS=new Uint8Array(NP),FPIX=new Int32Array(0),fieldBakeT=-9;
 function bakeField(){FC.fill(0);const list=[];
