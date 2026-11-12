@@ -242,7 +242,7 @@ function simStep(sunF){
     if(s===CANOPY||!holds(S[j])||cls(S[j])!==cls(s))continue;if(D[i]>D[j]+3){D[i]--;D[j]++;}}
   // 3) wind transport: snow creeps downwind, stops against obstacles
   const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind),n=(1400*wm)|0;for(let k=0;k<n;k++){const i=W+1+ri(NP-2*W-2);if(D[i]<4||E[i]<.75*BASEE[S[i]]||P[i]>100)continue;const j=i+dir; // open ice counts as exposed, or snow blown onto the pond would pile up at its rim
-    if(holds(S[j])&&cls(S[j])===cls(S[i])&&D[j]<=D[i]+2){D[i]--;D[j]++;}}}
+    if(holds(S[j])&&cls(S[j])===cls(S[i])&&D[j]<=D[i]+2&&D[j]<capOf(S[j])){D[i]--;D[j]++;}}}
   // 4) melt: temperature * sun * shade * packed * open-edge count
   if(temp>0){const n=(1500*Math.min(temp,6)/4*(.35+.65*sunF))|0;for(let k=0;k<n;k++){const i=ri(NP);if(!D[i])continue; // every row melts. A neighbour read past the canvas is undefined and counts as snow
     let rate=(SH[i]&&sunF>.4?.25:1)*(P[i]>100?.5:1);const s=S[i];if(s===ROOF||s===ROCKTOP)rate*=1.4;if(s===CANOPY)rate*=2.2;if(s===ICE)rate*=1.3;

@@ -757,8 +757,11 @@ How to use this file:
   Done: sim steps stop once 7 ms of the frame is spent, and the HUD then reads "over budget, running N× of
   16×". Heavy snow at speed 16 and 6x throttle: 14.7 ms per frame before, 9.5 ms after (running 10×).
   Unthrottled it runs the full 16× in 2.3 ms.
-- [ ] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
+- [x] **145.** `P6` (suspected) Depth can pass `MAXD` through the sandpile and wind passes (205 measured) in a
   Uint8Array.
+  Done: confirmed first: with the ground near the cap and wind 0.9, 3,000 steps took the maximum depth to
+  204 in a Uint8Array that wraps at 256. The wind pass now needs the target under its cap, 200 on ground and
+  14 on a canopy. Maximum after the same run: 199.
 
 ## vfx-light
 
