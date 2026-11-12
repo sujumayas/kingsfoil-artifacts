@@ -883,9 +883,12 @@ How to use this file:
   at 6x throttle.
 - [x] **167.** `P6` The Wind slider has no value readout.
   Done: a readout next to the slider, "45%" at load, updated on input.
-- [ ] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
+- [x] **181.** `P2` Non-integer canvas scale, the same defect as #5 (3.10x at 1280, 1.10x at 390). Found while
   fixing #5. The stage sits in a `1fr 200px` grid next to the minimap (`:19`), so the shared `fit()` needs the
   grid cell width, not `main`.
+  Done: the forest page has its own `fit()` that reads the first grid track of the row it shares with the
+  minimap. Canvas scale at 1280, 1024, 800 and 390 px wide: 3.10, 2.43, 1.73 and 1.10 before, 3, 2, 1 and 1
+  after.
 
 ## curves-hearthguard
 
