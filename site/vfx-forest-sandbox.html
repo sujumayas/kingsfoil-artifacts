@@ -261,7 +261,7 @@ function randomTreeNear(x,y,minD,maxD){let best=null,tries=0;while(tries++<40){c
 function spawnBirds(){birds.length=0;for(let k=0;k<28;k++){const t=randomTreeNear(player.x,player.y,40,220);if(!t)continue;const [bx,by]=perchSpot(t);const col=BIRDCOL();birds.push({x:bx,y:t.y,px:bx,py:by,z:t.y-by,vx:0,vy:0,state:'perch',tree:t,col,flap:rnd()*6,timer:0,hop:0});}}
 function updateBirds(dt){const fly=birds.filter(b=>b.state!=='perch');
   for(const b of birds){b.flap+=dt*14;
-    if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){b.hop=.6+rnd()*2.5;b.px+=(rnd()<.5?-1:1);}
+    if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){b.hop=.6+rnd()*2.5;const lim=SPR[b.tree.sp][b.tree.v][sIdx(b.tree)].cw*.55;b.px=clamp(b.px+(rnd()<.5?-1:1),b.tree.x-lim,b.tree.x+lim);} // hops stay on the crown
       if(dx*dx+dy*dy<30*30||b.tree.shake>.3){b.state='fly';const L=Math.hypot(dx,dy)||1;b.vx=dx/L*45+(rnd()-.5)*20;b.vy=dy/L*35;b.z=b.tree.y-b.py;b.timer=6+rnd()*10;}
       else if(Math.hypot(dx,dy)>420){const t=randomTreeNear(player.x,player.y,180,260);if(t){const [bx,by]=perchSpot(t);b.tree=t;b.x=bx;b.y=t.y;b.px=bx;b.py=by;}}continue;}
     if(b.state==='fly'){let sx=0,sy=0,ax=0,ay=0,cx=0,cy=0,n=0;for(const o of fly){if(o===b)continue;const dx=o.x-b.x,dy=o.y-b.y,d2=dx*dx+dy*dy;if(d2<64){sx-=dx;sy-=dy;}if(d2<1600){ax+=o.vx;ay+=o.vy;cx+=o.x;cy+=o.y;n++;}}

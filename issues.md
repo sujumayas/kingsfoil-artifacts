@@ -852,7 +852,10 @@ How to use this file:
   Done: the gust noise was sampled at `time*wind`, so one slider step moved the field by time times the
   step. The gust offset is now integrated. Mean change in sway for one slider step of 0.01: 0.016 at 10 s
   and 0.115 at 10 min before, 0.004 and 0.005 after.
-- [ ] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
+- [x] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
+  Done: a hop is clamped to 55% of the crown half-width, the same range a bird perches in. After 5 min with
+  nobody near, 16 of 28 birds sat outside their crown, the farthest 3.53 half-widths from the trunk. Now 0,
+  the farthest at 0.55.
 - [ ] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
   (`:253`, `:256`, `:351`).
 - [ ] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
