@@ -397,7 +397,7 @@ function impactFx(x,y,el,tier,big){const pol=POL[tier],small=pol.mini||pol.red||
 function beamRay(c){let ax,ay;if(c===P){const a=playerAim();ax=a[0];ay=a[1];}else{const t=c.beamTg;if(!t||!t.act||t.dead)return null;ax=t.x;ay=t.y-7;}
   const x0=hand(c),y0=c.y-11;let dx=ax-x0,dy=ay-y0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;if(Math.abs(dx)>.2)c.face=dx<0?-1:1;const R=ray(c,x0,y0,dx,dy,160);c.bx=x0+dx*R.d;c.by=y0+dy*R.d;return R;}
 function beamStart(c,tg){if(c.beamOn||c.dead||c.froz>0)return;c.beamOn=true;c.beamT=0;c.beamTg=tg;c.beamTier=tierOf(c);if(!beamRay(c)){c.bx=hand(c);c.by=c.y-11;}ev('cast','CAST #'+c.id+' BEAM ON',c.x,c.y,0,0);const f=spawn(3,c.beamTier,5,1e9);if(f)f.own=c;}
-function beamStop(c){if(!c.beamOn)return;c.beamOn=false;ev('cast','CAST #'+c.id+' BEAM OFF',c.x,c.y,0,0);}
+function beamStop(c){if(!c.beamOn)return;c.beamOn=false;for(let i=0;i<fxHi;i++){const f=FX[i];if(f.on&&f.ty===3&&f.own===c)kill(f);}ev('cast','CAST #'+c.id+' BEAM OFF',c.x,c.y,0,0);}
 
 // ---------- update: layers 3 to 6 ----------
 function updCast(dt){for(let i=0;i<fxHi;i++){const f=FX[i];if(!f.on)continue;
