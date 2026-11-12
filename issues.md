@@ -950,8 +950,12 @@ How to use this file:
   Done: the old text said each elite stops being the first enemy of a new step. In the model and in report
   A2 the wall keeps its step (encounter 12 at 1.45) and the 3 encounters after it drop back (13 to 15 at
   1.00, 16 at 1.45). The text now says that.
-- [ ] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
+- [x] **178.** `P5` Lab and report disagree by 0.01 on the proposal's scroll share, 0.35 and 0.82 against 0.34
   and 0.81 (`:155`).
+  Done: the lab computes 0.3546 and 0.8213 from the measured seconds to each boss. The report's 0.34 and
+  0.81 came from scaling the measured shares 0.23 and 0.55 by the accel ratio. The report cites the model,
+  so its 2 sentences (A3 and §11) now read 0.35 and 0.82, and the study page is rebuilt. The lab is
+  unchanged.
 - [ ] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
   `:422`). XP_PAST_LEVEL reads "9/24" at the 3/8 stop (`:255`). `REACH` is unused (`:160`).
 - [ ] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
