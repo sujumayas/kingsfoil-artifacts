@@ -356,8 +356,12 @@ How to use this file:
 - [x] **69.** `P4` Residue toggle leaves scorch and frost decals for up to 12 s (`:317` has no `residue` check).
   Done: drawDecals skips drawing while Residue is off and keeps ageing the decals. A scorch decal with
   Residue off: 123 px drawn before, 0 after. Switched back on, the 123 px return.
-- [ ] **70.** `P4` (taste) Meteor rune circle is a 108 x 54 ellipse centred on the mage. The blast is 112 x 112
+- [x] **70.** `P4` (taste) Meteor rune circle is a 108 x 54 ellipse centred on the mage. The blast is 112 x 112
   centred on the tile (`:448`, `:372`).
+  Done: an area spell's cast circle is now a true circle of 56 px radius centred on the caster's tile, so it
+  covers the mask. With the mage at 100,100 the circle measured 109 x 56 px centred on 100,99.5 before. Now
+  113 x 114 centred on 104,104.5, against a blast of 112 x 112 centred on 103.5,103.5. Reduced and minimal
+  tiers keep the small ellipse. Card 3 updated.
 - [ ] **71.** `P6` Beam damage numbers stack into an unreadable column (`:314`, `:600`).
 - [ ] **72.** `P6` Haste button stays lit after the timer runs out (`:703`).
 - [ ] **73.** `P5` HUD "evicted" also counts refused spawns, and "particles refused" counts overwritten live
