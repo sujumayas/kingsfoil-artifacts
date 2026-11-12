@@ -572,14 +572,14 @@ function updPlayer(dt){if(PL.dead||PL.sdead){PL.walking=false;return;}let dx=KEY
   if(CL.open){const c=CL.corpses.get(CL.open.cid);if(!c||cheb(PL.x,PL.y,c.x,c.y)>TUNING.reach)CL.open=null;}}
 // action queue with a 200 ms cooldown; clicks during the cooldown queue up
 function queueAct(a){if(CL.q.some(q=>q.k===a.k&&q.id===a.id&&q.cid===a.cid))return;CL.q.push(a);}
-let SEQ=0;
+let SEQ=0;const PREDALL=new Map();// items predicted by one Loot all, by request seq, so the answer can roll back the ones the server skipped
 function pumpQueue(){while(CL.q.length&&now>=CL.cdUntil){const a=CL.q.shift();if(a.k==='take'){const ci=CL.items.get(a.id)||(CL.open&&CL.open.items.find(x=>x.id===a.id));if(!ci||ci.pred||ci.pend)continue;}CL.cdUntil=now+(a.magnet?40:TUNING.actionCd);sendAct(a);}}
 function sendAct(a){a.seq=++SEQ;
   // wait: dots until the answer; cosmetic: a tick and a small hop, the item stays until PICK_OK; full prediction: it leaves at once and may pop back
   if(a.k==='take'){const ci=CL.items.get(a.id);if(ci){ci.mag=!!a.magnet;if(PRED==='predict'){ci.pred=true;NET.pred++;predictAdd(ci);if(a.magnet&&FX.magnet)startPull(ci);else startFly(ci.dx,ci.dy,ci,true);}else{ci.pend=true;if(PRED==='cosmetic'){ci.cos=true;if(!a.magnet){ci.hop=now;ci.hopPx=TUNING.cosmetic.hopPx;sfx('tick',{tag:'own'});}}}}
     else if(CL.open){const s=CL.open.items.find(x=>x.id===a.id);if(s){if(PRED==='predict'){s.pred=true;NET.pred++;predictAdd(s);const p=slotXY(CL.open.items.indexOf(s));startFly(p[0]+1,p[1]+6,s,true);}else{s.pend=true;if(PRED==='cosmetic'){s.cos=true;s.hop=now;sfx('tick',{tag:'own'});}}}}}
-  if(a.k==='all'&&PRED==='predict'){let n=0;const list=CL.open?CL.open.items.filter(s=>!s.pred):[...CL.items.values()].filter(ci=>ci.landed&&!ci.pred&&!ci.pend&&cheb(PL.x,PL.y,ci.x,ci.y)<=1&&canLoot(PL.id,ci,now)&&now>=ci.landT+TUNING.drop.pickDelayMs);
-    for(const s of list){if(n>=TUNING.lootAll.maxItems)break;n++;s.pred=true;NET.pred++;predictAdd(s);if(CL.open){const p=slotXY(CL.open.items.indexOf(s));startFly(p[0]+1,p[1]+6,s,true,n*40);}else startFly(s.dx,s.dy,s,true,n*40);}}
+  if(a.k==='all'&&PRED==='predict'){let n=0;const list=CL.open?CL.open.items.filter(s=>!s.pred&&!s.pend&&canLoot(PL.id,s,now)):[...CL.items.values()].filter(ci=>ci.landed&&!ci.pred&&!ci.pend&&cheb(PL.x,PL.y,ci.x,ci.y)<=1&&canLoot(PL.id,ci,now)&&now>=ci.landT+TUNING.drop.pickDelayMs);
+    for(const s of list){if(n>=TUNING.lootAll.maxItems)break;n++;s.pred=true;NET.pred++;predictAdd(s);if(CL.open){const p=slotXY(CL.open.items.indexOf(s));startFly(p[0]+1,p[1]+6,s,true,n*40);}else startFly(s.dx,s.dy,s,true,n*40);}PREDALL.set(a.seq,list.slice(0,n));}
   upMe(TUNING.bytes.req,T=>svAction(PL,a,T));}
 function predictAdd(s){if(ITEMS[s.def].gold)CL.pendGold+=s.n;else CL.pendSlots+=ITEMS[s.def].k==='pack'?s.n:1;s.predAdded=1;}
 function predictUndo(s){if(!s.predAdded)return;s.predAdded=0;if(ITEMS[s.def].gold)CL.pendGold-=s.n;else CL.pendSlots-=ITEMS[s.def].k==='pack'?s.n:1;}
@@ -612,6 +612,8 @@ function clResult(res,snap){CL.sbag=snap;
     if(fromOpen){const p=slotXY(CL.open.items.indexOf(fromOpen));CL.open.items=CL.open.items.filter(x=>x!==fromOpen);flies.push([p[0]+1,p[1]+6,t]);continue;}
     flies.push([t.x,t.y-6,t]);}
   flyMany(flies);
+  const pa=PREDALL.get(res.seq);if(pa){PREDALL.delete(res.seq);for(const s of pa){if(!s.pred||res.taken.some(t=>t.id===s.id)||res.rej.some(r=>r.id===s.id))continue;
+    if(CL.items.get(s.id)!==s&&!(CL.open&&CL.open.items.includes(s))){predictUndo(s);s.pred=false;continue;}res.rej.push({id:s.id,why:s.gone?'taken':'skip'});}}
   for(const r of res.rej){const s=CL.items.get(r.id)||(CL.open&&CL.open.items.find(x=>x.id===r.id));if(!s){if(r.why==='far'&&res.kind==='open')toast('TOO FAR AWAY',P.s2);continue;}
     if(s.pred){NET.predRej++;predictUndo(s);s.pred=false;s.pull=false;BAGRED=300;POPS.push({s:'-'+(ITEMS[s.def].gold?s.n:1),x:302,y:146,t:0,col:P.r3});s.hop=now;s.hopPx=6;if(s.dx!=null){s.dx=s.x;s.dy=s.y;}}
     else if(s.cos)s.shake=now;// cosmetic: settle with a 1 px shake, plus the reason line

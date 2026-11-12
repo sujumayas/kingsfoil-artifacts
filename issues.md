@@ -148,9 +148,13 @@ How to use this file:
   on a uint32 hash (`:468`). Fix: `(h>>>4)%3`.
   Done: h>>>4. Over 12 boss drops, 257 of 793 items sat 6 or 9 px above their tile's centre row before.
   After the change all 817 sit at -3, 0 or +3 px, about a third each.
-- [ ] **27.** `P3` Full prediction plus Loot all leaves ghost items and an inflated bag count. The client
+- [x] **27.** `P3` Full prediction plus Loot all leaves ghost items and an inflated bag count. The client
   predicts without an ownership check (`:581`) and the server skips silently (`:494`). Fix: roll back
   unanswered predicted items in `clResult`, or filter with `canLoot` on the client.
+  Done: both halves. The client predicts only window items that pass canLoot. Each Loot all stores its
+  predicted items by request number, and clResult rolls back every one the answer lists as neither taken nor
+  rejected. On another player's goblin corpse the window kept its items and the bag stayed at 0. With the
+  client's ownership data forced wrong, 2 predicted items came back and the pending count returned to 0.
 - [ ] **28.** `P3` With the default spill setting, PvP enemies never loot your death pile. PvP bots only look at
   corpses with items (`:540` to `:547`).
 - [ ] **29.** `P4` PvP enemies respawn twice, at 5 s and again at 6 s (`:454` and `:538`).
