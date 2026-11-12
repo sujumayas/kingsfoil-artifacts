@@ -13,7 +13,7 @@ header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
 h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--lamp);letter-spacing:-.5px}
 .by{color:var(--mute);font-size:13px}
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
-.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px var(--mono);background:rgba(10,6,10,.74);padding:4px 8px;border-radius:4px;pointer-events:none;color:#f6eeea;max-width:calc(100% - 16px)}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
@@ -35,7 +35,7 @@ input[type=range]{flex:1;min-width:0;accent-color:#f77622}
 .card p{margin:0;color:#dacfd0;font-size:14px}
 code{font:13px var(--mono);color:var(--cool)}
 .keys{color:var(--mute);font-size:13px;margin:8px 0 0}
-@media (max-width:640px){.hud{position:static;max-width:none;border-radius:0;background:#0c080b;font-size:11px;padding:6px 8px}}
+@media (max-width:677px){.hud{position:static;max-width:none;border-radius:0;background:#0c080b;font-size:11px;padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -109,10 +109,11 @@ const GRASS=0,DRY=1,TREE=2,WOOD=3,STONE=4,WATER=5,LAVA=6,OILM=7,ASH=8;
 const NONE=0,IGN=1,BURN=2,EMB=3,ASHS=4;
 const IGN16=[9830,26214,14418,19661,0,0,0,65535,0],FUELT=[8,5,28,44,0,0,0,10,0],EMBT=[5,3,14,26,1,1,1,3,1],BASEM=[40,8,60,24,0,0,0,0,0];
 const U8=()=>new Uint8Array(NC);
-const MAT=U8(),OMAT=U8(),FUEL=U8(),FUEL0=U8(),MOIST=U8(),STA=U8(),HEAT=U8(),TIM=U8(),AGE=U8(),OBJ=U8(),OOBJ=U8(),OIL=U8(),DEAD=U8(),FLD=U8(),FLT=U8(),STEAM=U8(),COOL=U8(),FLASH=U8(),PEND=U8(),PROG=U8(),EPR=U8(),HZ=U8();
+const MAT=U8(),OMAT=U8(),FUEL=U8(),FUEL0=U8(),MOIST=U8(),STA=U8(),HEAT=U8(),TIM=U8(),AGE=U8(),OBJ=U8(),OOBJ=U8(),OIL=U8(),DEAD=U8(),FLD=U8(),FLT=U8(),STEAM=U8(),COOL=U8(),FLASH=U8(),PEND=U8(),PROG=U8(),EPR=U8(),HZ=U8(),DEP=U8();
 const GL=new Float32Array(NC),GT=new Float32Array(NC);
 const GP=new Uint32Array(NP),GC=new Uint32Array(NP),GA=new Uint32Array(NP),OP=new Uint32Array(NP),OC=new Uint32Array(NP),OA=new Uint32Array(NP);
-const OWN=new Int16Array(NP),PK=new Uint8Array(NP),HP=new Uint8Array(NP),OILP=new Uint8Array(NP),WINM=new Uint8Array(NP);
+// OCC: per pixel, depth row + 1 of the object drawn there this frame, 0 for ground. DEP: depth row per cell, a house counts as its front row
+const OCC=new Uint8Array(NP),OWN=new Int16Array(NP),PK=new Uint8Array(NP),HP=new Uint8Array(NP),OILP=new Uint8Array(NP),WINM=new Uint8Array(NP);
 const LR=new Float32Array(NP),LG=new Float32Array(NP),LB=new Float32Array(NP);
 const HOUSES=[[2,6,4,4],[9,5,5,5],[16,6,4,4],[15,15,4,3]];
 const CHIM={x:0,y:0,cell:0},LAVAC=[],CAMP={x:68,y:141,c:17*GW+8},TORCHES=[[60,86],[116,86],[172,86]],MAGE={x:210,y:127};
@@ -127,8 +128,8 @@ const dryF=(x,y)=>vn(x/42,y/30,seed)*.75+vn(x/10,y/10,seed+5)*.25;
 function build(){
   OWN.fill(-1);OP.fill(0);OC.fill(0);OA.fill(0);PK.fill(0);WINM.fill(0);LAVAC.length=0;
   for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const c=cy*GW+cx;let m=dryF(cx*8+4,cy*8+4)>.56?DRY:GRASS;
-    if(isRoad(cx,cy)||rimCell(cx,cy)||c===CAMP.c)m=STONE;if(lavaCell(cx,cy)){m=LAVA;LAVAC.push(c);}if(pondV(cx*8+4,cy*8+4)<1)m=WATER;OMAT[c]=m;OOBJ[c]=0;}
-  for(const [hx,hy,hw,hh] of HOUSES)for(let y=hy;y<hy+hh;y++)for(let x=hx;x<hx+hw;x++){OMAT[y*GW+x]=WOOD;OOBJ[y*GW+x]=2;}
+    if(isRoad(cx,cy)||rimCell(cx,cy)||c===CAMP.c)m=STONE;if(lavaCell(cx,cy)){m=LAVA;LAVAC.push(c);}if(pondV(cx*8+4,cy*8+4)<1)m=WATER;OMAT[c]=m;OOBJ[c]=0;DEP[c]=cy;}
+  for(const [hx,hy,hw,hh] of HOUSES)for(let y=hy;y<hy+hh;y++)for(let x=hx;x<hx+hw;x++){OMAT[y*GW+x]=WOOD;OOBJ[y*GW+x]=2;DEP[y*GW+x]=hy+hh-1;}
   const trees=[];
   for(let cy=1;cy<=10;cy++)for(let cx=28;cx<GW;cx++){const c=cy*GW+cx;if(OMAT[c]<=DRY&&hf(cx,cy,seed+11)<.55)trees.push([cx,cy]);}
   for(const [cx,cy] of [[1,1],[6,2],[15,1],[21,3],[24,7],[1,20],[12,21],[20,21],[0,14],[27,19],[8,3],[27,14]])if(OMAT[cy*GW+cx]<=DRY)trees.push([cx,cy]);
@@ -233,7 +234,8 @@ function simTick(){const t0=performance.now();tick++;nIgn=0;nExt=0;
       if(rain&&(hash(c,tick,7,seed)%1000)<(200+30*Math.min(AGE[c],15))/4){extinguish(c);continue;}
       FUEL[c]--;AGE[c]++;HEAT[c]=255;if(!FUEL[c]){STA[c]=EMB;TIM[c]=EMBT[MAT[c]];}}
     else if(s===EMB){TIM[c]-=TIM[c]>1&&rain?2:1;if(TIM[c]<=0){STA[c]=ASHS;MAT[c]=ASH;DEAD[c]=1;OIL[c]=0;HEAT[c]=0;}}}
-  cand.sort((a,b)=>a-b);let budget=capOn?3:1e9;
+  // the budget goes to candidates in a per-tick hash order, the same on every client. Plain index order gave it to the northmost cells
+  cand.sort((a,b)=>hash(a,tick,11,seed)-hash(b,tick,11,seed)||a-b);let budget=capOn?3:1e9;
   for(const c of cand){PEND[c]=0;if(budget>0&&ignite(c))budget--;}
   const na=[];let nb=0;for(let c=0;c<NC;c++){const s=STA[c];if(s>=IGN&&s<=EMB){na.push(c);if(s!==EMB)nb++;}}active=na;
   const nf=[];for(const c of fieldList){if(!FLD[c])continue;if(--FLT[c]<=0){FLD[c]--;FLT[c]=10;}if(FLD[c])nf.push(c);}fieldList=nf;
@@ -253,7 +255,7 @@ function spawn(x,y,vx,vy,life,type){for(let k=0;k<PN;k++){const j=(pHead+k)&255;
 const FW=80,FH=45,FN=FW*FH;let SM=new Float32Array(FN),SO=new Float32Array(FN),SS=new Float32Array(FN),SM2=new Float32Array(FN),SO2=new Float32Array(FN),SS2=new Float32Array(FN);
 function addSmoke(x,y,a,kind){const fx=clamp((x/4)|0,0,FW-1),fy=clamp((y/4)|0,0,FH-1),k=fy*FW+fx;const A=kind===0?SM:kind===1?SO:SS;A[k]=Math.min(5,A[k]+a);}
 const puffs=[];let puffT=0,proj=null;const expl=[];let shake=0,frameN=0,tSec=0,castT=0;
-const DB=new Uint8Array(NP),DEC=[0,1,1,2,2,1,3,2];
+const DB=new Uint8Array(NP),DZ=new Uint8Array(NP),DEC=[0,1,1,2,2,1,3,2];
 // flame sprites: 4 sizes x 4 frames, tones 1..4 = deep red, orange, yellow, near-white
 const FS=[[3,5],[5,8],[7,11],[9,15],[11,19]],SPR=[],TONE=[0,DRED,ORA,YEL,PYEL,WHITE];
 for(let s=0;s<5;s++){SPR[s]=[];const [w,h]=FS[s];for(let f=0;f<4;f++){const a=new Uint8Array(w*h),cx=(w-1)/2,tip=h*(.84+.16*Math.sin(f*Math.PI/2+.6));
@@ -261,23 +263,25 @@ for(let s=0;s<5;s++){SPR[s]=[];const [w,h]=FS[s];for(let f=0;f<4;f++){const a=ne
     for(let x=0;x<w;x++){const d=Math.abs(x-cx-sx)/hw;if(d>=1)continue;const q=1-d-v*.55+(v<.3?.14:0);a[y*w+x]=q>.8&&s>=3?5:q>.56?4:q>.3?3:q>.07?2:1;}}
   if(f&1){const ty=Math.round(h-1-tip-1-(f>>1)),tx=Math.round(cx+Math.sin(3.4+f*Math.PI/2)*w*.2);if(ty>=0&&tx>=0&&tx<w){a[ty*w+tx]=s>1?2:1;if(s>2&&ty>0)a[(ty-1)*w+tx]=1;}}
   SPR[s].push(a);}}
+// cb(x, y, size, key, depth row). Torch, campfire and sheep flames pass 99: their props draw over everything too
 function flames(cb){
-  for(const c of active){const s=STA[c];if(s===EMB)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,h=hash(c,0,0,seed)&255,j=(h&3)-1;
+  for(const c of active){const s=STA[c];if(s===EMB)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,h=hash(c,0,0,seed)&255,j=(h&3)-1,d=DEP[c];
     const f=FUEL0[c]?FUEL[c]/FUEL0[c]:0,big=s===BURN&&f>.12;
-    if(OBJ[c]===2&&!DEAD[c]){cb(bx+j,by-6-((h>>2)&3),big?(f>.45&&(h&16)?4:3):2,c);if(big&&(h&32))cb(bx-3+((h>>4)&1)*6,by-2,1,c+700);}
-    else if(OBJ[c]===1&&!DEAD[c]){cb(bx+j,by-8,big?2:1,c);if(big)cb(bx-3,by-3,1,c+999);}
-    else if(s===IGN)cb(bx+j,by-1,1,c);
-    else{cb(bx-2+j,by-1,big&&MAT[c]!==GRASS?2:1,c);if(big)cb(bx+2,by-3-(h&1),1,c+500);}}
-  for(const c of fieldList){const st=FLD[c];if(!st)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7;cb(bx,by,st,c+2000);if(st>1)cb(bx-3+(c&1)*6,by-2,1,c+3000);}
-  for(const [x,y] of TORCHES)cb(x,y-7,0,x);
-  cb(CAMP.x,CAMP.y+1,2,7);cb(CAMP.x-2,CAMP.y+1,1,8);
-  if(sheep.stacks>0&&!sheep.dead)cb(Math.round(sheep.x)-sheep.dir,Math.round(sheep.y)-5,sheep.stacks>4?2:1,9);
+    if(OBJ[c]===2&&!DEAD[c]){cb(bx+j,by-6-((h>>2)&3),big?(f>.45&&(h&16)?4:3):2,c,d);if(big&&(h&32))cb(bx-3+((h>>4)&1)*6,by-2,1,c+700,d);}
+    else if(OBJ[c]===1&&!DEAD[c]){cb(bx+j,by-8,big?2:1,c,d);if(big)cb(bx-3,by-3,1,c+999,d);}
+    else if(s===IGN)cb(bx+j,by-1,1,c,d);
+    else{cb(bx-2+j,by-1,big&&MAT[c]!==GRASS?2:1,c,d);if(big)cb(bx+2,by-3-(h&1),1,c+500,d);}}
+  for(const c of fieldList){const st=FLD[c];if(!st)continue;const cx=c%GW,cy=(c/GW)|0,bx=cx*8+4,by=cy*8+7,d=DEP[c];cb(bx,by,st,c+2000,d);if(st>1)cb(bx-3+(c&1)*6,by-2,1,c+3000,d);}
+  for(const [x,y] of TORCHES)cb(x,y-7,0,x,99);
+  cb(CAMP.x,CAMP.y+1,2,7,99);cb(CAMP.x-2,CAMP.y+1,1,8,99);
+  if(sheep.stacks>0&&!sheep.dead)cb(Math.round(sheep.x)-sheep.dir,Math.round(sheep.y)-5,sheep.stacks>4?2:1,9,99);
 }
 function doomStep(){const wsh=windX*windV/10,wpi=(Math.abs(wsh)*.6*256)|0,ws=wsh>0?1:-1;
   for(let x=0;x<W;x++)for(let y=1;y<H;y++){const src=y*W+x,p=DB[src];if(p===0){DB[src-W]=0;continue;}
-    const r=rb();let off=(r&3)===0?-1:(r&3)===3?1:0;if(((r>>>2)&255)<wpi)off+=ws;if(x+off<0||x+off>=W)off=0;const nv=p-DEC[(r>>>10)&7];DB[src-W+off]=nv>0?nv:0;}
-  flames((fx,fy,sz,key)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1||fy>=H)return;
-    for(let k=0;k<w;k++){const x=fx-(w>>1)+k;if(x<0||x>=W)continue;const e=(k===0||k===w-1)?7:0,v=base-e-(rb()&7);const i=fy*W+x;if(v>DB[i])DB[i]=v;}});
+    const r=rb();let off=(r&3)===0?-1:(r&3)===3?1:0;if(((r>>>2)&255)<wpi)off+=ws;if(x+off<0||x+off>=W)off=0;const nv=p-DEC[(r>>>10)&7];DB[src-W+off]=nv>0?nv:0;DZ[src-W+off]=DZ[src];}
+  // the bottom cell row is cut at y 180, its flame bases lie below the canvas: seed them on the last pixel row
+  flames((fx,fy,sz,key,d)=>{const w=[3,5,7,9,10][sz],base=[17,24,30,34,36][sz];if(fy<1)return;if(fy>=H)fy=H-1;
+    for(let k=0;k<w;k++){const x=fx-(w>>1)+k;if(x<0||x>=W)continue;const e=(k===0||k===w-1)?7:0,v=base-e-(rb()&7);const i=fy*W+x;if(v>DB[i]){DB[i]=v;DZ[i]=d+1;}}});
 }
 function smokeStep(dt){
   for(const c of active){const s=STA[c],cx=c%GW,cy=(c/GW)|0,ob=OBJ[c]&&!DEAD[c];const fx=cx*2+1,fy=Math.max(0,cy*2-(OBJ[c]===2&&ob?5:ob?3:1)),k=fy*FW+fx;
@@ -326,6 +330,8 @@ function step60(){const dt=1/60;frameN++;tSec+=dt;
   for(let k=expl.length-1;k>=0;k--){const e=expl[k];e.a++;if(e.a===4)for(let q=0;q<5;q++)addSmoke(e.x+(q-2)*3,e.y-4-(q&1)*4,1.2,0);if(e.a>26)expl.splice(k,1);}
   for(let k=floaters.length-1;k>=0;k--){const f=floaters[k];f.a++;f.y-=.25;if(f.a>48)floaters.splice(k,1);}
   if(shake>0)shake--;
+  // ignition flash of the Active cells view. It decays here so it runs out in every view
+  for(let c=0;c<NC;c++)if(FLASH[c])FLASH[c]--;
   if(frameN&1){doomStep();smokeStep(1/30);}
 }
 
@@ -337,6 +343,11 @@ const MAGEP=['...p...','..pp...','.ppp..t','ppppp.w','.sss..w','.beb..w','bbbbbb
 function putE(x,y,col){x|=0;y|=0;if(x<0||y<0||x>=W||y>=H)return;out[y*W+x]=col;}
 function putL(x,y,col){x|=0;y|=0;if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;out[i]=lit(col,LR[i],LG[i],LB[i]);}
 function lit(c,a,b,d){const r=(c&255)*a,g=((c>>8)&255)*b,bb=((c>>16)&255)*d;return (255<<24|(bb>255?255:bb)<<16|(g>255?255:g)<<8|(r>255?255:r))>>>0;}
+// glow from a moving source, split over the 4 nearest cells so the light slides with it
+function glowAt(x,y,v){const gx=clamp(x/8-.5,0,GW-1),gy=clamp(y/8-.5,0,GH-1),x0=gx|0,y0=gy|0,fx=gx-x0,fy=gy-y0,x1=Math.min(GW-1,x0+1),y1=Math.min(GH-1,y0+1);
+  GL[y0*GW+x0]+=v*(1-fx)*(1-fy);GL[y0*GW+x1]+=v*fx*(1-fy);GL[y1*GW+x0]+=v*(1-fx)*fy;GL[y1*GW+x1]+=v*fx*fy;}
+// glow response 1-e^-v for v in 0..8, in steps of 1/512. Replaces a Math.exp per pixel
+const GLUT=new Float32Array(4096);for(let k=0;k<4096;k++)GLUT[k]=1-Math.exp(-k/512);
 function render(){
   const ms=(tSec*1000)|0,t=tSec;
   for(let c=0;c<NC;c++){const s=STA[c];PROG[c]=(s===ASHS||s===EMB)?16:(FUEL0[c]?((FUEL0[c]-FUEL[c])*16/FUEL0[c])|0:0);EPR[c]=s===EMB?(16-(TIM[c]*16/EMBT[MAT[c]]))|0:0;}
@@ -347,9 +358,9 @@ function render(){
   for(const c of fieldList)GL[c]+=.45*FLD[c]*(.8+.4*n1(t*10,c+7));
   for(const [x,y] of TORCHES)GL[CELL[(y-6)*W+x]]+=.6*(.8+.4*n1(t*9,x));
   GL[CAMP.c]+=1.1*(.75+.5*n1(t*8,3));
-  if(proj)GL[CELL[clamp(proj.y|0,0,H-1)*W+clamp(proj.x|0,0,W-1)]]+=1.4;
-  for(const e of expl)GL[CELL[clamp(e.y|0,0,H-1)*W+clamp(e.x|0,0,W-1)]]+=5*Math.max(0,1-e.a/18);
-  if(sheep.stacks>0&&!sheep.dead)GL[CELL[clamp(sheep.y|0,0,H-1)*W+clamp(sheep.x|0,0,W-1)]]+=.6;
+  if(proj)glowAt(proj.x,proj.y,1.4);
+  for(const e of expl)glowAt(e.x,e.y,5*Math.max(0,1-e.a/18));
+  if(sheep.stacks>0&&!sheep.dead)glowAt(sheep.x,sheep.y,.6);
   for(let it=0;it<3;it++){for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const i=y*GW+x;GT[i]=(GL[x>0?i-1:i]+2*GL[i]+GL[x<GW-1?i+1:i])*.25;}
     for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const i=y*GW+x;GL[i]=(GT[y>0?i-GW:i]+2*GT[i]+GT[y<GH-1?i+GW:i])*.25;}}
   let ar=1,ag=1,ab=1,wr=.5,wg=.26,wb=.08,gain=4,gmax=.6;
@@ -361,7 +372,7 @@ function render(){
   // ground + object layers, lit by ambient + glow
   for(let y=0;y<H;y++){const gy=(y+.5)/8-.5,y0=gy<0?0:Math.floor(gy),fy=gy<0?0:gy-y0,r0=Math.min(GH-1,y0)*GW,r1=Math.min(GH-1,y0+1)*GW;
     for(let x=0;x<W;x++){const gx=(x+.5)/8-.5,x0=gx<0?0:Math.floor(gx),fx=gx<0?0:gx-x0,x1=Math.min(GW-1,x0+1);
-      const g=gmax*(1-Math.exp(-((GL[r0+x0]*(1-fx)+GL[r0+x1]*fx)*(1-fy)+(GL[r1+x0]*(1-fx)+GL[r1+x1]*fx)*fy)*gain));
+      const gv=((GL[r0+x0]*(1-fx)+GL[r0+x1]*fx)*(1-fy)+(GL[r1+x0]*(1-fx)+GL[r1+x1]*fx)*fy)*gain*512,g=gv<4096?gmax*GLUT[gv|0]:gmax;
       const i=y*W+x,lr=ar+g*wr,lg=ag+g*wg,lb=ab+g*wb;LR[i]=lr;LG[i]=lg;LB[i]=lb;
       let col=0,em=0;const oc=OWN[i];
       if(oc>=0&&OBJ[oc]){const s=STA[oc];
@@ -369,6 +380,7 @@ function render(){
         else if(s===EMB){col=BY[i]<EPR[oc]?OA[i]:OC[i];if(col&&col!==OA[i]&&HP[i]<46&&((HP[i]+fr)&3)){col=TIM[oc]*2>EMBT[MAT[oc]]?ORA:RED;em=1;}}
         else{col=BY[i]<PROG[oc]?OC[i]:OP[i];if(s===BURN&&col===OC[i]&&HP[i]<40){col=(HP[i]+fr)&1?ORA:YEL;em=1;}
           else if(night&&WINM[i]&&s===NONE){col=(HP[i]&7)?YEL:PYEL;em=1;}}}
+      OCC[i]=col?DEP[oc]+1:0;
       if(!col){const c=CELL[i],s=STA[c];
         if(PK[i]===1){const w=Math.sin(x*.7+t*2.1+y*1.3)+Math.sin(y*.9-t*1.4+x*.2);col=w>1.7?(w>1.9?CYAN:B2):GP[i];}
         else if(PK[i]===2){if(COOL[c]){col=HP[i]<30&&COOL[c]<25?RED:(HP[i]&1?WD3:BLK);em=col===RED;}
@@ -398,11 +410,16 @@ function render(){
   for(const p of puffs){const f=p.a/375,R=1.2+4.6*f,al=.8*(1-f),cx=p.x,cy=p.y,ir=Math.ceil(R);
     for(let dy=-ir;dy<=ir;dy++)for(let dx=-ir;dx<=ir;dx++){const d2=(dx*dx+dy*dy)/(R*R);if(d2>1)continue;const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;
       if(al*(1.2-d2*.7)*16<=BY[i])continue;out[i]=lit(dy<-R*.3?S1:d2>.55&&dy>0?S3:S2,LR[i]*.9+.1,LG[i]*.9+.1,LB[i]*.9+.1);}}
-  // flames
-  if(style==='sprite'){const L=[];flames((x,y,sz,key)=>L.push(x,y,sz,key));const idx=[];for(let k=0;k<L.length;k+=4)idx.push(k);idx.sort((a,b)=>L[a+1]-L[b+1]);
-    for(const k of idx){const x=L[k],y=L[k+1],sz=L[k+2],key=L[k+3],per=sz>=3?640:sz===2?500:400,f=(((ms+x*3047+y*88+key*131)%per)/per*4)|0,[w,h]=FS[sz],a=SPR[sz][f];
-      for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const tn=a[yy*w+xx];if(tn)putE(x-(w>>1)+xx,y-h+1+yy,TONE[tn]);}}}
-  else{for(let i=W;i<NP;i++){const v=DB[i];if(v<4)continue;if(v<8&&BY[i]>=(v-3)*3)continue;out[i]=DOOMP[v];}}
+  // heat haze: sine row offsets above big fires. It runs before the flames, so it bends the scene and the smoke behind
+  // them and leaves the flame sprites, sparks, rain and damage numbers whole
+  if(haze){HZ.fill(0);let any=0;for(const c of active)if(STA[c]===BURN&&OBJ[c]&&!DEAD[c]){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<5;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
+    for(const c of fieldList)if(FLD[c]===3){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<3;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
+    if(any){tmp.set(out);for(let y=0;y<H;y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;for(let x=1;x<W-1;x++){const i=y*W+x;if(HZ[CELL[i]])out[i]=tmp[i+dx];}}}}
+  // flames. A flame pixel is skipped where an object with a deeper row stands in front of the flame's source
+  if(style==='sprite'){const L=[];flames((x,y,sz,key,d)=>L.push(x,y,sz,key,d+1));const idx=[];for(let k=0;k<L.length;k+=5)idx.push(k);idx.sort((a,b)=>L[a+1]-L[b+1]);
+    for(const k of idx){const x=L[k],y=L[k+1],sz=L[k+2],key=L[k+3],d=L[k+4],per=sz>=3?640:sz===2?500:400,f=(((ms+x*3047+y*88+key*131)%per)/per*4)|0,[w,h]=FS[sz],a=SPR[sz][f];
+      for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const tn=a[yy*w+xx];if(!tn)continue;const X=x-(w>>1)+xx,Y=y-h+1+yy;if(X<0||Y<0||X>=W||Y>=H)continue;const i=Y*W+X;if(OCC[i]<=d)out[i]=TONE[tn];}}}
+  else{for(let i=W;i<NP;i++){const v=DB[i];if(v<4)continue;if(v<8&&BY[i]>=(v-3)*3)continue;if(OCC[i]<=DZ[i])out[i]=DOOMP[v];}}
   // particles
   for(let j=0;j<PN;j++){if(PLF[j]<=0)continue;const f=1-PLF[j]/PML[j],ty=PTY[j],x=PXa[j],y=PYa[j];
     if(ty===0){if(f>.85&&(j&1))continue;putE(x,y,[WHITE,PYEL,YEL,YEL,ORA,ORA,RED][Math.min(6,f*7|0)]);}
@@ -415,34 +432,33 @@ function render(){
     if(a<=2){for(let dy=-11;dy<=11;dy++)for(let dx=-11;dx<=11;dx++)if(dx*dx+dy*dy<=121)putE(e.x+dx,e.y-2+dy,WHITE);continue;}
     if(a<9){const R=9-a*.5;for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const r=(dx*dx+dy*dy)/(R*R);if(r>1)continue;putE(e.x+dx,e.y-2+dy,r<.25?PYEL:r<.6?YEL:ORA);}}
     const R=4+a*.75,col=a<6?WHITE:a<11?PYEL:a<16?ORA:a<21?RED:DRED;
-    for(let k=0;k<64;k++){const an=k/64*6.283,x=e.x+Math.cos(an)*R,y=e.y-2+Math.sin(an)*R*.6;if(a>18&&(BY[((y|0)&3)*4+((x|0)&3)]>=(26-a)*2))continue;putE(x,y,col);}}
+    for(let k=0;k<64;k++){const an=k/64*6.283,x=e.x+Math.cos(an)*R,y=e.y-2+Math.sin(an)*R*.6;if(a>18&&(BAY[((y|0)&3)*4+((x|0)&3)]>=(26-a)*2))continue;putE(x,y,col);}}
   // rain
   if(rain){const sl=windX*windV*.05;for(let k=0;k<150;k++){const sp=200+hf(k,3,99)*90,y=(hf(k,2,99)*(H+10)+t*sp)%(H+10)-5,x=((hf(k,1,99)*W+t*sp*sl)%W+W)%W;for(let q=0;q<3;q++)putL(x+sl*q,y+q,q===2?WHITE:S1);}}
   // damage numbers
   for(const f of floaters){const str=String(f.v),x0=Math.round(f.x-str.length*2),y0=Math.round(f.y);if(f.a>36&&(f.a&2))continue;
     for(let n=0;n<str.length;n++){const g=FONT[+str[n]];for(let p=0;p<15;p++)if(g[p]==='1'){const x=x0+n*4+p%3,y=y0+(p/3|0);putE(x-1,y,BLK);putE(x+1,y,BLK);putE(x,y-1,BLK);putE(x,y+1,BLK);}
       for(let p=0;p<15;p++)if(g[p]==='1')putE(x0+n*4+p%3,y0+(p/3|0),f.a<6?WHITE:ORA);}}
-  // heat haze: sine row offsets above big fires
-  if(haze){HZ.fill(0);let any=0;for(const c of active)if(STA[c]===BURN&&OBJ[c]&&!DEAD[c]){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<5;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
-    for(const c of fieldList)if(FLD[c]===3){any=1;const cx=c%GW,cy=(c/GW)|0;for(let k=0;k<3;k++)if(cy-k>=0)HZ[(cy-k)*GW+cx]=1;}
-    if(any){tmp.set(out);for(let y=0;y<H;y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;for(let x=1;x<W-1;x++){const i=y*W+x;if(HZ[CELL[i]])out[i]=tmp[i+dx];}}}}
   // palette lock: everything to Endesga 32 with ordered dither
   if(lock){if(!LUT)buildLUT();for(let i=0;i<NP;i++){const c=out[i],o=(BY[i]-7.5)*.9;const r=clamp(((c&255)+o)|0,0,255),g=clamp((((c>>8)&255)+o)|0,0,255),b=clamp((((c>>16)&255)+o)|0,0,255);out[i]=LUT[(r>>3)<<10|(g>>3)<<5|(b>>3)];}}
   if(view!=='normal')xray();
   ctx.putImageData(img,0,0);
   if(shake>0){const s=cv.getBoundingClientRect().width/W,m=shake>4?2:1;cv.style.transform=`translate(${((frameN&1)?m:-m)*s}px,${((frameN&2)?m:-m)*s*.5}px)`;}else if(cv.style.transform)cv.style.transform='';
 }
+// fuel view: three flat colours, and one colour per cell worked out once per frame
+const XWATER=px('10204a'),XASH=px('202020'),XNOFUEL=px('383838'),XC=new Uint32Array(NC);
 function xray(){
   if(view==='active'){for(let i=0;i<NP;i++){const c=out[i];out[i]=(255<<24|((((c>>16)&255)*.3)|0)<<16|((((c>>8)&255)*.3)|0)<<8|(((c&255)*.3)|0))>>>0;}
     const box=(c,col,fill)=>{const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=0;y<8;y++)for(let x=0;x<8;x++){if(!fill&&x&&y&&x<7&&y<7)continue;if(fill&&BY[(y0+y)*W+x0+x]>fill)continue;putE(x0+x,y0+y,col);}};
     for(const c of LAVAC)box(c,MAG,0);for(const c of fieldList)box(c,PINK,0);
-    for(let c=0;c<NC;c++){if(FLASH[c]){box(c,WHITE,FLASH[c]);FLASH[c]--;}else if(STEAM[c]>2)box(c,CYAN,6);}
+    for(let c=0;c<NC;c++){if(FLASH[c])box(c,WHITE,FLASH[c]);else if(STEAM[c]>2)box(c,CYAN,6);}
     for(const c of active){const s=STA[c];box(c,s===IGN?YEL:s===BURN?ORA:RED,0);if(s===IGN)box(c,YEL,5);}
     return;}
+  if(view==='fuel')for(let c=0;c<NC;c++){let col;if(MAT[c]===WATER)col=XWATER;else if(STA[c]===ASHS)col=XASH;else if(!ign16(c))col=XNOFUEL;
+    else{const f=FUEL0[c]?FUEL[c]/Math.max(FUEL0[c],1):0,mo=MOIST[c]/255,big=Math.min(1,FUEL0[c]/44);col=(255<<24|((30+mo*220)|0)<<16|((f*(90+big*140)*(1-mo*.6))|0)<<8|((f*220*(1-mo*.8)+20)|0))>>>0;}
+    XC[c]=col;}
   for(let i=0;i<NP;i++){const c=CELL[i],x=i%W,y=(i/W)|0,edge=(x&7)===0||(y&7)===0;let col;
-    if(view==='fuel'){const m=MAT[c];if(m===WATER)col=px('10204a');else if(STA[c]===ASHS)col=px('202020');else if(!ign16(c))col=px('383838');
-      else{const f=FUEL0[c]?FUEL[c]/Math.max(FUEL0[c],1):0,mo=MOIST[c]/255,big=Math.min(1,FUEL0[c]/44);col=(255<<24|((30+mo*220)|0)<<16|((f*(90+big*140)*(1-mo*.6))|0)<<8|((f*220*(1-mo*.8)+20)|0))>>>0;}
-      if(STA[c]===BURN||STA[c]===IGN)col=(i+frameN>>1)&1?ORA:col;}
+    if(view==='fuel'){col=XC[c];if(STA[c]===BURN||STA[c]===IGN)col=(i+frameN>>1)&1?ORA:col;}
     else if(view==='heat'){const h=(STA[c]===BURN||STA[c]===IGN)?255*Math.max(.3,FUEL[c]/Math.max(1,FUEL0[c])):STA[c]===EMB?60:HEAT[c];col=DOOMP[Math.min(36,(h*36/255)|0)];}
     else{const k=(y>>2)*FW+(x>>2),s=Math.min(1,SM[k]*.8),o=Math.min(1,SO[k]*.8),st=Math.min(1,SS[k]*.8);col=(255<<24|((20+st*235+s*150)|0)<<16|((16+st*235+s*150+o*30)|0)<<8|((18+s*150+o*90+st*60)|0))>>>0;}
     if(edge)col=lit(col,.75,.75,.75);out[i]=col;}
@@ -451,14 +467,20 @@ function xray(){
 
 // ---------- loop and UI ----------
 let last=performance.now(),acc=0,fxAcc=0,hudN=0;
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;
   if(paused){if(queue.length){for(const a of queue)applyAction(a);queue.length=0;const na=[];for(let c=0;c<NC;c++)if(STA[c]>=IGN&&STA[c]<=EMB)na.push(c);active=na;}}
   else{acc+=dt;while(acc>=.25){acc-=.25;simTick();}}
-  fxAcc+=dt;let n=0;while(fxAcc>=1/60&&n<6){fxAcc-=1/60;step60();n++;}if(n>=6)fxAcc=0;
+  // pause stops the 60 Hz layer too: sheep, fireball, particles, smoke and flame frames hold still
+  if(paused)fxAcc=0;else{fxAcc+=dt;let n=0;while(fxAcc>=1/60&&n<6){fxAcc-=1/60;step60();n++;}if(n>=6)fxAcc=0;}
   render();
   if(++hudN%6===0){let nb=0;for(const c of active)if(STA[c]!==EMB)nb++;
-    document.getElementById('hud').textContent=`tick ${tick}${paused?' (paused)':''} · burning ${nb} · active ${active.length} · sim ${simMs.toFixed(3)} ms/tick · net per tick: full set ${netFull} B, events ${netEv} B (illustrative) · particles ${pCount}/256${capOn?' · cap 3 ignitions/tick':''} · seed ${seed}`;}
-  requestAnimationFrame(loop);}
+    document.getElementById('hud').textContent=`tick ${tick}${paused?' (paused)':''} · burning ${nb} · active ${active.length} · sim ${simMs.toFixed(3)} ms/tick · net per tick: full set ${netFull} B, events ${netEv} B (illustrative) · particles ${pCount}/256${capOn?' · cap 3 ignitions/tick':''} · seed ${seed}`;}}
 const $=id=>document.getElementById(id);
 const group=(sel,attr,fn)=>{const bs=document.querySelectorAll(sel);bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset[attr]);});};
 const setTool=t=>{tool=t;document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));};
@@ -472,7 +494,9 @@ $('wv').oninput=e=>{windV=+e.target.value;syncWind();};
 const tog=(id,get,set)=>{const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle('on',get());};return ()=>b.classList.toggle('on',get());};
 const syncRain=tog('rain',()=>rain,v=>rain=v),syncNight=tog('night',()=>night,v=>night=v);tog('haze',()=>haze,v=>haze=v);tog('lock',()=>lock,v=>lock=v);tog('cap',()=>capOn,v=>capOn=v);
 const syncPause=tog('pause',()=>paused,v=>paused=v);
-$('step').onclick=()=>{simTick();};
+// one step is one 4 Hz tick. While paused it also runs the 15 frames of the 60 Hz layer that lead up to it
+const stepTick=()=>{if(paused)for(let f=0;f<15;f++)step60();simTick();};
+$('step').onclick=stepTick;
 $('reset').onclick=()=>reset();
 $('seed').onclick=()=>{seed=1+(rb()%9999);build();};
 document.querySelector('button[data-demo="blaze"]').onclick=()=>blaze();
@@ -481,7 +505,9 @@ function blaze(){reset();night=false;rain=false;paused=false;windDir=0;windV=5;s
   active=[];for(let c=0;c<NC;c++)if(STA[c]>=IGN&&STA[c]<=EMB)active.push(c);
   for(let k=0;k<12;k++){simTick();for(let f=0;f<15;f++)step60();}acc=0;render();}
 let down=false,lastCell=-1;
-function useTool(e,first){const r=cv.getBoundingClientRect();const x=clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),y=clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1),c=CELL[y*W+x];
+function useTool(e,first){const r=cv.getBoundingClientRect();const x=clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),y=clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1),oc=OWN[y*W+x];
+  // a click on a standing tree or house picks that object's cell, not the ground cell its sprite covers
+  const c=oc>=0&&OBJ[oc]?oc:CELL[y*W+x];
   if(tool==='fireball'){if(first)castFireball(x,y);return;}
   if(c===lastCell)return;lastCell=c;const cx=c%GW,cy=(c/GW)|0;
   const area=k=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=cx+dx,Y=cy+dy;if(X>=0&&Y>=0&&X<GW&&Y<GH)queue.push({k,c:Y*GW+X});}};
@@ -493,6 +519,10 @@ function useTool(e,first){const r=cv.getBoundingClientRect();const x=clamp(Math.
 cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}useTool(e,true);e.preventDefault();});
 cv.addEventListener('pointermove',e=>{if(down)useTool(e,false);});
 addEventListener('pointerup',()=>{down=false;lastCell=-1;});addEventListener('pointercancel',()=>{down=false;lastCell=-1;});
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
   const T=['ignite','water','fireball','oil','regrow'];
   if(k>='1'&&k<='5'){setTool(T[+k-1]);}
@@ -500,8 +530,11 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k==='w'){windDir=(windDir+1)&7;if(!windV)windV=4;syncWind();}
   else if(k==='v'){setView(VIEWS[(VIEWS.indexOf(view)+1)%VIEWS.length]);}
   else if(k===' '){paused=!paused;syncPause();e.preventDefault();}
-  else if(k==='n'){simTick();}
+  else if(k==='n'){stepTick();}
   else return;});
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 build();syncWind();requestAnimationFrame(loop);
 })();
 </script>

@@ -13,7 +13,7 @@ header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
 h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--lamp);letter-spacing:-.5px}
 .by{color:var(--mute);font-size:13px}
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
-.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px var(--mono);background:rgba(6,10,14,.74);padding:4px 8px;border-radius:4px;pointer-events:none;color:#eef6f6;max-width:calc(100% - 16px)}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
@@ -31,7 +31,7 @@ input[type=range]{flex:1;min-width:0;accent-color:#2fa0b2}
 .card p{margin:0;color:#cfdcde;font-size:14px}
 code{font:13px var(--mono);color:var(--cool)}
 .keys{color:var(--mute);font-size:13px;margin:8px 0 0}
-@media (max-width:640px){.hud{position:static;max-width:none;border-radius:0;background:#070b0f;font-size:11px;padding:6px 8px}}
+@media (max-width:677px){.hud{position:static;max-width:none;border-radius:0;background:#070b0f;font-size:11px;padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -41,7 +41,7 @@ code{font:13px var(--mono);color:var(--cool)}
 </header>
 <main>
   <div class="stage"><canvas id="c" width="320" height="180" aria-label="Water simulation"></canvas><div class="hud" id="hud">loading</div></div>
-  <p class="keys">Walk with the arrows or WASD, or tap where the walker should go. Pick a tool and click the water. Keys: <b>1-5</b> tools, <b>T</b> tide auto, <b>V</b> next view, <b>Space</b> pause. The tide runs on a 2 minute clock (illustrative) and only its byte goes over the wire. With the rod, click the water to cast and click again when the bobber dips.</p>
+  <p class="keys">Walk with the arrows or WASD, or tap where the walker should go. Walk into the sea or the river to wade, and keep going to swim. <b>Deep water blocks</b> turns deep water into a wall, the Tibia rule. Pick a tool and click the water. Keys: <b>1-5</b> tools, <b>T</b> tide auto, <b>V</b> next view, <b>Space</b> pause. The tide runs on a 2 minute clock (illustrative) and only its byte goes over the wire. With the rod, click the water to cast and click again when the bobber dips.</p>
   <div class="controls">
     <div class="group"><h3>Tools</h3>
       <div class="btns" id="tools"><button data-t="walk" class="on"><kbd>1</kbd>Walk</button><button data-t="stone"><kbd>2</kbd>Stone</button><button data-t="log"><kbd>3</kbd>Log</button><button data-t="rod"><kbd>4</kbd>Fishing rod</button><button data-t="boat"><kbd>5</kbd>Boat</button></div>
@@ -51,7 +51,7 @@ code{font:13px var(--mono);color:var(--cool)}
       <div class="btns" style="margin-top:6px"><button id="sync">Sync tile phase</button><button id="caust" class="on">Caustics</button><button id="refl" class="on">Reflections</button></div>
     </div>
     <div class="group"><h3>Rules and light</h3>
-      <div class="btns"><button id="deep" class="on">Deep water blocks</button><button id="hf">Pond heightfield</button></div>
+      <div class="btns"><button id="deep" title="Tibia rule: deep water is a wall. Off: the walker swims.">Deep water blocks</button><button id="hf">Pond heightfield</button></div>
       <div class="btns" id="light" style="margin-top:6px"><button data-l="day" class="on">Day</button><button data-l="dusk">Dusk</button><button data-l="night">Night</button></div>
     </div>
     <div class="group"><h3>Tide</h3>
@@ -68,7 +68,7 @@ code{font:13px var(--mono);color:var(--cool)}
   <div class="explain">
     <div class="card"><h4>1 · Server water truth</h4><p>The coast is a 40 by 23 grid of 8 px cells. Each cell has a height, a water kind (shallow, deep, river, swamp, waterfall), a flow direction with speed 0 to 3 and a fishable flag. Shallow water slows you to 0.6, deep water blocks you like Tibia or lets you swim. One tide byte moves the shoreline: a cell is wet when its height sits under the level, so beach rows flip as it rises and falls.</p></div>
     <div class="card"><h4>2 · Distance and depth</h4><p>When the tide byte changes the client runs one multi-source BFS from the shore cells. That gives a signed distance for every cell, plus in water and minus on land. Depth per pixel mixes that distance with the height under the water level and picks one of 5 sea bands, 3 river bands or 3 swamp bands. The HUD shows what the recompute costs.</p></div>
-    <div class="card"><h4>3 · Colour and surface</h4><p>Each body has its own hue-shifted ramp, teal in the shallows down to navy, with a 4 by 4 Bayer dither at band borders and no alpha. <b>Palette cycle</b> rotates 4 reserved slots per band at 8 Hz, so the pixels never change and only the palette moves. <b>Animated tiles</b> play a 4 frame loop at 5 fps with a hashed phase per cell. Turn on <b>Sync tile phase</b> to see the grid shimmer that the phase offset hides.</p></div>
+    <div class="card"><h4>3 · Colour and surface</h4><p>Each body has its own hue-shifted ramp, teal in the shallows down to navy, with a 4 by 4 Bayer dither at band borders and no alpha. <b>Palette cycle</b> rotates 4 reserved slots per band at 8 Hz, so the pixels never change and only the palette moves. <b>Animated tiles</b> play a 4 frame loop at 5 fps. Each tile gets a hashed phase, and the tile rows are staggered by a hashed shift so the 8 px grid does not show. Turn on <b>Sync tile phase</b> to see the grid shimmer that this hides.</p></div>
     <div class="card"><h4>4 · Flow</h4><p>River pixels read a flow vector filtered from the cell grid and scroll a noise texture along it. Two samples run half a cycle apart with triangle weights, so the texture never stretches and the reset never shows. Fast cells turn the highlights white. The waterfall is a strip that scrolls down at 55 px/s with churn and mist particles at its base.</p></div>
     <div class="card"><h4>5 · Shore and waves</h4><p>The coast uses dual-grid marching squares. The 4 corner cells give one of 16 cases, and only mixed cases (1 to 14) and their neighbours do foam work. A swash line runs up the beach every 5 s, breaks into foam and pulls back past the tide line. It leaves wet sand that dries over about 6 s. Wave crests come in ahead of it.</p></div>
     <div class="card"><h4>6 · Reflections and caustics</h4><p>Trees, the hut and the walker draw a mirrored copy below their base line. Each row shifts by a sine wobble of up to 1 px, the copy is mixed with the water colour through the palette, and it is clipped to water pixels. Shallow water gets caustics, two scrolling Voronoi edge textures with a 1 px line where either edge is close.</p></div>
@@ -131,7 +131,7 @@ const tf=(i,r,g,b)=>{
   else if(light==='night'){const w=WATERI[i];r=r*(w?.22:.3)+6;g=g*(w?.3:.38)+10;b=b*(w?.46:.55)+(w?24:30);}
   return (255<<24|clamp(b|0,0,255)<<16|clamp(g|0,0,255)<<8|clamp(r|0,0,255))>>>0;};
 function buildLUT(step){for(let i=0;i<NBASE;i++)LUTC[i]=tf(i,PR[i],PG[i],PB[i]);
-  for(let g=0;g<8;g++){const ramp=[GBASE[g],GBASE[g],GMID[g],GHI[g]];for(let k=0;k<4;k++){const s=ramp[(k-step+4000)&3];LUTC[64+g*4+k]=tf(s,PR[s],PG[s],PB[s]);}}}
+  for(let g=0;g<8;g++){const ramp=[GBASE[g],GBASE[g],GMID[g],GHI[g]];for(let k=0;k<4;k++){const s=ramp[(k+step)&3];LUTC[64+g*4+k]=tf(s,PR[s],PG[s],PB[s]);}}}
 
 // ---------- textures ----------
 const TEX=new Float32Array(4096);{let mn=9,mx=-9;for(let y=0;y<64;y++)for(let x=0;x<64;x++){const v=pvn(x/5.333,y/5.333,12,5)*.55+pvn(x/2.667,y/2.667,24,6)*.45;TEX[y*64+x]=v;if(v<mn)mn=v;if(v>mx)mx=v;}for(let k=0;k<4096;k++)TEX[k]=(TEX[k]-mn)/(mx-mn);}
@@ -139,7 +139,10 @@ const VOR=new Uint8Array(4096);{const pts=[];for(let k=0;k<11;k++)pts.push([rnd(
   for(let y=0;y<64;y++)for(let x=0;x<64;x++){let d1=1e9,d2=1e9;for(const p of pts){let dx=Math.abs(x-p[0]),dy=Math.abs(y-p[1]);dx=Math.min(dx,64-dx);dy=Math.min(dy,64-dy);const d=Math.sqrt(dx*dx+dy*dy);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}VOR[y*64+x]=Math.min(255,(d2-d1)*20);}}
 const TILEF=[];{const pos=[0,1,2,1],row=[2,2,3,3];for(let f=0;f<4;f++){const a=new Uint8Array(64),put=(x,y,v)=>{const k=((y&7)<<3)|(x&7);if(v>a[k])a[k]=v;};
   const x0=pos[f],y0=row[f];put(x0,y0,1);put(x0+1,y0,2);put(x0+2,y0,f===1?2:1);put(x0+4,y0+4,1);put(x0+5,y0+4,f===3?1:2);put(x0+6,y0+4,1);TILEF.push(a);}}
-const PHC=new Uint8Array(NC);for(let c=0;c<NC;c++)PHC[c]=hash(c%GW,(c/GW)|0,40)&3;
+// tile layout with the phase offset on. Each 8 px row of tiles slides sideways by a hashed 0 to 7 px, and each tile gets its
+// own phase, a hashed row shift, and keeps both dashes or one. TKX is the tile texel per pixel (255 for a dropped dash)
+const TKX=new Uint8Array(NP),TPX=new Uint8Array(NP);for(let i=0;i<NP;i++){const y=YS[i],r=y>>3,xs=XS[i]+(hash(r,7,41)&7),h=hash(xs>>3,r,42),ty=(y+((h>>2)&7))&7,m=(h>>5)&3;
+  TPX[i]=h&3;TKX[i]=(m===2&&ty>=4)||(m===3&&ty<4)?255:(ty<<3)|(xs&7);}
 const CYCPAT=new Uint8Array(NP);for(let i=0;i<NP;i++){const x=XS[i],y=YS[i];if(vn(x/9,y/5,30)>.5){const s=x*.45+y*.9+vn(x/11,y/7,31)*5;CYCPAT[i]=1+(Math.floor(s)&3);}}
 
 // ---------- world geometry ----------
@@ -232,7 +235,9 @@ const DXS=[1,.7071,0,-.7071,-1,-.7071,0,.7071],DYS=[0,.7071,1,.7071,0,-.7071,-1,
 const FDIR=new Uint8Array(NC),FSPD=new Uint8Array(NC);
 {const sx=new Float32Array(NC),sy=new Float32Array(NC),sn=new Float32Array(NC),ss=new Float32Array(NC);
   for(let i=0;i<NP;i++){const b=BODY[i],c=CELL[i];if(b===2){sx[c]+=RTX[i];sy[c]+=RTY[i];ss[c]+=RSPD[i];sn[c]++;}else if(b===4){sy[c]+=1;ss[c]+=3;sn[c]++;}
-    else if(b===1){const dx=XS[i]-198,dy=YS[i]-140,d=Math.hypot(dx,dy);if(d<36&&d>0){sx[c]+=dx/d;sy[c]+=dy/d;ss[c]+=1;sn[c]++;}}}
+    // river mouth: a jet along the last river segment that fans out to sea. Only sea bed that the high tide covers takes part
+    else if(b===1&&HGT[i]<148){const dx=XS[i]-198,dy=YS[i]-140,al=dx*.857+dy*.515,ac=dy*.857-dx*.515,hw=9+al*.6;
+      if(al>-6&&al<36&&Math.abs(ac)<hw){const k=ac/hw*.7,l=Math.hypot(1,k);sx[c]+=(.857-.515*k)/l;sy[c]+=(.515+.857*k)/l;ss[c]+=1;sn[c]++;}}}
   for(let c=0;c<NC;c++){if(sn[c]<3){FSPD[c]=0;continue;}FDIR[c]=((Math.round(Math.atan2(sy[c],sx[c])/(Math.PI/4))%8)+8)%8;FSPD[c]=clamp(Math.round(ss[c]/sn[c]),1,3);}
   const vx=c=>FSPD[c]?DXS[FDIR[c]]*FSPD[c]*9:0,vy=c=>FSPD[c]?DYS[FDIR[c]]*FSPD[c]*9:0;
   for(let i=0;i<NP;i++){if(!BODY[i])continue;const gx=clamp((XS[i]-4)/8,0,GW-1.001),gy=clamp((YS[i]-4)/8,0,GH-1.001),ix=gx|0,iy=gy|0,fx=gx-ix,fy=gy-iy,c=iy*GW+ix,c2=ix+1<GW?c+1:c,c3=iy+1<GH?c+GW:c,c4=iy+1<GH?c2+GW:c2;
@@ -283,16 +288,16 @@ let simT=0,lastDt=0,paused=false,fishN=0,msgText='',msgT=0;const msg=s=>{msgText
 // pond heightfield (Hugo Elias, 2 px cells)
 const PX0=8,PY0=134,GW2=34,GH2=18;let HA=new Float32Array(GW2*GH2),HB=new Float32Array(GW2*GH2);const HM=new Uint8Array(GW2*GH2);
 for(let y=0;y<GH2;y++)for(let x=0;x<GW2;x++){const X=PX0+x*2+1,Y=PY0+y*2+1;if(X<W&&Y<H&&BODY[Y*W+X]===3)HM[y*GW2+x]=1;}
-let hfOn=false,hfAcc=0;
+let hfOn=false,hfAcc=0;const HFC2=.14;const HS=new Float32Array(GW2*GH2);
 const hfPoke=(x,y,a)=>{const gx=((x-PX0)>>1),gy=((y-PY0)>>1);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=gx+dx,Y=gy+dy;if(X>0&&Y>0&&X<GW2-1&&Y<GH2-1&&HM[Y*GW2+X])HA[Y*GW2+X]-=a*(dx||dy?.5:1);}};
-function updHF(dt){hfAcc+=dt;while(hfAcc>=1/30){hfAcc-=1/30;for(let y=1;y<GH2-1;y++)for(let x=1;x<GW2-1;x++){const k=y*GW2+x;HB[k]=HM[k]?((HA[k-1]+HA[k+1]+HA[k-GW2]+HA[k+GW2])*.5-HB[k])*.965:0;}const t=HA;HA=HB;HB=t;}}
+function updHF(dt){hfAcc+=dt;while(hfAcc>=1/30){hfAcc-=1/30;for(let y=1;y<GH2-1;y++)for(let x=1;x<GW2-1;x++){const k=y*GW2+x;HB[k]=HM[k]?(2*HA[k]-HB[k]+(HA[k-1]+HA[k+1]+HA[k-GW2]+HA[k+GW2]-4*HA[k])*HFC2)*.955:0;}const t=HA;HA=HB;HB=t;}}
 const inPondHF=(x,y)=>hfOn&&BODY[(y|0)*W+(x|0)]===3;
 function splash(x,y,size){const pond=inPondHF(x,y);if(pond)hfPoke(x,y,size*1.6);else{ring(x,y,13,.9,0,1);if(size>3)ring(x,y,10,1.1,.18,1);}
   for(let k=0;k<size;k++){const a=rnd()*6.283,s=6+rnd()*12;drop(x,y,Math.cos(a)*s,Math.sin(a)*s*.6,30+rnd()*35,k&1?FM:WH);}}
 
 // ---------- entities ----------
 const wk={x:250,y:96,dir:0,mv:false,at:0,st:'land',stepT:0,wakeT:0,tx:0,ty:0,hasT:false};
-const keys={l:0,r:0,u:0,d:0};let deepBlocks=true;
+const keys={l:0,r:0,u:0,d:0};let deepBlocks=false;
 const terr=(x,y)=>{const X=x|0,Y=y|0;if(X<2||Y<12||X>=W-2||Y>=H)return 'block';const i=Y*W+X;if(DECK[i])return 'land';if(BLOCK[i]||BODY[i]===4)return 'block';if(!WATER[i])return 'land';const k=KIND[CELL[i]];return (k===2||k===3||k===5)?'deep':'wade';};
 function updWalker(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
   if(ix||iy)wk.hasT=false;else if(wk.hasT){const dx=wk.tx-wk.x,dy=wk.ty-wk.y,d=Math.hypot(dx,dy);if(d<1.2)wk.hasT=false;else{ix=dx/d;iy=dy/d;}}
@@ -300,26 +305,44 @@ function updWalker(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy-
   const m=Math.hypot(ix,iy);let vx=0,vy=0;
   if(m>0){ix/=m;iy/=m;const sp=42*(wk.st==='wade'?.6:wk.st==='swim'?.45:1);vx=ix*sp;vy=iy*sp;wk.dir=Math.abs(ix)>Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);}
   if(wk.st!=='land'){const i=(wk.y|0)*W+(wk.x|0),k=wk.st==='swim'?.8:.45;vx+=PFX[i]*k;vy+=PFY[i]*k;}
-  const ok=(x,y)=>{const t=terr(x,y);return !(t==='block'||(t==='deep'&&deepBlocks&&wk.st!=='swim'));};
+  // deep water rule: deep water is a wall. A walker the tide lifted into deep water may only move to cells that are no
+  // farther from the shore, so it can get out and never gets locked in
+  const sd0=SD[CELL[(wk.y|0)*W+(wk.x|0)]];
+  const ok=(x,y)=>{const t=terr(x,y);return !(t==='block'||(t==='deep'&&deepBlocks&&(wk.st!=='swim'||SD[CELL[(y|0)*W+(x|0)]]>sd0)));};
   const ox=wk.x,oy=wk.y,nx=wk.x+vx*dt,ny=wk.y+vy*dt;
-  if(ok(nx,ny)){wk.x=nx;wk.y=ny;}else if(ok(nx,wk.y))wk.x=nx;else if(ok(wk.x,ny))wk.y=ny;else if(wk.hasT){wk.hasT=false;if(deepBlocks&&terr(nx,ny)==='deep')msg('Deep water blocks the way (Tibia rule). Toggle it to swim.');}
+  if(ok(nx,ny)){wk.x=nx;wk.y=ny;}else if(ok(nx,wk.y))wk.x=nx;else if(ok(wk.x,ny))wk.y=ny;else wk.hasT=false;
+  // say why when the deep water rule refused the move, for key input as well as a tap target
+  if(m>0&&deepBlocks&&!ok(nx,ny)&&terr(nx,ny)==='deep')msg(wk.st==='swim'?'Deep water blocks is on: you can only swim back to shore. Turn it off to swim out.':'Deep water blocks is on (Tibia rule). Turn it off to swim.');
   wk.mv=m>0;if(wk.mv)wk.at+=dt;
   const rvx=dt?(wk.x-ox)/dt:0,rvy=dt?(wk.y-oy)/dt:0,sp=Math.hypot(rvx,rvy);
   if(wk.st!=='land'&&sp>3){wk.stepT+=dt;wk.wakeT+=dt;const pond=inPondHF(wk.x,wk.y);
-    if(wk.stepT>(wk.st==='swim'?.55:.3)){wk.stepT=0;if(pond)hfPoke(wk.x,wk.y,2.5);else ring(wk.x,wk.y-1,wk.st==='swim'?10:8,wk.st==='swim'?1:.75,0,2);}
+    if(wk.stepT>(wk.st==='swim'?.55:.3)){wk.stepT=0;if(pond)hfPoke(wk.x,wk.y,4);else ring(wk.x,wk.y-1,wk.st==='swim'?10:8,wk.st==='swim'?1:.75,0,2);}
     if(wk.wakeT>.07){wk.wakeT=0;wakePair(wk.x,wk.y,rvx,rvy,wk.st==='swim'?1.4:1.05);}}}
 const boat={on:false,x:0,y:0,vx:0,vy:0,tx:0,ty:0,face:1,wt:0};
-const boatOk=(x,y)=>{const tH=tideHOf(tide);for(const dx of[-8,0,8]){const X=(x+dx)|0,Y=y|0;if(X<0||X>=W||Y<0||Y>=H)return false;const j=Y*W+X;if(BODY[j]!==1||!WATER[j]||tH-HGT[j]<10||DECK[j])return false;}return true;};
-function updBoat(dt){if(!boat.on)return;const dx=boat.tx-boat.x,dy=boat.ty-boat.y,d=Math.hypot(dx,dy),des=d>3?Math.min(28,d*2):0,k=Math.min(1,dt*1.4);
-  boat.vx+=((d?dx/d:0)*des-boat.vx)*k;boat.vy+=((d?dy/d:0)*des-boat.vy)*k;const nx=boat.x+boat.vx*dt,ny=boat.y+boat.vy*dt;
-  if(boatOk(nx,ny)){boat.x=nx;boat.y=ny;}else{boat.vx*=.3;boat.vy*=.3;}
+// least water under the bow, the middle and the stern. The boat floats in 10 or more
+const boatDepth=(x,y)=>{const tH=tideHOf(tide);let m=1e9;for(const dx of[-8,0,8]){const X=(x+dx)|0,Y=y|0;if(X<0||X>=W||Y<0||Y>=H)return -1e9;const j=Y*W+X;if(BODY[j]!==1||DECK[j])return -1e9;m=Math.min(m,tH-HGT[j]);}return m;};
+const boatOk=(x,y)=>boatDepth(x,y)>=10;
+function updBoat(dt){if(!boat.on)return;let dx=boat.tx-boat.x,dy=boat.ty-boat.y,d=Math.hypot(dx,dy),des=d>3?Math.min(28,d*2):0;const k=Math.min(1,dt*1.4);
+  // when the ebb leaves the boat in less than 10 of water it slides down the beach until it floats again. Moves that do
+  // not lose depth are allowed meanwhile, so it can never be locked in place
+  const cur=boatDepth(boat.x,boat.y),aground=cur<10;
+  if(aground){dx=.55;dy=.835;d=1;des=14;if(!boat.ag&&cur<4)msg('Low tide. The boat slides back to deeper water.');}boat.ag=aground;
+  boat.vx+=((d?dx/d:0)*des-boat.vx)*k;boat.vy+=((d?dy/d:0)*des-boat.vy)*k;const nx=boat.x+boat.vx*dt,ny=boat.y+boat.vy*dt,nd=boatDepth(nx,ny);
+  if(nd>=10||(aground&&nd>=cur)){boat.x=nx;boat.y=ny;}else{boat.vx*=.3;boat.vy*=.3;}
   if(boat.vx<-1)boat.face=-1;else if(boat.vx>1)boat.face=1;const sp=Math.hypot(boat.vx,boat.vy);
   if(sp>4){boat.wt+=dt;if(boat.wt>.035){boat.wt=0;wakePair(boat.x-boat.face*6,boat.y+1,boat.vx,boat.vy,2.2);if(rnd()<.35)drop(boat.x-boat.face*9,boat.y+1,-boat.vx*.3,(rnd()-.5)*4,8+rnd()*8,WH);}}}
 const logs=[];
 const floatOk=(x,y)=>{if(x<0||y<0||x>=W||y>=H)return false;const j=(y|0)*W+(x|0);return !!(WATER[j]||BODY[j]===4);};
 function addLog(x,y){if(logs.length>=8)logs.shift();logs.push({x,y,vx:0,vy:0,ph:rnd()*6.283,wt:0,fall:false,age:0});if(floatOk(x,y))splash(x,y,4);else msg('Logs only float on water.');}
+// logs steer by the per-pixel river tangent, not the 8-direction cell flow. Near a bank the bed slope pushes them back to
+// mid-stream, and the plunge pool drains toward the river below it
+function logFlow(i,x,y){if(BODY[i]!==2)return [PFX[i],PFY[i]];
+  if(POOLF[i]){const dx=64-x,dy=59-y,d=Math.hypot(dx,dy)||1;return [dx/d*14,dy/d*14];}
+  const s=RSPD[i]*9;let fx=RTX[i]*s,fy=RTY[i]*s;
+  if(RIVD[i]<.75&&x>=1&&y>=1&&x<W-1&&y<H-1){const gx=(BODY[i+1]===2?RIVD[i+1]:0)-(BODY[i-1]===2?RIVD[i-1]:0),gy=(BODY[i+W]===2?RIVD[i+W]:0)-(BODY[i-W]===2?RIVD[i-W]:0),k=(.75-RIVD[i])*60;fx+=gx*k;fy+=gy*k;}
+  return [fx,fy];}
 function updLogs(dt){for(let k=logs.length-1;k>=0;k--){const g=logs[k];g.age+=dt;if(g.x<-8||g.y<-8||g.x>W+8||g.y>H+8||g.age>120){logs.splice(k,1);continue;}
-  if(!floatOk(g.x,g.y))continue;const i=(g.y|0)*W+(g.x|0),fx=PFX[i],fy=PFY[i];
+  if(!floatOk(g.x,g.y))continue;const i=(g.y|0)*W+(g.x|0),[fx,fy]=logFlow(i,g.x|0,g.y|0);
   if(Math.hypot(fx,fy)>.5){const a=Math.min(1,dt*1.6);g.vx+=(fx-g.vx)*a;g.vy+=(fy-g.vy)*a;}else{g.vx*=1-dt*.2;g.vy*=1-dt*.2;}
   const nx=g.x+g.vx*dt,ny=g.y+g.vy*dt,edge=nx<0||ny<0||nx>=W||ny>=H;
   if(edge||floatOk(nx,ny)){g.x=nx;g.y=ny;}else if(floatOk(nx,g.y)){g.x=nx;g.vy*=-.3;}else if(floatOk(g.x,ny)){g.y=ny;g.vx*=-.3;}else{g.vx*=.5;g.vy*=.5;}
@@ -348,7 +371,7 @@ function updParticles(dt){
   for(let k=0;k<2;k++)if(rnd()<dt*30){const p=mists[mistN++%90];Object.assign(p,{x:FX0+rnd()*(FX1-FX0+1),y:44+rnd()*3,vx:(rnd()-.5)*18,vy:-4-rnd()*10,age:0,life:1+rnd()*1.2});}
   for(const p of mists){if(p.age>=p.life)continue;p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=1-dt;p.vy*=1-dt*.6;}
   for(const p of sparks){if(simT>p.dl+p.life||p.life===0){const L=WLIST.length+RLIST.length;if(!L)continue;const k=(rnd()*L)|0,i=k<WLIST.length?WLIST[k]:RLIST[k-WLIST.length];if(BODY[i]===3||(BODY[i]===1&&BAND[i]<1))continue;p.x=i;p.dl=simT+rnd()*1.5;p.life=.25+rnd()*.3;}}
-  plopT-=dt;if(plopT<0){plopT=1.8+rnd()*1.8;const i=POND[(rnd()*POND.length)|0];if(PVAL[i]<.8){const x=XS[i],y=YS[i];if(hfOn)hfPoke(x,y,3);else ring(x,y,7,1.1,0,1);drop(x,y,(rnd()-.5)*6,0,20,FM);}}
+  plopT-=dt;if(plopT<0){plopT=1.8+rnd()*1.8;const i=POND[(rnd()*POND.length)|0];if(PVAL[i]<.8){const x=XS[i],y=YS[i];if(hfOn)hfPoke(x,y,5);else ring(x,y,7,1.1,0,1);drop(x,y,(rnd()-.5)*6,0,20,FM);}}
   seaT-=dt;if(seaT<0){seaT=4+rnd()*5;for(let k=0;k<20;k++){const i=WLIST[(rnd()*WLIST.length)|0];if(i!==undefined&&BODY[i]===1&&BAND[i]>=3){ring(XS[i],YS[i],8,1.3,0,1);ring(XS[i],YS[i],6,1.2,.25,1);break;}}}
   postT-=dt;if(postT<0){postT=1.2+rnd()*1.6;const p=POSTS[(rnd()*POSTS.length)|0];if(WATER[p[1]*W+p[0]])ring(p[0],p[1],4,1.4,0,1);}
   if(msgT>0)msgT-=dt;}
@@ -365,14 +388,20 @@ function reflect(s,x0,y0,r1){const by=y0+s.h,rr=r1==null?s.h:r1;for(let y=0;y<rr
 const put=(x,y,c)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<W&&y<H)IDX[y*W+x]=c;};
 const putW=(x,y,f)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;if(WATER[i])IDX[i]=f(IDX[i]);}};
 function ellipse(cx,cy,rx,ry,f,half){const n=Math.max(10,Math.ceil(rx*5));for(let k=0;k<n;k++){const a=k/n*6.283,s=Math.sin(a);if(half===1&&s<0||half===-1&&s>=0)continue;putW(cx+Math.cos(a)*rx,cy+s*ry,f);}}
-const walkSpr=()=>{const f=wk.mv?[1,0,2,0][Math.floor(wk.at*8)&3]:0;return WALK['durl'[wk.dir]+f];};
+const walkSpr=()=>{const f=wk.mv?[1,0,2,0][Math.floor(wk.at*8)&3]:0;return WALK['dulr'[wk.dir]+f];};
 let surf='cycle',sync=false,caust=true,reflOn=true,view='normal',waterMs=0;
 function render(){const t0=performance.now(),t=simT;IDX.set(BASEIDX);
   const cyc=surf==='cycle',tfr=Math.floor(t*5);
+  // pond heightfield: one slope per 2 px cell, filtered per pixel so the cells do not show. The thresholds sit near a quarter
+  // of a fresh poke (4 to 10), so a ripple shades its two flanks and flat water stays plain
+  if(hfOn)for(let y=1;y<GH2-1;y++)for(let x=1;x<GW2-1;x++){const q=y*GW2+x;HS[q]=HM[q]?HA[q+1]-HA[q-1]+(HA[q+GW2]-HA[q-GW2])*.6:0;}
   for(let k=0;k<WLIST.length;k++){const i=WLIST[k],b=BODY[i],band=BAND[i],g=b===1?band:5+band;
-    if(b===3&&hfOn){const gx=(XS[i]-PX0)>>1,gy=(YS[i]-PY0)>>1;if(gx<1||gy<1||gx>=GW2-1||gy>=GH2-1)continue;const q=gy*GW2+gx,s=HA[q+1]-HA[q-1]+(HA[q+GW2]-HA[q-GW2])*.6;if(s>2)IDX[i]=SWH;else if(s>.5)IDX[i]=LIGHTM[IDX[i]];else if(s<-.5)IDX[i]=DARKM[IDX[i]];continue;}
+    if(b===3&&hfOn){const fx=clamp((XS[i]-PX0-1)/2,0,GW2-1.001),fy=clamp((YS[i]-PY0-1)/2,0,GH2-1.001),ix=fx|0,iy=fy|0,ux=fx-ix,uy=fy-iy,q=iy*GW2+ix;
+      const s=(HS[q]*(1-ux)+HS[q+1]*ux)*(1-uy)+(HS[q+GW2]*(1-ux)+HS[q+GW2+1]*ux)*uy+(BY[i]/16-.5)*.5;
+      if(s>3.2)IDX[i]=SWH;else if(s>1.1)IDX[i]=LIGHTM[IDX[i]];else if(s<-1.1)IDX[i]=DARKM[IDX[i]];continue;}
     if(cyc){const p=CYCPAT[i];if(p)IDX[i]=64+g*4+p-1;}
-    else{const f=(tfr+(sync?0:PHC[CELL[i]]))&3,v=TILEF[f][((YS[i]&7)<<3)|(XS[i]&7)];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}}
+    else if(sync){const v=TILEF[tfr&3][((YS[i]&7)<<3)|(XS[i]&7)];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}
+    else{const tk=TKX[i];if(tk!==255){const v=TILEF[(tfr+TPX[i])&3][tk];if(v)IDX[i]=v===1?GMID[g]:GHI[g];}}}
   if(caust){const ax=(t*5)|0,ay=(t*3)|0,bx=(-t*4)|0,by=(t*6)|0;for(let k=0;k<SLIST.length;k++){const i=SLIST[k],x=XS[i],y=YS[i];
     const e=Math.min(VOR[(((y+ay)&63)<<6)|((x+ax)&63)],VOR[(((y-by+20)&63)<<6)|((x+bx+40)&63)]);if(e<18)IDX[i]=(BAND[i]===0||FORD[i])?A5:A4H;}}
   {const sp=.55,L=1/sp,p0=(t*sp)%1,p1=(p0+.5)%1,w0=1-Math.abs(2*p0-1),w1=1-w0,nrm=1/Math.sqrt(w0*w0+w1*w1),o0=p0*L,o1=p1*L,cf=(t*10)|0;
@@ -406,10 +435,11 @@ function render(){const t0=performance.now(),t=simT;IDX.set(BASEIDX);
   for(const p of wakes){if(p.age>=p.life)continue;const a=p.age/p.life,x=Math.round(p.x),y=Math.round(p.y);if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(!WATER[i])continue;if(a>.6&&BY[i]<(a-.6)*40)continue;IDX[i]=a<.2?FM:LIGHTM[IDX[i]];}
   if(light!=='day'){const mx=light==='night'?262:246,gl=light==='night'?MOON:T1;for(let y=60;y<H;y++){const r=hash(y,(t*6)|0,50);if((r&3)===0)continue;const w=.8+(y-60)*.035,ox=((r>>4)%5)-2;
     for(let x=Math.round(mx-w+ox);x<=mx+w+ox;x++){if(x<0||x>=W)continue;const i=y*W+x;if(WATER[i]&&BODY[i]===1&&hf(x,y,((t*8)|0)+51)<.45)IDX[i]=gl;}}}
+  // logs go down before the posts and the planks, so they pass under the bridge and the pier
+  for(const g of logs){const bob=Math.round(Math.sin(t*Math.PI+g.ph)),x0=Math.round(g.x)-5,y0=Math.round(g.y)-2+bob;if(floatOk(g.x,g.y)){blit(LOG,x0,y0,0,3);for(let x=0;x<10;x++)putW(x0+x,y0+3,v=>LIGHTM[v]);}else blit(LOG,x0,y0);}
   for(let k=0;k<OVLP.length;k++)IDX[OVLP[k]]=OVLC[k];
   waterMs=waterMs*.9+(performance.now()-t0)*.1;
   for(let k=0;k<DECKP.length;k++)IDX[DECKP[k]]=DECKC[k];
-  for(const g of logs){const bob=Math.round(Math.sin(t*Math.PI+g.ph)),x0=Math.round(g.x)-5,y0=Math.round(g.y)-2+bob;if(floatOk(g.x,g.y)){blit(LOG,x0,y0,0,3);for(let x=0;x<10;x++)putW(x0+x,y0+3,v=>LIGHTM[v]);}else blit(LOG,x0,y0);}
   if(fs.st!=='idle'){const bx=Math.round(fs.x),by=Math.round(fs.y)+(fs.st==='wait'?Math.round(Math.sin(t*5)*.6):0);
     if(fs.st==='fly'){put(bx,by-1,WH);put(bx,by,BOB);}else if(fs.st==='bite'){put(bx,by,BOB);putW(bx-1,by+1,v=>LIGHTM[v]);putW(bx+1,by+1,v=>LIGHTM[v]);}else{put(bx,by-2,WH);put(bx,by-1,BOB);putW(bx-1,by,v=>LIGHTM[v]);putW(bx+1,by,v=>LIGHTM[v]);}}
   const ents=UPR.map(o=>({by:o.by,f:()=>blit(o.s,o.x,o.y)}));
@@ -438,7 +468,7 @@ function drawView(){
     if((x&7)===0||(y&7)===0)c=dim(c)|0xff000000;out[i]=c;}
     for(let c=0;c<NC;c++){const v=SD[c];if(v!==0)continue;const x=(c%GW)*8+3,y=((c/GW)|0)*8+3;if(y<H-1){out[y*W+x]=out[y*W+x+1]=out[(y+1)*W+x]=out[(y+1)*W+x+1]=rgb('ff8a3c');}}}
   else if(view==='flow'){for(let i=0;i<NP;i++)out[i]=dim(out[i]);const cols=[0,rgb('9fd8ff'),rgb('ffe060'),rgb('ff6a4a')];
-    for(let c=0;c<NC;c++){const s=FSPD[c];if(!s)continue;const x=(c%GW)*8+4,y=((c/GW)|0)*8+4,l=1+s,ex=x+DXS[FDIR[c]]*l,ey=y+DYS[FDIR[c]]*l;vline(x-DXS[FDIR[c]]*1.5,y-DYS[FDIR[c]]*1.5,ex,ey,cols[s]);vline(ex,ey,ex,ey,0xffffffff);}}
+    for(let c=0;c<NC;c++){const s=FSPD[c];if(!s||!KIND[c])continue;const x=(c%GW)*8+4,y=((c/GW)|0)*8+4,l=1+s,ex=x+DXS[FDIR[c]]*l,ey=y+DYS[FDIR[c]]*l;vline(x-DXS[FDIR[c]]*1.5,y-DYS[FDIR[c]]*1.5,ex,ey,cols[s]);vline(ex,ey,ex,ey,0xffffffff);}}
   else if(view==='auto'){for(let i=0;i<NP;i++)out[i]=dim(out[i]);const TW=GW-1;
     for(let ty=0;ty<GH-1;ty++)for(let tx=0;tx<TW;tx++){const cs=CASE[ty*TW+tx];if(cs===0)continue;const hue=cs*22.5*Math.PI/180,col=cs===15?rgb('203a70'):(255<<24|((Math.sin(hue+4.2)*.5+.5)*200+40)<<16|((Math.sin(hue+2.1)*.5+.5)*200+40)<<8|((Math.sin(hue)*.5+.5)*200+40))>>>0;
       for(let y=ty*8+4;y<ty*8+12&&y<H;y++)for(let x=tx*8+4;x<tx*8+12;x++){const i=y*W+x,e=(x&7)===4||(y&7)===4;if(cs===15){if(e)out[i]=col;continue;}out[i]=e?col:(BODY[i]===1&&WATER[i]?dim(col)|0xff000000:out[i]);
@@ -446,10 +476,15 @@ function drawView(){
 
 // ---------- loop and UI ----------
 let last=performance.now(),hudN=0;
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else lastDt=0;render();
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else lastDt=0;render();
   if(++hudN%6===0){let nr=0,nw=0;for(const p of rings)if(p.age<p.life)nr++;for(const p of wakes)if(p.age<p.life)nw++;
-    $('hud').textContent=`tide ${tide}/255 ${tideAuto?'auto, 2 min period (illustrative)':'manual'} · net ${netB} B (1 B per change) · water pass ${waterMs.toFixed(2)} ms · rings ${nr}/64 · wake ${nw}/256 · BFS + depth ${bfsMs.toFixed(2)} ms · fish ${fishN} · ${wk.st==='swim'?'swimming':wk.st==='wade'?'wading x0.6':'on land'}${paused?' · paused':''}${msgT>0?' · '+msgText:''}`;}
-  requestAnimationFrame(loop);}
+    $('hud').textContent=`tide ${tide}/255 ${tideAuto?'auto, 2 min period (illustrative)':'manual'} · net ${netB} B (1 B per change) · water pass ${waterMs.toFixed(2)} ms · rings ${nr}/64 · wake ${nw}/256 · BFS + depth ${bfsMs.toFixed(2)} ms · fish ${fishN} · ${wk.st==='swim'?'swimming':wk.st==='wade'?'wading x0.6':'on land'}${paused?' · paused':''}${msgT>0?' · '+msgText:''}`;}}
 let tool='walk';
 const group=(sel,attr,fn)=>{const bs=document.querySelectorAll(sel);bs.forEach(b=>b.onclick=()=>fn(b.dataset[attr]));};
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===v));
@@ -484,6 +519,10 @@ cv.addEventListener('pointermove',e=>{if(down)useTool(e,false);});
 addEventListener('pointerup',()=>{down=false;});addEventListener('pointercancel',()=>{down=false;});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
   if(KM[k]){keys[KM[k]]=1;e.preventDefault();return;}
   const T=['walk','stone','log','rod','boat'];
@@ -493,6 +532,9 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k===' '){paused=!paused;syncPause();e.preventDefault();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 recompute();syncTide();requestAnimationFrame(loop);
 })();
 </script>

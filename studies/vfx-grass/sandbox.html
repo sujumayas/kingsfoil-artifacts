@@ -91,7 +91,7 @@ code{font:13px var(--mono);color:var(--cool)}
     <div class="card"><h4>8 · Small life</h4><p>All creatures live in one pooled struct-of-arrays and are culled off screen. Butterflies use Stardew flight: each flap kicks them up and sideways, gravity pulls between flaps, and they rest 200 ms after 4 or 6 flap frames. Ours also land on flowers and flee. Bees hop between flowers about every 2 s. Dragonflies hover, then dart at 10x the speed. Midges are springs pulled toward a centre. Moths orbit the lamp, stall and flip. Rabbits run once a threat is within 5 cells and dive into cover. Frogs leap for 0.8 s into the pond. Critters check for threats every 200 ms, not every frame. Rules from Stardew and Terraria: no butterflies after 15:00 (ours taper), in rain or in a storm, and frogs come out after rain.</p></div>
     <div class="card"><h4>9 · Fireflies</h4><p>The default model is pulse coupling (Nicky Case's shape), not Kuramoto. Each fly's phase rises at 1/period, with the period 5.9 s ± 10% (P. pyralis). At 1 the fly flashes and resets, and every neighbour within 48 px gets <code>phase += phase·0.035</code>. A uniform 48 px grid finds the neighbours, and the work only happens on flash frames. A flash rises in 1 frame and falls over 0.4 s through 4 halo frames, with a J-shaped rise. <b>Synchronous</b> switches to P. carolinus: bursts of 6 flashes 0.5 s apart, then about 9 s of darkness, with the same coupling. The glow is a pre-made halo that raises palette light levels. It is not a per-pixel light. Godot Compatibility allows at most 15 lights per canvas item, so one light per fly is not possible there. Each night rolls a density: heavy about 1 in 9, empty about 1 in 3 (Terraria). Fireflies stay out about 3 h after dusk.</p></div>
     <div class="card"><h4>10 · Seasons, weather, access</h4><p>The season is a palette swap. The grass ramps are anchored on Stardew's hues, spring 119°, summer 89° and fall 16°, with yellower lights and bluer shadows. A per-cell phenology offset makes the field turn over 8 s instead of all at once. Winter adds snow, so only tufts' tips poke through, the pond freezes and the trees go bare. After rain, grass gets darker and more saturated, with glints and road puddles. <b>Reduce motion</b> stops field sway completely, because guidelines flag repeated motion over 25% of the screen. <b>Density</b> thins creatures. Numbers not tied to a source above are illustrative.</p></div>
-    <div class="card"><h4>11 · What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed. Everything writes palette indices into one buffer, and one lookup table turns them into colours. The study's benchmark found this path fastest. For 2,000 tufts, writing pixels straight into one buffer costs 0.051 ms. One Canvas2D <code>drawImage</code> per tuft costs 1.62 ms. Slicing each tuft per row at draw time costs 12 ms, so never do that. An 80 by 45 trail map with 10 walkers costs 0.0023 ms. A random-tick pick costs about 3 ns. Firefly sync at 1,000 flies costs 1.14 ms naive, 0.42 ms with a grid and 0.067 ms with a per-cell mean field. A CPU halo loop beats additive sprites, 0.22 ms against 0.89 ms for 1,000 halos. A full frame should stay near 1 ms even with a 6x CPU throttle. <b>Stress</b> multiplies tufts and creatures up to 8x so you can see where the budget breaks. <b>Cost view</b> colours each 8 px cell by the pixel writes and updates it caused.</p></div>
+    <div class="card"><h4>11 · What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed. Everything writes palette indices into one buffer, and one lookup table turns them into colours. The study's benchmark found this path fastest. For 2,000 tufts, writing pixels straight into one buffer costs 0.051 ms. One Canvas2D <code>drawImage</code> per tuft costs 1.62 ms. Slicing each tuft per row at draw time costs 12 ms, so never do that. An 80 by 45 trail map with 10 walkers costs 0.0023 ms. A random-tick pick costs about 3 ns. Firefly sync at 1,000 flies costs 1.14 ms naive, 0.42 ms with a grid and 0.067 ms with a per-cell mean field. A CPU halo loop beats additive sprites, 0.22 ms against 0.89 ms for 1,000 halos. A full frame at default settings measured about 0.4 ms on a desktop and 2.3 to 2.6 ms with a 6x CPU throttle. The HUD total includes the wind field, the x-ray overlay and the canvas upload. <b>Stress</b> multiplies tufts and creatures up to 8x so you can see where the budget breaks. <b>Cost view</b> colours each 8 px cell by the pixel writes and updates it caused.</p></div>
   </div>
   <p class="keys" style="margin-top:16px">Full research: <a href="vfx-grass-topdown-pixel.html">Top-down pixel grass study</a> · series: <a href="vfx-snow-sandbox.html">Snow</a> · <a href="vfx-acid-sandbox.html">Acid</a> · <a href="vfx-rain-sandbox.html">Rain</a> · <a href="vfx-forest-sandbox.html">Forest</a> · <a href="vfx-light-sandbox.html">Light</a> · <a href="vfx-fire-sandbox.html">Fire</a> · <a href="vfx-water-sandbox.html">Water</a> · <a href="vfx-fog-sandbox.html">Fog</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
 </main>
@@ -162,7 +162,7 @@ const TK=[[0,'night'],[.19,'night'],[.26,'dawn'],[.33,'morn'],[.42,'day'],[.62,'
 function todP(t){let k=0;while(TK[k+1][0]<t)k++;const [t0,a]=TK[k],[t1,b]=TK[k+1],u=sm((t-t0)/(t1-t0)),A=KF[a],B=KF[b],L=(p,q)=>p+(q-p)*u;return {m:A.m.map((v,j)=>L(v,B.m[j])),a:A.a.map((v,j)=>L(v,B.a[j])),l:L(A.l,B.l)};}
 const phaseOf=t=>t<.2||t>=.79?'night':t<.3?'dawn':t<.68?'day':'dusk';
 const pack=(r,g,b)=>(255<<24|clamp(b|0,0,255)<<16|clamp(g|0,0,255)<<8|clamp(r|0,0,255))>>>0;
-const LUT=new Uint32Array(8<<10),LMIX=[0,.2,.36,.54,.24,.46,.8,0];
+const LUT=new Uint32Array(8<<10),LMIX=[0,.2,.36,.54,.24,.46,.8,0],SNG=[40,50,60],SNB=[150,90,60];
 let tod=.56,TP=todP(tod),lutT=-1,lutDirty=true,sFrom=1,sTo=1,sP=1,weather='clear';
 function buildLUT(){const p=TP=todP(tod),wet=weather==='rain',dk=p.l,A=SRGB[sFrom],B=SRGB[sTo];
   for(let s=0;s<8;s++){const u=s/7;for(let b=0;b<128;b++){let r,g,bl;
@@ -171,7 +171,9 @@ function buildLUT(){const p=TP=todP(tod),wet=weather==='rain',dk=p.l,A=SRGB[sFro
       if(wet&&((b>=G0&&b<=L3)||(b>=E0&&b<=E4))){r*=.8;g*=.86;bl*=.86;const gr=(r+g+bl)/3;r+=(r-gr)*.35;g+=(g-gr)*.35;bl+=(bl-gr)*.35;}
       if(b===FF||b===FL||b===F1||b===F2||b===F3||b===EM){}
       else if(b===WN){const l=Math.min(1,dk*1.3);r=86+154*l;g=66+112*l;bl=52+40*l;}
-      else{r=r*p.m[0]+p.a[0];g=g*p.m[1]+p.a[1];bl=bl*p.m[2]+p.a[2];}}
+      else{r=r*p.m[0]+p.a[0];g=g*p.m[1]+p.a[1];bl=bl*p.m[2]+p.a[2];
+        // snow under a warm sky: give back green and blue, most in the shadow tone, so the ramp runs peach to violet
+        if(b>=S0&&b<=S2){const wm=Math.max(0,p.m[0]-p.m[2]),k=b-S0;g+=wm*SNG[k];bl+=wm*SNB[k];}}}
     for(let l=0;l<8;l++){let r2=r,g2=g,b2=bl;const v=LMIX[l]*Math.min(1,dk*1.2);
       if(l>=1&&l<=3){r2+=(255-r2)*v;g2+=(208-g2)*v;b2+=(150-b2)*v;}else if(l===4||l===5){r2+=(214-r2)*v;g2+=(255-g2)*v;b2+=(120-b2)*v;}else if(l===6){r2+=(255-r2)*v;g2+=(170-g2)*v;b2+=(90-b2)*v;}
       LUT[s<<10|l<<7|b]=pack(r2,g2,b2);}}}
@@ -342,7 +344,9 @@ function bakeBlock(c){const x0=(c%GW)*8,y0=((c/GW)|0)*8,y1=Math.min(H,y0+8),snow
       else{if(lvl===3&&reg!==0)gg=reg===2?(h<.3?W2:W1):(h<.25?G3:G2);
         if(wearOn){const w=wearAt(x,y)+(hf(x,y,74)-.5)*46;if(w>PRM.wearDirt+20)gg=h<.25?E3:E4;else if(w>PRM.wearDirt)gg=h<.6?E3:E4;else if(w>PRM.wearWorn+30)gg=h<.55?E3:G4;else if(w>PRM.wearWorn)gg=h<.3?E3:BRT[gg];}
         if(FLOR[i]&&sea<=1&&snow<.3)gg=[FWc,FYc,FPc,FBc][FLOR[i]-1];}
-      if(snow>0){const t=hf(x,y,75);if(t<snow*1.08-.04)gg=SHD[i]?(t<.5?S0:S1):(t<snow*.25?S1:S2);}
+      // snow arrives in patches: value noise sets the order, the hash only frays the edges. Burnt ground keeps
+      // showing through, and a burning cell takes no snow
+      if(snow>0&&burn!==1){const t=vn(x/5,y/4,75)*.75+hf(x,y,75)*.25;if(t<(burn?snow*.45:snow*1.08-.04))gg=SHD[i]?(t<.5?S0:S1):(t<.3||hf(x,y,76)<.05?S1:S2);}
       g=gg;}
     GROUND[i]=g;}
   DIRTY[c]=0;bakeN++;CWC[c]+=64;}
@@ -353,11 +357,12 @@ const WLA=Int32Array.from(WLST);
 // ---------- wind ----------
 const GENV=new Float32Array(512);{const R=mkR(77);for(let k=0;k<6;k++){const c=R()*512,w=40+R()*70,a=.55+R()*.45;for(let i=0;i<512;i++){let d=Math.abs(i-c);d=Math.min(d,512-d);if(d<w){const u=d/w;GENV[i]+=a*(1-u*u)*(1-u*u);}}}for(let i=0;i<512;i++)GENV[i]=Math.min(1,.15+GENV[i]);}
 let windPre='breeze',windDir=12,windStr=.3,gustSpeed=50,gustAmp=1,gustsOn=true,wcx=1,wcy=0,gustPh=0,envPh=0,step5=false,rm=false;
-function windUpdate(){const tw=step5?Math.floor(simT*5)/5:simT,on=windStr>=PRM.windMin&&!rm,base=on?windStr*1.4:0,ga=on&&gustsOn?windStr*3.2*gustAmp:0,k=6.2832/PRM.gustLen,ph=step5?Math.floor(gustPh/ (gustSpeed/5||1))*(gustSpeed/5||1):gustPh;
+let windMs=0;
+function windUpdate(){const w0=performance.now(),tw=step5?Math.floor(simT*5)/5:simT,on=windStr>=PRM.windMin&&!rm,base=on?windStr*1.4:0,ga=on&&gustsOn?windStr*3.2*gustAmp:0,k=6.2832/PRM.gustLen,ph=step5?Math.floor(gustPh/ (gustSpeed/5||1))*(gustSpeed/5||1):gustPh;
   for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){const t=ty*TW+tx,x=tx*4+2,y=ty*4+2,p=x*wcx+y*wcy;let g=0;
     if(ga>0){const env=GENV[(((p-envPh)*.25)|0)&511];g=env*(.5+.5*Math.cos((p-ph)*k));g*=g;}
     WH[t]=g;WL[t]=base+g*ga;}
-  return tw;}
+  windMs=performance.now()-w0;return tw;}
 
 // ---------- state ----------
 let simT=0,frame=0,tool='walk',view='normal',paused=false,tAuto=true,smooth=false,rmode='tufts',density=1,syncF=false,leak=false,regrowN=12;
@@ -381,7 +386,10 @@ function interUpdate(dt){const dc=dt/PRM.crushFade,dp=dt/PRM.pushFade;
   if(wearOn){const dw=dt/PRM.wearT;for(let k=0;k<NTR;k++){const w=WEAR[k];if(w<=0)continue;const nw=w-w*dw-.02;WEAR[k]=nw>0?nw:0;const lv=WEAR[k]>PRM.wearDirt?3:WEAR[k]>PRM.wearWorn+30?2:WEAR[k]>PRM.wearWorn?1:0;
     if(lv!==WLV[k]){if(lv>=2||WLV[k]>=2)netTx(PRM.netTile);WLV[k]=lv;const c=CELL[((k/TW)|0)*4*W+(k%TW)*4];for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const cx=(c%GW)+ox,cy=((c/GW)|0)+oy;if(cx>=0&&cy>=0&&cx<GW&&cy<GH)markBlock(cy*GW+cx);}fieldDirty=true;}}}
   const walkers=[[P,0,8],[V,1,6]];
-  for(const [w,wi,R] of walkers){const vx=w.x-w.lx,vy=w.y-w.ly,m=Math.hypot(vx,vy);w.lx=w.x;w.ly=w.y;if(w===V&&V.x<0)continue;stamp(wi,w.x,w.y,m,R,vx,vy);rustle(w,wi);}
+  for(const [w,wi,R] of walkers){const vx=w.x-w.lx,vy=w.y-w.ly,m=Math.hypot(vx,vy);w.lx=w.x;w.ly=w.y;if(w===V&&V.x<0)continue;
+    // a villager the server does not send still wears the path (server truth), but this client has no entity to
+    // crush, push or rustle the grass with
+    const seen=w!==V||V.sent;stamp(wi,w.x,w.y,seen?m:0,R,vx,vy);if(seen)rustle(w,wi);}
   SHEEP.forEach((s,j)=>{const vx=s.x-(s.lx||s.x),vy=s.y-(s.ly||s.y),m=Math.hypot(vx,vy);s.lx=s.x;s.ly=s.y;stamp(2+j,s.x,s.y,m,5,vx,vy);});
   for(let c=0;c<NC;c++)if(SHK[c]>0)SHK[c]=Math.max(0,SHK[c]-dt);}
 const RCELL=new Int32Array(8).fill(-1);
@@ -421,11 +429,12 @@ const NGM=20,GMX=new Float32Array(3*NGM),GMY=new Float32Array(3*NGM),GVX=new Flo
 let holdT=0,sleeping=0,threatChecks=0,threatSec=0,nightRoll=1,nightRollName='normal',lastPhase='';
 function alloc(k){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(!LA[j]){LA[j]=1;ALIVE[k]++;LST[j]=0;LT[j]=0;LT2[j]=-1;LZ[j]=0;LVX[j]=LVY[j]=LVZ[j]=0;LTG[j]=-1;LPH[j]=rnd()*6.283;LANG[j]=rnd()*6.283;LB[j]=0;LC[j]=0;LCK[j]=rnd()*PRM.threatDt;LTD[j]=999;return j;}return -1;}
 function kill(j,k){if(LA[j]){LA[j]=0;ALIVE[k]--;}}
-let TAX=0,TAY=0;
+// flee direction from the last threat check, one unit vector per creature
+const LAX=new Float32Array(NPL),LAY=new Float32Array(NPL);
 function threat(j,x,y,fire){LCK[j]-=1;if(LCK[j]>0)return LTD[j];threatChecks++;LCK[j]=1;
-  let bd=1e9,ax=0,ay=0;const chk=(px,py)=>{const d=Math.hypot(x-px,y-py);if(d<bd){bd=d;ax=x-px;ay=y-py;}};chk(P.x,P.y);if(V.x>0)chk(V.x,V.y);
+  let bd=1e9,ax=0,ay=0;const chk=(px,py)=>{const d=Math.hypot(x-px,y-py);if(d<bd){bd=d;ax=x-px;ay=y-py;}};chk(P.x,P.y);if(V.x>0&&V.sent)chk(V.x,V.y);
   if(fire){const c=CELL[clamp(y|0,0,H-1)*W+clamp(x|0,0,W-1)],cx=c%GW,cy=(c/GW)|0;for(let oy=-3;oy<=3;oy++)for(let ox=-3;ox<=3;ox++){const nx=cx+ox,ny=cy+oy;if(nx>=0&&ny>=0&&nx<GW&&ny<GH&&BURN[ny*GW+nx]===1)chk(nx*8+4,ny*8+4);}}
-  const l=Math.hypot(ax,ay)||1;LVZ[j]=ax/l;LB[j]=ay/l;LTD[j]=bd;return bd;}
+  const l=Math.hypot(ax,ay)||1;LAX[j]=ax/l;LAY[j]=ay/l;LTD[j]=bd;return bd;}
 const tickThreat=(j,dt)=>{LCK[j]-=dt/PRM.threatDt-1;};
 const tuftOK=k=>k>=0&&k<TN&&TTOP[k]>0;
 function nearFlower(x,y,maxd){let best=-1,bd=maxd;for(let n=0;n<8;n++){const k=FLW[rnd()*FLW.length|0];if(!tuftOK(k)||TT[k]!==3)continue;const d=Math.hypot(TX[k]-x,TY[k]-y);if(d<bd){bd=d;best=k;}}return best;}
@@ -433,7 +442,7 @@ function spawnCricket(x,y){const j=alloc(8);if(j<0)return;LX[j]=x+(rnd()-.5)*6;L
 function spawnFrog(x,y,flee){const j=alloc(7);if(j<0)return;LX[j]=x;LY[j]=y;LST[j]=flee?1:0;LT[j]=flee?0:2+rnd()*4;if(flee){const a=Math.atan2(PCY-y,PCX-x);LANG[j]=a;}}
 function spawnAt(k,prefill){const j=alloc(k);if(j<0)return -1;const edge=()=>{const s=rnd()<.5;LX[j]=s?-6:W+6;LY[j]=30+rnd()*140;LANG[j]=s?0:Math.PI;};
   switch(k){
-  case 0:{const f=nearFlower(160,140,999);if(prefill&&f>=0){LX[j]=TX[f]+(rnd()-.5)*30;LY[j]=TY[f]+(rnd()-.5)*20;}else edge();LZ[j]=8;LC[j]=rnd()*3|0;LT[j]=1+rnd()*3;LTG[j]=-1;break;}
+  case 0:{const f=nearFlower(160,140,999);if(prefill&&f>=0){LX[j]=TX[f]+(rnd()-.5)*30;LY[j]=TY[f]+(rnd()-.5)*20;}else edge();LZ[j]=8;LC[j]=rnd()*3|0;LPH[j]=rnd()*.2;LT[j]=1+rnd()*3;LTG[j]=-1;break;}
   case 1:LX[j]=292;LY[j]=76;LZ[j]=6;LST[j]=1;LT[j]=0;LTG[j]=nearFlower(292,76,180);break;
   case 2:{const a=rnd()*6.283,r=rnd()*.7;LX[j]=PCX+Math.cos(a)*PRX*r;LY[j]=PCY+Math.sin(a)*PRY*r;LZ[j]=5;LT[j]=rnd()*2;break;}
   case 3:{const g=j-KS[3];LX[j]=80+rnd()*60;LY[j]=112+rnd()*16;for(let m=0;m<NGM;m++){const q=g*NGM+m;GMX[q]=LX[j]+(rnd()-.5)*10;GMY[q]=LY[j]-6+(rnd()-.5)*6;GVX[q]=(rnd()-.5)*10;GVY[q]=(rnd()-.5)*10;}break;}
@@ -460,22 +469,22 @@ function targets(){const ph=phaseOf(tod),s=sTo,wet=weather==='rain',dk=TP.l,stor
   for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;TGT[k]=KON[k]?Math.min(KC[k],Math.round(TGT[k]*(k===3||k===4?Math.min(d,1.5):d))):0;}}
 function spawnTick(dt){if(holdT>0){holdT-=dt;return;}for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;SPT[k]-=dt;if(SPT[k]>0)continue;SPT[k]=k===0?2.5+rnd()*2.5:k===5||k===9?.15:.6;
   if(ALIVE[k]<TGT[k]){const n=k===0?1+(rnd()*2|0):1;for(let m=0;m<n;m++)spawnAt(k,false);}
-  else if(ALIVE[k]>TGT[k]){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(LA[j]&&LST[j]!==9){LST[j]=9;break;}}}}
+  else if(ALIVE[k]>TGT[k]){const s=KS[k],e=s+KC[k],hop=k===6||k===7;for(let j=s;j<e;j++)if(LA[j]&&LST[j]!==9&&!(hop&&LST[j]!==0)){LST[j]=9;break;}}}}
 function prefill(){targets();for(let k=0;k<KD.length;k++){if(k===8||k===10)continue;while(ALIVE[k]<TGT[k])if(spawnAt(k,true)<0)break;}}
 // per-kind updates
 const offscreen=(x,y,m)=>x<-m||x>W+m||y<-m||y>H+m;
 function upBfly(j,dt){const st=LST[j];
-  if(st===1){const k=LTG[j];if(!tuftOK(k)){LST[j]=0;LVZ[j]=20;return;}LX[j]=TX[k]+TL[k]*(TFL[k]?-1:1);LY[j]=TY[k];LZ[j]=TTOP[k]+1;LT[j]-=dt;LPH[j]+=dt;
-    const th=threat(j,LX[j],LY[j]-LZ[j],false);if(th<PRM.bflyFlee||LT[j]<=0||LST[j]===9||TP.l>.95){LST[j]=0;LTG[j]=-1;LVZ[j]=30;LT2[j]=th<PRM.bflyFlee?1.2:0;LT[j]=3+rnd()*4;}return;}
-  // Stardew flight: flap kicks plus gravity, 4 or 6 flap frames, then a 200 ms rest
+  if(st===1){const k=LTG[j];if(!tuftOK(k)){LST[j]=0;LVZ[j]=20;LPH[j]=0;return;}LX[j]=TX[k]+TL[k]*(TFL[k]?-1:1);LY[j]=TY[k];LZ[j]=TTOP[k]+1;LT[j]-=dt;
+    const th=threat(j,LX[j],LY[j]-LZ[j],false);if(th<PRM.bflyFlee||LT[j]<=0||LST[j]===9||TP.l>.95){LST[j]=0;LTG[j]=-1;LVZ[j]=30;LPH[j]=0;LT2[j]=th<PRM.bflyFlee?1.2:0;LT[j]=3+rnd()*4;}return;}
+  // Stardew flight: flap kicks plus gravity, 4 or 6 flap frames, then a 200 ms rest.
+  // LPH is the time left on the current frame, LC>>2 the frames left. Frame 0 is the rest.
   LT2[j]-=dt;LPH[j]-=dt;
-  if(LPH[j]<=0){if(LC[j]>>2===0){LC[j]=(LC[j]&3)|((rnd()<.5?4:6)<<2);LANG[j]+=0;}
-    const left=LC[j]>>2;if(left>0){LC[j]=(LC[j]&3)|((left-1)<<2);LPH[j]=.045+rnd()*.035;if((left&1)===0){LVZ[j]+=PRM.bflyKick[0]+rnd()*(PRM.bflyKick[1]-PRM.bflyKick[0]);LVX[j]=clamp(LVX[j]+(rnd()*2-1)*PRM.bflySide,-PRM.bflyCap,PRM.bflyCap);LVY[j]=clamp(LVY[j]+(rnd()*2-1)*PRM.bflySide*.7,-PRM.bflyCap,PRM.bflyCap);}}
-    else{LPH[j]=.2;LC[j]=(LC[j]&3);LC[j]|=0;LPH[j]=.2;LC[j]=(LC[j]&3)|(0);LB[j]=1;}}
-  if(LB[j]>0&&LPH[j]<=.0001)LB[j]=0;
+  if(LPH[j]<=0){let left=LC[j]>>2;if(left===0)left=rnd()<.5?4:6;
+    if((left&1)===0){LVZ[j]+=PRM.bflyKick[0]+rnd()*(PRM.bflyKick[1]-PRM.bflyKick[0]);LVX[j]=clamp(LVX[j]+(rnd()*2-1)*PRM.bflySide,-PRM.bflyCap,PRM.bflyCap);LVY[j]=clamp(LVY[j]+(rnd()*2-1)*PRM.bflySide*.7,-PRM.bflyCap,PRM.bflyCap);}
+    left--;LC[j]=(LC[j]&3)|(left<<2);LPH[j]=left>0?.045+rnd()*.035:.2;}
   let sx=0,sy=0;const x=LX[j],y=LY[j],th=threat(j,x,y,false);
   if(th<PRM.bflyFlee&&LT2[j]<=0)LT2[j]=1.2;
-  if(LT2[j]>0){sx=LVZ.length&&0;sx=LVXa(j)*60;sy=LVYa(j)*60;}
+  if(LT2[j]>0){sx=LAX[j]*60;sy=LAY[j]*60;}
   else if(st===9){sx=x<W/2?-40:40;}
   else{LT[j]-=dt;if(LTG[j]<0&&LT[j]<=0){LTG[j]=nearFlower(x,y,90);LT[j]=4+rnd()*4;}
     const k=LTG[j];if(tuftOK(k)){const tx=TX[k]-x,ty=TY[k]-y,d=Math.hypot(tx,ty)||1;sx=tx/d*30;sy=ty/d*30;if(d<3&&LZ[j]<TTOP[k]+5){LST[j]=1;LT[j]=PRM.bflyPerch[0]+rnd()*(PRM.bflyPerch[1]-PRM.bflyPerch[0]);LVX[j]=LVY[j]=LVZ[j]=0;return;}}
@@ -484,8 +493,6 @@ function upBfly(j,dt){const st=LST[j];
   LX[j]+=LVX[j]*dt*rmF;LY[j]+=LVY[j]*dt*rmF*.8;LVZ[j]-=PRM.bflyGrav*dt;LZ[j]+=LVZ[j]*dt;
   const zmin=tuftOK(LTG[j])?TTOP[LTG[j]]+1:4;if(LZ[j]<zmin){LZ[j]=zmin;if(LVZ[j]<0)LVZ[j]=0;}if(LZ[j]>16){LZ[j]=16;if(LVZ[j]>0)LVZ[j]=0;}
   if(offscreen(LX[j],LY[j],10))kill(j,0);}
-function LVXa(j){return LVZ_(j,0);}function LVYa(j){return LVZ_(j,1);}
-function LVZ_(j,a){const dx=LX[j]-P.x,dy=LY[j]-P.y,l=Math.hypot(dx,dy)||1;return a?dy/l:dx/l;}
 function upBee(j,dt){const k=LTG[j];
   if(LST[j]===9){const dx=292-LX[j],dy=74-LY[j],d=Math.hypot(dx,dy);if(d<2){kill(j,1);return;}LX[j]+=dx/d*40*dt;LY[j]+=dy/d*40*dt;return;}
   if(LST[j]===1){if(!tuftOK(k)){LTG[j]=nearFlower(LX[j],LY[j],120);if(LTG[j]<0)LST[j]=9;return;}const tx=TX[k],ty=TY[k],dx=tx-LX[j],dy=ty-LY[j],d=Math.hypot(dx,dy);
@@ -521,18 +528,19 @@ function upFfly(j,dt){LANG[j]+=(rnd()-.5)*3*dt;const x=LX[j],y=LY[j];if(x<8)LANG
 function hopTo(j,a,dist,dur,peak){LANG[j]=a;LVX[j]=Math.cos(a)*dist/dur;LVY[j]=Math.sin(a)*dist/dur*.8;LT[j]=0;LT2[j]=dur;LB[j]=peak;}
 function hopStep(j,dt){LT[j]+=dt;const u=LT[j]/LT2[j];LX[j]+=LVX[j]*dt;LY[j]+=LVY[j]*dt;LZ[j]=Math.sin(Math.PI*Math.min(1,u))*LB[j];return u>=1;}
 function upRabbit(j,dt){tickThreat(j,dt);const th=threat(j,LX[j],LY[j],true);
-  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;if(th<PRM.rabbitFlee){LST[j]=2;hopTo(j,Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
+  if(LST[j]===9){LST[j]=2;hopTo(j,Math.atan2(LAY[j],LAX[j])+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
+  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;if(th<PRM.rabbitFlee){LST[j]=2;hopTo(j,Math.atan2(LAY[j],LAX[j])+(rnd()-.5)*.5,PRM.rabbitSpeed*.22,.22,3);}
     else if(LT[j]<=0){LST[j]=1;hopTo(j,rnd()*6.283,4,.2,2);}return;}
   if(hopStep(j,dt)){LZ[j]=0;stamp(4+(j&3),LX[j],LY[j],3,3);
     if(LST[j]===1){LST[j]=0;LT[j]=2+rnd()*5;return;}
     const c=CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)];
     if(th>PRM.rabbitStop||offscreen(LX[j],LY[j],4)){if(hides(c)||th>PRM.rabbitStop*1.2||offscreen(LX[j],LY[j],4)){kill(j,6);return;}}
-    let a=th<PRM.rabbitStop?Math.atan2(LB[j],LVZ_t(j))+(rnd()-.5)*.6:LANG[j];for(let n=0;n<6;n++){const nx=LX[j]+Math.cos(a)*10,ny=LY[j]+Math.sin(a)*8;if(!blockedPx(nx,ny)||offscreen(nx,ny,0))break;a+=1.1;}
-    hopTo(j,a,PRM.rabbitSpeed*.22,.22,3);}
-  if(LST[j]===9&&LST[j]!==2){}}
-function LVZ_t(j){return LVZ[j];}
+    let a=th<PRM.rabbitStop?Math.atan2(LAY[j],LAX[j])+(rnd()-.5)*.6:LANG[j];for(let n=0;n<6;n++){const nx=LX[j]+Math.cos(a)*10,ny=LY[j]+Math.sin(a)*8;if(!blockedPx(nx,ny)||offscreen(nx,ny,0))break;a+=1.1;}
+    hopTo(j,a,PRM.rabbitSpeed*.22,.22,3);}}
 function upFrog(j,dt){tickThreat(j,dt);
-  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;const th=threat(j,LX[j],LY[j],true);if(th<PRM.frogFlee||LST[j]===9){LST[j]=1;const a=Math.atan2(PCY-LY[j],PCX-LX[j]);hopTo(j,a,14,PRM.frogLeap,PRM.frogPeak);}else if(LT[j]<=0){LT[j]=3+rnd()*5;}return;}
+  // a frog marked for despawn leaps to the pond like a scared one
+  if(LST[j]===9){LST[j]=1;hopTo(j,Math.atan2(PCY-LY[j],PCX-LX[j]),14,PRM.frogLeap,PRM.frogPeak);}
+  if(LST[j]===0){LT[j]-=dt;LPH[j]+=dt;const th=threat(j,LX[j],LY[j],true);if(th<PRM.frogFlee){LST[j]=1;const a=Math.atan2(PCY-LY[j],PCX-LX[j]);hopTo(j,a,14,PRM.frogLeap,PRM.frogPeak);}else if(LT[j]<=0){LT[j]=3+rnd()*5;}return;}
   if(LST[j]===1&&LT2[j]<=0)hopTo(j,LANG[j],14,PRM.frogLeap,PRM.frogPeak);
   if(hopStep(j,dt)){LZ[j]=0;const i=clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1);if(PT[i]===3){const b=alloc(KB);if(b>=0){LX[b]=LX[j];LY[b]=LY[j];LST[b]=3;LT[b]=.5;LZ[b]=0;}kill(j,7);return;}hopTo(j,Math.atan2(PCY-LY[j],PCX-LX[j]),14,PRM.frogLeap,PRM.frogPeak);}}
 function upCricket(j,dt){if(LT2[j]<=0)hopTo(j,LANG[j],6,.18,4);if(hopStep(j,dt)){LZ[j]=0;LTG[j]--;if(LTG[j]<=0){kill(j,8);return;}hopTo(j,LANG[j]+(rnd()-.5)*1.5,6,.18,4);}}
@@ -555,10 +563,11 @@ function lifeUpdate(dt){const ph=phaseOf(tod);if(ph!==lastPhase){if(ph==='dusk')
       if(LA[j])CWC[CELL[clamp(LY[j]|0,0,H-1)*W+clamp(LX[j]|0,0,W-1)]]+=12;}}}
 
 // ---------- walkers ----------
-function moveWalker(w,ix,iy,sp,dt){const l=Math.hypot(ix,iy);w.mv=l>0;if(!w.mv)return;const s=sp*dt/l,nx=w.x+ix*s,ny=w.y+iy*s;if(!blockedPx(nx,w.y))w.x=nx;if(!blockedPx(w.x,ny))w.y=ny;w.at+=dt;if(ix)w.face=ix>0?1:-1;}
+// w.mv is true only when the walker covered at least a quarter of the step, so a blocked walker stands still
+function moveWalker(w,ix,iy,sp,dt){const l=Math.hypot(ix,iy);if(!l){w.mv=false;return;}if(!(dt>0))return;const s=sp*dt/l,nx=w.x+ix*s,ny=w.y+iy*s,ox=w.x,oy=w.y;if(!blockedPx(nx,w.y))w.x=nx;if(!blockedPx(w.x,ny))w.y=ny;w.mv=Math.hypot(w.x-ox,w.y-oy)>sp*dt*.25;if(w.mv)w.at+=dt;if(ix)w.face=ix>0?1:-1;}
 function stepWalkers(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
   if(ix||iy)P.hasT=false;else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);if(d<1.2)P.hasT=false;else{ix=dx/d;iy=dy/d;}}
-  const pc=CELL[(P.y|0)*W+(P.x|0)];moveWalker(P,ix,iy,hides(pc)?29:36,dt);if(P.reveal>0)P.reveal-=dt;
+  const pc=CELL[(P.y|0)*W+(P.x|0)];moveWalker(P,ix,iy,hides(pc)?29:36,dt);if(P.hasT&&!P.mv&&dt>0)P.hasT=false;if(P.reveal>0)P.reveal-=dt;
   const pc2=CELL[(P.y|0)*W+(P.x|0)];P.hideT=hides(pc2)&&P.reveal<=0?(P.hideT||0)+dt:0;const vc2=V.x>0?CELL[clamp(V.y|0,0,H-1)*W+clamp(V.x|0,0,W-1)]:-1;V.hideT=vc2>=0&&hides(vc2)?(V.hideT||0)+dt:0;
   // villager
   if(V.wait>0){V.wait-=dt;V.mv=false;}else{const wp=VWP[V.i],dx=wp[0]-V.x,dy=wp[1]-V.y,d=Math.hypot(dx,dy);if(d<1.5){V.wait=wp[2];V.i=(V.i+1)%VWP.length;if(V.i===0){V.x=VWP[0][0];V.y=VWP[0][1];}}else{V.x+=dx/d*24*dt;V.y+=dy/d*24*dt;V.mv=true;V.at+=dt;V.face=dx>0?1:-1;}}
@@ -568,20 +577,24 @@ function stepWalkers(dt){let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)i
       if(s.t<=0){let bx=s.x,by=s.y,bh=-1;for(let n=0;n<6;n++){const x=260+rnd()*50,y=118+rnd()*50,c=CELL[(y|0)*W+(x|0)];if(HGT[c]>bh){bh=HGT[c];bx=x;by=y;}}s.tx=bx;s.ty=by;s.st=1;}}}}
 
 // ---------- render ----------
-const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};
+const T={ground:0,tufts:0,inter:0,regrow:0,lifeU:0,lifeD:0,light:0,present:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};
 let flatN=0,tuftsDrawn=0,settled=0,lifeDrawAcc=0,playerHidden=false,villHidden=false;
 const ip=(x,y,c)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=c;if(smooth)AW[i]=255;}};
-const setL=(x,y,l)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x,cur=(IDX[i]>>7)&7;if(l>cur)IDX[i]=(IDX[i]&127)|(l<<7);}};
-function blitS(S,x0,y0,flip,crop,mask){const w=S.w,h=S.h-(crop||0),p=S.p;for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+(flip?w-1-x:x)];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;if(mask&&(y<4||((X+Y)&1)))continue;const i=Y*W+X;IDX[i]=v-1;if(smooth)AW[i]=255;}}}
+// light levels are not ordered by brightness (1 to 3 lamp, 4 and 5 firefly, 6 fire), so the brighter LMIX wins
+const setL=(x,y,l)=>{if(x>=0&&y>=0&&x<W&&y<H){const i=y*W+x,cur=(IDX[i]>>7)&7;if(LMIX[l]>LMIX[cur])IDX[i]=(IDX[i]&127)|(l<<7);}};
+// mask: the see-through overlay of a hidden walker. Every other pixel, and only over grass and wheat colours,
+// so trees, sheep and anything else standing in front keep covering the walker
+function blitS(S,x0,y0,flip,crop,mask){const w=S.w,h=S.h-(crop||0),p=S.p;for(let y=0;y<h;y++){const Y=y0+y;if(Y<0||Y>=H)continue;for(let x=0;x<w;x++){const v=p[y*w+(flip?w-1-x:x)];if(!v)continue;const X=x0+x;if(X<0||X>=W)continue;const i=Y*W+X;if(mask){if((X+Y)&1)continue;const g=IDX[i]&127;if(g<G0||g>W4)continue;}IDX[i]=v-1;if(smooth)AW[i]=255;}}}
 function blend(x,y,c,a){if(a<.06||x<0||x>=W||y<0||y>=H)return;const i=y*W+x;if(a>.94){IDX[i]=c;AW[i]=255;return;}IDX2[i]=IDX[i];IDX[i]=c;AW[i]=a*255|0;}
 let oscT1=0,oscT2=0,swayT=0;
 function tuftState(k){// returns key or -1, also lean in tuftLf
   const c=TCELL[k];if(BURN[c]===2){TTOP[k]=0;return -1;}let hl=HL[c];const t=TT[k];
   if(t===3&&!(FMASK[TV[k]]&(1<<SEAC[c]))){TTOP[k]=0;return -1;}
   if(t===2&&SEAC[c]===3)hl=(k%7)?3:Math.max(hl,1);
+  // settled shortcut: reuse the cached key, but only if that key is the upright pose with no sheen (q 0, lean 0, hi 0)
   const tr=TTR[k];if(wearOn){const wl=WLV[tr];if(wl>=3){TTOP[k]=0;return -1;}if(wl>=2&&hl<2)hl=2;else if(wl>=1&&hl<1)hl=1;}
   const CR=CRU[tr],I=CR>1?1:CR,ps=PSH[tr],sh=SHK[c],w=WL[tr];
-  if(w===0&&I===0&&ps===0&&sh===0&&TKEY[k]>=0&&!smooth&&(TKEY[k]/(LN*2*3)|0)%4===hl){settled++;tuftLf=0;tuftQ=0;return TKEY[k];}
+  if(w===0&&I===0&&ps===0&&sh===0&&TKEY[k]>=0&&!smooth&&TKEY[k]%(LN*2*3)===12&&(TKEY[k]/(LN*2*3)|0)%4===hl){settled++;tuftLf=0;tuftQ=0;return TKEY[k];}
   const fl=TFL[k]?-1:1,spr=Math.max(PRM.spring,1-I),fac=TFAC[k];
   let lf=(w+(w>0?(.25+windStr*.5)*(.6*sinT(TPH[k]+oscT1)+.4*sinT(TPH[k]*1.7+oscT2)):0))*STF[t]*spr*wcx;
   lf+=TDX[tr]/64*(I*2+ps*PRM.pushPx)*fac;
@@ -610,8 +623,8 @@ function buildEnts(){EN=0;addE(P.y,0,0);if(V.x>-6&&(!villHidden||leak||V.adj))ad
   for(const k of[6,7,8]){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++)if(LA[j])addE(LY[j],5,j);}
   for(let i=0;i<EN;i++)EO[i]=i;for(let i=1;i<EN;i++){const v=EO[i];let j=i-1;while(j>=0&&ENY[EO[j]]>ENY[v]){EO[j+1]=EO[j];j--;}EO[j+1]=v;}}
 function drawEnt(e,crop){const k=ENK[e],j=ENJ[e];
-  if(k===0){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,crop?6:0);}
-  else if(k===1){const S=V.mv?VIL[1+((V.at*7|0)&1)]:VIL[0];blitS(S,(V.x|0)-3,(V.y|0)-S.h+1,V.face<0,crop?6:0);}
+  if(k===0){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,crop?3:0);}
+  else if(k===1){const S=V.mv?VIL[1+((V.at*7|0)&1)]:VIL[0];blitS(S,(V.x|0)-3,(V.y|0)-S.h+1,V.face<0,crop?3:0);}
   else if(k===2){const s=SHEEP[j],S=SHP[s.st===1?0:((simT*1.2+j)|0)&1];blitS(S,(s.x|0)-4,(s.y|0)-S.h+1,s.face<0,crop?2:0);}
   else if(k===3)drawTree(TREES[j]);
   else if(k===4){const L=lamps[j],x=L.x,y=L.y;for(let h=0;h<9;h++)ip(x,y-h,E0);ip(x-1,y,E1);ip(x+1,y,E1);ip(x-1,y-9,R1);ip(x+1,y-9,R1);ip(x,y-10,R1);ip(x,y-9,TP.l>.4?FL:R3);}
@@ -626,7 +639,7 @@ function drawCritter(j,crop){const x=LX[j]|0,y=LY[j]|0,z=LZ[j]|0;
 let litN=0;function drawFlyers(){litN=0;const dk=TP.l,shadowOK=dk<.6;
   for(let k=0;k<6;k++){const s=KS[k],e=s+KC[k];for(let j=s;j<e;j++){if(!LA[j])continue;const x=LX[j]|0,y=LY[j]|0,z=LZ[j]|0;
     if(shadowOK&&k<3&&z>1&&x>=0&&y>=0&&x<W&&y<H){const i=y*W+x;IDX[i]=(IDX[i]&~127)|DARKB[IDX[i]&127];}
-    if(k===0){const col=[BO,FWc,FBc][LC[j]&3];let fr;if(LST[j]===1)fr=Math.sin(simT*1.4+j)>.3?0:1;else if(LB[j]>0)fr=0;else{const ph=((LC[j]>>2)&7);fr=[0,1,2,1,0,1,2][ph]||0;}
+    if(k===0){const col=[BO,FWc,FBc][LC[j]&3];let fr;if(LST[j]===1)fr=Math.sin(simT*1.4+j)>.3?0:1;else{const ph=((LC[j]>>2)&7);fr=[0,1,2,1,0,1,2][ph]||0;}
       const rows=BF[fr],X=x-2,Y=y-z-1;for(let r=0;r<3;r++)for(let c=0;c<5;c++){const ch=rows[r][c];if(ch==='.')continue;ip(X+c,Y+r,ch==='k'?OUT:col);}}
     else if(k===1){const jx=LST[j]===0?Math.round(Math.sin(simT*13+j)*.8):0,X=x+jx,Y=y-z;ip(X,Y,BE1);ip(X+1,Y,BE2);if((frame+j)&1)ip(X,Y-1,WING);}
     else if(k===2){const d=LC[j]?-1:1,Y=y-z;for(let b=0;b<5;b++)ip(x+b*d,Y,b<2?DF1:DF2);const wy=(frame+j)&1?-1:1;ip(x+d,Y+wy,WING);ip(x+2*d,Y+wy,WING);}
@@ -644,7 +657,7 @@ let litN=0;function drawFlyers(){litN=0;const dk=TP.l,shadowOK=dk<.6;
     if(TP.l>.2)ring(cx+4,cy+4,9,3);if(TP.l>.2)setL(cx+4,cy+4,6);}
   // scythe arcs
   for(const f of fx){const a0=Math.PI*(1.1-f.t*4);for(let a=0;a<8;a++){const an=a0+a*.18;ip(Math.round(f.x+Math.cos(an)*7),Math.round(f.y+Math.sin(an)*4),a<6?GL:S1);}}}
-function ring(cx,cy,r,mx){const R=Math.ceil(r);for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy*1.4);if(d>=r)continue;const i=y*W+x;const u=d/r+(BY[i]-128)/2048;let lv=mx-Math.floor(u*mx);if(lv>mx)lv=mx;if(lv<=0)continue;const cur=(IDX[i]>>7)&7;if(lv>cur)IDX[i]=(IDX[i]&127)|(lv<<7);CWC[CELL[i]]+=.3;}}}
+function ring(cx,cy,r,mx){const R=Math.ceil(r);for(let dy=-R;dy<=R;dy++){const y=cy+dy;if(y<0||y>=H)continue;for(let dx=-R;dx<=R;dx++){const x=cx+dx;if(x<0||x>=W)continue;const d=Math.sqrt(dx*dx+dy*dy*1.4);if(d>=r)continue;const i=y*W+x;const u=d/r+(BY[i]-128)/2048;let lv=mx-Math.floor(u*mx);if(lv>mx)lv=mx;if(lv<=0)continue;const cur=(IDX[i]>>7)&7;if(LMIX[lv]>LMIX[cur])IDX[i]=(IDX[i]&127)|(lv<<7);CWC[CELL[i]]+=.3;}}}
 // field layer: all grass in one pass (a shader would do this)
 let FC=new Uint8Array(NP),FR=new Uint8Array(NP),FS=new Uint8Array(NP),FPIX=new Int32Array(0),fieldBakeT=-9;
 function bakeField(){FC.fill(0);const list=[];
@@ -653,7 +666,7 @@ function bakeField(){FC.fill(0);const list=[];
     for(let p=s;p<e;p++){if(-SPY[p]<sr)continue;const x=TX[k]+SPX[p]*fl,y=TY[k]+SPY[p];if(x<0||x>=W||y<0)continue;const i=y*W+x;FC[i]=SPC[p];FR[i]=Math.min(255,(-SPY[p]/hm*255)|0);FS[i]=STF[t]*100;}}
   for(let i=0;i<NP;i++)if(FC[i])list.push(i);FPIX=Int32Array.from(list);fieldDirty=false;fieldBakeT=simT;}
 const SB=new Float32Array(NTR),KEEP=new Uint8Array(NTR);
-function drawField(){if(fieldDirty&&simT-fieldBakeT>.25)bakeField();
+function drawField(){if(fieldDirty&&(paused||simT-fieldBakeT>.25))bakeField();
   for(let t=0;t<NTR;t++){const I=Math.min(1,CRU[t]),w=WL[t];SB[t]=(w+(w>0?(.25+windStr*.5)*sinT(t*7+oscT1):0))*Math.max(PRM.spring,1-I)*wcx+TDX[t]/64*(I*2+PSH[t]*PRM.pushPx);KEEP[t]=255-I*130;}
   const n=FPIX.length,hiOn=windStr>0;for(let m=0;m<n;m++){const i=FPIX[m],t=TRP[i],r=FR[i];if(r>KEEP[t])continue;const y=(i/W)|0,x=i-y*W+Math.round(SB[t]*FS[i]*.01*POW[r>>4]);if(x<0||x>=W)continue;let c=FC[i];if(hiOn&&r>128&&WH[t]>.5&&windStr>=.2)c=BRT[c];IDX[y*W+x]=c;}
   tuftsDrawn=n;}
@@ -662,7 +675,7 @@ function render(){const now=()=>performance.now();let t0=now(),t;
   CWC.fill(0);bakeN=0;let nb=0;while(dirtyList.length&&nb<240){bakeBlock(dirtyList.pop());nb++;}
   IDX.set(GROUND);if(smooth)AW.fill(255);
   if(snowOf(CELL[PCY*W+PCX])<.55){const sh=rm?0:simT*6|0;for(let k=0;k<WLA.length;k+=1){const i=WLA[k],x=i%W,y=(i/W)|0;const v=hash((x+sh)>>2,y,(simT*1.5)|0)&63;if(v===0)IDX[i]=A3;else if(v===1&&y&1)IDX[i]=A4;}}
-  if(interOn){for(let k=0;k<NTR;k++){const v=CRU[k];if(v<.235)continue;const x0=(k%TW)*4,y0=((k/TW)|0)*4;for(let y=y0;y<y0+4&&y<H;y++)for(let x=x0;x<x0+4;x++){if(v<.4&&((x+y)&1))continue;const i=y*W+x;if(PT[i]!==0)continue;IDX[i]=v>.67?DARKB[DARKB[IDX[i]]]:DARKB[IDX[i]];}}}
+  if(interOn){for(let k=0;k<NTR;k++){const v=CRU[k];if(v<.235)continue;const x0=(k%TW)*4,y0=((k/TW)|0)*4;for(let y=y0;y<y0+4&&y<H;y++)for(let x=x0;x<x0+4;x++){if(v<.4&&((x+y)&1))continue;const i=y*W+x;if(PT[i]!==0)continue;const g=IDX[i],d=DARKB[g];if(g!==G1&&d!==OUT)IDX[i]=d;}}}
   t=now();ema('ground',t-t0);t0=t;
   oscT1=swayT*256*PRM.idleHz[0];oscT2=swayT*256*PRM.idleHz[1];
   tuftsDrawn=0;settled=0;flatN=0;lifeDrawAcc=0;
@@ -676,17 +689,18 @@ function render(){const now=()=>performance.now();let t0=now(),t;
   if(rmode==='tufts'){let j=0;for(let k=0;k<TN;k++){const ty=TY[k];while(j<EN&&ENY[EO[j]]<ty)drawEnt(EO[j++],false);drawTuft(k);}while(j<EN)drawEnt(EO[j++],false);}
   else{drawField();for(let j=0;j<EN;j++){const e=EO[j],k=ENK[e];let crop=false;if(k===0)crop=hides(pc);else if(k===1)crop=villHidden;else if(k===2||k===5){const yy=ENY[e]|0,xx=k===2?SHEEP[ENJ[e]].x|0:LX[ENJ[e]]|0;crop=hides(CELL[clamp(yy,0,H-1)*W+clamp(xx,0,W-1)]);}drawEnt(e,crop);}}
   if(playerHidden&&rmode==='tufts'){const S=P.mv?PLY[1+((P.at*7|0)&1)]:PLY[0];blitS(S,(P.x|0)-3,(P.y|0)-S.h+1,P.face<0,0,true);}
-  t=now();ema('tufts',t-t0-lifeDrawAcc);t0=t;
+  t=now();ema('tufts',t-t0-lifeDrawAcc+windMs);t0=t;
   drawFlyers();t=now();ema('lifeD',t-t0+lifeDrawAcc);t0=t;
   const dk=TP.l;if(dk>.35){const r=17*Math.min(1,(dk-.35)*2.2);for(const L of lamps)ring(L.x,L.y-9,r,3);ring(CX0+8,24,7,2);ring(CX0+31,24,7,2);}
   if(!smooth){for(let i=0;i<NP;i++)out[i]=LUT[STGP[i]<<10|IDX[i]];}
   else{for(let i=0;i<NP;i++){const s=STGP[i]<<10,c=LUT[s|IDX[i]],a=AW[i];if(a===255){out[i]=c;continue;}const d=LUT[s|IDX2[i]],ia=255-a;
     out[i]=(255<<24|((((c>>16)&255)*a+((d>>16)&255)*ia)>>8)<<16|((((c>>8)&255)*a+((d>>8)&255)*ia)>>8)<<8|(((c&255)*a+(d&255)*ia)>>8))>>>0;}}
-  t=now();ema('light',t-t0);
+  t=now();ema('light',t-t0);t0=t;
   for(let c=0;c<NC;c++)CWS[c]+=(CWC[c]-CWS[c])*.1;
-  T.total=T.ground+T.tufts+T.inter+T.regrow+T.lifeU+T.lifeD+T.light;
   if(view!=='normal')drawView(pc,vc);
-  ctx.putImageData(img,0,0);}
+  ctx.putImageData(img,0,0);
+  ema('present',now()-t0);
+  T.total=T.ground+T.tufts+T.inter+T.regrow+T.lifeU+T.lifeD+T.light+T.present;}
 const heat=v=>{v=clamp(v,0,1);return pack(v<.5?30+v*2*70:100+(v-.5)*2*155,v<.5?30+v*2*170:200-(v-.5)*2*120,v<.5?80+v*2*30:110-(v-.5)*2*90);};
 const dim=c=>pack((c&255)*.35,((c>>8)&255)*.35,((c>>16)&255)*.35);
 function drawView(pc,vc){
@@ -706,7 +720,7 @@ let serverAcc=0,lastWx='';
 function updateStages(){for(let c=0;c<NC;c++){const st=sP>=1?7:clamp(Math.round((sP*1.6-PHEN[c]*.6)*7),0,7);if(st!==STG[c]){STG[c]=st;SEAC[c]=st>=4?sTo:sFrom;markBlock(c);fieldDirty=true;const x0=(c%GW)*8,y0=((c/GW)|0)*8;for(let y=y0;y<Math.min(H,y0+8);y++)STGP.fill(st,y*W+x0,y*W+x0+8);}}}
 function step(dt){simT+=dt;frame++;swayT=step5?Math.floor(simT*5)/5:simT;
   if(tAuto)tod=(tod+dt/PRM.dayLen)%1;
-  if(sP<1){sP=Math.min(1,sP+dt/PRM.seasonLen);updateStages();}
+  if(sP<1){sP=Math.min(1,sP+dt/PRM.seasonLen*(sNext>=0?3:1));updateStages();if(sP>=1&&sNext>=0)setSeason(sNext,false);}
   serverAcc+=dt;if(serverAcc>=2){serverAcc-=2;const k=[windPre,windDir,Math.round(windStr*20),sTo,weather,phaseOf(tod)].join();if(k!==lastWx){netTx(PRM.netWx);lastWx=k;}}
   if(!rm)gustPh+=gustSpeed*dt;envPh+=gustSpeed*.35*dt;windUpdate();
   stepWalkers(dt);
@@ -719,26 +733,35 @@ function step(dt){simT+=dt;frame++;swayT=step5?Math.floor(simT*5)/5:simT;
 let last=performance.now(),hudN=0,secT=0;
 const f2=v=>v.toFixed(2),hh=t=>{const m=Math.floor(t*1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
 const SN=['spring','summer','autumn','winter'];
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else windUpdate();render();
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);else windUpdate();render();
   secT+=dt;if(secT>=1){secT-=1;netRate=netSec;netSec=0;stampRate=stampSec;stampSec=0;netFlat=flatCellsSec*PRM.netTile;flatCellsSec=0;threatSec=threatChecks;threatChecks=0;}
-  if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`].join(' · ');
+  if(++hudN%10===0){const L=[`ground ${f2(T.ground)}`,`tufts+wind ${f2(T.tufts)}`,`interaction ${f2(T.inter)}`,`regrowth ${f2(T.regrow)}`,`life update ${f2(T.lifeU)}`,`life draw ${f2(T.lifeD)}`,`light+resolve ${f2(T.light)}`,`x-ray+present ${f2(T.present)}`].join(' · ');
     const lifeS=[0,1,2,3,4,5,6,7,8,9].map(k=>`${['bfly','bee','dfly','gnat','moth','ffly','rabbit','frog','crick','drift'][k]} ${ALIVE[k]}/${KC[k]}`).join(' ');
-    const sea=sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo];
-    $('hud').innerHTML=`${sea} · ${phaseOf(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${windPre} ${Math.round(windStr*100)}% · ${weather==='rain'?'after rain':'clear'} · ${rmode==='tufts'?'per-tuft':'field layer'}, ${smooth?'smooth':'snapped'}${paused?' · paused':''}<br>${L} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · ${rmode==='tufts'?`tufts ${tuftsDrawn}/${TN}, settled ${settled}, flattened ${flatN}`:`field px ${tuftsDrawn}`} · stamps ${stampRate}/s · regrow ${regN} cells/tick (${regChanged} grew) · ground rebakes ${bakeN}<br>net ${netRate} B/s (${netTotal} B total) · trampling 0 B (sending each flatten would be ${netFlat} B/s) · you: ${playerHidden?'hidden, villager gets 0 B':P.reveal>0?'revealed':'in the open'} · villager: ${V.x<0?'away':villHidden?(V.sent?(leak&&!V.adj?'hidden but SENT (leak)':'hidden, seen up close'):'hidden, not sent'):'visible'}<br>${lifeS} · sleeping ${sleeping} · threat checks ${threatSec}/s · fireflies lit ${litN} · night ${nightRollName}`;
-    if(tAuto)syncTime();}
-  requestAnimationFrame(loop);}
+    const sea=(sP<1?`${SN[sFrom]}→${SN[sTo]}`:SN[sTo])+(sNext>=0?`→${SN[sNext]}`:'');
+    $('hud').innerHTML=`${sea} · ${phaseOf(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${windPre} ${Math.round(windStr*100)}% · ${weather==='rain'?'after rain':'clear'} · ${rmode==='tufts'?'per-tuft':'field layer'}, ${smooth?'smooth':'snapped'}${paused?' · paused':''}<br>${L} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · ${rmode==='tufts'?`tufts ${tuftsDrawn}/${TN}, settled ${settled}, flattened ${flatN}`:`field px ${tuftsDrawn}`} · stamps ${stampRate}/s · regrow ${regN} cells/tick (${regChanged} grew) · ground rebakes ${bakeN}<br>net ${netRate} B/s (${netTotal} B total) · trampling 0 B (sending each flatten would be ${netFlat} B/s) · you: ${playerHidden?(V.adj?'hidden, but the villager is close and still gets you':'hidden, villager gets 0 B'):P.reveal>0?'revealed':'in the open'} · villager: ${V.x<0?'away':villHidden?(V.sent?(leak&&!V.adj?'hidden but SENT (leak)':'hidden, seen up close'):'hidden, not sent'):'visible'}<br>${lifeS} · sleeping ${sleeping} · threat checks ${threatSec}/s · fireflies lit ${litN} · night ${nightRollName}`;
+    if(tAuto)syncTime();}}
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
 const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
 const setTool=v=>{tool=v;mark('#tools button','t',v);},setView=v=>{view=v;mark('#views button','v',v);};
 const setRmode=v=>{rmode=v;mark('#rmode button','r',v);fieldDirty=true;TKEY.fill(-1);},setSmooth=v=>{smooth=v==='smooth';mark('#smode button','s',v);TKEY.fill(-1);};
 function setWindPre(v){windPre=v;mark('#wpre button','w',v);const p=PRM.pre[v];windStr=p[0];gustSpeed=p[1];gustAmp=p[2];$('wstr').value=Math.round(windStr*100);$('wstrl').textContent=Math.round(windStr*100)+'%';}
 function setDir(d){windDir=d;wcx=Math.cos(d*Math.PI/180);wcy=Math.sin(d*Math.PI/180);$('wdir').value=d;$('wdirl').textContent=d+'°';}
-function setSeason(s,instant){s=+s;if(instant){sFrom=sTo=s;sP=1;STG.fill(7);SEAC.fill(s);STGP.fill(7);for(let c=0;c<NC;c++)markBlock(c);}else{if(s===sTo&&sP>=1)return;sFrom=sTo;sTo=s;sP=0;STG.fill(0);SEAC.fill(sFrom);STGP.fill(0);for(let c=0;c<NC;c++)markBlock(c);}lutDirty=true;fieldDirty=true;mark('#seas button','s',s);}
+// a season picked while another is still turning is queued in sNext. step() finishes the running turn at 3x speed
+// and starts the queued one from there, so no cell jumps a whole season in one frame
+let sNext=-1;
+function setSeason(s,instant){s=+s;if(!instant&&sP<1){sNext=s===sTo?-1:s;mark('#seas button','s',s);return;}
+  sNext=-1;if(instant){sFrom=sTo=s;sP=1;STG.fill(7);SEAC.fill(s);STGP.fill(7);for(let c=0;c<NC;c++)markBlock(c);}else{if(s===sTo)return;sFrom=sTo;sTo=s;sP=0;STG.fill(0);SEAC.fill(sFrom);STGP.fill(0);for(let c=0;c<NC;c++)markBlock(c);}lutDirty=true;fieldDirty=true;mark('#seas button','s',s);}
 function setWeather(v){weather=v;mark('#wx button[data-x]','x',v);lutDirty=true;for(let c=0;c<NC;c++)markBlock(c);}
 group('#tools button','t',setTool);group('#views button','v',setView);group('#rmode button','r',setRmode);group('#smode button','s',setSmooth);group('#wpre button','w',setWindPre);group('#seas button','s',v=>setSeason(v,false));group('#wx button[data-x]','x',setWeather);
 document.querySelectorAll('#life button').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;KON[k]^=1;b.classList.toggle('on',!!KON[k]);if(!KON[k]){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}});
 const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',get());b.onclick=()=>{set(!get());sy();};sy();return sy;};
-tog('inter',()=>interOn,v=>{interOn=v;if(!v){CRU.fill(0);PSH.fill(0);}});const syncWear=tog('wear',()=>wearOn,v=>{wearOn=v;for(let c=0;c<NC;c++)markBlock(c);fieldDirty=true;});
+const syncInter=tog('inter',()=>interOn,v=>{interOn=v;if(!v){CRU.fill(0);PSH.fill(0);}});const syncWear=tog('wear',()=>wearOn,v=>{wearOn=v;for(let c=0;c<NC;c++)markBlock(c);fieldDirty=true;});
 tog('step5',()=>step5,v=>step5=v);tog('gusts',()=>gustsOn,v=>gustsOn=v);const syncSync=tog('sync',()=>syncF,v=>{syncF=v;const s=KS[5];for(let j=s;j<s+KC[5];j++){LT2[j]=-1;LT[j]=rnd();LC[j]=6;}});
 const syncRm=tog('rm',()=>rm,v=>rm=v);tog('leak',()=>leak,v=>leak=v);const syncPause=tog('pause',()=>paused,v=>paused=v);const syncAuto=tog('tauto',()=>tAuto,v=>tAuto=v);
 const syncTime=()=>{$('tod').value=Math.round(tod*1000)%1000;$('todl').textContent=hh(tod);};
@@ -752,11 +775,11 @@ function reset(){HGT.fill(0);HL.fill(3);for(let c=0;c<NC;c++)if(FUEL[CT[c]]){HGT
   for(let k=0;k<KD.length;k++){const s=KS[k];for(let j=s;j<s+KC[k];j++)kill(j,k);}
   lamps=LAMP0.map(([x,y])=>({x,y}));Object.assign(P,{x:186,y:146,lx:186,ly:146,hasT:false,mv:false,reveal:0,face:1});Object.assign(V,{x:-12,y:95,i:0,wait:4,mv:false,sent:false,lx:-12,ly:95});
   SHEEP[0].x=276;SHEEP[0].y=132;SHEEP[1].x=298;SHEEP[1].y=156;SHEEP.forEach(s=>{s.st=0;s.t=rnd()*3;});
-  netTotal=0;netSec=0;fx=[];simT=0;gustPh=0;tAuto=true;syncAuto();tod=.56;syncTime();setWindPre('breeze');setDir(12);setWeather('clear');setSeason(1,true);
+  netTotal=0;netSec=0;fx=[];simT=0;fieldBakeT=-9;gustPh=0;tAuto=true;syncAuto();tod=.56;syncTime();setWindPre('breeze');setDir(12);setWeather('clear');setSeason(1,true);
   nightRoll=1;nightRollName='normal';lastPhase=phaseOf(tod);patchDirty=true;fieldDirty=true;TKEY.fill(-1);bakeAll();windUpdate();buildLUT();for(let k=0;k<TN;k++)tuftState(k);prefill();}
 $('reset').onclick=reset;
 document.querySelector('button[data-demo="showcase"]').onclick=showcase;
-function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal');paused=false;syncPause();rm=false;syncRm();interOn=true;wearOn=true;syncWear();
+function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal');paused=false;syncPause();rm=false;syncRm();interOn=true;syncInter();wearOn=true;syncWear();
   for(let k=0;k<KD.length;k++)KON[k]=1;document.querySelectorAll('#life button').forEach(b=>b.classList.add('on'));
   syncF=false;syncSync();setWindPre('gusty');windStr=.42;$('wstr').value=42;$('wstrl').textContent='42%';setDir(12);
   // late afternoon turning to dusk, a heavy firefly night
@@ -765,7 +788,7 @@ function showcase(){reset();setRmode('tufts');setSmooth('snap');setView('normal'
   V.x=-12;V.wait=30;Object.assign(P,{x:104,y:151,lx:104,ly:151});P.tx=178;P.ty=152;P.hasT=true;for(let n=0;n<4;n++)step(1/30);P.hideT=1;
   // butterflies settling on flowers near the path
   for(let j=KS[0];j<KS[0]+KC[0];j++)kill(j,0);const fls=FLW.filter(k=>tuftOK(k)&&TY[k]>112&&TY[k]<176&&TX[k]>112&&TX[k]<244&&Math.abs(TX[k]-P.x)>16&&Math.abs(TY[k]-P.y)>4);
-  for(let n=0;n<4&&fls.length;n++){const f=fls.splice(rnd()*fls.length|0,1)[0],j=alloc(0);if(j<0)break;LC[j]=n%3;if(n<3){LST[j]=1;LTG[j]=f;LT[j]=30;LX[j]=TX[f];LY[j]=TY[f];LZ[j]=TTOP[f]+1;}else{LX[j]=TX[f]-8;LY[j]=TY[f];LZ[j]=9;LT[j]=6;}}
+  for(let n=0;n<4&&fls.length;n++){const f=fls.splice(rnd()*fls.length|0,1)[0],j=alloc(0);if(j<0)break;LC[j]=n%3;LPH[j]=0;if(n<3){LST[j]=1;LTG[j]=f;LT[j]=30;LX[j]=TX[f];LY[j]=TY[f];LZ[j]=TTOP[f]+1;}else{LX[j]=TX[f]-8;LY[j]=TY[f];LZ[j]=9;LT[j]=6;}}
   // fireflies over meadow and wheat; about 20 timed to flash at the 2.5 s capture
   for(let j=KS[5];j<KS[5]+KC[5];j++)kill(j,5);
   for(let n=0;n<64;n++){const j=spawnAt(5,true);if(j<0)break;if(n%2===0){const y=LY[j];if(n%4===0){LX[j]=100+rnd()*124;LY[j]=20+rnd()*58;}else{LX[j]=112+rnd()*130;LY[j]=110+rnd()*64;}
@@ -787,8 +810,12 @@ cv.addEventListener('pointermove',e=>{if(down)useTool(e,false);});
 addEventListener('pointerup',()=>{down=false;});addEventListener('pointercancel',()=>{down=false;});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
-  if(k==='s'&&e.shiftKey){setSeason((sTo+1)%4,false);e.preventDefault();return;}
+  if(k==='s'&&e.shiftKey){setSeason(((sNext>=0?sNext:sTo)+1)%4,false);e.preventDefault();return;}
   if(KM[k]){keys[KM[k]]=1;e.preventDefault();return;}
   if(k>='1'&&k<='5')setTool(['walk','cut','burn','plant','lamp'][+k-1]);
   else if(k==='t'){tAuto=!tAuto;syncAuto();}
@@ -796,7 +823,8 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k===' '){paused=!paused;syncPause();e.preventDefault();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
-function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
 buildTufts(1);reset();requestAnimationFrame(loop);
 })();

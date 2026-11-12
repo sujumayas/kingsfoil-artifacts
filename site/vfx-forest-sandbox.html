@@ -22,6 +22,7 @@ main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
 canvas.px{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
 #c{aspect-ratio:16/9;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(6,10,6,.72);padding:4px 8px;border-radius:4px;pointer-events:none;color:#eef6e6;max-width:calc(100% - 16px)}
+@media (max-width:677px){.hud{position:static;max-width:none;border-radius:0;background:#060a06;font-size:11px;padding:6px 8px}}
 .side{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px}
 .side h3,.group h3{margin:0 0 8px;font:600 12px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
 .legend{font-size:12px;color:var(--mute);margin-top:6px;display:grid;grid-template-columns:auto 1fr;gap:2px 6px;align-items:center}
@@ -335,10 +336,13 @@ function drawAtlas(s){let x=4,y=4,rowH=0,maxW=0;const pos=[];for(const sp of SPR
 
 // ---------- loop & UI ----------
 let last=performance.now();
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();
+// frame gate: nothing runs while the canvas is off-screen
+let onScreen=true;
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;}).observe(cv);
+function skipFrame(){return !onScreen;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();
   if((time*10|0)%3===0){const b=BIOMES[biomeAt(player.x,player.y)];const sn=['Spring','Summer','Autumn','Winter'][Math.floor(season+.5)%4];
-    document.getElementById('hud').textContent=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;}
-  requestAnimationFrame(loop);}
+    document.getElementById('hud').textContent=`${b.n} · ${sn} · ${nTrees} trees + ${trees.length-nTrees} bushes · drawn ${drawnCount} · birds ${layers.birds?birds.length:0} · frame ${frameMs.toFixed(2)} ms`;}}
 document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.onclick=()=>{season=+b.dataset.s;auto=false;document.getElementById('auto').classList.remove('on');});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
 const wEl=document.getElementById('wind');wEl.oninput=()=>wind=wEl.value/100;
@@ -351,9 +355,14 @@ BIOMES.forEach((bm,bi)=>{let best=null,bs=-1;for(let k=0;k<4000;k++){const x=40+
 function teleport(x,y){for(let r=0;r<80;r+=4)for(let a=0;a<6.28;a+=.5){const nx=x+Math.cos(a)*r,ny=y+Math.sin(a)*r;if(!blocked(nx,ny)){player.x=nx;player.y=ny;player.tx=null;camX=clamp(Math.round(player.x-VW/2),0,WW-VW);camY=clamp(Math.round(player.y-VH/2-8),0,WH-VH);spawnBirds();return;}}}
 mini.addEventListener('pointerdown',e=>{const r=mini.getBoundingClientRect();teleport((e.clientX-r.left)/r.width*WW,(e.clientY-r.top)/r.height*WH);});
 cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();player.tx=camX+(e.clientX-r.left)/r.width*VW;player.ty=camY+(e.clientY-r.top)/r.height*VH;});
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}
   if(k==='e'){let best=null,bd=26*26;nearby(player.x,player.y,26,t=>{if(t.u)return;const dx=t.x-player.x,dy=t.y-player.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=t;}});if(best){best.shake=1;leafBurst(best,10);}}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 spawnBirds();requestAnimationFrame(loop);
 })();
 </script>

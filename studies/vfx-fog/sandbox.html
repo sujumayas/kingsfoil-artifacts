@@ -15,7 +15,7 @@ h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
 .stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
-.hud{position:absolute;left:8px;top:8px;font:11.5px/1.45 var(--mono);background:rgba(8,9,14,.72);padding:4px 8px;border-radius:4px;pointer-events:none;color:#eeeef4;max-width:calc(100% - 16px)}
+.hud{position:static;font:11.5px/1.45 var(--mono);background:#08090e;padding:5px 9px;border-top:1px solid var(--line);pointer-events:none;color:#eeeef4}
 .hud b{color:var(--lamp);font-weight:600}.hud .off{color:#6c7184}
 .bar{display:inline-block;width:80px;height:7px;background:#2a3040;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#86d49a}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
@@ -33,7 +33,7 @@ input[type=range]{flex:1;min-width:0;accent-color:#b9846c}
 .card p{margin:0;color:#d4d3dc;font-size:14px}
 code{font:13px var(--mono);color:var(--cool)}
 .keys{color:var(--mute);font-size:13px;margin:8px 0 0}
-@media (max-width:640px){.hud{position:static;max-width:none;border-radius:0;background:#08090e;font-size:10.5px;padding:6px 8px}}
+@media (max-width:640px){.hud{font-size:10.5px;padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -296,7 +296,8 @@ function step(dt){simT+=dt;
   serverAcc+=dt;if(serverAcc>=2){serverAcc-=2;serverTick();}
   let ix=0,iy=0;if(keys.l)ix--;if(keys.r)ix++;if(keys.u)iy--;if(keys.d)iy++;
   if(ix||iy)P.hasT=false;else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);if(d<1.2)P.hasT=false;else{ix=dx/d;iy=dy/d;}}
-  const l=Math.hypot(ix,iy);P.mv=l>0;if(P.mv){const s=38*dt/l,nx=P.x+ix*s,ny=P.y+iy*s;if(!blocked(nx,P.y))P.x=nx;if(!blocked(P.x,ny))P.y=ny;P.at+=dt;}
+  // P.mv is true only when the walker covered at least a quarter of the step. A blocked tap-to-walk drops its target
+  const l=Math.hypot(ix,iy);if(!l)P.mv=false;else if(dt>0){const s=38*dt/l,nx=P.x+ix*s,ny=P.y+iy*s,ox=P.x,oy=P.y;if(!blocked(nx,P.y))P.x=nx;if(!blocked(P.x,ny))P.y=ny;P.mv=Math.hypot(P.x-ox,P.y-oy)>38*dt*.25;if(P.mv)P.at+=dt;else P.hasT=false;}
   const pc=CELL[(P.y|0)*W+(P.x|0)];if(pc!==P.cell){P.cell=pc;fovDirty=true;}
   for(const b of beasts){if(!b.tx||Math.hypot(b.tx-b.x,b.ty-b.y)<2){b.tx=b.r[0]+rnd()*(b.r[2]-b.r[0]);b.ty=b.r[1]+rnd()*(b.r[3]-b.r[1]);}
     const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy)||1,nx=b.x+dx/d*10*dt,ny=b.y+dy/d*10*dt;if(!WALL[CELL[(ny|0)*W+(nx|0)]]){b.x=nx;b.y=ny;}else b.tx=0;b.at=(b.at||0)+dt;}
@@ -408,13 +409,18 @@ function drawView(){
 // ---------- loop and UI ----------
 let last=performance.now(),hudN=0;
 const f2=v=>v.toFixed(2),hh=t=>{const m=Math.floor(t*1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render();
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render();
   if(++hudN%10===0){const tn=performance.now();while(fieldTimes.length&&fieldTimes[0]<tn-1000)fieldTimes.shift();
     const o=(on,s)=>on?s:`<span class="off">${s.replace(/[\d.]+ ?$/,'off')}</span>`;
     const lay=[`field ${f2(T.field)}`,`texture ${f2(T.tex)}${noise==='proc'?' (fbm)':''}`,`fog pass ${f2(T.pass)}`,o(cloudsOn,`clouds ${f2(T.clouds)}`),`atmosphere ${f2(T.atmos)}${rays==='blur'?' (blur x'+samples+')':''}`,o(fowOn,`fog of war ${f2(T.fow)}`),`draw ${f2(T.draw)}`].join(' · ');
     $('hud').innerHTML=`${todName(tod)} ${hh(tod)} ${tAuto?'auto':'manual'} · ${PRE[preset].n} · ${mode==='steps'?'palette steps':mode==='dither'?'Bayer dither':'alpha blend'}${paused?' · paused':''}<br>${lay} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · field ${fieldTimes.length}/s · FOV recomputes ${fovN} (${f2(fovMs)} ms) · revealed ${revealed}<br>net: weather ${netW} B (7 B per change) · vision ${netV} B · creatures sent ${sentN}/${beasts.length}${view==='cost'?' · heat = layer ms per touched pixel':''}`;
-    if(tAuto)syncTime();}
-  requestAnimationFrame(loop);}
+    if(tAuto)syncTime();}}
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===v));
 const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
 const setTool=v=>{tool=v;mark('#tools button','t',v);},setView=v=>{view=v;mark('#views button','v',v);},setMode=v=>{mode=v;mark('#modes button','m',v);};
@@ -454,6 +460,10 @@ cv.addEventListener('pointermove',e=>{if(down)useTool(e,false);});
 addEventListener('pointerup',()=>{down=false;});addEventListener('pointercancel',()=>{down=false;});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
   if(KM[k]){keys[KM[k]]=1;e.preventDefault();return;}
   if(k>='1'&&k<='4')setTool(['walk','fog','lamp','wall'][+k-1]);
@@ -463,7 +473,8 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k===' '){paused=!paused;syncPause();e.preventDefault();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
-function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
 reset();requestAnimationFrame(loop);
 })();

@@ -82,7 +82,7 @@ code{font:13px var(--mono);color:var(--cool);overflow-wrap:anywhere}
   <div class="explain">
     <div class="card"><h4>1 · Server spell events</h4><p>The server decides hits and conditions. It sends five kinds of small events: cast start (caster, spell, element, cast time), missile (from tile, to tile, missile id), effect (tile, effect id), area (origin, mask id, effect id, delay per ring) and condition on or off. Effect is 9 bytes and missile 11 bytes, the Tibia 12+ sizes read from TFS. The cast, area mask and condition sizes are illustrative. Tibia sends an area as one effect per tile, so a 37-tile meteor storm costs 333 bytes per spectator. Here it is one mask event of about 11 bytes, and the HUD shows both totals. The delay field follows Old School RuneScape: one event arrives early and the client plays the rings later. A cap or a tier rule can never change who got hit. <b>Server events</b> view draws each event where it happened and lists the log.</p></div>
     <div class="card"><h4>2 · Spells as data</h4><p>A spell is a table of phases, not code: <code>{id:'FIREBOLT', el:fire, cast:0.30, travel:{kind:'homing', spr:0}, impact:{dmg:18, decal:'scorch'}, cond:{k:'burn', dur:3}}</code>. Each element owns a 5-step ramp from a dark hue-shifted edge to a light core, and a shape. Fire rises in tongues. Ice is shards and straight spikes. Energy is jagged. Poison bubbles slowly. Holy uses rings and rays. Arcane uses orbits and sigils. Pure white is a sixth entry used only on the peak frame, and nothing is pure black (Riot's guide: avoid 100% and 0% values). Sprites are stored as ramp indices, so the <b>colour-blind palette</b> is one table swap. In that mode every hostile spell and telegraph is orange, your shield and heal stay blue and grey, and status icons add a shape per condition. Orange against blue is the safe pair in the Game Accessibility Guidelines. Loudness follows Riot's importance scale: the shield is defensive, the fire bolt is damage, the meteor storm is the ultimate.</p></div>
-    <div class="card"><h4>3 · Cast and charge</h4><p>The cast is the anticipation. A rune ring draws in under the caster over the cast time: outer ring, inner ring, rune marks, then the element's sigil polygon. It turns at 40 degrees per second, takes the element's colour and is sized to the spell's area, as in Ragnarok Online, so other players can read what is coming. The meteor circle spans its 7-tile mask. Particles gather toward the staff hand and a charge orb grows there. On release the circle shows pure white for one beat and dims through the ramp. A monster's cast puts a red diamond under you. That telegraph is drawn last, at full opacity, and is never evicted. Guild Wars 2 had to patch hidden telegraphs three weeks after it let players hide ally effects.</p></div>
+    <div class="card"><h4>3 · Cast and charge</h4><p>The cast is the anticipation. A rune ring draws in under the caster over the cast time: outer ring, inner ring, rune marks, then the element's sigil polygon. It turns at 40 degrees per second, takes the element's colour and is sized to the spell's area, as in Ragnarok Online, so other players can read what is coming. The meteor circle is the blast itself: a true circle of 3.5 tiles centred on the mage's tile, over the 7-tile mask. Particles gather toward the staff hand and a charge orb grows there. On release the circle shows pure white for one beat and dims through the ramp. A monster's cast puts a red diamond under you. That telegraph is drawn last, at full opacity, and is never evicted. Guild Wars 2 had to patch hidden telegraphs three weeks after it let players hide ally effects.</p></div>
     <div class="card"><h4>4 · Projectiles and trails</h4><p>Missiles are pre-drawn per direction and move on whole pixels. 8 directions is the OTClient way, a 3 by 3 grid of frames that is never rotated. <b>Run-time rotation</b> spins one sprite by the exact angle. Watch the outline break and crawl on the curving fire bolt. Flight time is 150 ms times the square root of the distance in tiles (OTClient), so 9 tiles take 450 ms. The fire bolt launches off-axis, turns from 3.5 degrees per frame upward and is pulled onto the target over the last 40% of its flight, so it lands on the server's clock. The ice shard flies straight and can miss. Poison is lobbed, with a ground shadow that marks the landing tile. The beam is a channel with nested layers around a light core. Chain lightning is midpoint displacement over 5 generations, 32 segments, with two branches, re-rolled every 3 frames for 300 ms. It peaks once and does not strobe. Trails are a ring buffer: an 8-point ribbon (Mindustry keeps 7 to 9), 5 dimmed afterimages (Terraria), or a three-layer particle wake with lifetimes of 0.1, 0.6 and 1.4 s (Noita).</p></div>
     <div class="card"><h4>5 · Impacts and areas</h4><p>A hit is a 5-frame flipbook at 75 ms per frame, OTClient's effect clock: white flash, hot core, broken ring, sparks, dark fragments. The climax shape lasts 2 frames, so the target is hidden for 150 ms at most. <b>Front-loaded sparks</b> plays the same frames at 33, 33, 50, 83 and 134 ms, the fast-then-slow timing of fighting-game sparks. Area spells draw one effect per tile over a tile mask. The meteor storm uses Tibia's 37-tile circle, ring by ring at 55 ms per ring, or all tiles <b>in phase</b> as Tibia fires them. A 200 ms shockwave ring thins out as it grows. Residue stays behind: scorch for 12 s and fields in 3 shrinking stages of 4 s, animated at 500 ms per frame like Tibia field items. Both are compressed. Mindustry keeps scorch for 60 s and a Tibia fire field lasts 3 times 120 s. A tile holds one field and a new one refreshes it.</p></div>
     <div class="card"><h4>6 · Auras and status</h4><p>Each state has four slots, as in Diablo II: a back overlay drawn before the character, a front overlay drawn after it, a one-shot burst when it starts and a puff when it ends. The shield is a rim-only bubble, so the mage stays readable. A hit lights the rim on the side it came from, and the shield ends with a break ring. Status is one multiply colour per sprite, baked once and cached (the Ragnarok Online mechanism), plus a small overlay: flames, bubbles, ice shards at the feet, arcs. One tint shows at a time, by priority. The shocked tint blinks at 3 Hz and the target marker pulses at 2.5 Hz after a 250 ms lock-on spin. Orbit radius and period, the afterimage count and the bubble design are illustrative.</p></div>
@@ -242,7 +242,7 @@ const SCH=[];function after(s,fn){SCH.push({t:simT+s,fn});}
 
 // ---------- layer 9: clarity manager ----------
 const POL=[{},{},{},{}],TPRI=[0,4,7,7,6,5,5,3,2,0,0,9],TIERPRI=[4,2,1,3],TC=[0,0,0,0];
-let pressure=0,evicted=0,evictSec=0,evictRate=0,partDrop=0;
+let pressure=0,evicted=0,refused=0,evictSec=0,evictRate=0,partDrop=0,partOver=0;
 function setPolicy(){for(let t=0;t<4;t++){const p=POL[t];p.pm=1;p.op=16;p.red=0;p.light=1;p.trail=1;p.decal=1;p.screen=1;p.mini=0;}
   if(!mgr)return;POL[0].op=Math.round(opOwn*.16);POL[3].op=Math.round(opMon*.16);POL[1].pm=.7;POL[1].screen=0;const o=POL[2];o.screen=0;o.op=Math.round(opOth*.16);
   if(others==='reduced'){o.pm=.5;o.red=1;o.light=0;o.decal=0;}else if(others==='minimal'){o.pm=0;o.light=0;o.decal=0;o.trail=0;o.mini=1;}
@@ -250,17 +250,17 @@ function setPolicy(){for(let t=0;t<4;t++){const p=POL[t];p.pm=1;p.op=16;p.red=0;
 setPolicy();
 // effect types: 1 cast circle, 2 missile, 3 beam, 4 chain, 5 spark, 6 area tile, 7 shockwave, 8 field, 11 telegraph
 const FX=[],TRL=new Int16Array(HARD_FX*32),FIELD=new Array(240).fill(null);
-for(let i=0;i<HARD_FX;i++)FX.push({on:0,slot:i,ty:0,tier:0,el:0,pri:0,own:null,tg:null,sp:0,x:0,y:0,z:0,x0:0,y0:0,x1:0,y1:0,cx:0,cy:0,t:0,dur:0,delay:0,a:0,r:0,seed:0,n:0,k:0,rel:0,main:0,tick:0,hit:null});
+for(let i=0;i<HARD_FX;i++)FX.push({on:0,slot:i,ty:0,tier:0,el:0,pri:0,own:null,tg:null,sp:0,x:0,y:0,z:0,x0:0,y0:0,x1:0,y1:0,cx:0,cy:0,t:0,dur:0,delay:0,a:0,r:0,seed:0,n:0,k:0,rel:0,main:0,tick:0,sa:0,hit:null});
 let liveFx=0,fxHi=0,fxCur=0;
 function kill(f){if(!f.on)return;f.on=0;liveFx--;if(f.ty===8&&FIELD[f.k]===f)FIELD[f.k]=null;f.own=f.tg=f.hit=null;}
 function spawn(ty,tier,el,dur){const t0=now();let f=null,ok=true;if(cbOn&&tier===3)el=0;
   if(mgr&&POL[tier].mini&&ty===7)ok=false;
   else{const cap=mgr?PRM.cap.fx:HARD_FX;
-    if(liveFx>=cap){const v=TIERPRI[tier]*100+TPRI[ty]*10+9;let w=null,wv=1e9;
+    if(liveFx>=cap){const v=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10+9;let w=null,wv=1e9;
       for(let i=0;i<fxHi;i++){const g=FX[i];if(!g.on)continue;const gv=g.pri+(g.dur>50?9:(1-g.t/g.dur)*9);if(gv<wv){wv=gv;w=g;}}
-      evicted++;evictSec++;if(w&&wv<v)kill(w);else ok=false;}}
+      if(w&&wv<v){kill(w);evicted++;evictSec++;}else{ok=false;refused++;}}}
   if(ok){let i=-1;for(let n=0;n<HARD_FX;n++){const j=(fxCur+n)%HARD_FX;if(!FX[j].on){i=j;break;}}
-    if(i>=0){f=FX[i];fxCur=(i+1)%HARD_FX;f.on=1;f.ty=ty;f.tier=tier;f.el=el;f.dur=dur;f.t=0;f.delay=0;f.pri=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10;f.own=f.tg=f.hit=null;f.rel=f.n=f.k=f.main=0;f.a=f.z=f.tick=0;f.seed=(rnd()*65535)|0;liveFx++;if(i>=fxHi)fxHi=i+1;}}
+    if(i>=0){f=FX[i];fxCur=(i+1)%HARD_FX;f.on=1;f.ty=ty;f.tier=tier;f.el=el;f.dur=dur;f.t=0;f.delay=0;f.pri=ty===11?999:TIERPRI[tier]*100+TPRI[ty]*10;f.own=f.tg=f.hit=null;f.rel=f.n=f.k=f.main=0;f.a=f.z=f.tick=f.sa=0;f.seed=(rnd()*65535)|0;liveFx++;if(i>=fxHi)fxHi=i+1;}}
   A.clar+=now()-t0;return f;}
 function clarityPass(){const t0=now();TC[0]=TC[1]=TC[2]=TC[3]=0;while(fxHi>0&&!FX[fxHi-1].on)fxHi--;for(let i=0;i<fxHi;i++)if(FX[i].on)TC[FX[i].tier]++;
   pressure=mgr?Math.max(liveFx/PRM.cap.fx,liveP/PRM.cap.parts):0;setPolicy();A.clar+=now()-t0;}
@@ -269,9 +269,9 @@ function clarityPass(){const t0=now();TC[0]=TC[1]=TC[2]=TC[3]=0;while(fxHi>0&&!F
 const PX=new Float32Array(NPART),PY=new Float32Array(NPART),PVX=new Float32Array(NPART),PVY=new Float32Array(NPART),PL=new Float32Array(NPART),PM=new Float32Array(NPART),PK=new Uint8Array(NPART),PE=new Uint8Array(NPART),PTR=new Uint8Array(NPART);
 const PS0=[0,1000,3200,7000],PS1=[1000,3200,7000,8000],PCUR=PS0.slice(),PHI=PS0.slice();let liveP=0;
 // kinds: 0 spark, 1 rising tongue, 2 gather, 3 bubble, 4 shard, 5 mote, 6 smoke, 7 zap
-function part(L,tier,el,k,x,y,vx,vy,life){if(mgr&&tier===2&&liveP>=PRM.cap.parts){partDrop++;return;}
+function part(L,tier,el,k,x,y,vx,vy,life){if(cbOn&&tier===3)el=0;if(mgr&&tier===2&&liveP>=PRM.cap.parts){partDrop++;return;}
   const s=PS0[L],e=PS1[L];let i=PCUR[L];for(let n=0;n<6&&PL[i]>0;n++){i++;if(i>=e)i=s;}
-  if(PL[i]<=0)liveP++;else partDrop++;PX[i]=x;PY[i]=y;PVX[i]=vx;PVY[i]=vy;PL[i]=PM[i]=life;PK[i]=k;PE[i]=el;PTR[i]=tier;PCUR[L]=i+1>=e?s:i+1;if(i>=PHI[L])PHI[L]=i+1;}
+  if(PL[i]<=0)liveP++;else partOver++;PX[i]=x;PY[i]=y;PVX[i]=vx;PVY[i]=vy;PL[i]=PM[i]=life;PK[i]=k;PE[i]=el;PTR[i]=tier;PCUR[L]=i+1>=e?s:i+1;if(i>=PHI[L])PHI[L]=i+1;}
 function burst(L,tier,el,k,x,y,n,s0,s1,l0,l1,upv){const v=n*POL[tier].pm*(rm?.5:1);let m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--){const a=rnd()*6.2832,s=s0+rnd()*(s1-s0);part(L,tier,el,k,x,y,Math.cos(a)*s,Math.sin(a)*s*.7-(upv||0),l0+rnd()*(l1-l0));}}
 function runParts(L,dt){const s=PS0[L],e=PHI[L],tv=view==='tiers';let hi=s;
   for(let i=s;i<e;i++){let l=PL[i];if(l<=0)continue;l-=dt;if(l<=0){PL[i]=0;liveP--;continue;}PL[i]=l;hi=i+1;
@@ -283,7 +283,7 @@ function runParts(L,dt){const s=PS0[L],e=PHI[L],tv=view==='tiers';let hi=s;
     else if(k===4){x+=PVX[i]*dt;y+=PVY[i]*dt;c=u>.6?rp[5]:u>.3?rp[4]:rp[3];fp((x|0)-Math.sign(PVX[i]|0),(y|0)-Math.sign(PVY[i]|0),u>.5?rp[3]:rp[2]);}
     else if(k===5){x+=PVX[i]*dt;y+=PVY[i]*dt;const X=x|0,Y=y|0;if((((l*10)|0)+i&3)===0&&u>.2){fp(X-1,Y,rp[4]);fp(X+1,Y,rp[4]);fp(X,Y-1,rp[4]);fp(X,Y+1,rp[4]);c=rp[5];}else c=u>.3?rp[4]:rp[3];}
     else if(k===6){x+=PVX[i]*dt;y+=PVY[i]*dt*u;if(u<.4)cOp=Math.min(cOp,8);c=SMK[(u*3.99)|0];}
-    else{x+=(rnd()-.5)*4;y+=(rnd()-.5)*4;c=((l*30)|0)&1?rp[5]:rp[3];}
+    else{for(let n=((l+dt)*60|0)-(l*60|0);n>0;n--){x+=(rnd()-.5)*4;y+=(rnd()-.5)*4;}c=((l*30)|0)&1?rp[5]:rp[3];} // one hop per 1/60 s of its own life, none while paused
     PX[i]=x;PY[i]=y;fp(x|0,y|0,c);}
   PHI[L]=hi;cOp=16;cTint=0;}
 
@@ -310,11 +310,12 @@ function screenLayer(dt){
   if(scrOn&&P.hp<30)edgeTint(10,pack(220,30,40),rm?.45:.3+.3*Math.sin(simT*3.1416));}
 
 // ---------- damage numbers, decals ----------
-const DN=[];for(let i=0;i<24;i++)DN.push({t:0,x:0,y:0,s:'',c:0});let dnN=0;
-function dmgNum(x,y,s,c){const d=DN[dnN++%24];d.t=.7;d.x=x|0;d.y=y|0;d.s=String(s);d.c=c;}
+const DN=[];for(let i=0;i<24;i++)DN.push({t:0,x:0,y:0,s:'',c:0,n:0,key:null});let dnN=0;
+// key: a beam's ticks on one target add up in a single number that restarts its rise, where separate numbers would overlap
+function dmgNum(x,y,s,c,key){let d=null;if(key)for(const q of DN)if(q.t>0&&q.key===key){d=q;break;}if(d){d.n+=s;s=d.n;}else{d=DN[dnN++%24];d.n=+s;}d.key=key||null;d.t=.7;d.x=x|0;d.y=y|0;d.s=String(s);d.c=c;}
 const DEC=[];for(let i=0;i<64;i++)DEC.push({on:0,x:0,y:0,ty:0,t:0,dur:0,seed:0,r:0});let decN=0;
 function decal(ty,x,y,tier){if(!residue||!POL[tier].decal||!ty)return;const d=DEC[decN++&63];d.on=1;d.x=x|0;d.y=y|0;d.ty=ty==='scorch'?0:1;d.t=0;d.dur=d.ty?8:PRM.scorchS;d.seed=(rnd()*999)|0;d.r=5+(rnd()*3|0);}
-function drawDecals(dt){const tq=(simT*8)|0;cOp=16;cTint=0;for(const d of DEC){if(!d.on)continue;d.t+=dt;if(d.t>=d.dur){d.on=0;continue;}const r=d.r,a=d.t/d.dur,fade=a>.8?(a-.8)*5:0;
+function drawDecals(dt){const tq=(simT*8)|0;cOp=16;cTint=0;for(const d of DEC){if(!d.on)continue;d.t+=dt;if(d.t>=d.dur){d.on=0;continue;}if(!residue)continue;const r=d.r,a=d.t/d.dur,fade=a>.8?(a-.8)*5:0;
     for(let dy=-r;dy<=r;dy++)for(let dx=-r-2;dx<=r+2;dx++){const q=Math.hypot(dx*.75,dy*1.25)/r+(hash(dx+d.seed,dy)-.5)*.5;if(q>1||(fade&&hash(dx*3+d.seed,dy*5)<fade))continue;
       if(d.ty===0){dk(d.x+dx,d.y+dy,q<.5?120:176);if(d.t<1.3&&hash(dx+tq,dy+d.seed)>.94)fp(d.x+dx,d.y+dy,RAMP[0][q<.5?4:3]);}
       else{if(hash(dx+d.seed,dy*3)>.45)lt(d.x+dx,d.y+dy,RAMP[1][4],q<.5?140:90);if((dx===0||Math.abs(dx)===Math.abs(dy)*2)&&q<.85)lt(d.x+dx,d.y+dy,RAMP[1][5],170);if(d.t<1&&hash(dx+tq,dy+d.seed)>.96)fp(d.x+dx,d.y+dy,RAMP[1][5]);}}}}
@@ -328,20 +329,20 @@ const SPELLS=[
  {id:'HEAL',el:4,cast:.4,cd:.3,circle:11,heal:30},
  {id:'SHIELD',el:1,cast:.15,cd:.3,circle:9,aura:{k:'shield',dur:12}},
  {id:'BEAM',el:5,cast:0,cd:0,circle:9,travel:{kind:'beam',tick:.2,range:10},impact:{dmg:5}},
- {id:'METEOR',el:0,cast:.9,cd:1.5,circle:54,area:{r2:12.25,fall:.22},impact:{dmg:25,decal:'scorch'},cond:{k:'burn',dur:3}},
+ {id:'METEOR',el:0,cast:.9,cd:1.5,circle:56,area:{r2:12.25,fall:.22},impact:{dmg:25,decal:'scorch'},cond:{k:'burn',dur:3}},
  {id:'HEXBOLT',el:5,cast:.7,cd:.5,circle:9,travel:{kind:'homing',spr:3,speed:1.2},impact:{dmg:13}},
  {id:'EMBER',el:0,cast:.7,cd:.5,circle:9,travel:{kind:'homing',spr:0,speed:1.2},impact:{dmg:11,decal:'scorch'},cond:{k:'burn',dur:2}}];
 const hand=c=>c.x+c.face*6;
 const EK={burn:0,froz:1,shock:2,pois:3},EKP={burn:1,froz:4,shock:7,pois:3};
 function cond(e,k,dur,tier){if(e.dead)return;if(e[k]<=0){ev('cond','COND #'+e.id+' '+k.toUpperCase()+' ON',e.x,e.y,0,0);if(aurasOn)burst(3,tier,EK[k],EKP[k],e.x,e.y-8,5,10,34,.2,.4,6);}e[k]=Math.max(e[k],dur);e.stTier=e===P?3:tier;}
-function hurt(e,d,el,tier,sx,sy){if(e.dead)return;if(e.shield>0){e.shHit=.24;e.shAng=sx==null?.75:Math.atan2(sy-(e.y-8),sx-e.x)/6.2832;d=Math.ceil(d*.3);}
-  e.hp-=d;e.flash=.09;if(e.kind!==4&&(tier!==2||!mgr||e===P))dmgNum(e.x-3,e.y-24,d,RAMP[el][4]);
+function hurt(e,d,el,tier,sx,sy,sum){if(e.dead)return;if(e.shield>0){e.shHit=.24;e.shAng=sx==null?.75:Math.atan2(sy-(e.y-8),sx-e.x)/6.2832;d=Math.ceil(d*.3);}
+  e.hp-=d;e.flash=.09;if(e.kind!==4&&(tier!==2||!mgr||e===P))dmgNum(e.x-3,e.y-24,d,RAMP[cbOn&&tier===3?0:el][4],sum?e:null);
   if(e===P&&d>=5)reqEdge(el);
   if(e.hp<=0){if(e.kind===3){e.dead=1;e.resp=3;burst(2,tier,5,0,e.x,e.y-6,14,20,60,.3,.6,10);if(target===e)target=null;}else{e.hp=e.mx;if(e.kind===2)e.broke=.5;if(e===P)note='you fell and were restored';}}}
 function cast(c,si,tg,px,py,force){const S=SPELLS[si];if(c.dead||c.froz>0||(!force&&(c.cd>0||c.castT>0)))return false;const tier=tierOf(c);
   ev('cast','CAST #'+c.id+' '+S.id+' '+ELN[S.el]+' '+((S.cast*1000)|0)+'MS',c.x,c.y,0,0);c.castT=Math.max(S.cast,.18);if(c===P&&S.area&&dimOn)dimDur=dimT=S.cast+.8;c.cd=S.cast+S.cd;
   const fxp=tg&&tg!==c?tg.x:px;if(fxp!=null&&Math.abs(fxp-c.x)>2)c.face=fxp<c.x?-1:1;
-  if(S.cast>0){const f=spawn(1,tier,S.el,S.cast);if(f){f.own=c;f.r=POL[tier].red||POL[tier].mini?Math.max(5,S.circle*.6|0):S.circle;}}
+  if(S.cast>0){const f=spawn(1,tier,S.el,S.cast);if(f){f.own=c;const sm=POL[tier].red||POL[tier].mini;f.r=sm?Math.max(5,S.circle*.6|0):S.circle;f.k=S.area&&!sm?1:0;}} // k 1: an area spell's circle marks its blast, see drawCast
   if(tier===3&&tg){const f=spawn(11,3,S.el,S.cast);if(f)f.tg=tg;}
   after(S.cast,()=>{if(!c.dead&&c.act)release(c,S,tier,tg,px,py);});return true;}
 function ray(c,x0,y0,dx,dy,range){for(let d=6;d<range;d+=3){const x=x0+dx*d,y=y0+dy*d;if(x<3||y<3||x>W-3||y>H-2)return{d,e:null};
@@ -365,7 +366,7 @@ function release(c,S,tier,tg,px,py){const hx=hand(c),hy=c.y-11,el=S.el,tr=S.trav
     const f=spawn(4,tier,el,.3);if(f)f.hit=pts;
     for(const e of list){ev('effect','EFFECT '+tl(e.x,e.y)+' ENERGY HIT',e.x,e.y,0,0);impactFx(e.x,e.y-8,el,tier,1);hurt(e,S.impact.dmg,el,tier);cond(e,S.cond.k,S.cond.dur,tier);}
     const last=list[list.length-1];addField(last.x>>4,last.y>>4,2,1.6,tier,0,0,c);}
-  else if(S.heal){const e=tg&&tg.act&&!tg.dead?tg:c;ev('effect','EFFECT '+tl(e.x,e.y)+' HEAL',e.x,e.y,0,0);e.hp=Math.min(e.mx,e.hp+S.heal);e.healT=.9;e.healTier=tier;if(e.kind!==4)dmgNum(e.x-5,e.y-24,'+'+S.heal,RAMP[4][4]);lightQ(e.x,e.y-8,3,4,.6,tier);}
+  else if(S.heal){const e=tg&&tg.act&&!tg.dead?tg:c;ev('effect','EFFECT '+tl(e.x,e.y)+' HEAL',e.x,e.y,0,0);e.hp=Math.min(e.mx,e.hp+S.heal);e.healT=.9;e.healTier=tier;if(e.kind!==4)dmgNum(e.x-5,e.y-24,'+'+S.heal,RAMP[4][4]);}
   else if(S.aura){ev('cond','COND #'+c.id+' SHIELD ON',c.x,c.y,0,0);c.shield=S.aura.dur;c.shTier=tier;c.shHit=.2;burst(3,tier,1,5,c.x,c.y-8,8,10,26,.3,.6,6);}
   else if(S.area){const ctx_=c.x>>4,cty=c.y>>4,pol=POL[tier];ev('area','AREA '+tl(c.x,c.y)+' MASK37 '+S.id+(inPhase?'':' DELAY '+PRM.ringMs+'MS/RING'),c.x,c.y,56,0);areaMaskB+=PRM.bytes.area;areaTileB+=37*PRM.bytes.effect;
     reqFlash(el,tier,c.x,c.y-8);const g=spawn(7,tier,el,PRM.shockMs/1000);if(g){g.x=c.x;g.y=c.y;g.r=62;}
@@ -377,7 +378,7 @@ function hit(c,S,tier,e,x,y){ev('effect','EFFECT '+tl(x,y)+' '+ELN[S.el]+(e?' HI
 function areaField(c,S,tier,tx,ty){const cx=tx>>4,cy=ty>>4;ev('area','AREA '+tl(tx,ty)+' MASK3X3 '+S.id,tx,ty,24,0);areaMaskB+=PRM.bytes.area;areaTileB+=9*PRM.bytes.effect;impactFx(tx,ty-2,S.el,tier,1);
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)addField(cx+dx,cy+dy,S.el,S.linger.dur,tier,(dx||dy)?PRM.ringMs/1000:0,dx===0&&dy===0?1:0,c);}
 function addField(tx,ty,el,dur,tier,delay,main,c){if(tx<0||ty<0||tx>=20||ty>=12||ty*16+8>=H)return;const k=ty*20+tx;let f=FIELD[k];
-  if(f&&f.on){merged++;f.dur=f.t+dur;f.el=el;if(TIERPRI[tier]>TIERPRI[f.tier]){f.tier=tier;f.pri=TIERPRI[tier]*100+20;}if(main){f.main=1;f.own=c;}return;}
+  if(f&&f.on){merged++;f.t=0;f.dur=dur;f.el=el;if(TIERPRI[tier]>TIERPRI[f.tier]){f.tier=tier;f.pri=TIERPRI[tier]*100+20;}if(main){f.main=1;f.own=c;}return;}
   f=spawn(8,tier,el,dur);if(!f)return;f.k=k;f.x=tx*16+8;f.y=ty*16+8;f.delay=delay;f.main=main;f.own=c;FIELD[k]=f;}
 const SPT=new Float32Array(240).fill(-9),SPE=new Uint8Array(240);
 function sparkFr(ms){if(!sparkFront)return Math.min(4,(ms/PRM.sparkMs)|0);const F=PRM.sparkFront;let a=0;for(let i=0;i<5;i++){a+=F[i];if(ms<a)return i;}return 4;}
@@ -393,21 +394,25 @@ function impactFx(x,y,el,tier,big){const pol=POL[tier],small=pol.mini||pol.red||
   else if(el===3){burst(2,tier,3,3,x,y,6*m,6,18,.5,1,6);burst(2,tier,3,0,x,y,6*m,20,45,.3,.5,14);}
   else if(el===4)burst(2,tier,4,5,x,y,8*m,8,24,.4,.8,12);
   else burst(2,tier,5,0,x,y,10*m,25,60,.3,.55,0);}
-function beamStart(c,tg){if(c.beamOn||c.dead||c.froz>0)return;c.beamOn=true;c.beamT=0;c.beamTg=tg;c.beamTier=tierOf(c);ev('cast','CAST #'+c.id+' BEAM ON',c.x,c.y,0,0);const f=spawn(3,c.beamTier,5,1e9);if(f)f.own=c;}
-function beamStop(c){if(!c.beamOn)return;c.beamOn=false;ev('cast','CAST #'+c.id+' BEAM OFF',c.x,c.y,0,0);}
+// the beam's end point: the aim, cut at the first wall or foe on the ray. beamStart runs it once, so a beam started while paused has an end to draw to
+function beamRay(c){let ax,ay;if(c===P){const a=playerAim();ax=a[0];ay=a[1];}else{const t=c.beamTg;if(!t||!t.act||t.dead)return null;ax=t.x;ay=t.y-7;}
+  const x0=hand(c),y0=c.y-11;let dx=ax-x0,dy=ay-y0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;if(Math.abs(dx)>.2)c.face=dx<0?-1:1;const R=ray(c,x0,y0,dx,dy,160);c.bx=x0+dx*R.d;c.by=y0+dy*R.d;return R;}
+function beamStart(c,tg){if(c.beamOn||c.dead||c.froz>0)return;c.beamOn=true;c.beamT=0;c.beamTg=tg;c.beamTier=tierOf(c);if(!beamRay(c)){c.bx=hand(c);c.by=c.y-11;}ev('cast','CAST #'+c.id+' BEAM ON',c.x,c.y,0,0);const f=spawn(3,c.beamTier,5,1e9);if(f)f.own=c;}
+function beamStop(c){if(!c.beamOn)return;c.beamOn=false;for(let i=0;i<fxHi;i++){const f=FX[i];if(f.on&&f.ty===3&&f.own===c)kill(f);}ev('cast','CAST #'+c.id+' BEAM OFF',c.x,c.y,0,0);}
 
 // ---------- update: layers 3 to 6 ----------
 function updCast(dt){for(let i=0;i<fxHi;i++){const f=FX[i];if(!f.on)continue;
     if(f.ty===1){f.t+=dt;const c=f.own;if(c.dead||!c.act||f.t>=f.dur+.25){kill(f);continue;}if(!f.rel&&f.t>=f.dur)f.rel=1;
       if(!f.rel&&!rm&&f.r>=9){const v=dt*(f.r>20?70:36)*POL[f.tier].pm;let m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--){const a=rnd()*6.2832,r=Math.min(f.r,24)*(.9+rnd()*.7);part(0,f.tier,f.el,2,hand(c)+Math.cos(a)*r,c.y-11+Math.sin(a)*r*.7,hand(c),c.y-11,.32+rnd()*.15);}}}
     else if(f.ty===11){f.t+=dt;if(f.t>=f.dur)kill(f);}}}
-const TFADE=8*1.4/60; // Mindustry: a dead missile's trail shrinks out over its length x 1.4 ticks
+const SAMP=1/60,TFADE=8*1.4/60; // Mindustry: a dead missile's trail shrinks out over its length x 1.4 ticks
 function updProj(dt){for(let i=0;i<fxHi;i++){const f=FX[i];if(!f.on)continue;
-    if(f.ty===2){if(f.rel){f.tick+=dt;if(f.tick>=TFADE)kill(f);continue;}f.t+=dt;const p=f.t/f.dur;if(p>=1){if(trail==='ribbon'&&POL[f.tier].trail&&!POL[f.tier].mini&&f.n>2){f.rel=1;f.tick=0;f.tg=null;}else kill(f);continue;}const q=1-p;
+    if(f.ty===2){if(f.rel){f.tick+=dt;if(f.tick>=TFADE)kill(f);continue;}f.t+=dt;const p=f.t/f.dur;if(p>=1){if(trail==='ribbon'&&POL[f.tier].trail&&!POL[f.tier].mini&&f.n>2){f.rel=1;f.tick=0;f.tg=null;}else kill(f);continue;}const q=1-p,ox=f.x,oy=f.y-f.z;
       if(f.k===0){const tx=f.tg.x,ty=f.tg.y-7;if(f.t>.06){let da=Math.atan2(ty-f.cy,tx-f.cx)-f.a;da=Math.atan2(Math.sin(da),Math.cos(da));const mt=3.67*dt*(1+p*4);f.a+=clamp(da,-mt,mt);}f.cx+=Math.cos(f.a)*f.r*dt;f.cy+=Math.sin(f.a)*f.r*dt;const w=p<.6?0:(p-.6)/.4,sm=w*w*(3-2*w);f.x=f.cx+(tx-f.cx)*sm;f.y=f.cy+(ty-f.cy)*sm;}
       else if(f.k===1){f.x=f.x0+(f.x1-f.x0)*p;f.y=f.y0+(f.y1-f.y0)*p;}
       else{f.x=f.x0+(f.x1-f.x0)*p;f.y=f.y0+(f.y1-f.y0)*p;f.z=11*q+4*f.r*p*q;f.a=Math.atan2((f.y1-f.y0)-(4*f.r*(1-2*p)-11),f.x1-f.x0);}
-      const o=f.slot*32+(f.n&15)*2;TRL[o]=f.x;TRL[o+1]=f.y-f.z;f.n++;
+      // trail samples follow sim time, one per 1/60 s, placed along this frame's move. The trail then has the same length at 30, 60 and 120 Hz and in slow motion
+      f.sa+=dt;if(f.sa>=SAMP-1e-6){const a0=f.sa-dt,nx=f.x,ny=f.y-f.z,m=clamp((f.sa/SAMP+1e-4)|0,1,8);for(let j=1;j<=m;j++){const u=Math.min(1,(j*SAMP-a0)/dt),o=f.slot*32+(f.n&15)*2;TRL[o]=ox+(nx-ox)*u;TRL[o+1]=oy+(ny-oy)*u;f.n++;}f.sa=Math.max(0,f.sa-m*SAMP);}
       if(trail==='wake'&&POL[f.tier].trail){const pol=POL[f.tier],X=f.x,Y=f.y-f.z;let v=dt*100*pol.pm,m=(v|0)+(rnd()<v-(v|0)?1:0);for(;m>0;m--)part(1,f.tier,f.el,f.el===0?1:0,X+(rnd()-.5)*3,Y+(rnd()-.5)*3,(rnd()-.5)*10,(rnd()-.5)*10,.1+rnd()*.1);
         if(!pol.red){if(rnd()<dt*18*pol.pm)part(1,f.tier,f.el,f.el===3?3:f.el===1?4:0,X,Y,(rnd()-.5)*26,(rnd()-.5)*26-4,.6+rnd()*.2);if(rnd()<dt*7*pol.pm)part(1,f.tier,f.el,6,X,Y,(rnd()-.5)*5,-7,1.4+rnd()*.1);}}}
     else if(f.ty===3){const c=f.own;if(!c.beamOn||c.dead||!c.act){kill(f);continue;}f.t+=dt;if(POL[f.tier].pm>0&&!rm&&rnd()<dt*24*POL[f.tier].pm)part(1,f.tier,5,0,c.bx,c.by,(rnd()-.5)*70,(rnd()-.5)*50,.2+rnd()*.25);}
@@ -421,7 +426,7 @@ const STK=['burn','pois','froz','shock'];
 function updAura(dt){for(const e of ents){if(!e.act)continue;
     for(const k of STK)if(e[k]>0){e[k]-=dt;if(e[k]<=0){e[k]=0;ev('cond','COND #'+e.id+' '+k.toUpperCase()+' OFF',e.x,e.y,0,0);if(aurasOn)burst(3,e.stTier,EK[k],6,e.x,e.y-8,2,3,8,.4,.6,10);}}
     if(e.shield>0){e.shield-=dt;if(e.shield<=0){e.shield=0;ev('cond','COND #'+e.id+' SHIELD OFF',e.x,e.y,0,0);const g=spawn(7,e.shTier,1,.2);if(g){g.x=e.x;g.y=e.y-2;g.r=16;}}}
-    if(e.shHit>0)e.shHit-=dt;if(e.flash>0)e.flash-=dt;if(e.healT>0)e.healT-=dt;if(e.lvlT>0)e.lvlT-=dt;if(e.broke>0)e.broke-=dt;if(e.haste>0)e.haste-=dt;
+    if(e.shHit>0)e.shHit-=dt;if(e.flash>0)e.flash-=dt;if(e.healT>0)e.healT-=dt;if(e.lvlT>0)e.lvlT-=dt;if(e.broke>0)e.broke-=dt;if(e.haste>0){e.haste-=dt;if(e.haste<=0){e.haste=0;if(e===P)syHaste();}}
     if(e.burn>0||e.pois>0){e.dot+=dt;if(e.dot>=.5){e.dot=0;if(e.burn>0)hurt(e,2,0,e.stTier);if(e.pois>0)hurt(e,1,3,e.stTier);e.flash=0;}}
     if(!aurasOn||e.dead)continue;const t=e.stTier,pm=POL[t].pm*(rm?.5:1);e.em+=dt;
     if(e.em>=.07){e.em=0;
@@ -439,15 +444,16 @@ const BR=new Int16Array(HARD_FX*5);let BRN=0;
 function end(f){if(trackB&&bx1>=bx0&&BRN<HARD_FX){const o=BRN++*5;BR[o]=bx0;BR[o+1]=by0;BR[o+2]=bx1;BR[o+3]=by1;BR[o+4]=f.tier;}cOp=16;cTint=0;}
 // rune circle: rings and rune marks are built once per element and size, then revealed by cast progress
 const RUNE={};
-function runeCache(el,rx,mini){const key=el+rx*8+(mini?8192:0);let c=RUNE[key];if(c)return c;const ry=(rx*.5)|0,X=[],Y=[],U=[],C=[];
+function runeCache(el,rx,mini,round){const key=el+rx*8+(mini?8192:0)+(round?16384:0);let c=RUNE[key];if(c)return c;const ry=round?rx:(rx*.5)|0,X=[],Y=[],U=[],C=[];
   const arc=(ax,ay,cls,uf,dy)=>{const n=Math.max(8,((ax+ay)*3.4)|0);let lx=-999,ly=-999;for(let i=0;i<=n;i++){const a=(.75+i/n)*6.2832,x=Math.round(Math.cos(a)*ax),y=Math.round(Math.sin(a)*ay);if(x===lx&&y===ly)continue;lx=x;ly=y;X.push(x);Y.push(y+dy);U.push(uf(i/n));C.push(cls);}};
   if(!mini)arc(rx,ry,0,g=>g,1);arc(rx,ry,1,g=>g,0);
   if(!mini&&rx>=9){arc(rx*.7,ry*.7,2,g=>.201+.6*(1-g),0);
     if(rx>=11){const nr=rx>20?12:8;for(let k=0;k<nr;k++){const a=(k+.5)/nr*6.2832,gx=Math.round(Math.cos(a)*rx*.86),gy=Math.round(Math.sin(a)*ry*.86),bits=(hash(el*13+rx,k)*14|0)+1;for(let q=0;q<(rx>20?4:2);q++)if(bits>>q&1){X.push(gx+(q&1));Y.push(gy+(q>>1));U.push((k+.99)/nr);C.push(1);}}}}
   return RUNE[key]={n:X.length,X:Int16Array.from(X),Y:Int16Array.from(Y),U:Float32Array.from(U),C:Uint8Array.from(C)};}
-function drawCast(f){const c=f.own,pol=POL[f.tier],rp=RAMP[f.el],cx=c.x|0,cy=(c.y|0)-1,rx=f.r,ry=(f.r*.5)|0;let p=clamp(f.t/f.dur,0,1),b;
+// an area spell's circle is the blast footprint: a true circle of 3.5 tiles centred on the caster's tile, where the mask will land. Other circles are 2:1 ellipses at the caster's feet
+function drawCast(f){const c=f.own,pol=POL[f.tier],rp=RAMP[f.el],ar=f.k===1,cx=ar?(c.x>>4)*16+8:c.x|0,cy=ar?(c.y>>4)*16+8:(c.y|0)-1,rx=f.r,ry=ar?rx:(rx*.5)|0;let p=clamp(f.t/f.dur,0,1),b;
   if(f.rel){const q=(f.t-f.dur)/.25;b=q<.25?5:q<.5?4:q<.75?3:2;if(q>.5)cOp=Math.min(cOp,8);p=1;}else b=p>.85?5:4;
-  {const R_=runeCache(f.el,rx,pol.mini),X=R_.X,Y=R_.Y,U=R_.U,C=R_.C,c1=rp[b],c2=rp[b>4?5:3],c0=rp[1];for(let i=0;i<R_.n;i++)if(U[i]<=p){const k=C[i];fp(cx+X[i],cy+Y[i],k===1?c1:k?c2:c0);}}
+  {const R_=runeCache(f.el,rx,pol.mini,ar),X=R_.X,Y=R_.Y,U=R_.U,C=R_.C,c1=rp[b],c2=rp[b>4?5:3],c0=rp[1];for(let i=0;i<R_.n;i++)if(U[i]<=p){const k=C[i];fp(cx+X[i],cy+Y[i],k===1?c1:k?c2:c0);}}
   if(pol.mini)return;
   if(rx>=9){const lo=b>4?5:3,rot=rm?0:((f.t*8)|0)/72;
     const nv=POLY[f.el][0],sk=POLY[f.el][1],p3=clamp((p-.45)/.5,0,1),edges=Math.ceil(p3*nv),rr=.62;
@@ -464,7 +470,9 @@ function drawProj(f){const pol=POL[f.tier],rp=RAMP[f.el],x=Math.round(f.x),y=Mat
   if(pol.mini){fp(x,y,rp[5]);fp(x-1,y,rp[4]);fp(x+1,y,rp[4]);fp(x,y-1,rp[4]);fp(x,y+1,rp[4]);return;}
   const m=Math.min(f.n,pol.red?5:8),base=f.slot*32;
   if(pol.trail&&m>1){
-    if(trail==='ribbon'){for(let j=m-1;j>=1;j--){const a=base+((f.n-1-j)&15)*2,b=base+((f.n-j)&15)*2,u=j/m,c=rp[u<.3?4:u<.62?3:2];line(TRL[a],TRL[a+1],TRL[b],TRL[b+1],c);if(u<.45)line(TRL[a],TRL[a+1]+1,TRL[b],TRL[b+1]+1,rp[u<.2?3:2]);}}
+    if(trail==='ribbon'){for(let j=m-1;j>=1;j--){const a=base+((f.n-1-j)&15)*2,b=base+((f.n-j)&15)*2,u=j/m,c=rp[u<.3?4:u<.62?3:2];line(TRL[a],TRL[a+1],TRL[b],TRL[b+1],c);if(u<.45)line(TRL[a],TRL[a+1]+1,TRL[b],TRL[b+1]+1,rp[u<.2?3:2]);}
+      // between samples the head runs ahead of the newest one: close the gap
+      const h=base+((f.n-1)&15)*2;line(TRL[h],TRL[h+1],x,y,rp[4]);line(TRL[h],TRL[h+1]+1,x,y+1,rp[3]);}
     else if(trail==='after'){const S=MS[f.sp][0],di=Math.round(f.a/.7854)&7,km=cOp;for(let j=5;j>=1;j--){if(f.n<=j*2)continue;const a=base+((f.n-1-j*2)&15)*2;cOp=j>2?Math.min(km,8):km;blit(S[di],TRL[a],TRL[a+1],RAMPD[f.el][(j-1)>>1]);}cOp=km;}}
   if(dirs==='rot')blitRot(MS[f.sp][0][0],f.x,f.y-f.z,f.a,rp);
   else if(dirs==='16')blit(MS[f.sp][1][Math.round(f.a/.3927)&15],x,y,rp);
@@ -485,7 +493,7 @@ function drawBeam(f){const c=f.own,rp=RAMP[5],x0=hand(c),y0=c.y-11,x1=c.bx,y1=c.
   const ph=rm?0:simT*16,pi=(ph*2)|0;
   for(let s=0;s<=len;s++){const px=x0+ux*s,py=y0+uy*s;fp(Math.round(px+nx*2),Math.round(py+ny*2),rp[1]);fp(Math.round(px-nx*2),Math.round(py-ny*2),rp[1]);fp(Math.round(px+nx),Math.round(py+ny),rp[3]);fp(Math.round(px-nx),Math.round(py-ny),rp[3]);}
   for(let s=0;s<=len;s++){const px=x0+ux*s,py=y0+uy*s,o=Math.sin(s*.42-ph)*3.4;fp(Math.round(px),Math.round(py),((s-pi)&15)<3?rp[4]:rp[5]);fp(Math.round(px+nx*o),Math.round(py+ny*o),rp[4]);fp(Math.round(px-nx*o),Math.round(py-ny*o),rp[2]);}
-  orb(Math.round(x1),Math.round(y1),2+((frame>>2)&1),rp);for(let k=0;k<4;k++){const a=ph*.3+k*1.5708;fp(Math.round(x0+Math.cos(a)*5),Math.round(y0+Math.sin(a)*3),rp[4]);}
+  orb(Math.round(x1),Math.round(y1),2+(((simT*15)|0)&1),rp);for(let k=0;k<4;k++){const a=ph*.3+k*1.5708;fp(Math.round(x0+Math.cos(a)*5),Math.round(y0+Math.sin(a)*3),rp[4]);}
   for(let s=0;s<len;s+=20)lightQ(x0+ux*s,y0+uy*s,2.4,5,.4,f.tier);lightQ(x1,y1,3.5,5,.8,f.tier);}
 
 // ---------- draw: layer 5 impacts and areas ----------
@@ -505,7 +513,7 @@ function drawTile(f){const rp=RAMP[f.el],pol=POL[f.tier],x=f.x,y=f.y+2,FALL=.22,
   if(f.t<st){const p=f.t/FALL,q=1-p,sx=(7+(f.seed%9))*f.a,sy=46*f.a,hx=Math.round(x+q*sx),hy=Math.round(y-q*sy),sr=(5-p*3)|0,l=Math.hypot(sx,sy),ux=sx/l,uy=-sy/l,tl_=5+(f.seed>>4)%5;
     for(let i=-sr;i<=sr;i++){dk(x+i,y,150);if(Math.abs(i)<sr-1){dk(x+i,y+1,170);dk(x+i,y-1,185);}}
     // tapering tail: 3 px wide next to the head, 1 px at the end
-    for(let k=tl_;k>=2;k--){const tx=Math.round(hx+ux*k),ty=Math.round(hy+uy*k),c=rp[k<4?4:k<7?3:2];if(k>tl_-2&&(k+frame)&1)continue;fp(tx,ty,c);if(k<5){fp(tx+1,ty,rp[3]);fp(tx-1,ty,rp[k<3?3:2]);}}
+    for(let k=tl_;k>=2;k--){const tx=Math.round(hx+ux*k),ty=Math.round(hy+uy*k),c=rp[k<4?4:k<7?3:2];if(k>tl_-2&&(k+((simT*60)|0))&1)continue;fp(tx,ty,c);if(k<5){fp(tx+1,ty,rp[3]);fp(tx-1,ty,rp[k<3?3:2]);}}
     orb(hx,hy,(f.seed&1)?2.2:1.7,rp);lightQ(hx,hy,2,f.el,.4,f.tier);}
   else{let fr=sparkFr((f.t-st)*1000);if((pol.red||pol.mini)&&fr<1)fr=1;blit((pol.mini||pol.red?SPKS:SPK)[f.el][fr],x,y-fr,rp);lightQ(x,y,3.5,f.el,1-fr*.2,f.tier);}}
 // ice: a 1-frame flash, 6 straight shards at fixed angles, then 3 shards stuck in the ground for 300 ms
@@ -525,8 +533,9 @@ function auraBack(e){const cx=e.x|0,fy=e.y|0;
   if(e.shield>0){const rp=RAMP[1],pol=POL[e.shTier],h=e.shHit>0;cOp=pol.op;cTint=view==='tiers'?TCOL[e.shTier]:0;
     ell(cx,fy-8,9,10,rp[2],.5,1);ell(cx,fy,9,3,rp[2],.5,1);
     if(!pol.mini&&!pol.red)for(let k=0;k<3;k++){const a=(rm?0:simT/1.6)*6.2832+k*2.0944,s=Math.sin(a);if(s<0){const x=Math.round(cx+Math.cos(a)*11),y=Math.round(fy-8+s*4);fp(x,y,rp[4]);fp(Math.round(cx+Math.cos(a-.25)*11),Math.round(fy-8+Math.sin(a-.25)*4),rp[2]);}}}
-  if(e.healT>0){const p=1-e.healT/.9,rp=RAMP[4],r=3+p*10;cOp=POL[e.healTier].op;cTint=view==='tiers'?TCOL[e.healTier]:0;ell(cx,fy,r,r*.45,rp[p<.3?5:p<.6?4:3],0,1,p>.7?1:0);ell(cx,fy-p*17,7,3,rp[3],.5,1);}
-  if(e.lvlT>0){const p=1-e.lvlT/1.4,rp=RAMP[4];cOp=16;cTint=0;ell(cx,fy,4+p*14,(4+p*14)*.45,rp[p<.4?5:3],0,1,p>.75?1:0);
+  if(e.healT>0){const p=1-e.healT/.9,rp=RAMP[4],r=3+p*10;cOp=POL[e.healTier].op;cTint=view==='tiers'?TCOL[e.healTier]:0;ell(cx,fy,r,r*.45,rp[p<.3?5:p<.6?4:3],0,1,p>.7?1:0);ell(cx,fy-p*17,7,3,rp[3],.5,1);lightQ(cx,fy-8,3,4,.6*(1-p),e.healTier);}
+  // heal and level-up lights are queued here, during render. A lightQ call from the step or a click is wiped when render clears the queue
+  if(e.lvlT>0){const p=1-e.lvlT/1.4,rp=RAMP[4];cOp=16;cTint=0;lightQ(cx,fy-8,5,4,1-p,tierOf(e));ell(cx,fy,4+p*14,(4+p*14)*.45,rp[p<.4?5:3],0,1,p>.75?1:0);
     for(let k=1;k<7;k+=2){const x=cx-10+k*3,hk=(12+hash(k,3)*20)*Math.min(1,p*3),y0=fy-(p>.5?(p-.5)*2*hk:0);for(let y=y0;y>fy-hk;y--)fp(x,y|0,rp[y<fy-hk+4?3:4]);}}
   cOp=16;cTint=0;}
 function auraFront(e){const cx=e.x|0,fy=e.y|0,tv=view==='tiers';
@@ -537,7 +546,7 @@ function auraFront(e){const cx=e.x|0,fy=e.y|0,tv=view==='tiers';
       lightQ(cx,fy-8,2.5,1,h?.7:.2,e.shTier);}}
   cOp=POL[e.stTier].op;cTint=tv?TCOL[e.stTier]:0;
   if(e.froz>0){const rp=RAMP[1];line(cx-7,fy,cx-4,fy-7,rp[4]);line(cx-4,fy-7,cx-2,fy,rp[3]);line(cx+1,fy,cx+4,fy-9,rp[4]);line(cx+4,fy-9,cx+6,fy,rp[3]);line(cx-2,fy,cx,fy-5,rp[5]);line(cx,fy-5,cx+2,fy,rp[3]);fp(cx-4,fy-7,rp[5]);fp(cx+4,fy-9,rp[5]);for(let x=-7;x<=6;x++)fp(cx+x,fy+1,rp[1]);}
-  if(e.shock>0){const rp=RAMP[2],q=frame/3|0;for(let k=0;k<2;k++){let ax=cx-6,ay=fy-13+(hash(q+k,e.id)*10|0);for(let s=0;s<3;s++){const bx_=ax+4,by_=fy-14+(hash(q*5+s+k*9,e.id)*12|0);line(ax,ay,bx_,by_,(q+s)&1?rp[5]:rp[3]);ax=bx_;ay=by_;}}}
+  if(e.shock>0){const rp=RAMP[2],q=(simT*20)|0;for(let k=0;k<2;k++){let ax=cx-6,ay=fy-13+(hash(q+k,e.id)*10|0);for(let s=0;s<3;s++){const bx_=ax+4,by_=fy-14+(hash(q*5+s+k*9,e.id)*12|0);line(ax,ay,bx_,by_,(q+s)&1?rp[5]:rp[3]);ax=bx_;ay=by_;}}}
   if(e.healT>0){const p=1-e.healT/.9;cOp=POL[e.healTier].op;cTint=tv?TCOL[e.healTier]:0;ell(cx,fy-p*17,7,3,RAMP[4][p<.2?5:4],0,.5);}
   if(e.lvlT>0){const p=1-e.lvlT/1.4,rp=RAMP[4];cOp=8;cTint=0;for(let k=0;k<7;k+=2){const x=cx-10+k*3,hk=(12+hash(k,3)*20)*Math.min(1,p*3),y0=fy-(p>.5?(p-.5)*2*hk:0);for(let y=y0;y>fy-hk;y--)fp(x,y|0,rp[y<fy-hk+4?4:5]);}cOp=16;}
   cOp=16;cTint=0;
@@ -545,7 +554,7 @@ function auraFront(e){const cx=e.x|0,fy=e.y|0,tv=view==='tiers';
 function drawEnt(e){const cx=e.x|0,fy=e.y|0;let t0=now(),t;
   for(let j=-1;j<=1;j++)for(let i=-5;i<=5;i++)if(i*i/30+j*j/2.2<1){const q=(fy+j)*W+cx+i;if(cx+i>=0&&cx+i<W&&fy+j>=0&&fy+j<H)out[q]=mulc(out[q],165);}
   t=now();A.world+=t-t0;t0=t;if(aurasOn){auraBack(e);t=now();A.aura+=t-t0;t0=t;}
-  let s,ox=0,oy=0;if(e.kind===2){s=e.spr;if(e.broke>0)ox=((frame>>1)&1)*2-1;}else if(e.kind===3){s=e.spr;oy=-2-Math.round(Math.sin(simT*4+e.id));}else s=e.spr[e.castT>0||e.beamOn?2:e.mv?((e.wf*7)|0)&1:0];
+  let s,ox=0,oy=0;if(e.kind===2){s=e.spr;if(e.broke>0)ox=(((simT*30)|0)&1)*2-1;}else if(e.kind===3){s=e.spr;oy=-2-Math.round(Math.sin(simT*4+e.id));}else s=e.spr[e.castT>0||e.beamOn?2:e.mv?((e.wf*7)|0)&1:0];
   const wk=e.kind===4&&mgr&&others!=='full';let tc=0,ta=0;if(e.flash>0){tc=WHITE;ta=wk?70:225;}else if(e.froz>0)s=tinted(s,0,wk);else if(e.shock>0&&(((simT*6)|0)&1))s=tinted(s,1,wk);else if(e.burn>0)s=tinted(s,2,wk);else if(e.pois>0)s=tinted(s,3,wk);
   sprite(s,cx+ox,fy+oy,e.face<0,tc,ta);t=now();A.world+=t-t0;t0=t;
   if(aurasOn){auraFront(e);A.aura+=now()-t0;}}
@@ -572,13 +581,14 @@ function glowLayer(){LMR.fill(0);LMG.fill(0);LMB.fill(0);
 // ---------- step ----------
 const A={world:0,cast:0,proj:0,impact:0,aura:0,glow:0,screen:0,clar:0},T={world:0,cast:0,proj:0,impact:0,aura:0,glow:0,screen:0,clar:0,total:0};
 const keys={l:0,r:0,u:0,d:0};
-function walk(e,dx,dy,sp,dt){const l=Math.hypot(dx,dy);if(l<.01){e.mv=false;return;}const nx=e.x+dx/l*sp*dt,ny=e.y+dy/l*sp*dt;let moved=false;
-  if(!blockedPx(nx,e.y)){e.x=nx;moved=true;}if(!blockedPx(e.x,ny)){e.y=ny;moved=true;}e.mv=moved;if(moved){e.wf+=dt;if(Math.abs(dx)>.3)e.face=dx<0?-1:1;}}
+// moved is true only when the entity covered at least a quarter of the step, so a blocked walker stands still and drops its target
+function walk(e,dx,dy,sp,dt){const l=Math.hypot(dx,dy);if(l<.01){e.mv=false;return;}const st=sp*dt;if(!(st>0))return;const nx=e.x+dx/l*st,ny=e.y+dy/l*st,ox=e.x,oy=e.y;
+  if(!blockedPx(nx,e.y))e.x=nx;if(!blockedPx(e.x,ny))e.y=ny;const moved=Math.hypot(e.x-ox,e.y-oy)>st*.25;e.mv=moved;if(moved){e.wf+=dt;if(Math.abs(dx)>.3)e.face=dx<0?-1:1;}}
 function playerAim(){if(aimMode==='target'&&target&&target.act&&!target.dead)return[target.x,target.y-7,target.y];if(!aimSeen){const n=nearestFoe(P);if(n)return[n.x,n.y-7,n.y];}return[aimX,aimY,aimY];}
 function stepActors(dt){
   // player
   for(const e of ents){if(e.castT>0)e.castT-=dt;if(e.cd>0)e.cd-=dt;}
-  if(P.froz<=0){const kx=keys.r-keys.l,ky=keys.d-keys.u,sp=P.haste>0?80:48;if(kx||ky){P.hasT=false;walk(P,kx,ky,sp,dt);}else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y;if(Math.hypot(dx,dy)<1.5){P.hasT=false;P.mv=false;}else{walk(P,dx,dy,sp,dt);if(!P.mv)P.hasT=false;}}else P.mv=false;}else P.mv=false;
+  if(P.froz<=0){const kx=keys.r-keys.l,ky=keys.d-keys.u,sp=P.haste>0?80:48;if(kx||ky){P.hasT=false;walk(P,kx,ky,sp,dt);}else if(P.hasT){const dx=P.tx-P.x,dy=P.ty-P.y;if(Math.hypot(dx,dy)<1.5){P.hasT=false;P.mv=false;}else{walk(P,dx,dy,sp,dt);if(!P.mv&&dt>0)P.hasT=false;}}else P.mv=false;}else P.mv=false;
   if(P.hp<P.mx)P.hp=Math.min(P.mx,P.hp+dt*1.5);
   // healer (party)
   HL.ai-=dt;const hd=Math.hypot(P.x-HL.x,P.y-HL.y);if(hd>52&&HL.froz<=0)walk(HL,P.x-HL.x,P.y-HL.y,34,dt);else HL.mv=false;
@@ -595,9 +605,8 @@ function stepActors(dt){
     if(r<30)cast(c,0,tg===c?DUM[0]:tg,null,null,true);else if(r<52)cast(c,1,null,tg.x,tg.y-7,true);else if(r<64)cast(c,2,tg===c?DUM[1]:tg,null,null,true);else if(r<76)cast(c,3,null,tg.x,tg.y,true);
     else if(r<88)cast(c,4,tg.kind===4?tg:c,null,null,true);else if(r<93)cast(c,5,c,null,null,true);else if(r<97){if(tg!==c){beamStart(c,tg);after(.8,()=>beamStop(c));}}else cast(c,7,c,null,null,true);}
   // beams: the server ray and its ticks
-  for(const c of ents){if(!c.beamOn)continue;if(!c.act||c.dead||c.froz>0){beamStop(c);continue;}let ax,ay;if(c===P){const a=playerAim();ax=a[0];ay=a[1];}else{const t=c.beamTg;if(!t||!t.act||t.dead){beamStop(c);continue;}ax=t.x;ay=t.y-7;}
-    const x0=hand(c),y0=c.y-11;let dx=ax-x0,dy=ay-y0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;if(Math.abs(dx)>.2)c.face=dx<0?-1:1;const R=ray(c,x0,y0,dx,dy,160);c.bx=x0+dx*R.d;c.by=y0+dy*R.d;
-    c.beamT-=dt;if(c.beamT<=0){c.beamT=SPELLS[6].travel.tick;ev('effect','EFFECT '+tl(c.bx,c.by)+' ARCANE TICK',c.bx,c.by,0,0);if(R.e)hurt(R.e,SPELLS[6].impact.dmg,5,c.beamTier);}}
+  for(const c of ents){if(!c.beamOn)continue;if(!c.act||c.dead||c.froz>0){beamStop(c);continue;}const R=beamRay(c);if(!R){beamStop(c);continue;}
+    c.beamT-=dt;if(c.beamT<=0){c.beamT=SPELLS[6].travel.tick;ev('effect','EFFECT '+tl(c.bx,c.by)+' ARCANE TICK',c.bx,c.by,0,0);if(R.e)hurt(R.e,SPELLS[6].impact.dmg,5,c.beamTier,null,null,true);}}
   // showcase director: keeps one of everything on screen
   if(demoT>0){demoT-=dt;for(const d of DUM)d.hp=d.mx;P.hp=P.mx;P.shield=9;P.castT=.3;HL.froz=0;
     if(!demoF||!demoF.on||demoF.own!==P||demoF.ty!==1||demoF.rel){demoF=spawn(1,0,5,1.6);if(demoF){demoF.own=P;demoF.r=22;demoF.t=.9;}}
@@ -631,7 +640,7 @@ function render(dt){let t0=now(),t;const tv=view==='tiers';
   ORD.sort((a,b)=>(a.kind===undefined?a[1]:a.y)-(b.kind===undefined?b[1]:b.y));
   t=now();A.world+=t-t0;
   for(const o of ORD){if(o.kind!==undefined){drawEnt(o);continue;}t0=now();
-    if(o[1]===48||o[1]===152)sprite(SP_PIL,o[0],o[1],false,0,0);else{sprite(SP_BRAZ,o[0],o[1],false,0,0);tongues(o[0]-3,o[1]-8,3,3,7,RAMP[0],o[0],ep,10);lightQ(o[0],o[1]-8,5,0,.5+hash(frame>>3,o[0])*.12,0);}
+    if(o[1]===48||o[1]===152)sprite(SP_PIL,o[0],o[1],false,0,0);else{sprite(SP_BRAZ,o[0],o[1],false,0,0);tongues(o[0]-3,o[1]-8,3,3,7,RAMP[0],o[0],ep,10);lightQ(o[0],o[1]-8,5,0,.5+hash((simT*7.5)|0,o[0])*.12,0);}
     A.world+=now()-t0;}
   t0=now();
   // layer 4: missiles, beams, chains
@@ -669,14 +678,20 @@ function render(dt){let t0=now(),t;const tv=view==='tiers';
       if(L.type==='cast'){for(let k=0;k<16;k++)up(Math.round(x+Math.cos(k*.3927)*7),Math.round(y-6+Math.sin(k*.3927)*9),c);}
       else if(L.type==='missile'){const d=Math.hypot(L.x1-x,L.y1-y)|0;for(let s=0;s<=d;s+=2)up(Math.round(x+(L.x1-x)*s/(d||1)),Math.round(y+(L.y1-y)*s/(d||1)),c);}
       else if(L.type==='cond'){for(let k=-2;k<=2;k++){up(x+k,y-22,c);up(x,y-22+k,c);}}
-      else{const r=L.type==='area'?L.x1:0,tx=((x-r)>>4)*16,ty=((y-r)>>4)*16,w=(((x+r)>>4)+1)*16-tx,h=(((y+r)>>4)+1)*16-ty;for(let k=0;k<=w;k++){up(tx+k,ty,c);up(tx+k,ty+h,c);}for(let k=0;k<=h;k++){up(tx,ty+k,c);up(tx+w,ty+k,c);}}}
+      else{const rt=(L.type==='area'?L.x1:0)>>4,tx=((x>>4)-rt)*16,ty=((y>>4)-rt)*16,w=(rt*2+1)*16-1;for(let k=0;k<=w;k++){up(tx+k,ty,c);up(tx+k,ty+w,c);up(tx,ty+k,c);up(tx+w,ty+k,c);}}}
     for(let n=0;n<14;n++){const L=LOG[(logN-1-n)&63];if(!L.type||n>=logN)break;const y=H-8-n*7,s=L.txt+' '+L.b+'B';for(let j=-1;j<6;j++)for(let i=0;i<s.length*4+3;i++)up(1+i,y+j,BLACK);txt(s,3,y,EC[L.type]);}
     txt('SERVER EVENTS '+evRate+'/S '+byRate+' B/S',3,3,WHITE,1);}
   ctx.putImageData(img,0,0);A.world+=now()-t0;}
 
 // ---------- loop and HUD ----------
 let last=now(),hudN=0,secT=0;const f2=v=>v.toFixed(2);
-function loop(tn){let dt=(tn-last)/1000;last=tn;if(dt>.1)dt=.1;if(dt<0)dt=0;const sdt=paused?0:slow?dt*.25:dt;
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(tn){requestAnimationFrame(loop);if(skipFrame())return;let dt=(tn-last)/1000;last=tn;if(dt>.1)dt=.1;if(dt<0)dt=0;const sdt=paused?0:slow?dt*.25:dt;
   for(const k in A)A[k]=0;if(!paused)step(sdt);render(sdt);
   let tot=0;for(const k in A){T[k]+=(A[k]-T[k])*.08;tot+=A[k];}T.total+=(tot-T.total)*.08;
   secT+=dt;if(secT>=1){secT-=1;evRate=evSec;byRate=bySec;evSec=bySec=0;evictRate=evictSec;evictSec=0;flashAskR=flashAsk;flashShowR=flashShow;flashAsk=flashShow=0;}
@@ -684,10 +699,9 @@ function loop(tn){let dt=(tn-last)/1000;last=tn;if(dt>.1)dt=.1;if(dt<0)dt=0;cons
     const over=T.total>16.7,cap=mgr?`cap ${PRM.cap.fx}`:`<span class="warn">no cap</span>`;
     $('hud').innerHTML=`${TODN[tod]} · glow ${glow} · trail ${trail} · ${dirs==='rot'?'run-time rotation':dirs+' directions'} · crowd ${crowdN}, stress ${stress}x · manager ${mgr?'on, others '+others+(pressure>.85?', under pressure':''):'<span class="warn">off</span>'}${paused?' · paused':slow?' · 0.25x':''}<br>`+
     `cast ${f2(T.cast)} · projectiles+trails ${f2(T.proj)} · impacts+areas ${f2(T.impact)} · auras+status ${f2(T.aura)} · glow ${f2(T.glow)} · screen ${f2(T.screen)} · clarity ${f2(T.clar)} · world ${f2(T.world)} ms<br>`+
-    `<b>total ${f2(T.total)} ms</b> <span class="bar"><i class="${over?'hot2':''}" style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · effects ${liveFx} (own ${TC[0]}, party ${TC[1]}, others ${TC[2]}, hostile ${TC[3]}), ${cap} · auras ${au} · particles ${liveP} live of ${NPART} pooled${mgr?', cap '+PRM.cap.parts:''} · evicted ${evicted} (${evictRate}/s), merged ${merged}, particles refused ${partDrop} · opacity own ${mgr?opOwn:100}%, others ${mgr?opOth:100}%, monsters ${mgr?opMon:100}%<br>`+
+    `<b>total ${f2(T.total)} ms</b> <span class="bar"><i class="${over?'hot2':''}" style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · effects ${liveFx} (own ${TC[0]}, party ${TC[1]}, others ${TC[2]}, hostile ${TC[3]}), ${cap} · auras ${au} · particles ${liveP} live of ${NPART} pooled${mgr?', cap '+PRM.cap.parts:''} · evicted ${evicted} (${evictRate}/s), refused ${refused}, merged ${merged}, particles refused ${partDrop}, overwritten ${partOver} · opacity own ${mgr?opOwn:100}%, others ${mgr?opOth:100}%, monsters ${mgr?opMon:100}%<br>`+
     `server ${evRate} events/s, ${byRate} B/s (${byTot} B total, Tibia 12+ sizes: effect 9 B, missile 11 B) · areas ${areaMaskB} B as mask events, ${areaTileB} B if sent per tile · flashes asked ${flashAskR}/s, shown ${flashShowR}/s (limit ${PRM.flashMax}/s), last flash ${flashPx} px (${(flashPx/NP*100).toFixed(0)}% of screen, exempt under ${PRM.flashSmall} px) · overdraw ${fxN} effect px written, ${odPx} px touched, worst pixel ${maxOD}x · lights ${LQN}<br>`+
-    `you ${Math.ceil(P.hp)}/100${P.shield>0?', shield '+Math.ceil(P.shield)+' s':''} · target ${target&&target.act&&!target.dead?(target.kind===2?'dummy':'monster')+' #'+target.id:'none'}${note?' · '+note:''}`;}
-  requestAnimationFrame(loop);}
+    `you ${Math.ceil(P.hp)}/100${P.shield>0?', shield '+Math.ceil(P.shield)+' s':''} · target ${target&&target.act&&!target.dead?(target.kind===2?'dummy':'monster')+' #'+target.id:'none'}${note?' · '+note:''}`;}}
 
 // ---------- UI ----------
 const setOp=(k,v)=>{v=+v;if(k==='own')opOwn=v;else if(k==='oth')opOth=v;else opMon=v;$('op'+k).value=v;$('op'+k+'l').textContent=v+'%';setPolicy();};
@@ -700,8 +714,8 @@ const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',!!get());b
 const syRes=tog('residue',()=>residue,v=>residue=v),syAur=tog('auras',()=>aurasOn,v=>aurasOn=v),syScr=tog('screen',()=>scrOn,v=>scrOn=v),syRf=tog('rflash',()=>redFlash,v=>redFlash=v),syRm=tog('rm',()=>rm,v=>rm=v),syCb=tog('cb',()=>cbOn,v=>{cbOn=v;buildRamps(v);});
 const syMgr=tog('mgr',()=>mgr,v=>{mgr=v;$('mgr').textContent=v?'Manager on':'Manager off';setPolicy();}),syMons=tog('mons',()=>monsOn,v=>monsOn=v),syPause=tog('pause',()=>paused,v=>paused=v),sySlow=tog('slow',()=>slow,v=>slow=v);
 const syPh=tog('inphase',()=>inPhase,v=>inPhase=v),sySf=tog('sfront',()=>sparkFront,v=>sparkFront=v),syDim=tog('dim',()=>dimOn,v=>dimOn=v);
-tog('haste',()=>P.haste>0,v=>P.haste=v?600:0);$('lvl').onclick=levelUp;
-function levelUp(){P.lvlT=1.4;ev('effect','EFFECT '+tl(P.x,P.y)+' LEVELUP',P.x,P.y,0,0);burst(3,0,4,5,P.x,P.y-8,18,20,50,.5,.9,14);lightQ(P.x,P.y-8,5,4,1,0);}
+const syHaste=tog('haste',()=>P.haste>0,v=>P.haste=v?600:0);$('lvl').onclick=levelUp;
+function levelUp(){P.lvlT=1.4;ev('effect','EFFECT '+tl(P.x,P.y)+' LEVELUP',P.x,P.y,0,0);burst(3,0,4,5,P.x,P.y-8,18,20,50,.5,.9,14);}
 const setCrowd=v=>{crowdN=+v;$('crowd').value=v;$('crowdl').textContent=v;},setStress=v=>{stress=+v;$('stress').value=v;$('stressl').textContent=v+'x';};
 $('crowd').oninput=e=>setCrowd(e.target.value);$('stress').oninput=e=>setStress(e.target.value);
 function setTarget(e){if(target!==e){target=e;targT=0;}}
@@ -712,14 +726,14 @@ function castPlayer(si){demoStop();const S=SPELLS[si],k=S.travel&&S.travel.kind;
   else if(k==='straight'||k==='lob'){const a=playerAim();px=a[0];py=k==='lob'?a[2]:a[1];}
   else if(S.heal)tg=friend&&friend.act?friend:P;else tg=P;
   cast(P,si,tg,px,py);}
-let beamHold=0;
+let beamHold=0,beamBtn=false,beamTmr=0;
 document.querySelectorAll('#hot button').forEach(b=>{const si=+b.dataset.s;
-  if(si===6){const stop=()=>{const w=Math.max(0,600-(now()-beamHold));setTimeout(()=>{if(!keys.beam)beamStop(P);},w);};
-    b.addEventListener('pointerdown',e=>{demoStop();beamHold=now();beamStart(P,null);e.preventDefault();});b.addEventListener('pointerup',stop);b.addEventListener('pointerleave',()=>{if(P.beamOn)stop();});b.addEventListener('pointercancel',stop);b.addEventListener('contextmenu',e=>e.preventDefault());}
+  if(si===6){const stop=()=>{if(!beamBtn)return;beamBtn=false;const w=Math.max(0,600-(now()-beamHold));clearTimeout(beamTmr);beamTmr=setTimeout(()=>{if(!keys.beam&&!beamBtn)beamStop(P);},w);};
+    b.addEventListener('pointerdown',e=>{demoStop();clearTimeout(beamTmr);beamBtn=true;beamHold=now();beamStart(P,null);e.preventDefault();});b.addEventListener('pointerup',stop);b.addEventListener('pointerleave',stop);b.addEventListener('pointercancel',stop);b.addEventListener('contextmenu',e=>e.preventDefault());}
   else b.onclick=()=>castPlayer(si);});
-function reset(){seed=1234567;for(const f of FX)f.on=0;liveFx=0;fxHi=0;fxCur=0;FIELD.fill(null);PL.fill(0);liveP=0;for(let L=0;L<4;L++){PCUR[L]=PS0[L];PHI[L]=PS0[L];}for(const d of DEC)d.on=0;for(const d of DN)d.t=0;SCH.length=0;
-  for(const e of ents){e.x=e.hx;e.y=e.hy;e.hp=e.mx;e.dead=0;e.castT=e.cd=e.burn=e.pois=e.froz=e.shock=e.shield=e.shHit=e.flash=e.healT=e.lvlT=e.haste=e.broke=0;e.beamOn=false;e.hasT=false;e.mv=false;e.ai=1+rnd()*3;if(e.kind<2)e.face=1;}
-  $('haste').classList.remove('on');target=DUM[0];targT=0;merged=0;areaMaskB=areaTileB=0;dimT=0;SPT.fill(-9);friend=null;aimMode='target';aimSeen=false;evicted=0;partDrop=0;byTot=0;logN=0;for(const L of LOG){L.t=-9;L.type='';}flashT=borderT=edgeT=0;flashTimes.length=0;demoT=0;demoF=null;note='';simT=0;frame=0;}
+function reset(){seed=1234567;for(const f of FX)f.on=0;liveFx=0;fxHi=0;fxCur=0;FIELD.fill(null);PL.fill(0);liveP=0;for(let L=0;L<4;L++){PCUR[L]=PS0[L];PHI[L]=PS0[L];}for(const d of DEC)d.on=0;for(const d of DN){d.t=0;d.key=null;}SCH.length=0;
+  for(const e of ents){e.x=e.hx;e.y=e.hy;e.hp=e.mx;e.dead=0;e.castT=e.cd=e.burn=e.pois=e.froz=e.shock=e.shield=e.shHit=e.flash=e.healT=e.lvlT=e.haste=e.broke=0;e.beamOn=false;e.hasT=false;e.mv=false;e.trN=0;e.ai=1+rnd()*3;if(e.kind<2)e.face=1;}
+  $('haste').classList.remove('on');target=DUM[0];targT=0;merged=0;areaMaskB=areaTileB=0;dimT=0;SPT.fill(-9);friend=null;aimMode='target';aimSeen=false;evicted=refused=0;partDrop=partOver=0;byTot=0;logN=0;for(const L of LOG){L.t=-9;L.type='';}flashT=borderT=edgeT=0;flashTimes.length=0;demoT=0;demoF=null;note='';simT=0;frame=0;paused=false;syPause();}
 $('reset').onclick=reset;
 function showcase(){reset();setView('normal');setGlow('ramp');setTrail('ribbon');setDirs('8');setTod(1);setOthers('reduced');setOp('own',100);setOp('mon',100);inPhase=false;syPh();sparkFront=false;sySf();dimOn=true;syDim();setCrowd(4);setStress(1);
   residue=true;syRes();aurasOn=true;syAur();scrOn=true;syScr();redFlash=false;syRf();rm=false;syRm();if(cbOn){cbOn=false;buildRamps(false);syCb();}if(!mgr)$('mgr').click();monsOn=false;syMons();paused=false;syPause();slow=false;sySlow();setPolicy();
@@ -736,6 +750,10 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){const[x,y]=can
 function demoStop(){if(demoT>0){demoT=0;for(const f of FX)if(f.on&&f.dur>1e5)f.dur=f.t+4;}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'},VS=['normal','tiers','bounds','cost','glow','log'],GS=['ramp','add','buf','off'];
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
   if(KM[k]){keys[KM[k]]=1;demoStop();e.preventDefault();return;}
   if(k==='7'){if(!e.repeat){demoStop();keys.beam=1;beamStart(P,null);}}
@@ -747,9 +765,10 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k===' '){paused=!paused;syPause();e.preventDefault();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;if(k==='7'){keys.beam=0;beamStop(P);}});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;keys.beam=0;beamStop(P);});
-function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
-window.spellSandbox={T,stats:()=>({liveFx,liveP,evicted,partDrop,fxN,odPx,maxOD,evRate,byRate,TC:TC.slice()})};
+window.spellSandbox={T,stats:()=>({liveFx,liveP,evicted,refused,partDrop,partOver,fxN,odPx,maxOD,evRate,byRate,TC:TC.slice()})};
 reset();requestAnimationFrame(loop);
 })();
 </script>

@@ -121,20 +121,26 @@ function PB(w,h){const d=new Uint32Array(w*h);return {w,h,d,
   ol(c){const o=d.slice();for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(o[y*w+x])continue;const n=(xx,yy)=>xx>=0&&yy>=0&&xx<w&&yy<h&&o[yy*w+xx];if(n(x-1,y)||n(x+1,y)||n(x,y-1)||n(x,y+1))d[y*w+x]=c;}return this;},
   cv(){const [c,g]=mk(w,h);const im=g.createImageData(w,h);new Uint32Array(im.data.buffer).set(d);g.putImageData(im,0,0);return c;}};}
 // ---------- bitmap fonts: 5x9 cell main font (cap 7, descender 2) and 3x5 small caps font ----------
-const F1C="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~áéíóúüñ¡¿",F1D="ciiuiii00siisiis00cigggic00siiiiis00uggsggu00uggsggg00cigmiie00iiiuiii00s88888s0062222ic00iikokii00ggggggu00hrllhhh00iqqmmii00ciiiiic00siisggg00ciiiika00siiskii00cigc2ic00v44444400iiiiiic00hhhaa4400hhhllrh00hha4ahh00hha444400u248ggu0000c2eie00ggsiiis0000cgggc0022eiiie0000ciuge00c8s88880000eiiie2cggsiiii00g0ggggg0040444444oggikoki00gggggg80000ullll0000kqiii0000ciiic0000siiisgg00eiiie2200koggg0000egc2s0008s88840000iiiie0000hhaa40000hhlla0000iicii0000iiiie2c00u48gu00cimiqic008o8888s00ci248gu00ci2c2ic004ckku4400ugs22ic00cggsiic00u24488800ciiciic00ciie22c00ggggg0g00kk00000000avava0004fke5u400pp248jj008kk8mic00gg00000008ggggg800g88888g000k8k00000008s800000000008g00000s0000000000g0044888gg00000g00g000008008g0048g84000000s0s0000g848g000ci2480800ehnlnge00ogggggo00gg8884400o88888o008k00000000000000u0g80000000c88g88c00ggggggg00o88488o00000ak000048c2eie0048ciuge008gggggg0048ciiic0048iiiie00i0iiiie00aksiiii00g0ggggg004048gic00";
+const F1C="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~áéíóúüñ¡¿",F1D="ciiuiii00siisiis00cigggic00siiiiis00uggsggu00uggsggg00cigmiie00iiiuiii00s88888s0062222ic00iikokii00ggggggu00hrllhhh00iqqmmii00ciiiiic00siisggg00ciiiika00siiskii00cigc2ic00v44444400iiiiiic00hhhaa4400hhhllrh00hha4ahh00hha444400u248ggu0000c2eie00ggsiiis0000cgggc0022eiiie0000ciuge00c8s88880000eiiie2cggsiiii00g0ggggg0080888888gggikoki00gggggg80000ullll0000kqiii0000ciiic0000siiisgg00eiiie2200koggg0000egc2s0008s88840000iiiie0000hhaa40000hhlla0000iicii0000iiiie2c00u48gu00cimiqic008o8888s00ci248gu00ci2c2ic004ckku4400ugs22ic00cggsiic00u24488800ciiciic00ciie22c00ggggg0g00kk00000000avava0004fke5u400pp248jj008kk8mic00gg00000008ggggg800g88888g000k8k00000008s800000000008g00000s0000000000g0044888gg00000g00g000008008g0048g84000000s0s0000g848g000ci2480800ehnlnge00ogggggo00gg8884400o88888o008k00000000000000u0g80000000c88g88c00ggggggg00o88488o00000ak000048c2eie0048ciuge008gggggg0048ciiic0048iiiie00i0iiiie00aksiiii00g0ggggg004048gic00";
 const F2C="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.,'\"-+:;()/*=#%&_¡¿<>",F2D="8kskk0okoko0cgggc0okkko0sgogs0sgogg0cgkkc0kkskk0s888s0444k80kkokk0ggggs0hrlhh0hpljh08kkk80okogg08kkoc0okokk0cg84o0s88880kkkks0kkk880hhlrh0kk8kk0kk8880s48gs0skkks08o88s0o48gs0o484o0kks440sgo4o0cgsks0s48880sksks0sks4o0ggg0g0o480800000g00000gggg0000kk000000o00008s8000g0g000g0gg08ggg80g888g0448gg0k8k0000s0s00ksksk0k48gk08k8kc00000s0g0ggg0808gc048g840g848g0";
 const FONTS={};
-function mkFont(id,chars,data,rows,lh,sp){const g={};const N=[...chars].length;let i=0;
+// accented capitals are composed: the base letter plus a mark in the 2 rows above the cap line (TOP).
+// marks per font are [acute, tilde, diaeresis], each 2 rows of base-32 bits
+const STRIP={'Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U','Ñ':'N'},TOP=2;
+function mkFont(id,chars,data,rows,lh,sp,marks){const g={};let i=0;
   for(const ch of chars){let w=0;const rr=[];for(let r=0;r<rows;r++){const v=parseInt(data[i*rows+r],32);rr.push(v);for(let c=0;c<5;c++)if(v&(16>>c))w=Math.max(w,c+1);}g[ch]={i,w,rr};i++;}
-  return FONTS[id]={id,g,rows,lh,sp,N,cache:{}};}
-const F1=mkFont(1,F1C,F1D,9,10,3),F2=mkFont(2,F2C,F2D,6,7,2);
-const STRIP={'Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U','Ñ':'N'};
-function glyphOf(F,ch){let G=F.g[ch];if(G)return G;if(F===F2){const u=ch.toUpperCase();G=F.g[STRIP[u]||u];if(G)return G;}else if(STRIP[ch]&&F.g[STRIP[ch]])return F.g[STRIP[ch]];return F.g['?'];}
-const adv=(F,ch)=>ch===' '?F.sp:glyphOf(F,ch).w+1;
-function atlas(F,fg,eff,ec){const k=fg+eff+ec;let a=F.cache[k];if(a)return a;const ch=F.rows+2,pb=PB(F.N*7,ch),cf=C(fg),ce=C(ec);
+  for(const ch in STRIP){const b=g[STRIP[ch]],top=[...marks[ch==='Ñ'?1:ch==='Ü'?2:0]].map(c=>parseInt(c,32));let w=b.w;for(const v of top)for(let c=0;c<5;c++)if(v&(16>>c))w=Math.max(w,c+1);g[ch]={i:i++,w,rr:b.rr,top};}
+  return FONTS[id]={id,g,rows,lh,sp,N:i,cache:{}};}
+const F1=mkFont(1,F1C,F1D,9,10,3,['48','ak','i0']),F2=mkFont(2,F2C,F2D,6,7,2,['40','e0','k0']);
+function glyphOf(F,ch){let G=F.g[ch];if(G)return G;if(F===F2){const u=ch.toUpperCase();G=F.g[u]||F.g[STRIP[u]];if(G)return G;}else if(STRIP[ch]&&F.g[STRIP[ch]])return F.g[STRIP[ch]];return F.g['?'];}
+// fillText mode lays text out with the vector font's own advance (monospace, rounded up to whole pixels), so it is compared on its own metrics
+const fillFont=(F,s)=>(F===F1?9:7)*s+'px ui-monospace,Menlo,monospace',FILLA={};let curFont='';
+function fillAdv(F){let a=FILLA[F.id];if(!a){ctx.font=fillFont(F,1);curFont='';a=FILLA[F.id]=Math.ceil(ctx.measureText('M').width);}return a;}
+const adv=(F,ch)=>REN==='fill'?fillAdv(F):ch===' '?F.sp:glyphOf(F,ch).w+1;
+function atlas(F,fg,eff,ec){const k=fg+eff+ec;let a=F.cache[k];if(a)return a;const ch=F.rows+2+TOP,pb=PB(F.N*7,ch),cf=C(fg),ce=C(ec);
   for(let pass=0;pass<2;pass++)for(const c in F.g){const G=F.g[c],ox=G.i*7+1;
-    for(let r=0;r<F.rows;r++)for(let x=0;x<5;x++)if(G.rr[r]&(16>>x)){
-      if(pass===1)pb.s(ox+x,1+r,cf);else if(eff===1)pb.s(ox+x,2+r,ce);else if(eff===2){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)pb.s(ox+x+dx,1+r+dy,ce);}}}
+    for(let r=-TOP;r<F.rows;r++)for(let x=0;x<5;x++)if((r<0?G.top?G.top[r+TOP]:0:G.rr[r])&(16>>x)){const y=1+TOP+r;
+      if(pass===1)pb.s(ox+x,y,cf);else if(eff===1)pb.s(ox+x,y+1,ce);else if(eff===2){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)pb.s(ox+x+dx,y+dy,ce);}}}
   return F.cache[k]=pb.cv();}
 // ---------- per frame stats and cost rects ----------
 const ST={glyphs:0,blits:0,bub:0,hid:0};let VIEW='normal',LAYER=0;const COSTR=[];
@@ -144,15 +150,16 @@ function B9(img,sx,sy,sw,sh,dx,dy,dw,dh,nr){if(dw<=0||dh<=0)return;ctx.drawImage
 function R(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(x|0,y|0,w|0,h|0);ST.blits++;}
 let REN='bit',RM=false;
 function drawCh(F,ch,x,y,s,fg,eff,ec){if(ch===' ')return;ST.glyphs++;ST.blits++;x|=0;y|=0;
-  if(REN==='fill'){ctx.font=(F===F1?9:7)*s+'px ui-monospace,Menlo,monospace';ctx.textBaseline='top';
+  if(REN==='fill'){const f=fillFont(F,s);if(f!==curFont){ctx.font=curFont=f;ctx.textBaseline='top';} // the font is set when it changes, not once per glyph
     if(eff===2){ctx.strokeStyle='#'+ec;ctx.lineWidth=2;ctx.strokeText(ch,x,y);ST.blits++;}else if(eff===1){ctx.fillStyle='#'+ec;ctx.fillText(ch,x,y+s);ST.blits++;}
     ctx.fillStyle='#'+fg;ctx.fillText(ch,x,y);return;}
-  const G=glyphOf(F,ch);ctx.drawImage(atlas(F,fg,eff,ec),G.i*7,0,7,F.rows+2,x-s,y-s,7*s,(F.rows+2)*s);}
+  const G=glyphOf(F,ch);ctx.drawImage(atlas(F,fg,eff,ec),G.i*7,0,7,F.rows+2+TOP,x-s,y-(1+TOP)*s,7*s,(F.rows+2+TOP)*s);}
 // ---------- rich text: [c=key] [wave] [shake] [p=N] [spd=N] [e=expr] ----------
 const PUN_L=10,PUN_S=5; // punctuation pauses in glyph-times
 function parseRich(src){const out=[];let cc=null,fx=0,spd=1,k0=-1,ex=null,pend=0;
   for(let i=0;i<src.length;){
-    if(src[i]==='['){const m=src.slice(i).match(/^\[(\/?)(c|wave|shake|p|spd|e)(?:=([\w.]+))?\]/);
+    if(src[i]==='['&&src[i+1]==='[')i++; // [[ is a literal bracket, see esc()
+    else if(src[i]==='['){const m=src.slice(i).match(/^\[(\/?)(c|wave|shake|p|spd|e)(?:=([\w.]+))?\]/);
       if(m){i+=m[0].length;const cl=m[1]==='/',t=m[2],v=m[3];
         if(t==='c'){if(cl){if(cc==='key'&&k0>=0){const w=out.slice(k0).map(g=>g.ch).join('').toLowerCase();for(let j=k0;j<out.length;j++)out[j].kw=w;}cc=null;k0=-1;}else{cc=v;k0=out.length;}}
         else if(t==='wave')fx=cl?0:1;else if(t==='shake')fx=cl?0:2;
@@ -165,7 +172,8 @@ function parseRich(src){const out=[];let cc=null,fx=0,spd=1,k0=-1,ex=null,pend=0
   return out;}
 function layout(gl,F,maxW){let x=0,line=0,ls=0,sp=-1;
   for(let i=0;i<gl.length;i++){const g=gl[i];g.x=x;g.line=line;g.y=line*F.lh;if(g.ch===' ')sp=i;x+=adv(F,g.ch);
-    if(x-1>maxW&&sp>ls){line++;let nx=0;for(let j=sp+1;j<=i;j++){gl[j].x=nx;gl[j].line=line;gl[j].y=line*F.lh;nx+=adv(F,gl[j].ch);}x=nx;ls=sp+1;sp=-1;}}
+    if(x-1>maxW&&sp>ls){line++;let nx=0;for(let j=sp+1;j<=i;j++){gl[j].x=nx;gl[j].line=line;gl[j].y=line*F.lh;nx+=adv(F,gl[j].ch);}x=nx;ls=sp+1;sp=-1;}
+    else if(x-1>maxW&&i>ls){line++;g.x=0;g.line=line;g.y=line*F.lh;x=adv(F,g.ch);ls=i;sp=-1;}} // a word wider than the line breaks mid-word
   const lw=[];for(const g of gl){if(g.ch===' ')continue;lw[g.line]=Math.max(lw[g.line]||0,g.x+adv(F,g.ch)-1);}
   return {lines:line+1,w:Math.max(1,...lw.map(v=>v||0)),lw};}
 const TH={box:{b:P.wh,e:1,ec:P.ink,key:P.o2,num:P.g4,warn:P.r3,name:P.a3,grey:P.s2},
@@ -575,7 +583,9 @@ const LID={};Object.keys(EN).forEach((k,i)=>LID[k]=i);
 let LANG='en';
 const str=id=>(LANG==='es'&&ES[id])||EN[id]||id;
 const fmt=(s,a)=>s.replace(/\{(\w+)\}/g,(_,k)=>a&&a[k]!=null?a[k]:'?');
-const plain=s=>s.replace(/\[[^\]]*\]/g,'');
+const plain=s=>s.replace(/\[\[|\[[^\]]*\]/g,m=>m==='[['?'[':'');
+// text typed by a player is shown as typed: every [ is doubled so parseRich never reads it as a tag
+const esc=s=>s.replace(/\[/g,'[[');
 const EXPAND=(()=>{let a=0,b=0;for(const k in ES){a+=plain(EN[k]||'').length;b+=plain(ES[k]).length;}return Math.round((b/a-1)*100);})();
 const utf8=s=>new TextEncoder().encode(s).length;
 // ---------- server: authoritative sessions, quest vars, NPC focus. Only intents go up, line ids come down ----------
@@ -616,9 +626,9 @@ function svHandle(from,m){const s=SV.sess[from.id];
   else if(m.t==='chat'){const rcv=heard(from,PL,m.ch);netSend('down',3+utf8(m.text),()=>{if(rcv)showChat(from,m.text,m.ch);else NET.lost++;},PL);}}
 function kwFind(text){const t=text.toLowerCase().trim(),w=t.split(/[\s,.!?¿¡]+/);for(const e of KW.sailor){if(e.k[0][0]==='@')continue;for(const k of e.k)if(t===k||w.includes(k))return e;}return null;}
 const kwSpecial=k=>KW.sailor.find(e=>e.k[0]==='@'+k);
-function kwSay(to,e){const r={t:'dlg',npc:'sailor',kw:true,lines:[{id:e.id,spk:'Brannoc',ex:e.k[0]==='@busy'?'angry':e.k[0]==='bye'?'happy':'neutral'}],opts:[],args:{name:to.name},end:e.k[0]==='bye'||e.k[0]==='@gone'};
+function kwSay(to,e){const r={t:'dlg',npc:'sailor',kw:true,lines:[{id:e.id,spk:'Brannoc',ex:e.k[0]==='@busy'?'angry':e.k[0]==='bye'?'happy':'neutral'}],opts:[],args:{name:to.name},key:e.k[0],end:e.k[0]==='bye'||e.k[0]==='@gone'};
   r.pub=FOCUS==='shared';NPCS.sailor.face=FOCUS==='shared'?(SV.foc.f||to):((Object.values(SV.priv)[0]||{}).who||to);
-  if(to===PL||r.pub)reply(to,r);else{SV.privShown++;netSend('down',lineBytes(r)[0],()=>{},to);}}
+  if(to===PL||r.pub)reply(to,r);else{SV.privShown++;netSend('down',lineBytes(r)[0],()=>{to.heard=r.key;},to);}}
 function svKw(from,text){const e=kwFind(text),hi=e&&e.k[0]==='hi',bye=e&&e.k[0]==='bye';
   if(dist(from,NPCS.sailor)>3)return;
   if(FOCUS==='private'){const p=SV.priv[from.id];if(hi){SV.priv[from.id]={last:ms(),who:from};kwSay(from,e);}else if(p){p.last=ms();kwSay(from,e||kwSpecial('fallback'));if(bye)delete SV.priv[from.id];}return;}
@@ -691,8 +701,9 @@ function clientRecv(r){if(r.v){CL.v=r.v;CL.gold=r.gold;CL.inv=r.inv;}
   if(r.t==='inv'){sfx(r.ok?'coin':'deny');if(r.ok)TR.flash=1;return;}
   if(r.t==='pick'){if(r.ok){CLH[r.i]=false;pop(PLANT[r.i][0]*16+8,PLANT[r.i][1]*16,'+1',P.g4);TR.flash=1;sfx('pick');}return;}
   if(r.t==='dlg'){if(r.to===PL)onDlg(r);else othersLine(r);}}
-function othersLine(r){const n=NPCS[r.npc];if(!heard(n,PL,'say')){NET.lost++;return;}for(const l of r.lines){const txt=fmt(str(l.id),r.args);bubble(n,txt,'npc',dist(n,PL)<5?2:3);logAdd(npcName(n),txt,'npc');}}
-function onDlg(r){const n=NPCS[r.npc];
+// a simulated player learns what the sailor answered when the line reaches it: @busy makes it wait, @next resumes it
+function othersLine(r){const n=NPCS[r.npc];if(r.key&&r.to)r.to.heard=r.key;if(!heard(n,PL,'say')){NET.lost++;return;}for(const l of r.lines){const txt=fmt(str(l.id),r.args);bubble(n,txt,'npc',dist(n,PL)<5?2:3);logAdd(npcName(n),txt,'npc');}}
+function onDlg(r){const n=NPCS[r.npc];talkAt=-1e9;
   if(r.leave){for(const l of r.lines){const t=fmt(str(l.id),r.args);bubble(n,t,'npc',0);logAdd(npcName(n),t,'npc');hist(npcName(n),t);}if(D.on&&D.npc===n)closeDlg();return;}
   if(D.on&&D.npc!==n)return;
   if(!D.on||D.closing)openDlg(n);
@@ -701,7 +712,9 @@ function onDlg(r){const n=NPCS[r.npc];
   if(D.state==='wait'||D.state==='idle')nextLine();}
 function openDlg(n){Object.assign(D,{on:true,closing:false,open:RM?1:0,npc:n,style:styleFor(n),state:'wait',q:[],gl:null,opts:null,pOpts:null,pCmd:null,pEnd:false,pRew:null,kw:n.kind==='kw',expr:'happy',hold:0,page:0});n.face=PL;if(D.style!=='chat')sfx('open');}
 function closeDlg(){if(!D.on)return;if(D.style==='chat'||RM){D.on=false;D.state='off';}else{D.closing=true;D.state='close';sfx('close');}if(D.npc)D.npc.face=null;}
-function relayout(){const s=BIG?2:1;D.s=s;const wmax=D.style==='box'?Math.floor(254/s):(BIG?118:140);D.L=layout(D.gl,F1,wmax);D.lpp=BIG?2:3;D.pages=Math.ceil(D.L.lines/D.lpp);}
+// keep=true re-flows the line on screen: the page is recomputed from the first glyph of the page being read
+function relayout(keep){const at=keep&&D.L?pageStart(D.page):-1,s=BIG?2:1;D.s=s;const wmax=D.style==='box'?Math.floor(254/s):(BIG?118:140);D.L=layout(D.gl,F1,wmax);D.lpp=BIG?2:3;D.pages=Math.ceil(D.L.lines/D.lpp);
+  if(at>=0)D.page=clamp(Math.floor(D.gl[Math.min(at,D.gl.length-1)].line/D.lpp),0,D.pages-1);}
 const pageStart=p=>{const i=D.gl.findIndex(g=>g.line>=p*D.lpp);return i<0?D.gl.length:i;};
 const pageEnd=p=>pageStart(p+1);
 function nextLine(){
@@ -720,13 +733,15 @@ function advance(){
 function choose(i){const o=D.opts&&D.opts[i];if(!o)return;const t=plain(str(o.id));sfx('choice');hist(PL.name,t);if(D.style==='chat'){bubble(PL,t,'me',0);logAdd(PL.name,t,'me');}
   D.opts=null;D.state='wait';intent(PL,{t:'opt',n:i});}
 function leaveDlg(){if(!D.on)return;if(D.kw){playerSay(LANG==='es'?'adiós':'bye');return;}if(SV.sess.me)SV.sess.me.leaving=true;intent(PL,{t:'leave'});closeDlg();}
-function talk(n){if(D.on||TRADE.on||CARD.on)return;PL.d=dirTo(PL,n);n.face=PL;
+// one talk request at a time: until its answer lands (or 2 s pass) another E press sends nothing
+let talkAt=-1e9;
+function talk(n){if(D.on||TRADE.on||CARD.on)return;PL.d=dirTo(PL,n);n.face=PL;if(n.kind!=='kw'){if(ms()-talkAt<2000)return;talkAt=ms();}
   if(n.kind==='kw'){playerSay(LANG==='es'?'hola':'hi');return;}
   intent(PL,{t:'talk',npc:n.id});if(OPTIM)openDlg(n);}
 function playerSay(text){text=text.trim().slice(0,48);if(!text)return;
   if(!limiter(PL,dist(PL,NPCS.sailor)<=3||(D.on&&D.state==='opts')?'npc':'chat')){logAdd('',LANG==='es'?'Hablas demasiado rápido.':'You are talking too fast.','sys');pop(PL.px+8,PL.py-8,'!',P.r3);sfx('deny');return;}
-  bubble(PL,text,'me',0);logAdd(PL.name,text,'me');
-  if(D.on&&D.state==='opts'){const i=D.opts.findIndex(o=>plain(str(o.id)).toLowerCase()===text.toLowerCase());if(i>=0){D.opts=null;D.state='wait';hist(PL.name,text);intent(PL,{t:'opt',n:i});return;}if(/^(bye|adi[oó]s)$/i.test(text)){leaveDlg();return;}}
+  bubble(PL,esc(text),'me',0);logAdd(PL.name,esc(text),'me');
+  if(D.on&&D.state==='opts'){const i=D.opts.findIndex(o=>plain(str(o.id)).toLowerCase()===text.toLowerCase());if(i>=0){D.opts=null;D.state='wait';hist(PL.name,esc(text));intent(PL,{t:'opt',n:i});return;}if(/^(bye|adi[oó]s)$/i.test(text)){leaveDlg();return;}}
   if(dist(PL,NPCS.sailor)<=3){const e=kwFind(text);intent(PL,{t:'kw',text});if(!D.on&&e&&e.k[0]==='hi'&&(OPTIM||styleFor(NPCS.sailor)==='chat'))openDlg(NPCS.sailor);NPCS.sailor.face=PL;}
   else netSend('up',3+utf8(text),()=>{},PL);}
 function onKw(kw){if(D.on&&D.state==='opts'){const i=D.opts.findIndex(o=>plain(str(o.id)).toLowerCase()===kw);if(i>=0){choose(i);return;}}playerSay(kw);}
@@ -787,9 +802,10 @@ function updSims(dt,n){
     moveEnt(s,dt);s.ct-=dt;s.npcCd-=dt;
     if(s.ct<=0){s.ct=s.spam?.4+rnd()*.7:3+rnd()*6;const y=rnd()<.08;const t=y?pick(YELL):pick(CHAT);if(limiter(s))netSend('up',3+t.length,()=>svHandle(s,{t:'chat',text:t,ch:y?'yell':'say'}),s);if(rnd()<.05)emote(s,pick(['heart','?','!']));}
     if(s.mv>0||(s.path&&s.path.length))continue;
+    if(s.st==='idle'&&s.heard==='@next'&&s.seq&&s.k<s.seq.length&&dist(s,NPCS.sailor)<=3){s.st='talk';s.t=.5;} // called after giving up the wait, and still close by
     if(s.st==='idle'){s.t-=dt;if(s.t<=0){if(s.npcCd<=0&&rnd()<.35){s.st='go';s.path=bfs(s.tx,s.ty,nearSailor)||[];s.npcCd=25+rnd()*30;}else{const tx=clamp(s.tx+ri(13)-6,2,27),ty=clamp(s.ty+ri(9)-4,5,13);s.path=bfs(s.tx,s.ty,(x,y)=>x===tx&&y===ty)||[];s.t=1+rnd()*4;}}}
     else if(s.st==='go'){if(nearSailor(s.tx,s.ty)){s.st='talk';s.seq=['hi',pick(['job','travel','name']),pick(['travel','yes','job']),'bye'];s.k=0;s.t=.3;s.heard=null;s.wt=0;}else s.st='idle';}
-    else if(s.st==='talk'){s.d=dirTo(s,NPCS.sailor);if(s.heard==='@busy'){s.wt+=dt;if(s.wt>14){s.st='idle';s.t=1;}continue;}s.t-=dt;
+    else if(s.st==='talk'){s.d=dirTo(s,NPCS.sailor);if(s.heard==='@gone'){s.st='idle';s.t=1;continue;}if(s.heard==='@busy'){s.wt+=dt;if(s.wt>14){s.st='idle';s.t=1;}continue;}s.t-=dt;
       if(s.t<=0){const t=s.seq[s.k++];if(limiter(s,'npc'))netSend('up',3+t.length,()=>{svHandle(s,{t:'chat',text:t,ch:'say'});svHandle(s,{t:'kw',text:t});},s);s.t=2.2+rnd()*2;if(s.k>=s.seq.length){s.st='idle';s.t=1+rnd()*2;}}}}}
 function updPlayer(dt){const lock=(LOCK&&D.on&&D.style!=='chat')||TRADE.on||CARD.on||LOGV.on;
   if(!lock&&PL.mv===0){const k=keys.l?'l':keys.r?'r':keys.u?'u':keys.d?'d':null;if(k){PL.path=null;PL.after=null;PL.d=k;const [dx,dy]=DV[k];if(passable(PL.tx+dx,PL.ty+dy)){PL.fx=PL.tx;PL.fy=PL.ty;PL.tx+=dx;PL.ty+=dy;PL.mv=1;}}}
@@ -826,11 +842,11 @@ function drawWorld(){const t=simT;
   DR.sort((a,b)=>a[0]-b[0]);for(const d of DR){if(d[1])drawChar(d[2]);else B(d[2],d[3],d[4]);}
   // quest markers, emotes, prompt, popups
   for(const n of NPCL){let k=null;for(const m of MARKERS)if(m.npc===n.id&&m.c(CL.v)){k=m.k;break;}if(!k)continue;const img=MARK[k],bob=RM?0:Math.round(Math.sin(t*3+n.tx)*1.2);B(img,Math.round(n.px)-cam.x+8-(img.width>>1),Math.round(n.py)-cam.y-15+bob);}
-  for(let i=EMOS.length-1;i>=0;i--){const m=EMOS[i];m.t+=1/60;if(m.t>1.6||!m.e.active){EMOS.splice(i,1);continue;}const img=EMO[m.k],a=Math.min(1,m.t/.18);let sx=1,sy=1;if(!RM&&a<1){sx=1.35-.35*a;sy=.6+.4*a;}
+  for(let i=EMOS.length-1;i>=0;i--){const m=EMOS[i];m.t+=FDT;if(m.t>1.6||!m.e.active){EMOS.splice(i,1);continue;}const img=EMO[m.k],a=Math.min(1,m.t/.18);let sx=1,sy=1;if(!RM&&a<1){sx=1.35-.35*a;sy=.6+.4*a;}
     const w=Math.round(11*sx),h=Math.round(12*sy),hasM=m.e.kind&&MARKERS.some(q=>q.npc===m.e.id&&q.c(CL.v));const x=Math.round(m.e.px)-cam.x+8-(w>>1),y=Math.round(m.e.py)-cam.y-(hasM?27:16)+(12-h);B9(img,0,0,11,12,x,y,w,h);}
   if(!D.on&&!TRADE.on&&!CARD.on){const f=facing();if(f){const x=f.x*16+8-cam.x,y=f.y*16-cam.y-(f.npc?14:4)-(f.npc&&MARKERS.some(q=>q.npc===f.npc.id&&q.c(CL.v))?12:0);
     const lab=f.npc?(LANG==='es'?'Hablar':'Talk'):(LANG==='es'?'Coger':'Pick'),lw=textW(F2,lab),w=9+3+lw;B(KEYCAP,x-(w>>1),y-9);drawCh(F2,'E',x-(w>>1)+3,y-7,1,P.ink,0,P.ink);drawStr(F2,lab,x-(w>>1)+12,y-7,P.wh,2,P.ink);}}
-  for(let i=POPS.length-1;i>=0;i--){const p=POPS[i];p.t+=1/60;if(p.t>1){POPS.splice(i,1);continue;}drawStr(F1,p.text,p.x-cam.x-3,p.y-cam.y-10-p.t*12,p.col,2,P.ink);}}
+  for(let i=POPS.length-1;i>=0;i--){const p=POPS[i];p.t+=FDT;if(p.t>1){POPS.splice(i,1);continue;}drawStr(F1,p.text,p.x-cam.x-3,p.y-cam.y-10-p.t*12,p.col,2,P.ink);}}
 function drawBubbles(vis){
   for(const b of vis){const out=b.life-b.t<.05,a=out?(RM?0:Math.max(0,(b.life-b.t)/.05)):b.t<.1&&!RM?b.t/.1:1;if(out&&RM)continue;
     if(b.kind==='npc'){if(a>=1&&!out)drawRich(b.gl,F1,b.x+1,b.y+1,1,TH.npc,1e9,0,99,simT,null,b.prio===0?HITS:null);}
@@ -843,13 +859,14 @@ function drawBubbles(vis){
     ctx.globalAlpha=1;}}
 function placeBubbles(dt){ST.bub=0;ST.hid=0;const vis=[];
   for(let i=BUBS.length-1;i>=0;i--){const b=BUBS[i];b.t+=dt;if(b.t>b.life||b.e.active===false){BUBS.splice(i,1);continue;}ST.bub++;
-    if((CLUT==='collapse'&&b.prio>=2&&dist(b.e,PL)>5)||(CLUT==='prio'&&b.capped)){ST.hid++;continue;}vis.push(b);}
+    if(CLUT==='collapse'&&b.prio>=2&&dist(b.e,PL)>5){ST.hid++;continue;}vis.push(b);}
   for(const b of vis){b.ax=Math.round(b.e.px)-cam.x+8;b.ay=Math.round(b.e.py)-cam.y-(b.e.kind&&MARKERS.some(q=>q.npc===b.e.id&&q.c(CL.v))?16:5);b.x=Math.round(b.ax-b.w/2);b.y=Math.round(b.ay-b.h-(b.kind==='npc'?1:4));b.off=b.ax<0||b.ax>W||b.ay<0||b.ay>H+12;b.near=true;}
-  if(CLUT==='prio'){vis.sort((a,b)=>a.prio-b.prio||a.t-b.t);if(vis.length>12){ST.hid+=vis.length-12;for(const b of vis.slice(12))b.capped=true;vis.length=12;}}
+  if(CLUT==='prio'){vis.sort((a,b)=>a.prio-b.prio||a.t-b.t);if(vis.length>12){ST.hid+=vis.length-12;vis.length=12;}} // the cap is redone every frame, so a hidden bubble shows once a slot frees
   const edge=b=>{if(b.off){b.x=clamp(b.x,6,W-b.w-6);b.y=clamp(b.y,b.x+b.w>W-60?30:6,H-b.h-6);}else{b.x=clamp(b.x,1,W-b.w-1);if(b.y<1)b.y=1;}};
   if(CLUT==='none'){vis.forEach(edge);return vis;}
   vis.sort((a,b)=>a.prio-b.prio||a.t-b.t);const placed=[];
-  for(const b of vis){edge(b);const y0=b.y;for(let g=0,mv=true;mv&&g<24;g++){mv=false;for(const o of placed)if(b.x<o.x+o.w+1&&b.x+b.w+1>o.x&&b.y<o.y+o.h+1&&b.y+b.h+1>o.y){b.y=o.y-b.h-2;mv=true;}}if(b.y!==y0)b.near=false;placed.push(b);}
+  for(const b of vis){edge(b);const y0=b.y;for(let g=0,mv=true;mv&&g<24;g++){mv=false;for(const o of placed)if(b.x<o.x+o.w+1&&b.x+b.w+1>o.x&&b.y<o.y+o.h+1&&b.y+b.h+1>o.y){b.y=o.y-b.h-2;mv=true;}}if(b.y<1){ST.hid++;continue;}if(b.y!==y0)b.near=false;placed.push(b);} // no room left under the top edge: hidden, not drawn off-canvas
+  vis.length=0;for(const b of placed)vis.push(b);
   if(logVisible()){const ly=H-62;for(let i=vis.length-1;i>=0;i--){const b=vis[i];if(b.prio>0&&b.x<216&&b.y+b.h>ly){vis.splice(i,1);ST.hid++;}}}
   return vis;}
 function portraitBg(x,y,n){R(x-1,y-1,34,34,'#'+P.ink);R(x,y,32,32,'#'+P[n.bg]);R(x,y+24,32,8,'#'+P.dk);for(let i=0;i<32;i+=4)R(x+i,y+22+((i>>2)&1),2,2,'#'+P.dk);}
@@ -868,8 +885,10 @@ function drawBox(){const big=BIG,h=big?68:50,y0=H-h-4,x0=6,w=308,e=ease(D.open);
   if(D.state==='opts')drawOpts(x0+w,y0-1,FR_BOX,8,TH.box);}
 function drawOpts(right,bottom,fr,n,th){const op=D.opts.map(o=>plain(str(o.id))),ow=Math.max(...op.map(o=>textW(F1,o)))+24,oh=op.length*12+12,ox=right-ow,oy=bottom-oh;
   nine(fr,n,ox,oy,ow,oh);op.forEach((t,i)=>{const y=oy+7+i*12,sel=i===D.cursor;if(sel)B(fr===FR_BOX?ARR:ARRK,ox+7+(RM?0:Math.round(Math.sin(simT*8))),y);drawStr(F1,t,ox+15,y,sel?th.key:th.b,th.e,th.ec);HITS.push({x:ox,y:y-2,w:ow,h:12,fn:()=>{D.cursor=i;choose(i);}});});}
+// bubble width for lines l0..l1 of the current text. The last line keeps 9 px clear on its right for the advance arrow
+function convW(l0,l1){let mw=1;for(let l=l0;l<l1;l++)mw=Math.max(mw,D.L.lw[l]||0);return Math.max(mw*D.s+12,(D.L.lw[l1-1]||0)*D.s+15);}
 function drawConv(){const s=D.s,ax=Math.round(D.npc.px)-cam.x+8,ay=Math.round(D.npc.py)-cam.y-5,e=ease(D.open);let w=26,h=17;
-  if(D.gl&&D.state!=='wait'){const l0=D.page*D.lpp,l1=Math.min(D.L.lines,l0+D.lpp);let mw=1;for(let l=l0;l<l1;l++)mw=Math.max(mw,D.L.lw[l]||0);w=mw*s+12;h=(l1-l0)*10*s+8;}
+  if(D.gl&&D.state!=='wait'){const l0=D.page*D.lpp,l1=Math.min(D.L.lines,l0+D.lpp);w=convW(l0,l1);h=(l1-l0)*10*s+8;}
   let x=clamp(Math.round(ax-w/2),2,W-w-2),y=ay-h-4;if(y<2)y=2;
   if(e<1){const ww=Math.max(9,Math.round(w*e)),hh=Math.max(9,Math.round(h*e));nine(BUBF.conv,3,ax-(ww>>1),y+h-hh,ww,hh);return;}
   HITS.push({x,y,w,h,fn:()=>{if(D.state==='type'||D.state==='done')advance();}});
@@ -878,7 +897,9 @@ function drawConv(){const s=D.s,ax=Math.round(D.npc.px)-cam.x+8,ay=Math.round(D.
   else if(D.gl)drawRich(D.gl,F1,x+6,y+5,s,TH.bub,D.state==='type'?D.rev:1e9,D.page*D.lpp,(D.page+1)*D.lpp,simT,null,HITS);
   if(D.state==='done')B(ARDK,x+w-8,y+h-7+(RM?0:ARB()));
   if(D.state==='opts'){const px=Math.round(PL.px)-cam.x+8,py=Math.round(PL.py)-cam.y-6,op=D.opts.map(o=>plain(str(o.id))),ow=Math.max(...op.map(o=>textW(F1,o)))+20,oh=op.length*11+7;
-    const ox=clamp(px-(ow>>1),2,W-ow-2),oy=Math.max(y+h+4,py-oh-4);nine(BUBF.me,3,ox,oy,ow,oh);
+    // the menu sits beside the player, on the side away from the NPC, so it covers neither of them
+    const nd=Math.round(D.npc.px-PL.px);let side=nd>4?-1:nd<-4?1:px+12+ow<=W-2?1:-1;if(side>0?px+12+ow>W-2:px-12-ow<2)side=-side;
+    const ox=clamp(side>0?px+12:px-12-ow,2,W-ow-2);let oy=py+14-(oh>>1);if(ox<x+w+2&&ox+ow+2>x)oy=Math.max(oy,y+h+4);oy=clamp(oy,2,H-oh-2);nine(BUBF.me,3,ox,oy,ow,oh);
     op.forEach((t,i)=>{const yy=oy+4+i*11,sel=i===D.cursor;if(sel)B(ARRK,ox+5,yy+1);drawStr(F1,t,ox+11,yy,sel?P.r1:P.ink,0,P.ink);HITS.push({x:ox,y:yy-1,w:ow,h:11,fn:()=>{D.cursor=i;choose(i);}});});}}
 function logVisible(){return (D.on&&D.style==='chat')||((!D.on||D.style==='chat')&&(CLUT==='collapse'||CLUT==='prio'||(styleFor(NPCS.sailor)==='chat'&&dist(PL,NPCS.sailor)<=6)));}
 function drawLog(){const x=4,w=212,h=58,y=H-h-4;R(x,y,w,h,'#100c1a');R(x,y,w,1,'#'+P.s0);
@@ -889,14 +910,15 @@ function drawPanels(){const t=simT;
   {const rows=[];const v=CL.v;
     if(v.q1===1)rows.push([IC.herb,v.herbs>=3?(LANG==='es'?'Vuelve con el anciano':'Return to the elder'):(LANG==='es'?'Hierbas ':'Herbs ')+Math.min(3,v.herbs)+'/3']);
     if(v.q2===1)rows.push([IC.bread,LANG==='es'?'Avisa al anciano':'Tell the elder']);if(v.q2===2)rows.push([IC.bread,LANG==='es'?'Vuelve con Mara':'Return to Mara']);
-    rows.push([IC.coin,String(CL.gold)]);TR.flash=Math.max(0,TR.flash-1/60);
-    rows.forEach(([ic,s],i)=>{const tw=textW(F1,s),x=W-tw-16,y=4+i*11;B(ic,x,y);drawStr(F1,s,x+11,y,TR.flash>0&&i===0&&((t*10)|0)&1?P.o2:P.wh,2,P.ink);});}
-  if(CARD.on){CARD.t+=1/60;const q=QUESTS[CARD.q],e=RM?1:ease(Math.min(1,CARD.t/.2)),x=56,w=208,h=110,y=Math.round(24-(1-e)*24);
+    rows.push([IC.coin,String(CL.gold)]);TR.flash=Math.max(0,TR.flash-FDT);
+    // the trade panel has its own gold counter and covers the top right, so the tracker steps aside for it
+    if(!TRADE.on)rows.forEach(([ic,s],i)=>{const tw=textW(F1,s),x=W-tw-16,y=4+i*11;B(ic,x,y);drawStr(F1,s,x+11,y,TR.flash>0&&i===0&&((t*10)|0)&1?P.o2:P.wh,2,P.ink);});}
+  if(CARD.on){CARD.t+=FDT;const q=QUESTS[CARD.q],e=RM?1:ease(Math.min(1,CARD.t/.2)),x=56,w=208,h=110,y=Math.round(24-(1-e)*24);
     nine(FR_CARD,8,x,y,w,h);const tt=str(q.id+'t');drawStr(F1,LANG==='es'?'MISIÓN':'QUEST',x+10,y+8,P.r1,0);drawStr(F1,tt,x+w-10-textW(F1,tt),y+8,P.w0,0);R(x+8,y+19,w-16,1,'#'+P.w3);
     const gl=parseRich(str(q.id+'d'));layout(gl,F1,w-20);drawRich(gl,F1,x+10,y+24,1,TH.card,1e9,0,9,t,null,null);
     drawStr(F1,LANG==='es'?'Recompensa':'Reward',x+10,y+58,P.w1,0);let rx=x+10;for(const [k,n] of q.rw){const ic=IC[k==='gold'?'coin':k];B(ic,rx,y+70);const s=k==='gold'?String(n):'x'+n;drawStr(F1,s,rx+11,y+70,P.w0,0);rx+=textW(F1,s)+24;}
     [LANG==='es'?'Aceptar':'Accept',LANG==='es'?'Rechazar':'Decline'].forEach((s,i)=>{const bw=72,bx=x+w/2-bw-4+i*(bw+8),by=y+h-22;nine(FR_TAG,4,bx,by,bw,15);if(CARD.sel===i)B(ARR,bx+5+(RM?0:Math.round(Math.sin(t*8))),by+4);drawStr(F1,s,bx+bw/2-textW(F1,s)/2+3,by+4,CARD.sel===i?P.o2:P.s3,1,P.ink);HITS.push({x:bx,y:by,w:bw,h:15,fn:()=>CARD.choose(i)});});}
-  if(TRADE.on){TRADE.t+=1/60;const x=48,y=18,w=224,h=140,l=TRADE.list();TRADE.sel=clamp(TRADE.sel,0,Math.max(0,l.length-1));
+  if(TRADE.on){TRADE.t+=FDT;const x=48,y=13,w=224,h=153,l=TRADE.list();TRADE.sel=clamp(TRADE.sel,0,Math.max(0,l.length-1));
     nine(FR_BOX,8,x,y,w,h);drawStr(F1,LANG==='es'?'Tetera de Cobre':'Copper Kettle',x+10,y+8,P.o2,1,P.ink);
     HITS.push({x:x+w-16,y:y+4,w:12,h:12,fn:()=>TRADE.close()});drawStr(F1,'x',x+w-13,y+6,P.s3,1,P.ink);
     ['buy','sell'].forEach((tb,i)=>{const s=tb==='buy'?(LANG==='es'?'Comprar':'Buy'):(LANG==='es'?'Vender':'Sell'),bx=x+10+i*56,by=y+20;nine(FR_TAG,4,bx,by,52,14);drawStr(F1,s,bx+26-textW(F1,s)/2,by+3,TRADE.tab===tb?P.o2:P.s1,1,P.ink);HITS.push({x:bx,y:by,w:52,h:14,fn:()=>{TRADE.tab=tb;TRADE.sel=0;sfx('tick');}});});
@@ -905,7 +927,7 @@ function drawPanels(){const t=simT;
       HITS.push({x:x+8,y:ry-2,w:w-16,h:12,fn:()=>{if(TRADE.sel===i)TRADE.doSel();else{TRADE.sel=i;sfx('tick');}}});});
     if(!l.length)drawStr(F1,LANG==='es'?'Nada que vender.':'Nothing to sell.',x+12,y+44,P.s2,1,P.ink);
     R(x+8,y+h-20,w-16,1,'#'+P.s0);B(IC.coin,x+12,y+h-15);drawStr(F1,String(CL.gold),x+24,y+h-15,P.o2,1,P.ink);drawStr(F2,LANG==='es'?'E COMPRAR  TAB CAMBIAR  ESC CERRAR':'E OK  TAB SWITCH  ESC CLOSE',x+w-10-textW(F2,LANG==='es'?'E COMPRAR  TAB CAMBIAR  ESC CERRAR':'E OK  TAB SWITCH  ESC CLOSE'),y+h-13,P.s1,0);}
-  if(REW.on){REW.t+=1/60;if(REW.t>3.4){REW.on=false;}else{const q=QUESTS[REW.q],e=RM?1:ease(Math.min(1,REW.t/.3)),out=REW.t>3?(REW.t-3)/.4:0,w=180,h=54,x=70,y=Math.round(-h+(h+30)*e-out*70);
+  if(REW.on){REW.t+=FDT;if(REW.t>3.4){REW.on=false;}else{const q=QUESTS[REW.q],e=RM?1:ease(Math.min(1,REW.t/.3)),out=REW.t>3?(REW.t-3)/.4:0,w=180,h=54,x=70,y=Math.round(-h+(h+30)*e-out*70);
     nine(FR_BOX,8,x,y,w,h);const s=LANG==='es'?'¡Misión completada!':'Quest complete!';drawStr(F1,s,x+w/2-textW(F1,s)/2,y+8,P.o2,1,P.ink);const tt=str(q.id+'t');drawStr(F1,tt,x+w/2-textW(F1,tt)/2,y+19,P.s3,1,P.ink);
     let rx=x+w/2-q.rw.length*22;q.rw.forEach(([k,n],i)=>{const a=REW.t-.4-i*.25;if(a<0)return;const sc=!RM&&a<.15?2:1,ic=IC[k==='gold'?'coin':k];B9(ic,0,0,8,8,rx+i*44+4-(sc-1)*4,y+33-(sc-1)*4,8*sc,8*sc);drawStr(F1,(k==='gold'?'+':'x')+n,rx+i*44+15,y+33,P.wh,1,P.ink);});
     if(!RM)for(let k=0;k<6;k++){const a=(REW.t*1.5+k/6)%1;R(x+10+((hash(k,0,4)%(w-20))),y+4+a*(h-8),1,1,'#'+(a<.5?P.o2:P.wh));}}}
@@ -917,12 +939,13 @@ function drawLogView(){const x=12,y=10,w=296,h=160;nine(FR_BOX,8,x,y,w,h);drawSt
   for(let i=all.length-1;i>=0&&lines>0;i--){const e=all[i];for(let l=e.L.lines-1;l>=0&&lines>0;l--){if(skip>0){skip--;continue;}drawRich(e.gl,F1,x+12,yy,1,TH.box,1e9,l,l+1,-1,null,null);yy-=10;lines--;}}}
 function drawViews(){if(VIEW==='ranges'){const cx=Math.round(PL.px)-cam.x+8,cy=Math.round(PL.py)-cam.y+8;
     const circ=(x,y,r,col,lab)=>{const n=Math.max(24,r*.8|0);for(let i=0;i<n;i++){const a=i/n*Math.PI*2;R(x+Math.cos(a)*r,y+Math.sin(a)*r,1,1,col);}if(lab)drawStr(F2,lab,x-textW(F2,lab)/2,y-r-7,col.slice(1),2,P.ink);};
-    const box=(x,y,rx,ry,col,lab)=>{const x0=x-rx,y0=y-ry,w=rx*2,h=ry*2;for(let i=0;i<w;i+=3){R(x0+i,y0,1,1,col);R(x0+i,y0+h,1,1,col);}for(let i=0;i<h;i+=3){R(x0,y0+i,1,1,col);R(x0+w,y0+i,1,1,col);}drawStr(F2,lab,clamp(x-textW(F2,lab)/2,2,W-60),clamp(y0+2,2,H-8),col.slice(1),2,P.ink);};
-    box(cx,cy,24,24,'#'+P.wh,'WHISPER 1');box(cx,cy,136,104,'#'+P.yl,'SAY 8x6');box(cx,cy,296,232,'#'+P.r3,'YELL 18x14');const sx=NPCS.sailor.px-cam.x+8,sy=NPCS.sailor.py-cam.y+8;circ(sx,sy,48,'#'+P.cy,'TALK RANGE 3');
+    // a box label never sits above minY. Each call returns the next free row, so the labels of boxes that leave the canvas stack
+    const box=(x,y,rx,ry,col,lab,minY)=>{const x0=x-rx,y0=y-ry,w=rx*2,h=ry*2;for(let i=0;i<w;i+=3){R(x0+i,y0,1,1,col);R(x0+i,y0+h,1,1,col);}for(let i=0;i<h;i+=3){R(x0,y0+i,1,1,col);R(x0+w,y0+i,1,1,col);}const ly=clamp(Math.max(y0+2,minY||2),2,H-8);drawStr(F2,lab,clamp(x-textW(F2,lab)/2,2,W-60),ly,col.slice(1),2,P.ink);return ly+8;};
+    let ly=box(cx,cy,296,232,'#'+P.r3,'YELL 18x14',2);ly=box(cx,cy,136,104,'#'+P.yl,'SAY 8x6',ly);box(cx,cy,24,24,'#'+P.wh,'WHISPER 1',ly);const sx=NPCS.sailor.px-cam.x+8,sy=NPCS.sailor.py-cam.y+8;circ(sx,sy,48,'#'+P.cy,'TALK RANGE 3');
     for(const s of SIMS){if(!s.active)continue;R(Math.round(s.px)-cam.x+6,Math.round(s.py)-cam.y-8,4,2,'#'+(heard(s,PL,'say')?P.g4:P.r2));}}
   else if(VIEW==='server'){const sx=W-18,sy=24;R(sx-5,sy-6,11,12,'#'+P.ink);R(sx-4,sy-5,9,10,'#'+P.s1);R(sx-3,sy-3,7,1,'#'+P.g4);R(sx-3,sy,7,1,'#'+P.g4);
     for(const m of NET.q){const e=m.from||PL,ex=Math.round(e.px)-cam.x+8,ey=Math.round(e.py)-cam.y,p=clamp((ms()-m.t0)/Math.max(1,m.at-m.t0),0,1),k=m.dir==='up'?p:1-p;R(ex+(sx-ex)*k-1,ey+(sy-ey)*k-1,3,3,'#'+(m.dir==='up'?P.a3:P.o2));}
-    const L=[];const s=SV.sess.me;L.push('SERVER  AUTHORITATIVE');L.push(s?'YOU: '+s.npc.toUpperCase()+' @ '+s.node+(s.wait?' WAIT '+s.wait:''):'YOU: NO SESSION');
+    const L=[];const s=SV.sess.me;L.push('SERVER  AUTHORITATIVE');L.push(s?'YOU: '+s.npc.toUpperCase()+' AT '+s.node+(s.wait?' WAIT '+s.wait:''):'YOU: NO SESSION');
     L.push('VARS Q1='+SV.v.q1+' HERBS='+SV.v.herbs+' Q2='+SV.v.q2+' GOLD='+SV.gold);
     if(FOCUS==='shared'){L.push('SAILOR FOCUS: '+(SV.foc.f?SV.foc.f.name:'-'));L.push('QUEUE: '+(SV.foc.q.map(n=>n.name).join(' ')||'-'));}else{L.push('PRIVATE SESSIONS: '+Object.keys(SV.priv).length);L.push('LINES HIDDEN FROM YOU: '+SV.privShown);}
     L.push('IN FLIGHT: '+NET.q.length+' MSGS  RTT '+LAT+' MS');L.push('UP '+NET.up+' B  DOWN '+NET.down+' B');
@@ -938,7 +961,9 @@ function step(dt){simT+=dt;const a0=performance.now();netTick();svTick();updVill
   updPlayer(dt);for(const n of NPCL){if(!n.face&&n.mv===0&&!RM&&hash(n.tx,(simT/3)|0,9)%5===0&&(simT%3)<dt)n.d=pick(['d','d','l','r']);}
   updDialog(dt);
   const tx=clamp(Math.round(PL.px)+8-W/2,0,WW-W),ty=clamp(Math.round(PL.py)+8-H/2+(D.on&&D.style==='box'?24:0),0,WHH-H);cam.x+=(tx-cam.x)*Math.min(1,dt*8);cam.y+=(ty-cam.y)*Math.min(1,dt*8);}
-function render(dt){ST.glyphs=ST.blits=0;COSTR.length=0;HITS=[];const c=cam.x,d=cam.y;cam.x=Math.round(c);cam.y=Math.round(d);
+// FDT is the frame's game time: 0 while paused. Popups, emotes and panel animations advance by it
+let FDT=0;
+function render(dt){FDT=dt;ST.glyphs=ST.blits=0;COSTR.length=0;HITS=[];const c=cam.x,d=cam.y;cam.x=Math.round(c);cam.y=Math.round(d);
   const t0=performance.now();LAYER=0;drawWorld();const t1=performance.now();LAYER=1;const vis=placeBubbles(dt);drawBubbles(vis);const t2=performance.now();
   const panel=CARD.on||TRADE.on;LAYER=2;if((D.on||D.closing)&&!panel){if(D.style==='box')drawBox();else if(D.style==='bubble')drawConv();}if(logVisible()&&!panel)drawLog();if(panel){ctx.globalAlpha=.7;B9(DITH,0,0,W,H,0,0,W,H,1);ctx.globalAlpha=1;}const t3=performance.now();
   LAYER=3;drawPanels();const t4=performance.now();
@@ -947,26 +972,34 @@ function render(dt){ST.glyphs=ST.blits=0;COSTR.length=0;HITS=[];const c=cam.x,d=
   cam.x=c;cam.y=d;}
 const f2=v=>v.toFixed(2);let last=performance.now(),hudN=0,chipKey='';
 const clock=()=>{const m=Math.floor(((simT%120)/120*1440+480)%1440);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
-function loop(now){let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render(paused?0:dt);
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;let dt=(now-last)/1000;last=now;if(dt>.1)dt=.1;if(dt<0)dt=0;if(!paused)step(dt);render(paused?0:dt);
   if(++hudN%10===0){const sn={auto:'per NPC',box:'box + portrait',bubble:'bubble',chat:'keyword chat'}[STYLE];
     $('hud').innerHTML=`town ${clock()} · ${sn} · ${REN==='bit'?'bitmap atlas':'canvas fillText'} · clutter ${CLUT} · ${FOCUS==='shared'?'shared focus':'private sessions'}${paused?' · paused':''}<br>world ${f2(T.world)} · overhead ${f2(T.over)} · dialog ${f2(T.dlg)} · panels ${f2(T.pan)} · ambient ${f2(T.amb)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · glyphs ${ST.glyphs} · blits ${ST.blits} · bubbles ${ST.bub} (hidden ${ST.hid})<br>net: last step ${NET.lastId} B as ids vs ${NET.lastTxt} B as text · ${NET.times.length} msg/s · dropped ${NET.dropped} · ${LAT} ms ${OPTIM?'optimistic':'wait for server'}`;
-    syncChips();const f=facing(),tb=$('talk'),coarse=matchMedia('(pointer:coarse)').matches;tb.style.display=coarse&&(f||D.on)&&!TRADE.on&&!CARD.on?'block':'none';tb.textContent=D.on?(LANG==='es'?'Seguir':'Next'):f&&f.pl!=null?(LANG==='es'?'Coger':'Pick'):(LANG==='es'?'Hablar':'Talk');}
-  requestAnimationFrame(loop);}
+    syncChips();const f=facing(),tb=$('talk'),coarse=matchMedia('(pointer:coarse)').matches;tb.style.display=coarse&&(f||D.on)&&!TRADE.on&&!CARD.on?'block':'none';tb.textContent=D.on?(LANG==='es'?'Seguir':'Next'):f&&f.pl!=null?(LANG==='es'?'Coger':'Pick'):(LANG==='es'?'Hablar':'Talk');}}
 function syncChips(){let l=[];if(D.on&&D.state==='opts')l=D.opts.map(o=>plain(str(o.id)));else if(dist(PL,NPCS.sailor)<=5)l=LANG==='es'?['hola','nombre','trabajo','viaje','sí','mañana','adiós']:['hi','name','job','travel','yes','tomorrow','bye'];
   const k=l.join('|');if(k===chipKey)return;chipKey=k;const c=$('chips');c.innerHTML='';for(const s of l){const b=document.createElement('button');b.className='chip';b.textContent=s;b.onclick=()=>{ensureAudio();onKw(s.toLowerCase());};c.appendChild(b);}}
 // ---------- UI ----------
 const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
 const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
-const setStyle=v=>{STYLE=v;mark('#styles button','s',v);if(D.on&&!D.closing){D.style=styleFor(D.npc);if(D.gl)relayout();}};
+const setStyle=v=>{STYLE=v;mark('#styles button','s',v);if(D.on&&!D.closing){D.style=styleFor(D.npc);if(D.gl)relayout(true);}};
 const setView=v=>{VIEW=v;mark('#views button','v',v);};
 const setClut=v=>{CLUT=v;mark('#clut button','c',v);};
 const setCps=v=>{CPS=+v;$('cps').value=Math.min(120,CPS);$('cpsl').textContent=CPS>=999?'instant':CPS;mark('#spd button','v',CPS);};
 const setLang=v=>{LANG=v;mark('#lang button','l',v);chipKey='';LOGV.dirty=true;};
 group('#styles button','s',setStyle);group('#views button','v',setView);group('#clut button','c',setClut);group('#spd button','v',setCps);group('#lang button','l',setLang);
-group('#ren button','r',v=>{REN=v;mark('#ren button','r',v);});group('#focus button','f',v=>{FOCUS=v;mark('#focus button','f',v);SV.foc={f:null,q:[],last:0};SV.priv={};});
+// the two renderers have different advances, so text already on screen is laid out again on a switch
+function reflow(){if(D.on&&D.gl)relayout(true);for(const e of LOG)e.L=layout(e.gl,F1,204);for(const b of BUBS){b.L=layout(b.gl,b.F,b.kind==='npc'?150:84);b.w=b.L.w+b.pad*2;b.h=b.L.lines*b.F.lh+b.pad*2-1;}LOGV.dirty=true;}
+const setRen=v=>{REN=v;mark('#ren button','r',v);reflow();};
+group('#ren button','r',setRen);group('#focus button','f',v=>{FOCUS=v;mark('#focus button','f',v);SV.foc={f:null,q:[],last:0};SV.priv={};});
 $('cps').oninput=e=>setCps(e.target.value);
 const tog=(id,get,set)=>{const b=$(id),sy=()=>b.classList.toggle('on',get());b.onclick=()=>{set(!get());sy();};return sy;};
-tog('auto',()=>AUTO,v=>AUTO=v);tog('big',()=>BIG,v=>{BIG=v;if(D.gl)relayout();});const syncRm=tog('rm',()=>RM,v=>RM=v);tog('blip',()=>SND,v=>SND=v);
+tog('auto',()=>AUTO,v=>AUTO=v);tog('big',()=>BIG,v=>{BIG=v;if(D.gl)relayout(true);});const syncRm=tog('rm',()=>RM,v=>RM=v);tog('blip',()=>SND,v=>SND=v);
 tog('opt',()=>OPTIM,v=>OPTIM=v);tog('lock',()=>LOCK,v=>LOCK=v);const syncPause=tog('pause',()=>paused,v=>paused=v);
 $('logb').onclick=()=>{LOGV.on=!LOGV.on;LOGV.scroll=0;};
 $('sims').oninput=e=>{NSIM=+e.target.value;$('simsl').textContent=NSIM;};
@@ -978,7 +1011,7 @@ $('talk').onclick=()=>{ensureAudio();act();};
 function act(){if(LOGV.on){LOGV.on=false;return;}if(CARD.on){CARD.choose(CARD.sel);return;}if(TRADE.on){TRADE.doSel();return;}
   if(D.on){if(D.closing)return;if(D.style==='chat'){if(D.state==='opts')choose(D.cursor);return;}if(D.state==='idle')return;advance();return;}
   const f=facing();if(f&&f.npc)talk(f.npc);else if(f&&f.pl!=null)pickHerb(f.pl);}
-function reset(){svReset();Object.assign(CL,{v:{q1:0,herbs:0,q2:0},gold:25,inv:{potion:1}});CLH.fill(true);NET.q.length=0;NET.times.length=0;Object.assign(NET,{dropped:0,lastId:0,lastTxt:0,totId:0,totTxt:0,steps:0,up:0,down:0,lost:0});
+function reset(){svReset();talkAt=-1e9;Object.assign(CL,{v:{q1:0,herbs:0,q2:0},gold:25,inv:{potion:1}});CLH.fill(true);NET.q.length=0;NET.times.length=0;Object.assign(NET,{dropped:0,lastId:0,lastTxt:0,totId:0,totTxt:0,steps:0,up:0,down:0,lost:0});
   BUBS.length=EMOS.length=POPS.length=LOG.length=0;D.hist.length=0;D.on=D.closing=false;D.state='off';D.open=0;CARD.on=TRADE.on=REW.on=LOGV.on=false;LOGV.dirty=true;
   Object.assign(PL,{tx:14,ty:12,fx:14,fy:12,mv:0,d:'u',path:null,after:null,lim:null});
   VIL.forEach((v,i)=>{const s=v.sched[0];Object.assign(v,{tx:s[0],ty:s[1],fx:s[0],fy:s[1],mv:0,path:null,hold:0,lastBark:-99,lastNotice:-99,near:false});});
@@ -986,7 +1019,7 @@ function reset(){svReset();Object.assign(CL,{v:{q1:0,herbs:0,q2:0},gold:25,inv:{
   for(const e of [PL,...VIL]){e.px=e.tx*16;e.py=e.ty*16;}cam.x=clamp(PL.px+8-W/2,0,WW-W);cam.y=clamp(PL.py+8-H/2,0,WHH-H);}
 $('reset').onclick=reset;
 document.querySelector('button[data-demo="showcase"]').onclick=showcase;
-function showcase(){reset();setStyle('auto');setView('normal');REN='bit';mark('#ren button','r','bit');RM=false;syncRm();setLang('en');setClut('stack');paused=false;syncPause();BIG=false;$('big').classList.remove('on');
+function showcase(){reset();setStyle('auto');setView('normal');setRen('bit');RM=false;syncRm();setLang('en');setClut('stack');paused=false;syncPause();BIG=false;$('big').classList.remove('on');
   NSIM=6;$('sims').value=6;$('simsl').textContent=6;simT=8;
   SV.v.q2=2;CL.v.q2=2;Object.assign(PL,{tx:12,ty:6,fx:12,fy:6,d:'u',mv:0});PL.px=192;PL.py=96;
   const put=(e,x,y,d)=>{Object.assign(e,{tx:x,ty:y,fx:x,fy:y,mv:0,path:null,d:d||'d',hold:simT+9});e.px=x*16;e.py=y*16;};
@@ -994,7 +1027,7 @@ function showcase(){reset();setStyle('auto');setView('normal');REN='bit';mark('#
   updSims(0,6);const sp=[[7,7],[19,6],[20,9],[9,11],[18,10],[16,12]];SIMS.slice(0,6).forEach((s,i)=>{put(s,sp[i][0],sp[i][1],i&1?'l':'d');s.ct=9;s.t=9;s.npcCd=60;});
   bubble(VIL[0],'Lovely morning for it.','bark',3).life=12;bubble(SIMS[0],'lf party orc cave','party',1).life=12;bubble(SIMS[1],'selling rope 20gp','say',2).life=12;bubble(VIL[1],'Sit, sit. The bench is free.','bark',3).life=12;
   VIL.forEach(v=>v.lastBark=simT+20);lastBarkAll=simT+20;
-  openDlg(NPCS.elder);D.open=1;SV.sess.me={npc:'elder',node:'elder.offer',wait:null};const txt=str('e1');D.gl=parseRich(txt);relayout();D.cur={id:'e1'};D.expr='happy';hist(npcName(NPCS.elder),txt);
+  openDlg(NPCS.elder);D.open=1;SV.sess.me={npc:'elder',node:'elder.offer',wait:'offer',q:'herbs'};const txt=str('e1');D.gl=parseRich(txt);relayout();D.cur={id:'e1'};D.expr='happy';hist(npcName(NPCS.elder),txt);
   D.rev=D.gl.map(g=>g.ch).join('').indexOf('Asterion')+9;D.state='type';D.hold=9;D.blinkT=3;D.q.push({id:'e2',spk:'Elder',ex:'neutral',args:{}},{id:'e3',spk:'Elder',ex:'sad',args:{}});D.pCmd={n:'offer',a:'herbs'};
   cam.x=clamp(PL.px+8-W/2,0,WW-W);cam.y=clamp(PL.py+8-H/2+24,0,WHH-H);step(0);render(0);}
 function canvasXY(e){const r=cv.getBoundingClientRect();return [clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1)];}
@@ -1008,6 +1041,10 @@ cv.addEventListener('pointerdown',e=>{ensureAudio();const [x,y]=canvasXY(e);e.pr
 cv.addEventListener('wheel',e=>{if(LOGV.on){LOGV.scroll=Math.max(0,LOGV.scroll+(e.deltaY<0?1:-1));e.preventDefault();}},{passive:false});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;ensureAudio();const k=e.key.toLowerCase(),dir=KM[k];
   if(LOGV.on){if(dir==='u')LOGV.scroll++;else if(dir==='d')LOGV.scroll=Math.max(0,LOGV.scroll-1);else if(k==='l'||k==='escape'||k==='e'||k===' '||k==='enter')LOGV.on=false;e.preventDefault();return;}
   if(TRADE.on){const n=TRADE.list().length;if(dir==='u')TRADE.sel=(TRADE.sel+n-1)%Math.max(1,n);else if(dir==='d')TRADE.sel=(TRADE.sel+1)%Math.max(1,n);else if(dir==='l'||dir==='r'||k==='tab'){TRADE.tab=TRADE.tab==='buy'?'sell':'buy';TRADE.sel=0;}else if(k==='e'||k===' '||k==='enter')TRADE.doSel();else if(k==='escape')TRADE.close();if(dir)sfx('tick');e.preventDefault();return;}
@@ -1023,7 +1060,8 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
   else if(k==='t'||k==='/'){$('kw').focus();e.preventDefault();}});
 addEventListener('keyup',e=>{const d=KM[e.key.toLowerCase()];if(d)keys[d]=0;});
 addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
-function fit(){const st=cv.parentElement.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
 addEventListener('resize',fit);fit();
 window.__sb={get:()=>({state:D.state,on:D.on,style:D.style,trade:TRADE.on,card:CARD.on,tx:PL.tx,ty:PL.ty,cam:[Math.round(cam.x),Math.round(cam.y)],q:CL.v,path:PL.path&&PL.path.length,after:!!PL.after,hits:HITS.length,msgs:NET.times.length})};
 if(innerWidth<640){BIG=true;$('big').classList.add('on');}

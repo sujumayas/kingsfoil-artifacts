@@ -16,7 +16,7 @@ main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
 .stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair;touch-action:none}
 .hud{font:11.5px/1.45 var(--mono);background:#08090e;padding:5px 9px;pointer-events:none;color:#eeeef4;border-top:1px solid var(--line);overflow-wrap:anywhere}
-.hud b{color:var(--lamp);font-weight:600}.hud .off{color:#6c7184}.hud .warn{color:#ff8a6a}
+.hud b{color:var(--lamp);font-weight:600}.hud .off{color:#6c7184}.hud .warn{color:#ff8a6a}.hud .sv{color:#5ff7f7}.hud .cl{color:#efef00}
 .bar{display:inline-block;width:80px;height:7px;background:#2a3040;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#86d49a}
 .touch{display:none;gap:6px;margin-top:8px;flex-wrap:wrap;touch-action:none;user-select:none;-webkit-user-select:none}
 .touch button{flex:1 1 0;min-width:44px;height:52px;padding:2px;font:600 13px var(--mono);touch-action:none}
@@ -105,7 +105,7 @@ code{font:13px var(--mono);color:var(--cool)}
     </div>
     <div class="group"><h3>X-ray view</h3>
       <div class="btns" id="views"><button data-v="normal" class="on">Normal</button><button data-v="server">Server truth</button><button data-v="timeline">Timeline</button><button data-v="cost">Cost view</button></div>
-      <p class="keys">Server truth draws ghosts at server positions, hit circles and the server panel. Timeline shows your presses, predicted events and server confirms on one clock.</p>
+      <p class="keys">Server truth draws ghosts at server positions and their hit circles, and adds the server's counters to the readout under the arena. Timeline shows your presses, predicted events and server confirms on one clock.</p>
     </div>
     <div class="group"><h3>Simulation</h3>
       <div class="btns"><button id="pause"><kbd>P</kbd>Pause</button><button id="slow"><kbd>M</kbd>Slow 0.25x</button><button id="reset">Reset</button><button data-demo="showcase">Showcase</button></div>
@@ -115,7 +115,7 @@ code{font:13px var(--mono);color:var(--cool)}
     <div class="card"><h4>1 · Server combat truth</h4><p>The server owns cooldowns, damage and deaths. It wakes on a tick (50, 100 or 600 ms) and resolves everything due since the last one. Targeted hits resolve at cast end and cannot miss. Aimed hits are checked against server positions. Lag compensation rewinds targets by your latency plus half a tick, which favours the shooter. With it off, the server checks where targets are now, which favours the target. Ground circles resolve when the marker ends, and the hitbox matches the decal.</p></div>
     <div class="card"><h4>2 · Input, targeting and queue</h4><p>Tab picks the nearest enemy in view by Chebyshev tiles, breaks ties by the smallest clockwise angle from your facing, then by unit id. In combat it only cycles enemies already fighting you, and in PvP players come before mobs. Taps and free aim use an auto pick that keeps its target unless another is a tile closer. Soft lock may bend an aimed skill's start direction by at most 15° in PvE and 0 in PvP, and clamps circles to range. The global cooldown is 1.0 s and the queue window 400 ms. One press is queued and the last one wins; it fires the moment the cooldown ends. The strip above the hotbar shows presses, fires and drops.</p></div>
     <div class="card"><h4>3 · Prediction and reconciliation</h4><p><b>Wait for server</b> starts nothing until the server answers, so every swing lags by a round trip plus up to one tick. <b>Animation</b> starts the swing at once and plays impact on confirm. <b>Animation + effects</b> also predicts sparks and sound. Numbers wait for the server unless you predict them. A predicted hit that the server rejects turns into a grey struck-out phantom number.</p></div>
-    <div class="card"><h4>4 · Animation</h4><p>A sword swing has anticipation (100 ms, weapon drawn back, 1 px lean), a strike of three 50 ms frames with the smear arc, and 150 ms of recovery, which moving cancels. You walk at half speed while swinging. Body sprites have 4 directions; the weapon and smear rotate freely. A 150 ms flinch plays only on crits or when one hit takes at least 1/16 of max life. Deaths flash for 2 frames, squash to 1.2 by 0.8 while fading, and leave a corpse at 133 ms, or swap to a corpse at once as in Tibia.</p></div>
+    <div class="card"><h4>4 · Animation</h4><p>A sword swing has anticipation (100 ms, weapon drawn back, 1 px lean), a strike of three 50 ms frames with the smear arc, and 150 ms of recovery, which moving cancels. You walk at half speed while swinging. Body sprites have 4 directions; the weapon and its smear follow the aim in 16 steps of 22.5°. A 150 ms flinch plays only on crits or when one hit takes at least 1/16 of max life. Deaths flash for 2 frames, squash to 1.2 by 0.8 while fading, and leave a corpse at 133 ms, or swap to a corpse at once as in Tibia.</p></div>
     <div class="card"><h4>5 · Impact feedback</h4><p>Hitstop freezes only sprites, and only when you are the attacker or the target: 3 frames on a hit, 5 on a heavy hit, 6 on a crit, 8 on a kill. Other players' hits get none, and PvP victims get none. It never freezes input or the server. Switch to <b>Global</b> to see why a whole-screen freeze breaks a shared screen. The flash is 2 full white frames plus a 4-frame fade, and keeps the dark outline so the shape reads. Normal hits recoil 2 px, crits 4 px, 3 frames out and 3 back. Cleave, Quake, the warden's slam and enemy orbs shove the target 1 tile over 150 ms on the server, snapped to the tile; a shoved player is immune to the next shove for 10 s.</p></div>
     <div class="card"><h4>6 · Camera</h4><p>Shake is trauma² times 3 px, half that vertically, in whole pixels with no rotation. Trauma decays by 1.5 per second and caps at 1.0. A hit you take adds 0.2 plus 0.3 times damage over max life. Your crit adds 0.3 and kicks the camera 1 px against your aim. The warden's slam adds 0.6 at its centre, fading to nothing over 6 tiles, so slams far away barely move your view. Shake intensity goes down to 0.</p></div>
     <div class="card"><h4>7 · Combat text and telegraphs</h4><p>Numbers use the bitmap atlas, one blit per glyph. They live 1 s, rise 24 px and fade after 833 ms. Same-tier numbers on one target merge for 400 ms (yours, taken, others'); crits never merge, last 1.2 s and pop to double size for 3 frames. A new number whose predecessor is under 250 ms old starts lower. At most 4 per target and 64 on screen. Other players' numbers are dimmed. Telegraph leads: trash 500 ms, caster circle and line 1.2 s, warden slam 2.5 s. The lance flies 12 tiles/s and the enemy orb 6, both 0.75 tile wide; bolts take 150 × √tiles ms. A whiff shows only after a projectile passed within half a tile.</p></div>
@@ -280,11 +280,15 @@ function smear(r0,r1,a0,a1,cIn,cMid,cOut,fade){const R1=Math.ceil(r1)+1,N=R1*2+1
     p.s(x,y,r>r1-1.2?Q[cOut]:r<inner+1?Q[cIn]:Q[cMid]);}
   return {cv:p.cv(),c:R1};}
 const ANG={d:Math.PI/2,u:-Math.PI/2,r:0,l:Math.PI};const SWS={d:1,r:1,u:-1,l:-1};
-const SMEAR={};
-for(const d of ['d','u','r','l']){const f=ANG[d],s=SWS[d],a0=s>0?f-1.75:f-1.35,a1=s>0?f+1.35:f+1.75;
-  SMEAR[d]={sw:[smear(7,12,a0,a1,'a2','a3','wh',0),smear(7,12,a0,a1,'a2','a3','a3',1)],
-    cone:[smear(26,38,f-.75,f+.75,'o1','o2','wh',0),smear(26,38,f-.75,f+.75,'o0','o1','o2',1)],
-    mob:[smear(6,10,a0,a1,'r1','r3','cr',0),smear(6,10,a0,a1,'r1','r1','r3',1)]};}
+// swings follow the aim in 16 steps of 22.5 degrees. Smears are baked on first use: 3 kinds x 16 angles x 2 sweep directions at most, 2 frames each
+const SMN=16,SMSTEP=Math.PI*2/SMN,SMEAR=new Map();
+const swK=a=>((Math.round(a/SMSTEP)%SMN)+SMN)%SMN;
+function smearSet(kind,k,s){const key=kind+k+(s>0?'+':'-');let m=SMEAR.get(key);if(m)return m;const f=k>SMN/2?(k-SMN)*SMSTEP:k*SMSTEP,a0=s>0?f-1.75:f-1.35,a1=s>0?f+1.35:f+1.75;
+  m=kind==='cone'?[smear(26,38,f-.75,f+.75,'o1','o2','wh',0),smear(26,38,f-.75,f+.75,'o0','o1','o2',1)]
+   :kind==='sw'?[smear(7,12,a0,a1,'a2','a3','wh',0),smear(7,12,a0,a1,'a2','a3','a3',1)]
+   :[smear(6,10,a0,a1,'r1','r3','cr',0),smear(6,10,a0,a1,'r1','r1','r3',1)];SMEAR.set(key,m);return m;}
+// the angle an action swings around: the aim (snapped to the 16 smear angles when snap is set), unwrapped next to the facing so the weapon takes the short way from idle
+function aimF(e,a,snap){const c=ANG[e.dir];let f=a.ang===undefined?c:snap?swK(a.ang)*SMSTEP:a.ang;while(f-c>Math.PI)f-=Math.PI*2;while(f-c<-Math.PI)f+=Math.PI*2;return f;}
 const SPARK=[0,1].map(f=>{const p=PB(11,11);const L=f?5:4;for(let i=-L;i<=L;i++){p.s(5+i,5,Q.wh);p.s(5,5+i,Q.wh);}if(!f){for(let i=-2;i<=2;i++){p.s(5+i,5+i,Q.o2);p.s(5+i,5-i,Q.o2);}}p.s(5,5,Q.wh);return p.cv();});
 const PUFF=[2,3,4,5].map((r,i)=>{const p=PB(13,13);p.el(6.5,6.5,r,r*.85,(x,y,dx,dy,q)=>q>.45?(((x+y+i)&1)||i<2?(dy<0?Q.s3:Q.s2):0):(i<1?Q.s3:0));return p.cv();});
 const ORB={me:(()=>{const p=PB(7,7);p.el(3.5,3.5,3.2,3.2,(x,y,dx,dy,q)=>q<.3?Q.wh:dx+dy<-.2?Q.vi2:Q.vi);p.ol(Q.ink);return p.cv();})(),
@@ -309,14 +313,15 @@ const ICON=[
  sprite(["..............","......oooo....",".....owwwwo...","....owwwwwo...","....owwwwo....","...owwwwo.....","...owwwwo.....","..owwwwwwooo..","..owwwwwwwwwo.","..oWWWWWWWWWo.","..ooooooooooo.","..............",".a.a..........","..............","..............".slice(0)].slice(0,14),{o:'ink',w:'w2',W:'w1',a:'a3'})].map(s=>s.cv());
 const SWEEP=[];for(let k=0;k<16;k++){const p=PB(16,16);const lim=(k/16)*Math.PI*2;for(let y=0;y<16;y++)for(let x=0;x<16;x++){let a=Math.atan2(x-7.5,-(y-7.5));if(a<0)a+=Math.PI*2;if(a>=lim)p.s(x,y,0xb0100c14);}SWEEP.push(p.cv());}
 // tele bakes: membership-tested pixel decals, quantized to 16 fill steps, cached by shape key
-const TBAKE=new Map();
+const TBAKE=new Map(),TBMAX=2e6;let TBPX=0; // the cache is capped by its pixel count, 2 million px is 8 MB
 function teleImg(t,step){const cb=CBLIND?1:0;const key=t.key+'|'+step+'|'+cb;let c=TBAKE.get(key);if(c)return c;
-  const {w,h,ox,oy}=t.box,p=PB(w,h),en=t.team!=='me',e0=en?Q.r2:Q.a2,e1=en?Q.r3:Q.a3,f0=en?Q.r1:Q.a1,f1=en?Q.r2:Q.a2,pr=step/(TUNING.tele.warnSteps);
+  const {w,h,ox,oy,px=0,py=0}=t.box,p=PB(w,h),en=t.team!=='me',e0=en?Q.r2:Q.a2,e1=en?Q.r3:Q.a3,f0=en?Q.r1:Q.a1,f1=en?Q.r2:Q.a2,pr=step/(TUNING.tele.warnSteps);
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const m=t.inside(x-ox,y-oy);if(m<0)continue;const edge=t.inside(x-ox+1,y-oy)<0||t.inside(x-ox-1,y-oy)<0||t.inside(x-ox,y-oy+1)<0||t.inside(x-ox,y-oy-1)<0;
-    if(edge){if(cb&&en&&((x+y)>>1)%3===2)continue;p.s(x,y,e1);continue;}
-    const filled=m<=pr;let on;if(cb){on=en?(((x+y)&3)<(filled?2:1)):((x&1)===0&&(y&1)===0)||(filled&&((x+y)&1)===0);}else on=filled?((x+y)&1)===0:((x&3)===0&&(y&1)===0);
+    const X=x+px,Y=y+py; // dither phase, kept where the old square canvas had it
+    if(edge){if(cb&&en&&((X+Y)>>1)%3===2)continue;p.s(x,y,e1);continue;}
+    const filled=m<=pr;let on;if(cb){on=en?(((X+Y)&3)<(filled?2:1)):((X&1)===0&&(Y&1)===0)||(filled&&((X+Y)&1)===0);}else on=filled?((X+Y)&1)===0:((X&3)===0&&(Y&1)===0);
     if(filled&&m>pr-.07&&pr<1)p.s(x,y,e1);else if(on)p.s(x,y,filled?f1:f0);}
-  c=p.cv();if(TBAKE.size>900)TBAKE.clear();TBAKE.set(key,c);return c;}
+  c=p.cv();TBPX+=w*h;if(TBPX>TBMAX){TBAKE.clear();TBPX=w*h;}TBAKE.set(key,c);return c;}
 // ---------- arena: 20x10 slabs of 16 px below a back wall ----------
 const FY=24;const SOLID=[];const PILLARS=[[4,2],[15,2],[4,7],[15,7]];
 for(let y=0;y<10;y++){SOLID.push(Array(20).fill(0));}PILLARS.forEach(([x,y])=>SOLID[y][x]=1);
@@ -363,8 +368,10 @@ function spawn(kind,x,y,o){const e=Object.assign({id:++EID,kind,x,y,px:x,py:y,lp
 let PL=null;
 function mkPlayer(){PL=spawn('player',150,116,{team:'me',hp:600,mhp:600,chp:600,r:TUNING.proj.playerR,sheet:SPR.player,weapon:'sword',name:'YOU',CH:new Float32Array(RING*2),dir:'r'});fillH(PL,150,116);}
 const GOBN=['GOBLIN','GOBLIN','GOBLIN RUNT','GOBLIN'];const PVPN=['RAVEN','MORDO','SKARN'];
-function spawnMob(kind,i){const side=()=>{const r=rnd();return r<.5?{x:280+rnd()*30,y:40+rnd()*130}:r<.75?{x:90+rnd()*210,y:38+rnd()*8}:{x:90+rnd()*210,y:162+rnd()*10};};
-  if(kind==='gob'){let p;do{p=side();}while(solidAt(p.x,p.y));return spawn('gob',p.x,p.y,{hp:260,mhp:260,chp:260,r:6,spd:34+rnd()*8,sheet:SPR.gob,weapon:'club',name:pick(GOBN),dir:'l'});}
+// goblins come in from the right, the back or the front, one to three tiles off the walls, so a fight has room on every side
+function gobSpot(){let p;do{const r=rnd();p=r<.5?{x:256+rnd()*40,y:46+rnd()*116}:r<.75?{x:90+rnd()*200,y:46+rnd()*14}:{x:90+rnd()*200,y:148+rnd()*14};}while(solidAt(p.x,p.y));return p;}
+function spawnMob(kind,i){
+  if(kind==='gob'){const p=gobSpot();return spawn('gob',p.x,p.y,{hp:260,mhp:260,chp:260,r:6,spd:34+rnd()*8,sheet:SPR.gob,weapon:'club',name:pick(GOBN),dir:'l'});}
   if(kind==='imp')return spawn('imp',284,56,{hp:300,mhp:300,chp:300,r:6,spd:26,sheet:SPR.imp,weapon:'staff',name:'GOBLIN HEXER',dir:'l'});
   if(kind==='golem')return spawn('golem',236,104,{hp:1400,mhp:1400,chp:1400,r:10,spd:15,sheet:SPR.golem,weapon:'none',name:'STONE WARDEN',dir:'l',aggro:false});
   if(kind==='pvp'){const k=i%3;return spawn('pvp',250+rnd()*40,50+k*45,{hp:900,mhp:900,chp:900,r:TUNING.proj.playerR,spd:44,sheet:SPR.pvp[k],weapon:k===1?'staff':'sword',name:PVPN[k],dir:'l'});}
@@ -403,7 +410,7 @@ function svShove(att,vic,T){if(vic.kind==='golem'||vic.kind==='dummy'||vic.kind=
   if(vic===PL){const dx=q.x-vic.x,dy=q.y-vic.y;down(T,TUNING.bytes.pos,()=>clPush(dx,dy));}else vic.shv={x0:vic.x,y0:vic.y,x1:q.x,y1:q.y,t0:T};return true;}
 function svStun(vic,T){const D=TUNING.pvp;if(T-vic.dr.last>D.drWindow)vic.dr.n=0;const m=D.drSteps[Math.min(vic.dr.n,D.drSteps.length-1)];vic.dr.n++;vic.dr.last=T;const dur=Math.min(D.ccCap,D.stun*m);
   if(dur>0)vic.sStun=Math.max(vic.sStun,T+dur);down(T,6,()=>clStun(vic,dur,m));}
-function svRespawn(e,T){e.sdead=false;e.hp=e.mhp;if(e===PL){e.x=150;e.y=116;}else if(e.kind==='gob'){do{const r=rnd();e.x=r<.5?290+rnd()*20:90+rnd()*210;e.y=r<.5?40+rnd()*130:r<.75?38+rnd()*8:162+rnd()*10;}while(solidAt(e.x,e.y));}else if(e.kind==='golem'){e.x=236;e.y=104;e.aggro=false;}else if(e.kind==='pvp'){e.x=280;e.y=60+rnd()*90;}else if(e.kind==='imp'){e.x=284;e.y=56;}
+function svRespawn(e,T){e.sdead=false;e.hp=e.mhp;if(e===PL){e.x=150;e.y=116;}else if(e.kind==='gob'){const p=gobSpot();e.x=p.x;e.y=p.y;}else if(e.kind==='golem'){e.x=236;e.y=104;e.aggro=false;}else if(e.kind==='pvp'){e.x=280;e.y=60+rnd()*90;}else if(e.kind==='imp'){e.x=284;e.y=56;}
   e.tgt=null;e.busy=0;e.sStun=0;const x=e.x,y=e.y;if(e!==PL)fillH(e,x,y);down(T,TUNING.bytes.pos,()=>clSpawn(e,x,y));}
 function inCone(o,x,y,ang,range,half){const d=Math.hypot(o.x-x,o.y-y);if(d>range+o.r)return false;let a=Math.atan2(o.y-y,o.x-x)-ang;while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;return Math.abs(a)<=half+Math.atan2(o.r,Math.max(1,d));}
 function posAt(o,T,rew){if(!rew)return {x:o.x,y:o.y};NET.lastRewind=Math.round(REWIND());return hsampA(o.H,T-REWIND(),{x:0,y:0});}
@@ -430,11 +437,14 @@ function sweep(p,T){const end=Math.min(T,p.tEnd);for(let t=p.checked;t<=end;t+=H
 function svProj(T){for(let i=SPROJ.length-1;i>=0;i--){const p=SPROJ[i];if(p.homing){if(p.hitT&&T>p.hitT+1500)SPROJ.splice(i,1);continue;}
   if(p.fin){if(T>p.hitT+1500)SPROJ.splice(i,1);continue;}if(T<p.t0)continue;const r=sweep(p,T);if(!r)continue;p.fin=r;
   if(r==='hit'){if(p.rew)NET.lastRewind=Math.round(REWIND());svDamage(p.owner,p.victim,p.dmg,{seq:p.seq,shove:p.kind==='fire'},p.hitT);}
-  else if(p.best&&p.bestD<TUNING.proj.whiffPx&&(p.owner===PL||p.best===PL)){const b=p.best;(p.owner===PL?downOwn:down)(p.hitT,4,()=>clWhiff(b));} // near miss after the projectile passed, caster and dodger only
+  else if(p.best&&p.bestD<TUNING.proj.whiffPx&&(p.owner===PL||p.best===PL)){const b=p.best;if(p.owner===PL)downOwn(p.hitT,4,()=>{if(PRED==='wait')clWhiff(b);});else down(p.hitT,4,()=>clWhiff(b));} // near miss after the projectile passed, caster and dodger only. With prediction on, the client lance already showed your own whiff
   if(p.seq)downOwn(p.hitT,TUNING.bytes.ack,()=>clDone(p.seq));}}
-function mkTele(t){const R=Math.ceil(t.shape==='circle'?t.r:t.len)+2;
-  if(t.shape==='circle'){t.key='c'+t.r+t.team;t.box={w:R*2+1,h:R*2+1,ox:R,oy:R};t.inside=(x,y)=>{const d=Math.hypot(x,y);return d<=t.r?d/t.r:-1;};}
-  else if(t.shape==='line'||t.shape==='aim'){const a=Math.round(t.ang/(Math.PI*2)*64)/64*Math.PI*2,c=Math.cos(a),s=Math.sin(a);t.ang=a;t.key=t.shape+Math.round(a*100)+'_'+t.len+'_'+t.w+t.team;t.box={w:R*2+1,h:R*2+1,ox:R,oy:R};
+function mkTele(t){
+  if(t.shape==='circle'){const R=Math.ceil(t.r)+2;t.key='c'+t.r+t.team;t.box={w:R*2+1,h:R*2+1,ox:R,oy:R};t.inside=(x,y)=>{const d=Math.hypot(x,y);return d<=t.r?d/t.r:-1;};}
+  else if(t.shape==='line'||t.shape==='aim'){const a=Math.round(t.ang/(Math.PI*2)*64)/64*Math.PI*2,c=Math.cos(a),s=Math.sin(a);t.ang=a;t.key=t.shape+Math.round(a*100)+'_'+t.len+'_'+t.w+t.team;
+    // the decal canvas is the bounding box of the rotated strip plus 2 px, not a square of side 2 x length
+    const hw=t.w/2,xs=[hw*s,-hw*s,t.len*c+hw*s,t.len*c-hw*s],ys=[hw*c,-hw*c,t.len*s+hw*c,t.len*s-hw*c],x0=Math.floor(Math.min(...xs))-2,y0=Math.floor(Math.min(...ys))-2;
+    t.box={w:Math.ceil(Math.max(...xs))+2-x0+1,h:Math.ceil(Math.max(...ys))+2-y0+1,ox:-x0,oy:-y0,px:Math.ceil(t.len)+2+x0,py:Math.ceil(t.len)+2+y0};
     t.inside=(x,y)=>{const u=x*c+y*s,v=-x*s+y*c;return (u>=0&&u<=t.len&&Math.abs(v)<=t.w/2)?u/t.len:-1;};}
   return t;}
 // ---------- server AI: moves every frame, thinks on ticks ----------
@@ -451,7 +461,14 @@ function svMove(dt){const T=now;
     if(e.kind==='gob'){if(t)svMoveTo(e,t.x+(e.x<t.x?-12:12),t.y,e.spd,dt,2);}
     else if(e.kind==='imp'){if(t){const d=dist(e,t);if(d<70)svMoveTo(e,e.x+(e.x-t.x),e.y+(e.y-t.y),e.spd,dt,0);else if(d>110)svMoveTo(e,t.x,t.y,e.spd,dt,100);}}
     else if(e.kind==='golem'){if(t&&e.aggro)svMoveTo(e,t.x,t.y,e.spd,dt,20);}
-    else if(e.kind==='ally'){if(t){const sl=e.id*2.39996,rad=e.ranged?68+(e.id%4)*10:16+(e.id%3)*5;svMoveTo(e,t.x+Math.cos(sl)*rad,t.y+Math.sin(sl)*rad*.75,e.spd,dt,2);}}
+    else if(e.kind==='ally'){if(t){
+      // an ally whose target fights back does not back away from it, or the pair chases each other into a wall.
+      // Ranged allies hold their ground. Melee allies stand where a goblin wants them, 14 px to its side
+      if(t.tgt===e){if(e.ranged)continue;if(t.kind==='gob'){svMoveTo(e,t.x+(e.x<t.x?-14:14),t.y,e.spd,dt,2);continue;}}
+      // otherwise a slot on a ring around the target, clamped to the floor. Melee rings sit outside the 11 and 15 px push-apart distances,
+      // inside the warden's 20 px stand-off and the 24 px strike range. Ranged rings are 68 to 98 px
+      const sl=e.id*2.39996,rad=e.ranged?68+(e.id%4)*10:t.kind==='golem'?18+e.id%3:14+(e.id%3)*2,ry=e.ranged?.75:1;
+      svMoveTo(e,Math.max(14,Math.min(306,t.x+Math.cos(sl)*rad)),Math.max(FY+14,Math.min(168,t.y+Math.sin(sl)*rad*ry)),e.spd,dt,2);}}
     else if(e.kind==='pvp'){if(e.dodge&&e.dodge.until>T){svMoveTo(e,e.x+e.dodge.dx*20,e.y+e.dodge.dy*20,120,dt,0);continue;}if(e.busy>T&&e.castRoot)continue;
       if(!PL.sdead){const d=dist(e,PL),a=Math.atan2(e.y-PL.y,e.x-PL.x),want=e.weapon==='staff'?95:62,ra=d<want-10?1:d>want+10?-1:0;const tx=e.x+Math.cos(a)*ra*20+Math.cos(a+Math.PI/2)*e.str.dir*20,ty=e.y+Math.sin(a)*ra*20+Math.sin(a+Math.PI/2)*e.str.dir*20;if(!svMoveTo(e,tx,ty,e.spd*.75,dt,0))e.str.dir*=-1;}}}
   for(let i=0;i<ENTS.length;i++){const a=ENTS[i];if(a.sdead||a===PL||a.kind==='dummy')continue;for(let j=i+1;j<ENTS.length;j++){const b=ENTS[j];if(b.sdead||b===PL||b.kind==='dummy')continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),m=a.kind==='ally'&&b.kind==='ally'?14:Math.max(11,a.r+b.r-1);if(d<m&&d>.01){const k=(m-d)/2/d;if(!solidAt(a.x-dx*k,a.y-dy*k)){a.x-=dx*k;a.y-=dy*k;}if(!solidAt(b.x+dx*k,b.y+dy*k)){b.x+=dx*k;b.y+=dy*k;}}}}}
@@ -589,19 +606,21 @@ function impact(att,vic,info,pred,critOnly){const own=att===PL,recv=vic===PL,lod
   sfx('hit',{tag:tagOf(att),crit,lod,recv,kill});}
 function bigFlash(){if(RFLASH){const t=now;BIGFLASHES=BIGFLASHES.filter(x=>t-x<1000);if(BIGFLASHES.length>=2)return;BIGFLASHES.push(t);REDF=Math.max(REDF,120);}else REDF=200;}
 function addTrauma(a){TRAUMA=Math.min(TUNING.shake.cap,TRAUMA+a*JUICE);}
-function posShake(x,y,a){if(!FX.shake||JUICE<=0)return;const d=Math.hypot(x-PL.px,y-PL.py),f=Math.max(0,1-d/TUNING.shake.slamRange);if(f>0)addTrauma(a*f);} // elite slam +0.6 at the centre, linear falloff over 6 tiles
+function posShake(x,y,a){if(!FX.shake||JUICE<=0)return;const d=Math.hypot(x-PL.px,y-PL.py),f=Math.max(0,1-d/TUNING.shake.slamRange);if(f>0)addTrauma(a*f);} // elite slam: TUNING.shake.slam at the centre, linear falloff over 6 tiles
 // ---------- particles: fillRect squares and streaks ----------
 function capP(own){if(!CAPS)return true;if(PART.length<TUNING.caps.particles)return true;if(!own)return false;const i=PART.findIndex(p=>!p.own);if(i>=0){PART.splice(i,1);return true;}return false;}
 function sparks(x,y,ang,n,crit,own){for(let i=0;i<n;i++){if(!capP(own))break;const a=ang+(rnd()-.5)*(crit?2.6:1.7)+(i%3===0?Math.PI:0)*.0,s=80+rnd()*120*(crit?1.4:1);PART.push({k:'spark',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:TUNING.sparks.life*(.6+rnd()*.6),col:rnd()<.5?HX('wh'):HX(crit?'o2':'a3'),own});}
   if(capP(own))PART.push({k:'star',x,y,t:0,life:crit?100:67,own,big:crit});}
 const MAT={gob:['g2','g1','g3'],golem:['s2','s1','s3'],imp:['vi','vi2','dk'],dummy:['sa1','sa0','cr'],player:['r1','r2','k1'],ally:['r1','r2','k1'],pvp:['r1','r2','k1']};
-function debris(x,y,ang,n,vic){const m=MAT[vic.kind]||MAT.gob;for(let i=0;i<n;i++){if(!capP(false))break;const a=ang+(rnd()-.5)*1.8,s=30+rnd()*50;PART.push({k:'chip',x,y,z:0,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.6,vz:60+rnd()*60,t:0,life:TUNING.debris.life*(.7+rnd()*.6),col:HX(m[i%3]),gy:vic.py+rnd()*3-1});}}
-function burst(x,y,n,vic){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=30+rnd()*60;PART.push({k:'chip',x,y,z:0,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.6,vz:50+rnd()*80,t:0,life:600,col:HX((MAT[vic.kind]||MAT.gob)[i%3]),gy:vic.py,own:1});}PART.push({k:'poof',x,y,t:0,life:300,own:1});}
+// a chip starts at height gy - y above its ground point and bounces on the floor at gy, the victim's feet, not at chest height
+function chip(x,y,gy,vx,vy,vz,life,col,own){PART.push({k:'chip',x,y:gy,z:Math.max(0,gy-y),vx,vy,vz,t:0,life,col,own});}
+function debris(x,y,ang,n,vic){const m=MAT[vic.kind]||MAT.gob;for(let i=0;i<n;i++){if(!capP(false))break;const a=ang+(rnd()-.5)*1.8,s=30+rnd()*50;chip(x,y,vic.py+rnd()*3-1,Math.cos(a)*s,Math.sin(a)*s*.6,60+rnd()*60,TUNING.debris.life*(.7+rnd()*.6),HX(m[i%3]));}}
+function burst(x,y,n,vic){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=30+rnd()*60;chip(x,y,vic.py,Math.cos(a)*s,Math.sin(a)*s*.6,50+rnd()*80,600,HX((MAT[vic.kind]||MAT.gob)[i%3]),1);}PART.push({k:'poof',x,y,t:0,life:300,own:1});}
 function puff(x,y){if(capP(true))PART.push({k:'poof',x,y,t:0,life:260,own:1});}
-function splat(x,y){if(!capP(false))return;for(let i=0;i<6;i++)PART.push({k:'chip',x,y:y-2,z:0,vx:(rnd()-.5)*30,vy:(rnd()-.5)*14,vz:20+rnd()*30,t:0,life:420,col:HX(i&1?'r1':'r0'),gy:y+rnd()*2});}
+function splat(x,y){if(!capP(false))return;for(let i=0;i<6;i++)chip(x,y-2,y+rnd()*2,(rnd()-.5)*30,(rnd()-.5)*14,20+rnd()*30,420,HX(i&1?'r1':'r0'));}
 function spawnWhiff(o){PART.push({k:'whiff',x:o.px,y:bodyY(o),t:0,life:260,own:1,s:rnd()<.5?1:-1});addText(o,'WHIFF',P.s2);sfx('whiff',{tag:'own'});}
 function ringFx(x,y,r,col,life){PART.push({k:'ring',x,y,r,t:0,life,col,own:1});}
-function dust(x,y,n){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=20+rnd()*70;PART.push({k:'chip',x:x+Math.cos(a)*6,y:y+Math.sin(a)*4,z:0,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.55,vz:30+rnd()*50,t:0,life:500,col:HX(i%3?'s2':'s1'),gy:y+Math.sin(a)*4,own:1});}}
+function dust(x,y,n){for(let i=0;i<n;i++){if(!capP(true))break;const a=rnd()*Math.PI*2,s=20+rnd()*70;chip(x+Math.cos(a)*6,y+Math.sin(a)*4,y+Math.sin(a)*4,Math.cos(a)*s,Math.sin(a)*s*.55,30+rnd()*50,500,HX(i%3?'s2':'s1'),1);}}
 // ---------- combat text (layer 7) ----------
 function numFor(att,vic,info){if(!FX.numbers)return null;const own=att===PL,recv=vic===PL;if(!own&&!recv&&OTHERS==='hidden')return null;return addNum(vic,info.dmg,info.crit&&(own||OTHERS==='full'),own,recv,info.pred);}
 // OTClient rules at sandbox scale: merge per target, per tier (mine, others, taken) and per type within 400 ms; crits never merge;
@@ -653,7 +672,7 @@ const actDur=a=>a.wind+(a.active||0)+(a.rec||0);
 const phase=a=>a.t<a.wind?'wind':a.t<a.wind+(a.active||0)?'active':a.t<actDur(a)?'rec':'done';
 function tryMove(e,nx,ny){if(!solidAt(nx,e.py))e.px=nx;if(!solidAt(e.px,ny))e.py=ny;}
 function updPlayer(dt,dtv){const s=dt/1000;
-  if(PL.dead){if(PL.dieT>=0&&PL.dieT<999)PL.dieT+=dtv;return;}
+  if(PL.dead){if(PL.stop<=0&&PL.dieT>=0&&PL.dieT<999)PL.dieT+=dtv;return;}
   if(PL.push){const p=PL.push;p.t+=dt;const k=Math.min(1,p.t/p.dur),tx=p.dx*k,ty=p.dy*k;tryMove(PL,PL.px+tx-p.ax,PL.py+ty-p.ay);p.ax=tx;p.ay=ty;if(k>=1)PL.push=null;}
   let moving=false;
   if(PL.roll){const r=PL.roll;if(GSTOP<=0){const st=Math.min(dt,r.dur-r.t),v=TUNING.roll.dist/TUNING.roll.ms;tryMove(PL,PL.px+r.dx*v*st,PL.py+r.dy*v*st*.8);r.t+=dt;if((r.t/40|0)!==(r.lt|0)){r.lt=r.t/40|0;PART.push({k:'after',x:PL.px,y:PL.py,img:frameOf(PL),t:0,life:180,own:1});}}moving=true;if(r.t>=r.dur)PL.roll=null;}
@@ -682,13 +701,13 @@ function updProj(dt){const s=dt/1000;
   for(const p of SPROJ){if(p.own&&PRED!=='wait')continue;if(!p.homing&&p.fin&&!p.cEnd&&tv>=p.hitT){p.cEnd=1;if(p.fin!=='hit'){puff(p.ex,p.ey);if(p.owner===PL)sfx('puff',{tag:'own'});}}if(!p.cS&&tv>=p.t0){p.cS=1;if(p.kind==='fire'||p.kind==='foe')sfx('zap',{tag:'creatures',recv:1});}}}
 function teleBurst(t){const own=t.team==='me';if(JUICE>0&&FX.particles){ringFx(t.x,t.y,t.shape==='circle'?t.r:12,own?HX('a3'):HX('r3'),220);if(t.shape==='circle')dust(t.x,t.y,Math.round((t.slam?22:8)*JUICE));
   else{const c=Math.cos(t.ang),s=Math.sin(t.ang);for(let i=0;i<14;i++){const k=rnd()*t.len;PART.push({k:'spark',x:t.x+c*k,y:t.y+s*k,vx:(rnd()-.5)*40,vy:-20-rnd()*30,t:0,life:200,col:HX(i&1?'vi2':'r3'),own:1});}}}
-  if(t.slam){posShake(t.x,t.y,.5);sfx('boom',{tag:'creatures'});}else if(own&&t.own)sfx('boom',{tag:'own'});}
+  if(t.slam){posShake(t.x,t.y,TUNING.shake.slam);sfx('boom',{tag:'creatures'});}else if(own&&t.own)sfx('boom',{tag:'own'});}
 function updEnts(dt,dtv){const tv=vnow-DLY();nearPlayers=0;
   for(const e of ENTS){if(e!==PL&&isPlayerKind(e)&&dpx(e,PL)<120)nearPlayers++;
     const st=e.stop>0;if(st)e.stop-=dt;
     if(e!==PL){if(!st&&!e.dead){hsampA(e.H,tv,TMP2);const mv=Math.hypot(TMP2.x-e.px,TMP2.y-e.py);e.walking=mv>.04;if(e.walking){if(!e.act||phase(e.act)==='done')e.dir=dirOf(Math.atan2(TMP2.y-e.py,TMP2.x-e.px));e.walk+=dtv;}e.px=TMP2.x;e.py=TMP2.y;}
       if(e.act&&!st){e.act.t+=dtv;if(phase(e.act)==='done')e.act=null;}
-      if(e.dead&&e.dieT>=0&&e.dieT<999){e.dieT+=dtv;if(e.dieT>=TUNING.anim.corpseAt){e.dieT=999;corpse(e);if(JUICE>0)PART.push({k:'poof',x:e.px,y:bodyY(e),t:0,life:300,own:1});}}}
+      if(e.dead&&!st&&e.dieT>=0&&e.dieT<999){e.dieT+=dtv;if(e.dieT>=TUNING.anim.corpseAt){e.dieT=999;corpse(e);if(JUICE>0)PART.push({k:'poof',x:e.px,y:bodyY(e),t:0,life:300,own:1});}}}
     if(e===PL&&PL.dead&&PL.dieT>=TUNING.anim.corpseAt&&PL.dieT<999){PL.dieT=999;corpse(PL);}
     if(e.flash>0)e.flash-=dt;if(!st)e.kbt+=dtv;if(e.sq>0&&!st)e.sq-=dtv;if(e.react>0)e.react-=dtv;if(e.cast&&now>e.cast.t0+e.cast.dur)e.cast=null;}
   for(let i=CORPSES.length-1;i>=0;i--){CORPSES[i].t+=dtv;if(CORPSES[i].t>TUNING.corpseMs)CORPSES.splice(i,1);}}
@@ -702,7 +721,7 @@ function updParts(dt){const s=dt/1000;
 const PIV={d:[3,-6],u:[-3,-7],r:[2,-6],l:[-2,-6]},IDLE={d:1.25,u:1.9,r:1.0,l:2.14};
 function frameOf(e){const S=e.sheet,d=S[e.dir]?e.dir:'d';let fi=0;if(e.walking&&(!e.act||e.act.hidden)&&e.react<=0)fi=Math.floor(e.walk/TUNING.anim.walkMs)%4;return S[d][fi];}
 const ease=t=>1-(1-t)*(1-t);
-function weaponAng(e){const d=e.dir,f=ANG[d],s=SWS[d],idle=IDLE[d],a=e.act;if(!a||a.hidden)return idle;const ph=phase(a),k=a.t;
+function weaponAng(e){const d=e.dir,s=SWS[d],idle=IDLE[d],a=e.act;if(!a||a.hidden)return idle;const ph=phase(a),k=a.t,f=aimF(e,a,a.type!=='throw');
   if(a.type==='melee'||a.type==='cone'){const a0=f-1.75*s,a1=f+1.35*s;if(ph==='wind'){const q=Math.min(1,k/(a.wind*.6));return idle+(a0-idle)*ease(q);}if(ph==='active'){const q=(k-a.wind)/a.active;return a0+(a1-a0)*ease(Math.min(1,q*1.6));}const q=(k-a.wind-a.active)/Math.max(1,a.rec);return a1+(idle-a1)*q;}
   if(a.type==='cast')return -Math.PI/2+(d==='l'?-.3:.3);
   if(a.type==='throw'){const back=f+s*2.3;if(ph==='wind')return back;if(ph==='active')return f;return f+(idle-f)*((k-a.wind-a.active)/a.rec);}
@@ -725,7 +744,7 @@ let FC=0;
 function drawEnt(e){if(e.dead&&e.dieT>=999)return;const S=e.sheet,img=frameOf(e),[ox,oy]=entOffset(e),x=Math.round(e.px)-S.w/2+ox,y=Math.round(e.py)-S.h+1+oy;
   const alpha=e.kind==='ally'&&LOD==='minimal'?.6:1;if(alpha<1)ctx.globalAlpha=alpha;
   B(e.kind==='golem'?SHADOW.l:SHADOW.s,Math.round(e.px)-(e.kind==='golem'?10:6),Math.round(e.py)-2);
-  const sqk=e.sq>0&&JUICE>0?(e.sq>45&&JUICE>=.5?2:1):0;const dying=e.dead&&e.dieT>=0;
+  const sqk=e.sq>0&&JUICE>0?(e.sq>45&&JUICE>=.5?2:1):0;const dying=e.dead&&e.dieT>=0&&e.stop<=0; // a killing blow holds the struck pose for its hitstop, then the death animation starts
   const pv=PIV[e.dir]||PIV.d,wx=Math.round(e.px)+pv[0]+ox,wy=Math.round(e.py)+pv[1]+oy+sqk,wa=weaponAng(e);
   if(e.dir==='u'&&!dying)drawWeapon(e,wx,wy,wa);
   if(dying){const A=TUNING.anim;if(e.dieT<A.deathFlash)B(flashImg(img,'#ffffff'),x,y);else{const k=Math.min(1,(e.dieT-A.deathFlash)/(A.corpseAt-A.deathFlash)),w=Math.round(S.w*(1+.2*k)),h=Math.round(S.h*(1-.2*k));ctx.globalAlpha=alpha*(1-.6*k);Bs(img,0,0,S.w,S.h,Math.round(e.px)-w/2,Math.round(e.py)-h+1,w,h);ctx.globalAlpha=alpha;}}
@@ -733,8 +752,8 @@ function drawEnt(e){if(e.dead&&e.dieT>=999)return;const S=e.sheet,img=frameOf(e)
     if(e.flash>0){const k=e.flashKind;if(k==='white'){const fa=e.flash>TUNING.flash.fade?1:e.flash/TUNING.flash.fade;ctx.globalAlpha=alpha*fa;drawSq(flashImg(img,'#ffffff'),x,y,sqk);ctx.globalAlpha=alpha;}else{ctx.globalAlpha=alpha*(k==='soft'?.35:k==='purple'?.6:TUNING.flash.redAlpha)*Math.min(1,e.flash/e.flashMax*1.3);drawSq(flashImg(img,k==='red'?'#ff3a3a':k==='purple'?'#b45cff':'#ffffff'),x,y,sqk);ctx.globalAlpha=alpha;}}
     if(e.ciframe>now&&e===PL){ctx.globalAlpha=.4;B(tintOf(img,'#92cfe4'),x,y);ctx.globalAlpha=alpha;}}
   if(e.dir!=='u'&&!dying)drawWeapon(e,wx,wy,wa);
-  const a=e.act;if(a&&!a.hidden&&FX.smear&&JUICE>=.25&&phase(a)==='active'&&!dying){const sm=SMEAR[e.dir],q=(a.t-a.wind)/a.active,set=a.cone?sm.cone:e===PL||e.team==='me'||e.kind==='pvp'?sm.sw:sm.mob,fr=set[q<.6?0:1];
-    if(!(lodOf(e,PL)===2&&e!==PL)){const fa=ANG[e.dir];B(fr.cv,Math.round(wx+Math.cos(fa)*2)-fr.c,Math.round(wy+Math.sin(fa)*2)-fr.c);}}
+  const a=e.act;if(a&&!a.hidden&&FX.smear&&JUICE>=.25&&phase(a)==='active'&&!dying){
+    if(!(lodOf(e,PL)===2&&e!==PL)){const q=(a.t-a.wind)/a.active,fa=aimF(e,a,1),fr=smearSet(a.cone?'cone':e===PL||e.team==='me'||e.kind==='pvp'?'sw':'mob',swK(fa),SWS[e.dir])[q<.6?0:1];B(fr.cv,Math.round(wx+Math.cos(fa)*2)-fr.c,Math.round(wy+Math.sin(fa)*2)-fr.c);}}
   if(a&&a.type==='cast'&&!dying&&phase(a)==='wind'){const tx=Math.round(wx+Math.cos(wa)*11),ty=Math.round(wy+Math.sin(wa)*11);for(let i=0;i<3;i++){const an=vnow/90+i*2.1;R(tx+Math.round(Math.cos(an)*3),ty+Math.round(Math.sin(an)*3),1,1,HX(e.kind==='pvp'?'o2':e.team==='me'?'vi2':'r3'));}}
   if(e.cstun>now&&!e.dead){for(let i=0;i<3;i++){const an=vnow/150+i*2.1;R(Math.round(e.px+Math.cos(an)*5),Math.round(e.py-S.h-1+Math.sin(an)*2),1,1,HX('yl'));}}
   if(alpha<1)ctx.globalAlpha=1;}
@@ -756,7 +775,7 @@ function drawTele(){const tv=vnow-DLY();const one=(t,time)=>{if(time<t.t0)return
 function drawAim(){if(!AIM||PL.dead)return;const sk=SK[AIM.i],a=aimPoint(sk,MX,MY),cx=Math.round(PL.px),cy=Math.round(PL.py-7),ang=Math.atan2(a.y-(sk.type==='circle'?PL.py:cy),a.x-cx),col=HX(AIM.cancel?'s1':'cr'),c=Math.cos(ang),s=Math.sin(ang);
   if(sk.type==='shot'){for(let i=6;i<=sk.range;i+=2)R(cx+c*i,cy+s*i,1,1,col);for(let i=10;i<=sk.range;i+=6){R(cx+c*i-s*sk.r,cy+s*i+c*sk.r,1,1,col);R(cx+c*i+s*sk.r,cy+s*i-c*sk.r,1,1,col);}}
   else if(sk.type==='cone'){for(let q=-sk.half;q<=sk.half;q+=.05)R(cx+Math.cos(ang+q)*sk.range,cy+Math.sin(ang+q)*sk.range,1,1,col);for(let i=4;i<sk.range;i+=3){R(cx+Math.cos(ang-sk.half)*i,cy+Math.sin(ang-sk.half)*i,1,1,col);R(cx+Math.cos(ang+sk.half)*i,cy+Math.sin(ang+sk.half)*i,1,1,col);}}
-  else if(sk.type==='circle'){for(let q=0;q<Math.PI*2;q+=.09)R(a.x+Math.cos(q)*sk.rad,a.y+Math.sin(q)*sk.rad*.75,1,1,col);for(let q=0;q<Math.PI*2;q+=.1)R(PL.px+Math.cos(q)*sk.range,PL.py+Math.sin(q)*sk.range*.75,1,1,'rgba(255,243,200,.3)');}
+  else if(sk.type==='circle'){for(let q=0;q<Math.PI*2;q+=.09)R(a.x+Math.cos(q)*sk.rad,a.y+Math.sin(q)*sk.rad,1,1,col);for(let q=0;q<Math.PI*2;q+=.1)R(PL.px+Math.cos(q)*sk.range,PL.py+Math.sin(q)*sk.range,1,1,'rgba(255,243,200,.3)');}
   else if(sk.type==='roll'){const L=TUNING.roll.dist;for(let i=4;i<=L;i+=2)R(PL.px+c*i,PL.py-2+s*i*.8,1,1,col);}
   if(a.snap){const e=a.snap,w=e.sheet.w/2+2,y0=e.py-e.sheet.h-1,y1=e.py+2,x0=e.px-w,x1=e.px+w,cc=HX('yl');for(const [x,y,dx,dy] of [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]]){R(x,y,3*dx||1,1,cc);R(x,y,1,3*dy||1,cc);R(dx<0?x-2:x,y,3,1,cc);R(x,dy<0?y-2:y,1,3,cc);}}}
 function drawMarkers(){const fr=Math.floor(vnow/120)%4;
@@ -768,7 +787,7 @@ function drawParts(){for(const p of PART){const k=p.t/p.life;
   else if(p.k==='chip'){if(k>.75&&(FC&1))continue;R(Math.round(p.x),Math.round(p.y-p.z),1,1,p.col);}
   else if(p.k==='star'){B(SPARK[p.t<p.life/2?0:1],Math.round(p.x)-5,Math.round(p.y)-5);if(p.big&&p.t<p.life/2){const c=HX('o2');R(p.x-8,p.y,3,1,c);R(p.x+6,p.y,3,1,c);R(p.x,p.y-8,1,3,c);R(p.x,p.y+6,1,3,c);}}
   else if(p.k==='poof'){B(PUFF[Math.min(3,Math.floor(k*4))],Math.round(p.x)-6,Math.round(p.y)-6);}
-  else if(p.k==='ring'){const r=p.r*(.6+.5*k);if(k>.6&&(FC&1))continue;for(let q=0;q<Math.PI*2;q+=Math.max(.06,1.2/r))R(p.x+Math.cos(q)*r,p.y+Math.sin(q)*r*.75,1,1,p.col);}
+  else if(p.k==='ring'){const r=p.r*(.6+.5*k);if(k>.6&&(FC&1))continue;for(let q=0;q<Math.PI*2;q+=Math.max(.06,1.2/r))R(p.x+Math.cos(q)*r,p.y+Math.sin(q)*r,1,1,p.col);}
   else if(p.k==='whiff'){const c=HX('s3');for(let i=0;i<3;i++){const yy=Math.round(p.y-4+i*4),xx=Math.round(p.x+p.s*(7+k*6));R(xx,yy,3,1,c);R(xx+p.s*3,yy+1,2,1,HX('s1'));}}
   else if(p.k==='after'){ctx.globalAlpha=.45*(1-k);B(tintOf(p.img,'#92cfe4'),Math.round(p.x)-8,Math.round(p.y)-15);ctx.globalAlpha=1;}}}
 function drawNums(){const N=TUNING.numbers,J=JUICE;
@@ -804,8 +823,9 @@ function drawHUD(){
   if(JUICE<=0){const s='JUICE 0%';txt(F2,s,317-textW(F2,s),18,P.s2,2,P.ink);}
   const x0=106,y0=162;
   for(let i=0;i<6;i++){const sk=SK[i],x=x0+i*18;R(x,y0,17,17,HX('ink'));R(x+1,y0+1,15,15,HX('dk'));B(ICON[i],x+2,y0+2);
-    let rem=0,tot=1;const cdr=sk.cd?(CCD[sk.k]||0)-now:0,gr=sk.gcd?CGCD-now:0;if(cdr>gr){rem=cdr;tot=sk.cd;}else if(gr>0){rem=gr;tot=GCDLEN;}
-    if(rem>0)B(SWEEP[Math.min(15,Math.floor((1-rem/tot)*16))],x+1,y0+1);
+    let rem=0,tot=1;const cdr=sk.cd?(CCD[sk.k]||0)-now:0,grp=GRP&&sk.grp?(CCD['g_'+sk.grp]||0)-now:0,gr=sk.gcd?CGCD-now:0; // the sweep shows whichever lock ends last: own cooldown, spell group or global
+    if(gr>rem){rem=gr;tot=GCDLEN;}if(grp>rem){rem=grp;tot=TUNING.groups[sk.grp];}if(cdr>rem){rem=cdr;tot=sk.cd;}
+    if(rem>0)B(SWEEP[Math.max(0,Math.min(15,Math.floor((1-rem/tot)*16)))],x+1,y0+1);
     if(sk.tgt&&TARGET&&dpx(PL,TARGET)>sk.range+TARGET.r+4){ctx.globalAlpha=.35;R(x+1,y0+1,15,15,HX('r1'));ctx.globalAlpha=1;}
     if(QUEUE&&QUEUE.i===i&&(FC>>2)&1)sqFrame(x-1,y0-1,19,19,HX('yl'));else if(AIM&&AIM.i===i)sqFrame(x-1,y0-1,19,19,HX('wh'));
     txt(F2,String(i+1),x+2,y0+1,P.o2,2,P.ink);}
@@ -819,32 +839,33 @@ function drawHUD(){
   if(PL.dead){const s='YOU DIED';txt(F1,s,Math.round(160-textW(F1,s)/2),80,P.r3,2,P.ink);}
   if(paused&&!frozenShow)txt(F2,'PAUSED',148,32,P.wh,2,P.ink);else if(slow)txt(F2,'SLOW 0.25X',140,32,P.yl,2,P.ink);}
 // ---------- x-ray views ----------
-let CHK=[];
+let CHK=[];const chkPerS=()=>{let n=0;for(let i=1;i<CHK.length;i+=2)n+=CHK[i];return n;}; // (time, count) pairs for the last second
 function drawViews(){
   if(VIEW==='server'){for(const e of ENTS){if(e.sdead)continue;const S=e.sheet,img=S[e.dir]?S[e.dir][0]:S.d[0];ctx.globalAlpha=.45;B(tintOf(img,'#5ff7f7'),Math.round(e.x)-S.w/2,Math.round(e.y)-S.h+1);ctx.globalAlpha=1;
       for(let q=0;q<Math.PI*2;q+=.5)R(e.x+Math.cos(q)*e.r,e.y-6+Math.sin(q)*e.r,1,1,HX('cy'));const dx=e.x-e.px,dy=e.y-e.py,d=Math.hypot(dx,dy);for(let i=0;i<d;i+=2)R(e.px+dx/d*i,e.py+dy/d*i,1,1,HX('py'));}
     for(const p of SPROJ){if(p.homing||now<p.t0||p.fin)continue;const k=(now-p.t0)/1000*p.speed;R(p.x0+p.dx*k-1,p.y0+p.dy*k-1,3,3,HX('cy'));}
-    const L=['SERVER  AUTHORITATIVE','TICK '+TICK+' MS  #'+SV.ticks,'INBOX '+SV.inbox.length+'  PENDING '+SV.pend.length,'IN FLIGHT  UP '+NET.up.length+'  DOWN '+NET.down.length,'ACCEPTED '+NET.acc+'  REJECTED '+NET.rej,LAGC?'LAG COMP  REWIND '+Math.round(REWIND())+' MS':'NO REWIND  FAVOURS TARGET','HIT CHECKS '+CHK.length+'/S','PHANTOMS '+NET.phantom+'  GHOST FX '+NET.ghostfx,'CYAN  SERVER   YOU  CLIENT'];
-    R(3,32,118,L.length*7+5,'rgba(8,12,20,.86)');L.forEach((t,i)=>txt(F2,t,6,35+i*7,i?P.s3:P.cy,0));}
+}
   else if(VIEW==='timeline'){const x0=40,w=272,y0=32,span=2400,X=t=>x0+(t-(now-span))/span*w;R(3,y0,314,46,'rgba(8,10,18,.88)');
-    for(let t=SV.next-TICK;t>now-span;t-=TICK){if(TICK<100&&((t/TICK)|0)%2)continue;R(X(t),y0+2,1,42,'rgba(255,255,255,.12)');}
-    ['INPUT','PREDICT','SERVER'].forEach((s,i)=>{txt(F2,s,6,y0+5+i*14,[P.s3,P.yl,P.g4][i],0);R(x0,y0+8+i*14,w,1,'rgba(255,255,255,.08)');});
+    for(let t=SV.next-TICK;t>now-span;t-=TICK){if(TICK<100&&((t/TICK)|0)%2)continue;R(X(t),y0+2,1,34,'rgba(255,255,255,.12)');}
+    ['INPUT','PREDICT','SERVER'].forEach((s,i)=>{txt(F2,s,6,y0+5+i*12,[P.s3,P.yl,P.g4][i],0);R(x0,y0+8+i*12,w,1,'rgba(255,255,255,.08)');});
     const fires={};for(const e of TL)if(e.kind==='fire'||e.kind==='auto')fires[e.seq]=e;
-    for(const e of TL){if(e.t<now-span)continue;const x=Math.round(X(e.t)),y=y0+8+e.lane*14;
-      if(e.kind==='hit'&&fires[e.seq]){const fx=X(fires[e.seq].t);for(let xx=fx;xx<x;xx+=3)R(xx,y0+8+((xx-fx)/(x-fx||1))*28,1,1,'rgba(188,214,108,.5)');}
+    for(const e of TL){if(e.t<now-span)continue;const x=Math.round(X(e.t)),y=y0+8+e.lane*12;
+      if(e.kind==='hit'&&fires[e.seq]){const fx=X(fires[e.seq].t);for(let xx=fx;xx<x;xx+=3)R(xx,y0+8+((xx-fx)/(x-fx||1))*24,1,1,'rgba(188,214,108,.5)');}
       const c={press:'s3',fire:'o2',auto:'s1',queue:'yl',drop:'r2',pred:'yl',ack:'a3',hit:'g4',rej:'r2'}[e.kind]||'wh';
       if(e.kind==='drop'||e.kind==='rej'){R(x-1,y-2,1,1,HX(c));R(x+1,y-2,1,1,HX(c));R(x,y-1,1,1,HX(c));R(x-1,y,1,1,HX(c));R(x+1,y,1,1,HX(c));}else R(x,y-3,e.kind==='hit'||e.kind==='fire'?2:1,6,HX(c));}
     txt(F2,'LAST 2.4 S   RTT '+LAT+' MS + TICK WAIT',x0,y0+38,P.s2,0);}
   else if(VIEW==='cost'){const col=['rgba(146,207,228,.5)','rgba(244,211,94,.9)','rgba(214,105,138,.9)','rgba(188,214,108,.6)','rgba(255,255,255,.5)'];ctx.lineWidth=1;
     for(let i=0;i<COSTR.length;i+=5){ctx.strokeStyle=col[COSTR[i]];ctx.strokeRect((COSTR[i+1]|0)+.5,(COSTR[i+2]|0)+.5,Math.max(1,COSTR[i+3]|0)-1,Math.max(1,COSTR[i+4]|0)-1);}
-    const items=[['SIM',T.sim,P.wh],['SPRITES',T.spr,P.a3],['EFFECTS',T.fx,P.yl],['TEXT',T.txt,P.pk],['CAMERA',T.cam,P.g4],['UI',T.ui,P.s3]];R(3,104,112,50,'rgba(10,8,18,.88)');
-    items.forEach(([n,v,c],i)=>{const y=107+i*7.5;txt(F2,n,6,y,c,0);R(42,y,Math.max(1,Math.min(46,v/1*46)),4,'#'+c);txt(F2,v.toFixed(2),92,y,P.wh,0);});}}
+    const items=[['SIM',T.sim,P.wh],['SPRITES',T.spr,P.a3],['EFFECTS',T.fx,P.yl],['TEXT',T.txt,P.pk],['CAMERA',T.cam,P.g4],['UI',T.ui,P.s3],['XRAY+HUD',T.xray+T.hud,P.s1]];R(3,102,112,52,'rgba(10,8,18,.88)');
+    items.forEach(([n,v,c],i)=>{const y=104+i*7;txt(F2,n,6,y,c,0);R(42,y,Math.max(1,Math.min(46,v/1*46)),4,'#'+c);txt(F2,v.toFixed(2),92,y,P.wh,0);});}}
 // ---------- render ----------
-const T={sim:0,spr:0,fx:0,txt:0,cam:0,ui:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};let simMs=0;
+const T={sim:0,spr:0,fx:0,txt:0,cam:0,ui:0,xray:0,hud:0,total:0};const ema=(k,v)=>{T[k]+=(v-T[k])*.06;};let simMs=0;
 function camOffset(){const S=TUNING.shake,tr=TRAUMA,amp=S.maxPx*SHK*(RSHAKE?.25:1)*tr*tr;let ox=0,oy=0;if(amp>0&&FX.shake){const t=now/1000*S.noiseHz;ox=(vn(t,0,41)*2-1)*amp;oy=(vn(t,7,43)*2-1)*amp*S.yMul;}
   if(KICKT<S.kickMs){const k=1-KICKT/S.kickMs;ox+=KICKX*k;oy+=KICKY*k;}return [Math.round(ox),Math.round(oy)];}
 function render(){ST.blits=0;ST.glyphs=0;COSTR.length=0;FC++;
-  const t0=performance.now();const [ox,oy]=camOffset();ctx.setTransform(1,0,0,1,ox,oy);
+  const t0=performance.now();const [ox,oy]=camOffset();
+  if(ox||oy){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=HX('ink');ctx.fillRect(0,0,W,H);} // the shaken background leaves a strip of up to 3 px uncovered: paint it, or last frame's pixels stay there
+  ctx.setTransform(1,0,0,1,ox,oy);
   LAYER=0;B(BG,0,0);for(const c of CORPSES){if(c.t>5000)ctx.globalAlpha=Math.max(0,(6000-c.t)/1000);B(c.img,Math.round(c.x)-c.img.width/2,Math.round(c.y)-c.img.height+3);ctx.globalAlpha=1;}
   const t1=performance.now();LAYER=1;drawTele();drawMarkers();drawAim();const t2=performance.now();
   LAYER=0;const list=ENTS.filter(e=>!(e.dead&&e.dieT>=999));list.sort((a,b)=>a.py-b.py);let pi=0;const PS=PILLARS.map(([x,y])=>({x,y,by:FY+y*16+13})).sort((a,b)=>a.by-b.by);
@@ -854,8 +875,8 @@ function render(){ST.blits=0;ST.glyphs=0;COSTR.length=0;FC++;
   LAYER=3;drawLights();const t5=performance.now();LAYER=2;if(FX.numbers)drawNums();const t6=performance.now();
   LAYER=3;ctx.setTransform(1,0,0,1,0,0);B(VIG,0,0);if(REDF>0){ctx.globalAlpha=Math.min(1,REDF/200)*(RFLASH?.5:1);B(REDV,0,0);ctx.globalAlpha=1;}const t7=performance.now();
   LAYER=4;drawHUD();const t8=performance.now();
-  ema('sim',simMs);ema('spr',(t1-t0)+(t3-t2));ema('fx',(t2-t1)+(t4-t3));ema('txt',t6-t5);ema('cam',(t5-t4)+(t7-t6));ema('ui',t8-t7);T.total=T.sim+T.spr+T.fx+T.txt+T.cam+T.ui;
-  drawViews();}
+  ema('sim',simMs);ema('spr',(t1-t0)+(t3-t2));ema('fx',(t2-t1)+(t4-t3));ema('txt',t6-t5);ema('cam',(t5-t4)+(t7-t6));ema('ui',t8-t7);
+  drawViews();ema('xray',performance.now()-t8);T.total=T.sim+T.spr+T.fx+T.txt+T.cam+T.ui+T.xray+T.hud;}
 // ---------- simulation step ----------
 function step(dt){now+=dt;if(GSTOP>0)FROZEN.push(now,dt);if(GSTOP>0){GSTOP-=dt;if(GSTOP<=0){GSTOP=0;vnow=now;}}else vnow=now;const dtv=GSTOP>0?0:dt;
   updPlayer(dt,dtv);
@@ -868,14 +889,24 @@ function step(dt){now+=dt;if(GSTOP>0)FROZEN.push(now,dt);if(GSTOP>0){GSTOP-=dt;i
   updProj(dtv);updEnts(dt,dtv);updParts(dtv);
   TRAUMA=Math.max(0,TRAUMA-TUNING.shake.decay*dt/1000);KICKT+=dt;if(REDF>0)REDF-=dt;
   const c=now-1000;while(NET.log.length&&NET.log[0]<c)NET.log.splice(0,2);while(MERGED.length&&MERGED[0]<c)MERGED.shift();while(FROZEN.length&&FROZEN[0]<c)FROZEN.splice(0,2);
-  if(NET.checks){CHK.push(now);NET.checks=0;}while(CHK.length&&CHK[0]<c)CHK.shift();}
+  if(NET.checks){CHK.push(now,NET.checks);NET.checks=0;}while(CHK.length&&CHK[0]<c)CHK.splice(0,2);}
 // ---------- loop and DOM HUD ----------
 let last=performance.now(),hudN=0;const f2=v=>v.toFixed(2);
-function loop(ts){let dt=ts-last;last=ts;if(dt>100)dt=100;if(dt<0)dt=0;if(slow)dt*=.25;if(paused)dt=0;
+// server truth counters go in the readout under the canvas, so no panel covers the ghosts they describe
+const svLine=()=>`<br><span class="sv">server truth</span> · tick ${SV.ticks} · inbox ${SV.inbox.length} · pending ${SV.pend.length} · in flight ${NET.up.length} up, ${NET.down.length} down · accepted ${NET.acc} · ${LAGC?`lag compensation rewinds ${Math.round(REWIND())} ms`:'no rewind, which favours the target'} · hit checks ${chkPerS()}/s · ghost effects ${NET.ghostfx} · <span class="sv">cyan ghosts and circles</span> are server positions and hitboxes, <span class="cl">yellow lines</span> join them to what you see`;
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(ts){requestAnimationFrame(loop);if(skipFrame())return;let dt=ts-last;last=ts;if(dt>100)dt=100;if(dt<0)dt=0;if(slow)dt*=.25;if(paused)dt=0;
   const a=performance.now();if(dt>0)step(dt);simMs=performance.now()-a;render();
-  if(++hudN%10===0){let bytes=0;for(let i=1;i<NET.log.length;i+=2)bytes+=NET.log[i];let fz=0;for(let i=1;i<FROZEN.length;i+=2)fz+=FROZEN[i];const live=VO.filter(v=>!AC||v.end>AC.currentTime).length;
-    $('hud').innerHTML=`${MODE.toUpperCase()} · tick ${TICK} ms · RTT ${LAT} ms · ${{wait:'wait for server',anim:'predict animation',full:'predict animation + effects'}[PRED]} · juice ${Math.round(JUICE*100)}% · ${STOPMODE==='global'?'<span class="warn">global hitstop</span>':'per-entity hitstop'}${paused?' · paused':''}<br>sim ${f2(T.sim)} · sprites + anim ${f2(T.spr)} · effects ${f2(T.fx)} · combat text ${f2(T.txt)} · camera + post ${f2(T.cam)} · UI ${f2(T.ui)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · blits ${ST.blits} · glyphs ${ST.glyphs} · entities ${ENTS.length} · particles ${PART.length} · numbers ${NUMS.length} (merged ${MERGED.length}/s)<br>sounds ${AC?live+' playing':'off until first key or tap'} · dropped ${VDROP} · stolen ${VSTOLE} · server ${NET.log.length/2|0} msg/s · ${(bytes/1024).toFixed(2)} kB/s · phantoms ${NET.phantom} · rejected ${NET.rej}${fz?` · <span class="warn">screen frozen ${Math.min(100,fz/10).toFixed(0)}% of the last second</span>`:''}`;}
-  requestAnimationFrame(loop);}
+  // the readout below is written every 10th frame. Its cost is averaged over all frames, so it shows up in the total it reports
+  const h0=performance.now(),wr=++hudN%10===0;
+  if(wr){let bytes=0;for(let i=1;i<NET.log.length;i+=2)bytes+=NET.log[i];let fz=0;for(let i=1;i<FROZEN.length;i+=2)fz+=FROZEN[i];const live=VO.filter(v=>!AC||v.end>AC.currentTime).length;
+    $('hud').innerHTML=`${MODE.toUpperCase()} · tick ${TICK} ms · RTT ${LAT} ms · ${{wait:'wait for server',anim:'predict animation',full:'predict animation + effects'}[PRED]} · juice ${Math.round(JUICE*100)}% · ${STOPMODE==='global'?'<span class="warn">global hitstop</span>':'per-entity hitstop'}${paused?' · paused':''}<br>sim ${f2(T.sim)} · sprites + anim ${f2(T.spr)} · effects ${f2(T.fx)} · combat text ${f2(T.txt)} · camera + post ${f2(T.cam)} · UI ${f2(T.ui)} · x-ray ${f2(T.xray)} · this readout ${f2(T.hud)} ms<br><b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · blits ${ST.blits} · glyphs ${ST.glyphs} · entities ${ENTS.length} · particles ${PART.length} · numbers ${NUMS.length} (merged ${MERGED.length}/s)<br>sounds ${AC?live+' playing':'off until first key or tap'} · dropped ${VDROP} · stolen ${VSTOLE} · server ${NET.log.length/2|0} msg/s · ${(bytes/1024).toFixed(2)} kB/s · phantoms ${NET.phantom} · rejected ${NET.rej}${fz?` · <span class="warn">screen frozen ${Math.min(100,fz/10).toFixed(0)}% of the last second</span>`:''}${VIEW==='server'?svLine():''}`;}
+  ema('hud',wr?performance.now()-h0:0);}
 // ---------- UI wiring ----------
 const mark=(sel,v)=>document.querySelectorAll(sel+' button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v)));
 const group=(sel,fn)=>document.querySelectorAll(sel+' button[data-v]').forEach(b=>b.addEventListener('click',()=>{fn(b.dataset.v);mark(sel,b.dataset.v);}));
@@ -890,7 +921,7 @@ const setMode=v=>{MODE=v;mark('#mode',v);setTarget(null);syncPop();},setView=v=>
 group('#stopmode',setStop);group('#flashst',setFlashSt);group('#nstyle',setNstyle);group('#others',setOthers);group('#death',setDeath);group('#lod',setLod);group('#pred',setPred);group('#autospd',setAuto);group('#tick',setTick);group('#mode',setMode);group('#views',setView);
 group('#tmode',v=>TMODE=v);group('#cmode',v=>CMODE=v);group('#pvpkb',v=>PVPKB=v);group('#apri',v=>AUTOPRI=v);
 const syncAutoB=tog('autob',()=>AUTO_ON,v=>{AUTO_ON=v;$('autob').lastChild.textContent=v?'Auto on':'Auto off';});tog('pnum',()=>PNUM,v=>PNUM=v);const syncLagc=tog('lagc',()=>LAGC,v=>LAGC=v);tog('caps',()=>CAPS,v=>CAPS=v);tog('rflash',()=>RFLASH,v=>RFLASH=v);tog('rshake',()=>RSHAKE,v=>RSHAKE=v);tog('cblind',()=>CBLIND,v=>CBLIND=v);tog('pvpfirst',()=>PVPFIRST,v=>PVPFIRST=v);
-const syncPause=tog('pause',()=>paused,v=>{paused=v;frozenShow=false;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
+const syncPause=tog('pause',()=>paused,v=>{if(frozenShow)leaveShow();else paused=v;});const syncSlow=tog('slow',()=>slow,v=>slow=v);
 const PRESETS={
  none:{j:0,fx:{},ns:'rise',death:'instant',auto:TUNING.autoSlow,q:TUNING.queueWin,gcd:TUNING.gcd,grp:false,tibia:false,others:'dim',lod:'reduced'},
  tibia:{j:.35,fx:{hitstop:0,flash:0,kb:0,shake:0,smear:0},ns:'rise',death:'instant',auto:TUNING.autoSlow,q:0,gcd:TUNING.gcd,grp:true,tibia:true,others:'full',lod:'full'},
@@ -904,6 +935,8 @@ $('juice').addEventListener('input',()=>document.querySelectorAll('#presets butt
 function reset(){ENTS.length=0;CPROJ.length=0;CTELE.length=0;PART.length=0;NUMS.length=0;CORPSES.length=0;TL.length=0;TOASTS.length=0;SPROJ.length=0;TELE.length=0;SV.inbox.length=0;SV.pend.length=0;NET.up.length=0;NET.down.length=0;
   Object.assign(NET,{rej:0,acc:0,phantom:0,ghostfx:0});for(const k in PIMP)delete PIMP[k];for(const k in WAITING)delete WAITING[k];for(const k in CCD)delete CCD[k];
   TARGET=null;QUEUE=null;AIM=null;MOVE=null;CGCD=0;SV.gcdEnd=0;SV.cd={};TRAUMA=0;GSTOP=0;REDF=0;VDROP=0;VSTOLE=0;vnow=now;SV.next=Math.ceil(now/TICK)*TICK;paused=false;frozenShow=false;syncPause();mkPlayer();syncPop();}
+// the showcase frame is staged: a prop lance, parked cooldowns, a fake cast. Leaving it rebuilds the world so play resumes clean
+function leaveShow(){if(frozenShow)reset();}
 function place(e,x,y,dir){e.x=x;e.y=y;e.px=x;e.py=y;fillH(e,x,y);if(dir)e.dir=dir;}
 function showcase(){rs=0x2545f491;preset('asterion');setJuice(100);setMode('pve');setAllies(5);setView('normal');setOthers('dim');setPred('anim');setLat(120);setTick(100);setShk(100);paused=false;slow=false;syncSlow();reset();
   const G=ENTS.find(e=>e.kind==='golem'),I=ENTS.find(e=>e.kind==='imp'),gs=ENTS.filter(e=>e.kind==='gob'),al=ENTS.filter(e=>e.kind==='ally');
@@ -929,29 +962,31 @@ function skillUp(i){if(AIM&&AIM.i===i&&!AIM.normal&&!AIM.touch){press(i,{x:MX,y:
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){const [x,y]=canvasXY(e.clientX,e.clientY);MX=x;MY=y;}});
 cv.addEventListener('contextmenu',e=>{e.preventDefault();if(AIM)AIM=null;});
 cv.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();const [x,y]=canvasXY(e.clientX,e.clientY);MX=x;MY=y;if(e.button===2){AIM=null;return;}
-  if(frozenShow){paused=false;frozenShow=false;syncPause();}
+  leaveShow();
   if(AIM&&!AIM.touch){press(AIM.i,{x,y});AIM=null;return;}
   const f=foeAt(x,y);if(f&&(TMODE==='click'||TMODE==='soft')){if(TARGET===f&&dpx(PL,f)>24)MOVE={x:f.px,y:f.py,e:f};else setTarget(f);return;}
   MOVE={x,y};});
 // touch skill buttons: tap fires at the auto pick, drag aims (joystick from the button), drag back to the centre cancels
 document.querySelectorAll('#touch button[data-sk]').forEach(b=>{const i=+b.dataset.sk;
-  b.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();b.setPointerCapture(e.pointerId);const sk=SK[i];if(!sk.aim){press(i);return;}AIM={i,touch:true,sx:e.clientX,sy:e.clientY,moved:false,cancel:false};const q=quickPt(sk);MX=q.x;MY=q.y;});
+  b.addEventListener('pointerdown',e=>{ensureAudio();e.preventDefault();b.setPointerCapture(e.pointerId);leaveShow();const sk=SK[i];if(!sk.aim){press(i);return;}AIM={i,touch:true,sx:e.clientX,sy:e.clientY,moved:false,cancel:false};const q=quickPt(sk);MX=q.x;MY=q.y;});
   b.addEventListener('pointermove',e=>{if(!AIM||AIM.i!==i||!AIM.touch)return;const dx=e.clientX-AIM.sx,dy=e.clientY-AIM.sy,d=Math.hypot(dx,dy);if(d>14){AIM.moved=true;AIM.cancel=false;const sk=SK[i],k=(sk.range||60)/70;MX=PL.px+dx*k;MY=PL.py-7+dy*k;}else if(AIM.moved){AIM.cancel=true;}});
   const end=e=>{if(!AIM||AIM.i!==i||!AIM.touch)return;const a=AIM;AIM=null;if(a.cancel){toast('CANCELLED',P.s2);return;}press(i,a.moved?{x:MX,y:MY}:quickPt(SK[i]));};
   b.addEventListener('pointerup',end);b.addEventListener('pointercancel',()=>{AIM=null;});});
-$('tAuto').addEventListener('click',()=>{AUTO_ON=!AUTO_ON;syncAutoB();$('autob').lastChild.textContent=AUTO_ON?'Auto on':'Auto off';});$('tTab').addEventListener('click',()=>{ensureAudio();cycleTarget();});
+$('tAuto').addEventListener('click',()=>{AUTO_ON=!AUTO_ON;syncAutoB();$('autob').lastChild.textContent=AUTO_ON?'Auto on':'Auto off';});$('tTab').addEventListener('click',()=>{ensureAudio();leaveShow();cycleTarget();});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
 addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'&&e.target.type!=='range'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;ensureAudio();const k=e.key.toLowerCase(),dir=KM[k];
+  if(frozenShow&&(dir||(k>='1'&&k<='6')||k==='tab'||k==='escape'||k===' '||k==='p')){leaveShow();if(k==='p'){e.preventDefault();return;}} // V and M keep the frame, so the x-ray views can inspect it
   if(dir){KEYS[dir]=1;e.preventDefault();return;}
   if(k>='1'&&k<='6'){if(!e.repeat)skillDown(+k-1);e.preventDefault();return;}
   if(k==='tab'){cycleTarget();e.preventDefault();}else if(k==='escape'){if(AIM)AIM=null;else setTarget(null);}
   else if(k===' '){AUTO_ON=!AUTO_ON;syncAutoB();$('autob').lastChild.textContent=AUTO_ON?'Auto on':'Auto off';e.preventDefault();}
   else if(k==='v'){const V=['normal','server','timeline','cost'];setView(V[(V.indexOf(VIEW)+1)%V.length]);}
-  else if(k==='p'){paused=!paused;frozenShow=false;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
+  else if(k==='p'){paused=!paused;syncPause();}else if(k==='m'){slow=!slow;syncSlow();}});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase(),d=KM[k];if(d)KEYS[d]=0;if(k>='1'&&k<='6')skillUp(+k-1);});
 addEventListener('blur',()=>{KEYS.l=KEYS.r=KEYS.u=KEYS.d=0;});
-function fit(){const st=cv.parentElement,w=st.parentElement.clientWidth;st.style.width=w>=640?Math.floor(w/320)*320+2+'px':'';document.body.classList.toggle('coarse',matchMedia('(pointer:coarse)').matches||innerWidth<700);}
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';document.body.classList.toggle('coarse',matchMedia('(pointer:coarse)').matches||innerWidth<700);}
 addEventListener('resize',fit);fit();
 window.__sb={get:()=>({cproj:CPROJ.length,tele:TELE.length,mode:MODE,target:TARGET&&TARGET.name,ents:ENTS.length,parts:PART.length,nums:NUMS.length,phantom:NET.phantom,rej:NET.rej,acc:NET.acc,hp:PL.chp,act:PL.act&&PL.act.type,gstop:GSTOP,queue:!!QUEUE,tick:SV.ticks,blits:ST.blits,total:T.total}),press,skillDown,skillUp,cycleTarget,setMode,preset,step:n=>{for(let i=0;i<n;i++)step(16);},pl:()=>PL,ents:()=>ENTS,aim:(x,y)=>{MX=x;MY=y;}};
 reset();preset('asterion');requestAnimationFrame(loop);

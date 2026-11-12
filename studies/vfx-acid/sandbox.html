@@ -16,9 +16,10 @@ header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
 h1{font-family:"Pixelify Sans",monospace;font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--acid)}
 .by{color:var(--mute);font-size:13px}
 main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
-.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
 .hud{position:absolute;left:8px;top:8px;font:12px "IBM Plex Mono",monospace;background:rgba(8,12,6,.75);padding:5px 8px;border-radius:4px;pointer-events:none;color:#eef6e4;max-width:calc(100% - 16px)}
+@media (max-width:677px){.hud{position:static;max-width:none;border-radius:0;background:#080c06;font-size:11px;padding:6px 8px}}
 .bars{display:grid;grid-template-columns:auto 90px;gap:2px 8px;align-items:center;margin-top:4px}
 .bar{height:6px;background:#2a3324;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acid)}
 .bar.hp i{background:#ff6b5e}
@@ -374,12 +375,18 @@ const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255;HEAT[i]=pac
 
 // ---------- loop & UI ----------
 let tool='walk',view='normal',simSpeed=1,paused=false,simAcc=0,simMs=0,last=performance.now(),down=false;
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run,
+// enough to redraw the scene and refresh the HUD
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){const t0=performance.now();simAcc+=dt*60*simSpeed;let n=0;while(simAcc>=1&&n<16){simStep();simAcc--;n++;}if(simAcc>4)simAcc=0;
     if(frame%4===0)computeGlow();simMs=simMs*.9+(performance.now()-t0)*.1;
     updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+6)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
     if(down&&tool!=='walk'&&tool!=='item'&&tool!=='slime')applyTool(lastPt[0],lastPt[1]);frame++;}
-  render();if(frame%6===0)hud();requestAnimationFrame(loop);}
+  render();if(frame%6===0)hud();}
 function hud(){let tot=0;for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++)tot+=A[y*W+x];
   document.getElementById('hudt').textContent=`acid ${tot.toFixed(0)} u · slimes ${slimes.length} · sim ${simMs.toFixed(2)} ms`;
   const e=player.eq,set=(id,v)=>document.getElementById(id).style.width=Math.max(0,v*100)+'%';set('b_hp',player.hp/100);set('b_helm',e.helm.q);set('b_chest',e.chest.q);set('b_boots',e.boots.q);set('b_sword',e.sword.q);}
@@ -394,13 +401,21 @@ cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId
   if(tool==='walk'){player.tx=x;player.ty=y;const near=slimes.some(s=>Math.hypot(s.x-x,s.y-y)<rad(s)+4&&Math.hypot(s.x-player.x,s.y-player.y)<22);if(near){player.tx=null;const dx=x-player.x,dy=y-player.y;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');attack();}}
   else if(tool==='slime')slimes.push(newSlime(x,y,16));else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
 cv.addEventListener('pointermove',e=>{lastPt=toCell(e);});cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercancel',()=>down=false);
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}if(k===' '||k==='j'){attack();e.preventDefault();}});
+// a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(k)){keys[k]=true;e.preventDefault();}if(k===' '||k==='j'){attack();e.preventDefault();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 document.querySelectorAll('#tbtns [data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;document.querySelectorAll('#tbtns [data-t]').forEach(x=>x.classList.toggle('on',x===b));});
 document.querySelectorAll('#vbtns [data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll('#vbtns [data-v]').forEach(x=>x.classList.toggle('on',x===b));});
 const spEl=document.getElementById('speed');spEl.oninput=()=>{simSpeed=+spEl.value;document.getElementById('speedv').textContent=simSpeed+'×';};
 document.getElementById('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'Resume':'Pause';e.target.classList.toggle('on',paused);};
 document.getElementById('repair').onclick=()=>repair();document.getElementById('reset').onclick=()=>{buildRoom();bx0=1;bx1=W-2;by0=1;by1=H-2;};
+// whole-number canvas scale: the stage is a multiple of 320 px wide plus its 2 px border, and 1x on small screens
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=320?Math.floor(w/320)*320+2+'px':'';}
+addEventListener('resize',fit);fit();
 buildRoom();requestAnimationFrame(loop);
 })();
 </script>
