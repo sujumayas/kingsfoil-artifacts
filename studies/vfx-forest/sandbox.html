@@ -255,21 +255,24 @@ function trunkR(t){const sp=SPECIES[t.sp];if(t.u)return 0;return sp.kind==='broa
 function blocked(x,y){if(x<4||y<14||x>WW-4||y>WH-2)return true;let b=false;nearby(x,y,8,t=>{const r=trunkR(t);if(!r)return;const dx=x-t.x,dy=(y-t.y)*1.7;if(dx*dx+dy*dy<(r+2)*(r+2))b=true;});return b;}
 
 // ---------- birds ----------
-const birds=[];const BIRDCOL=()=>{const b=biomeAt(player.x,player.y),s=Math.floor(season+.5)%4;if(s===3)return ['#24232b','#3e3d48'];if(b===5)return rnd()<.5?['#d8402a','#2e8a3a']:['#2e8a3a','#f2c14e'];if(s===0&&rnd()<.4)return ['#3a6ac8','#e8a060'];return ['#7a5a3a','#d8c8a8'];};
+// a bird's colours follow the biome it sits in and the season. recolour() runs at spawn, on a hop, on landing and on a relocation,
+// so a flock turns over a bird at a time within about 3 s of a season change or as the birds follow the player into another biome
+const birds=[];const BIRDCOL=(x,y)=>{const b=biomeAt(x,y),s=Math.floor(season+.5)%4;if(s===3)return ['#24232b','#3e3d48'];if(b===5)return rnd()<.5?['#d8402a','#2e8a3a']:['#2e8a3a','#f2c14e'];if(s===0&&rnd()<.4)return ['#3a6ac8','#e8a060'];return ['#7a5a3a','#d8c8a8'];};
+function recolour(b){const k=(Math.floor(season+.5)%4)*8+biomeAt(b.x,b.y);if(b.key!==k){b.key=k;b.col=BIRDCOL(b.x,b.y);}}
 function perchSpot(t){const S=SPR[t.sp][t.v][sIdx(t)];return [t.x+(rnd()-.5)*S.cw*1.1,t.y-S.h+3+rnd()*4];}
 function randomTreeNear(x,y,minD,maxD){let best=null,tries=0;while(tries++<40){const a=rnd()*6.283,d=minD+rnd()*(maxD-minD);let c=null;nearby(x+Math.cos(a)*d,y+Math.sin(a)*d,10,t=>{if(!c&&!t.u&&SPR[t.sp][t.v][sIdx(t)].leafy!==undefined)c=t;});if(c){best=c;break;}}return best;}
-function spawnBirds(){birds.length=0;for(let k=0;k<28;k++){const t=randomTreeNear(player.x,player.y,40,220);if(!t)continue;const [bx,by]=perchSpot(t);const col=BIRDCOL();birds.push({x:bx,y:t.y,px:bx,py:by,z:t.y-by,vx:0,vy:0,state:'perch',tree:t,col,flap:rnd()*6,timer:0,hop:0});}}
+function spawnBirds(){birds.length=0;for(let k=0;k<28;k++){const t=randomTreeNear(player.x,player.y,40,220);if(!t)continue;const [bx,by]=perchSpot(t);const b={x:bx,y:t.y,px:bx,py:by,z:t.y-by,vx:0,vy:0,state:'perch',tree:t,col:null,key:-1,flap:rnd()*6,timer:0,hop:0};recolour(b);birds.push(b);}}
 function updateBirds(dt){const fly=birds.filter(b=>b.state!=='perch');
   for(const b of birds){b.flap+=dt*14;
-    if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){b.hop=.6+rnd()*2.5;const lim=SPR[b.tree.sp][b.tree.v][sIdx(b.tree)].cw*.55;b.px=clamp(b.px+(rnd()<.5?-1:1),b.tree.x-lim,b.tree.x+lim);} // hops stay on the crown
+    if(b.state==='perch'){const dx=b.x-player.x,dy=b.y-player.y;b.hop-=dt;if(b.hop<=0){recolour(b);b.hop=.6+rnd()*2.5;const lim=SPR[b.tree.sp][b.tree.v][sIdx(b.tree)].cw*.55;b.px=clamp(b.px+(rnd()<.5?-1:1),b.tree.x-lim,b.tree.x+lim);} // hops stay on the crown
       if(dx*dx+dy*dy<30*30||b.tree.shake>.3){b.state='fly';const L=Math.hypot(dx,dy)||1;b.vx=dx/L*45+(rnd()-.5)*20;b.vy=dy/L*35;b.z=b.tree.y-b.py;b.timer=6+rnd()*10;}
-      else if(Math.hypot(dx,dy)>420){const t=randomTreeNear(player.x,player.y,180,260);if(t){const [bx,by]=perchSpot(t);b.tree=t;b.x=bx;b.y=t.y;b.px=bx;b.py=by;}}continue;}
+      else if(Math.hypot(dx,dy)>420){const t=randomTreeNear(player.x,player.y,180,260);if(t){const [bx,by]=perchSpot(t);b.tree=t;b.x=bx;b.y=t.y;b.px=bx;b.py=by;recolour(b);}}continue;}
     if(b.state==='fly'){let sx=0,sy=0,ax=0,ay=0,cx=0,cy=0,n=0;for(const o of fly){if(o===b)continue;const dx=o.x-b.x,dy=o.y-b.y,d2=dx*dx+dy*dy;if(d2<64){sx-=dx;sy-=dy;}if(d2<1600){ax+=o.vx;ay+=o.vy;cx+=o.x;cy+=o.y;n++;}}
       const tx=player.x+Math.cos(time*.21+b.flap*.0)*90,ty=player.y-20+Math.sin(time*.17)*60;let fx=sx*1.6+(tx-b.x)*.12,fy=sy*1.6+(ty-b.y)*.12;if(n){fx+=(ax/n-b.vx)*.5+(cx/n-b.x)*.35;fy+=(ay/n-b.vy)*.5+(cy/n-b.y)*.35;}
       b.vx+=fx*dt*2;b.vy+=fy*dt*2;const sp=Math.hypot(b.vx,b.vy),cl=clamp(sp,30,52);b.vx*=cl/(sp||1);b.vy*=cl/(sp||1);b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=(36+Math.sin(b.flap*.2)*4-b.z)*dt;
       b.timer-=dt;if(b.timer<=0){const t=randomTreeNear(player.x,player.y,70,180);if(t){b.tree=t;const [bx,by]=perchSpot(t);b.px=bx;b.py=by;b.state='land';}else b.timer=3;}
       if(Math.hypot(b.x-player.x,b.y-player.y)>380){b.x=player.x+(rnd()<.5?-1:1)*200;b.y=player.y+(rnd()-.5)*120;}}
-    else if(b.state==='land'){const dx=b.px-b.x,dy=b.tree.y-b.y,L=Math.hypot(dx,dy);const tz=b.tree.y-b.py;if(L<2&&Math.abs(b.z-tz)<2){b.state='perch';b.x=b.px;b.y=b.tree.y;continue;}
+    else if(b.state==='land'){const dx=b.px-b.x,dy=b.tree.y-b.y,L=Math.hypot(dx,dy);const tz=b.tree.y-b.py;if(L<2&&Math.abs(b.z-tz)<2){b.state='perch';b.x=b.px;b.y=b.tree.y;recolour(b);continue;}
       const sp=Math.min(40,L*2+8);b.vx=dx/(L||1)*sp;b.vy=dy/(L||1)*sp;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=(tz-b.z)*Math.min(1,dt*2.5);
       const ddx=b.x-player.x,ddy=b.y-player.y;if(ddx*ddx+ddy*ddy<900){b.state='fly';b.timer=5;}}}}
 const BF=[["#...#",".#.#.","..#.."],[".....","##.##","..#.."]];

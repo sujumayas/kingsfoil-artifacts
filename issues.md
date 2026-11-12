@@ -856,8 +856,12 @@ How to use this file:
   Done: a hop is clamped to 55% of the crown half-width, the same range a bird perches in. After 5 min with
   nobody near, 16 of 28 birds sat outside their crown, the farthest 3.53 half-widths from the trunk. Now 0,
   the farthest at 0.55.
-- [ ] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
+- [x] **163.** `P3` Crows and parrots only change after a teleport. Bird colour is chosen in `spawnBirds` only
   (`:253`, `:256`, `:351`).
+  Done: colour was picked once in `spawnBirds`, from the player's biome. A bird now recolours from its own
+  position when it hops, lands or relocates. After 10 s of winter with no teleport: 0 of 28 crows before, 28
+  of 28 after. After a walk into the rainforest: 0 parrots before, 7 after, the birds that had followed and
+  landed there.
 - [ ] **164.** `P4` Snowflakes fall over the rainforest and savanna in winter (`:287`, `:321`, ground test at
   `:220`).
 - [ ] **165.** `P6` (suspected) Bushes and ferns shift their base row in wind (`:313`). `shake` only decays for
