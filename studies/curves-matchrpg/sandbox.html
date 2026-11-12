@@ -461,7 +461,7 @@ function render(){
   var w2=shareAt(D_BOSS[1]*paceF(first?1:t,S),S,first),w2B=shareAt(D_BOSS[1]*paceF(first?1:t,BASE),BASE,first);
   var medShare=Math.min(1,accelOf(S,first)*tc*DUTY*177/(S.max-S.base));
   var lap1=0;for(n=1;n<108;n++)lap1=Math.max(lap1,endlessPow(n,S));
-  var dbl=12*Math.log(2)/Math.log(1+S.endless);
+  var dbl=S.every*Math.log(2)/Math.log(1+S.endless);
   var w2ok=!first&&t>=2?(w2>=0.75&&w2<=0.85):null;
   var cards=[
    ["Full speed, "+tierName,Math.round(fsP)+" s","no pauses "+Math.round(fsN)+" s; current "+Math.round(fsB)+" s; p90 run 369 s",fsP<=369?"ok":""],

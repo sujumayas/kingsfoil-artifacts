@@ -929,8 +929,10 @@ How to use this file:
 
 ## curves-matchrpg
 
-- [ ] **174.** `P5` "Endless doubles every" card hardcodes 12 and ignores the Every slider (`:464`). Fix: use
+- [x] **174.** `P5` "Endless doubles every" card hardcodes 12 and ignores the Every slider (`:464`). Fix: use
   `S.every`.
+  Done: the card used 12 where the model uses `DEPTH_EVERY`. At Every 6, 12 and 18 it read 73, 73 and 73
+  encounters. Now 37, 73 and 110.
 - [ ] **175.** `P4` Scroll chart labels collide. "p90 369 s" sits on the boss labels on Diamond, unreadable at
   390 px, and the "600 s" axis label is cut at the right edge (`:391`, `:367`, `:390`, `:359`).
 - [ ] **176.** `P5` Landing follows `n % S.every` (`:173`) while walls stay at 12, 24 and 36. The report defines
