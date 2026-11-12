@@ -469,7 +469,7 @@ function placeItems(corpse,roll,T,delay,boss,contrib){const L=roll.items;
       const ro=reveal.indexOf(li);const it=Object.assign({id:++SIDN,def:i.def,tier:i.tier,n:i.n,x:tx*16+8+jx,y:ty*16+10+jy,sx:corpse.x,sy:corpse.y-4,cont:null,order:ro,stag,spawnT:T,despawnAt:T+O.groundTotalS*1000,origOwner:roll.owner},own);
       // spills: 60 s private (owner set, or the killer group and victim party for a death pile), then public until 180 s
       if(!it.personal&&PARTY!=='rag'){const set=corpse.prio||(rrSet?[rrSet[(SV.rr++)%rrSet.length]]:corpse.ownerSet||partyOf(roll.owner));it.tiers=[[T+(corpse.prio?TUNING.death.priorityS:O.groundS)*1000,set]];it.ownUntil=it.tiers[0][0];if(rrSet)it.owner=set[0];}
-      if(corpse.player)it.despawnAt=corpse.rotAt[1];if(corpse.player)it.contents=i.contents;
+      if(corpse.player){it.despawnAt=corpse.rotAt[1];it.contents=i.contents;it.death=1;}
       it.pickAt=T+delay+ro*stag+TUNING.drop.arcMs+TUNING.drop.pickDelayMs;
       later(T+delay,()=>{if(SV.corpses.has(corpse.id)||true)svAddGround(it,T+delay,0,1);},1);});
     return;}
@@ -539,6 +539,8 @@ function hitEnt(att,vic,dmg){if(vic.sdead)return;if((att===PL&&vic.kind==='pvp')
 function botThink(b){b.think=now+250+ri(200);
   if(b.kind==='pvp'){if(!PL.sdead&&!inPZ(PL)&&Math.hypot(PL.x-b.x,PL.y-b.y)<130){b.task={k:'hunt',e:PL};return;}
     const c=[...SV.corpses.values()].find(c=>c.player&&c.items.length);if(c){b.task={k:'corpse',c};return;}
+    // a spilled death pile: the nearest item of it this bot may take
+    let pile=null,pd=1e9;for(const it of SV.items.values()){if(!it.death||it.cont!=null||now<it.pickAt||!canLoot(b.id,it,now)||(b.denied&&b.denied.has(it.id)))continue;const d=Math.hypot(it.x-b.x,it.y-b.y);if(d<pd){pd=d;pile=it;}}if(pile){b.task={k:'item',id:pile.id};return;}
     if(!b.task||b.task.k!=='wander'||Math.hypot(b.task.x-b.x,b.task.y-b.y)<4){const [x,y]=freeSpot(140,310,20,170);b.task={k:'wander',x,y};}return;}
   // allies: loot first, then help, then hunt
   if(MODE==='pvp'){const foe=ENTS.find(e=>e.kind==='pvp'&&!e.sdead&&Math.hypot(e.x-b.x,e.y-b.y)<90);if(foe){b.task={k:'hunt',e:foe};return;}}
@@ -553,7 +555,7 @@ function botThink(b){b.think=now+250+ri(200);
 function updBot(b,dt){if(b.sdead)return;if(now>=b.think)botThink(b);const t=b.task;if(!t){b.walking=false;return;}const spd=TUNING.moveSpd*.9;
   if(b.detour&&now<b.detour.until){moveTo(b,b.detour.x,b.detour.y,spd,dt,1);return;}
   if(t.k==='hunt'){const e=t.e;if(e.sdead||(e===PL&&inPZ(PL))){b.task=null;b.walking=false;return;}if(moveTo(b,e.x,e.y,spd,dt,15)){b.walking=false;if(now>=b.atkT){b.atkT=now+(b.kind==='pvp'?1000:700);hitEnt(b,e,b.kind==='pvp'?14+ri(12):10+ri(10));b.dir=Math.abs(e.x-b.x)>Math.abs(e.y-b.y)?(e.x>b.x?'r':'l'):(e.y>b.y?'d':'u');}}}
-  else if(t.k==='item'){const it=SV.items.get(t.id);if(!it){b.task=null;return;}if(cheb(b.x,b.y,it.x,it.y)<=TUNING.reach&&Math.hypot(it.x-b.x,it.y-b.y)<20){b.walking=false;if(!b.req){b.req=1;const id=it.id;upBot(b,TUNING.bytes.req,T=>{b.req=0;const res=svAction(b,{k:'take',id},T);if(res.rej.length){(b.denied||(b.denied=new Set())).add(id);if(res.rej[0].why==='notyours')botSay(b,'NOT YOURS',P.r3);}else if(it.origOwner===PL.id&&b.ninja)downMe(T,0,()=>chat(b.name+' TOOK YOUR '+nameOf(it.def,it.tier,it.n)+'.',P.r3));b.task=null;});}}else moveTo(b,it.x,it.y,spd,dt,4);}
+  else if(t.k==='item'){const it=SV.items.get(t.id);if(!it){b.task=null;return;}if(cheb(b.x,b.y,it.x,it.y)<=TUNING.reach&&Math.hypot(it.x-b.x,it.y-b.y)<20){b.walking=false;if(!b.req){b.req=1;const id=it.id;upBot(b,TUNING.bytes.req,T=>{b.req=0;const res=svAction(b,{k:'take',id},T);if(res.rej.length){(b.denied||(b.denied=new Set())).add(id);if(res.rej[0].why==='notyours')botSay(b,'NOT YOURS',P.r3);}else if((it.origOwner===PL.id&&b.ninja)||(it.death&&b.kind==='pvp'))downMe(T,0,()=>chat(b.name+' TOOK YOUR '+nameOf(it.def,it.tier,it.n)+'.',P.r3));b.task=null;});}}else moveTo(b,it.x,it.y,spd,dt,4);}
   else if(t.k==='corpse'){const c=t.c;if(!SV.corpses.has(c.id)||!c.items.length){b.task=null;return;}if(cheb(b.x,b.y,c.x,c.y)<=1&&Math.hypot(c.x-b.x,c.y-b.y)<22){b.walking=false;const out=c.prio&&now>=c.ownUntil&&!c.prio.includes(b.id);
       if(out){if(!b.chan||(b.hitT||0)>b.chan)b.chan=now;if(now-b.chan<TUNING.death.channelMs)return;}// outsiders channel 1.5 s, damage restarts it
       if(!b.req){if(out){b.chan=0;b.looterUntil=now+TUNING.death.looterNameS*1000;}b.req=1;upBot(b,TUNING.bytes.req,T=>{b.req=0;const res=svAction(b,{k:'all',cid:c.id},T);if(!res.taken.length){(b.denied||(b.denied=new Set())).add('c'+c.id);}else if(c.player&&b.kind==='pvp')downMe(T,0,()=>chat(b.name+' LOOTED YOUR BODY: '+res.taken.map(x=>nameOf(x.def,x.tier,x.n)).join(', ')+'.',P.r3));b.task=null;});}}else{const a=(b.id*2.3)%(Math.PI*2);moveTo(b,c.x+Math.cos(a)*12,c.y+Math.sin(a)*10,spd,dt,3);}}

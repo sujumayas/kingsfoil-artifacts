@@ -155,8 +155,13 @@ How to use this file:
   predicted items by request number, and clResult rolls back every one the answer lists as neither taken nor
   rejected. On another player's goblin corpse the window kept its items and the bag stayed at 0. With the
   client's ownership data forced wrong, 2 predicted items came back and the pending count returned to 0.
-- [ ] **28.** `P3` With the default spill setting, PvP enemies never loot your death pile. PvP bots only look at
+- [x] **28.** `P3` With the default spill setting, PvP enemies never loot your death pile. PvP bots only look at
   corpses with items (`:540` to `:547`).
+  Done: items spilled from your body carry a death flag, and a PvP bot with nobody to hunt takes the nearest
+  one it may loot. Killed by VEX with 77 gold and a backpack of 6, both were gone within 24 s and the chat
+  said who took them. Before, both lay there until they despawned. If you die with no killer, the enemies
+  are outsiders and still wait out the 60 s. The 1.5 s search channel applies to the body only, not to
+  spilled items.
 - [ ] **29.** `P4` PvP enemies respawn twice, at 5 s and again at 6 s (`:454` and `:538`).
 - [ ] **30.** `P3` After Showcase the allies never move (`:921`, `think=now+1e9`) and a staged gold pile stays as
   a permanent ghost (`:925`, `:934`). Latency, Juice and "Alt: all labels" also stay changed after Reset.
