@@ -847,13 +847,14 @@ function drawBubbles(vis){
     ctx.globalAlpha=1;}}
 function placeBubbles(dt){ST.bub=0;ST.hid=0;const vis=[];
   for(let i=BUBS.length-1;i>=0;i--){const b=BUBS[i];b.t+=dt;if(b.t>b.life||b.e.active===false){BUBS.splice(i,1);continue;}ST.bub++;
-    if((CLUT==='collapse'&&b.prio>=2&&dist(b.e,PL)>5)||(CLUT==='prio'&&b.capped)){ST.hid++;continue;}vis.push(b);}
+    if(CLUT==='collapse'&&b.prio>=2&&dist(b.e,PL)>5){ST.hid++;continue;}vis.push(b);}
   for(const b of vis){b.ax=Math.round(b.e.px)-cam.x+8;b.ay=Math.round(b.e.py)-cam.y-(b.e.kind&&MARKERS.some(q=>q.npc===b.e.id&&q.c(CL.v))?16:5);b.x=Math.round(b.ax-b.w/2);b.y=Math.round(b.ay-b.h-(b.kind==='npc'?1:4));b.off=b.ax<0||b.ax>W||b.ay<0||b.ay>H+12;b.near=true;}
-  if(CLUT==='prio'){vis.sort((a,b)=>a.prio-b.prio||a.t-b.t);if(vis.length>12){ST.hid+=vis.length-12;for(const b of vis.slice(12))b.capped=true;vis.length=12;}}
+  if(CLUT==='prio'){vis.sort((a,b)=>a.prio-b.prio||a.t-b.t);if(vis.length>12){ST.hid+=vis.length-12;vis.length=12;}} // the cap is redone every frame, so a hidden bubble shows once a slot frees
   const edge=b=>{if(b.off){b.x=clamp(b.x,6,W-b.w-6);b.y=clamp(b.y,b.x+b.w>W-60?30:6,H-b.h-6);}else{b.x=clamp(b.x,1,W-b.w-1);if(b.y<1)b.y=1;}};
   if(CLUT==='none'){vis.forEach(edge);return vis;}
   vis.sort((a,b)=>a.prio-b.prio||a.t-b.t);const placed=[];
-  for(const b of vis){edge(b);const y0=b.y;for(let g=0,mv=true;mv&&g<24;g++){mv=false;for(const o of placed)if(b.x<o.x+o.w+1&&b.x+b.w+1>o.x&&b.y<o.y+o.h+1&&b.y+b.h+1>o.y){b.y=o.y-b.h-2;mv=true;}}if(b.y!==y0)b.near=false;placed.push(b);}
+  for(const b of vis){edge(b);const y0=b.y;for(let g=0,mv=true;mv&&g<24;g++){mv=false;for(const o of placed)if(b.x<o.x+o.w+1&&b.x+b.w+1>o.x&&b.y<o.y+o.h+1&&b.y+b.h+1>o.y){b.y=o.y-b.h-2;mv=true;}}if(b.y<1){ST.hid++;continue;}if(b.y!==y0)b.near=false;placed.push(b);} // no room left under the top edge: hidden, not drawn off-canvas
+  vis.length=0;for(const b of placed)vis.push(b);
   if(logVisible()){const ly=H-62;for(let i=vis.length-1;i>=0;i--){const b=vis[i];if(b.prio>0&&b.x<216&&b.y+b.h>ly){vis.splice(i,1);ST.hid++;}}}
   return vis;}
 function portraitBg(x,y,n){R(x-1,y-1,34,34,'#'+P.ink);R(x,y,32,32,'#'+P[n.bg]);R(x,y+24,32,8,'#'+P.dk);for(let i=0;i<32;i+=4)R(x+i,y+22+((i>>2)&1),2,2,'#'+P.dk);}

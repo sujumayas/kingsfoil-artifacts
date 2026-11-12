@@ -268,8 +268,11 @@ How to use this file:
   minutes with 30 players, queued players sent 1,385 keywords the server ignored and none ever waited.
   After, 0 ignored keywords, 29 of 30 players were seen waiting, and 68 of 73 players called with "your
   turn" finished their talk, up from 62 of 137.
-- [ ] **51.** `P3` Stack clutter mode pushes bubbles off the top of the canvas and still counts them (`:852`).
+- [x] **51.** `P3` Stack clutter mode pushes bubbles off the top of the canvas and still counts them (`:852`).
   Priority mode never clears `b.capped` (`:848`), so a bubble capped once stays hidden.
+  Done: a bubble stacked above y 1 is hidden and counted in "hidden". The capped flag is removed. With 30
+  players over 50 s, Stack mode drew 6.4 bubbles per frame fully above the canvas, the highest at y -204.
+  Now 0. In Priority mode 738 of 2,999 frames had free slots while capped bubbles stayed hidden. Now 0.
 - [ ] **52.** `P4` Chat ranges view prints the SAY and YELL labels on top of each other (`:920`).
 - [ ] **53.** `P4` Server sessions view prints "?" for "@". The small font has no `@` (`:925`).
 - [ ] **54.** `P3` "Wait for server" mode repeats the dialog when E is pressed more than once in flight (`:723`).
