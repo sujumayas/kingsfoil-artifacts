@@ -235,6 +235,11 @@
      "id": "loot",
      "label": "Loot",
      "desc": "Drops, reveals, pickup and sharing"
+    },
+    {
+     "id": "magic",
+     "label": "Magic",
+     "desc": "Spell projectiles, impacts, auras and how they stay readable"
     }
    ]
   },
@@ -631,6 +636,31 @@
      "id": "death-drops",
      "label": "Death drops",
      "desc": "What players lose on death and who may loot it"
+    },
+    {
+     "id": "stateless-effects",
+     "label": "Stateless effects",
+     "desc": "One-shot effects drawn as a function of a seed and a time"
+    },
+    {
+     "id": "ribbon-trail",
+     "label": "Ribbon trails",
+     "desc": "Ring buffer of past positions drawn as a tapering trail"
+    },
+    {
+     "id": "area-masks",
+     "label": "Area masks",
+     "desc": "Tile matrices that expand one spell event into many tile effects"
+    },
+    {
+     "id": "effect-tiers",
+     "label": "Effect tiers",
+     "desc": "Own, party, others and hostile effects drawn at different strengths under a cap"
+    },
+    {
+     "id": "flash-limiter",
+     "label": "Flash limiter",
+     "desc": "Caps full-screen flashes at 3 per second and swaps the rest for a border"
     }
    ]
   },

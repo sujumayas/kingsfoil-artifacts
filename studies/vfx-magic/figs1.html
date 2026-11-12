@@ -1,0 +1,224 @@
+<!-- Figures 1 (Agent R): FIG blocks, mapped to sections in build.py -->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of spell effect techniques, 1983 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or click a row in the list. The axis is compressed before 1997 and stretched after 2020, where six years hold seven events. Gen 1 is the papers and console scripts the later games borrow from. Gen 2 is the shape this study recommends: an effect is an id or a table row, and the client animates it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG effectclock-->
+<figure class="fig" data-demo="effectclock" id="fig-effectclock">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia magic effect is an id, a tile and a 75 ms clock</h4><span class="illu">Flipbooks drawn for this page</span></div>
+  <div class="stage mid click"><canvas width="176" height="96" aria-label="An 11 by 6 grid of stone tiles. A fire burst plays on one tile as a flipbook, one frame every 75 milliseconds, and removes itself after the last frame. Click a tile to send another effect there."></canvas><div class="hud" data-hud></div></div>
+  <div class="frames pixgrid f12" aria-label="The frames of the flipbook, the current one outlined"><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas><canvas width="19" height="19"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="id" role="group" aria-label="Effect id"><button type="button" class="on" data-v="75">Any effect, 75 ms</button><button type="button" data-v="300">Effect id 33, 300 ms</button></div>
+    <label class="rng"><span>Frames in the flipbook</span><input type="range" data-k="n" min="4" max="12" step="1" value="8"><output data-o="n">8</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="play" checked> Play</label>
+    <button type="button" class="btn ghost" data-b="step">Step one frame</button>
+    <div class="seg" data-seg="proto" role="group" aria-label="Protocol"><button type="button" class="on" data-v="0">Old protocol</button><button type="button" data-v="1">TFS 12.03+</button><button type="button" data-v="2">Canary</button></div>
+  </div>
+  <div class="bytes" data-bytes aria-live="polite"></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The whole model from OTClient. The server names an effect and a tile once. The client computes <code>phase = min(elapsed / 75, phases - 1)</code> and removes the effect after <code>75 x phases</code> ms, so a typical 8-frame effect lasts 600 ms [V, S14, S15; I, note 01]. Effect id 33 is the one exception, hard-coded to 300 ms per frame. Click any tile to send another effect. Each live effect is three numbers, and nothing crosses the network after the first message. The old protocol spends 7 bytes: opcode 1, position 5, id 1. TFS sends 9 from protocol 12.03 and Canary 10 or 11 [V, S18, S21, S22, S26]. The report does not break the newer layouts down, so they show as plain bytes. Measured for 148 live 16×16 tile effects: 0.047 / 0.28 ms as pixel blits and 0.0031 ms in one GPU batch [V, S13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG missile-->
+<figure class="fig" data-demo="missile" id="fig-missile">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia missile picks one of nine frames and flies for 150 x sqrt(tiles) ms</h4><span class="illu">Sprites drawn for this page</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage click"><canvas width="208" height="144" aria-label="A 13 by 9 tile grid with a mage on the left and a target dummy. A missile slides from the mage to the dummy. Drag the dummy to another tile to change the distance and the direction frame."></canvas><div class="hud" data-hud></div></div>
+      <p class="pl">Drag the dummy to any tile.</p></div>
+    <div>
+      <div class="sheet3 pixgrid" aria-label="The 3 by 3 direction sheet, the chosen frame outlined"><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas></div>
+      <svg class="chart" viewBox="0 0 300 170" role="img" aria-label="Flight time against distance. The square root curve stays under 520 milliseconds at 12 tiles. The straight line of 150 milliseconds per tile reaches 1,800."></svg>
+      <div class="legend-mini"><span><i style="background:var(--lamp)"></i>150 x sqrt(tiles), what OTClient does</span><span><i style="background:#ff8f7a"></i>150 ms per tile, the common wrong guess</span></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="shape" role="group" aria-label="Missile sprite"><button type="button" class="on" data-v="0">Fire bolt</button><button type="button" data-v="1">Ice shard</button><button type="button" data-v="3">Arcane orb</button></div>
+    <label><input type="checkbox" data-k="ghost" checked> Show the 150 ms per tile ghost</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The sheet is laid out as OTClient reads it: NW, N, NE on the top row, W, centre, E in the middle, SW, S, SE below. The client picks one frame from the two tiles when the missile starts and never rotates it. The duration is <code>150 * sqrt(delta.length())</code> with the delta in tiles, and the position is a plain linear lerp [V, S16]. A near shot is slow enough to see, and a shot across 11 tiles still lands in about half a second. The grey ghost flies at 150 ms per tile, which is what many clones assume. It drags badly at range. For a targeted spell, lerp toward the target's current position by <code>t = age / duration</code> and the missile lands on time with no steering [I, note 03]. Nothing is sent per frame.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG areamask-->
+<figure class="fig" data-demo="areamask" id="fig-areamask">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Area masks: one effect per tile, and what the 73-tile UE costs in bytes and blits</h4><span class="illu">Wave layout and beam size illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage"><canvas width="208" height="208" aria-label="A 13 by 13 tile grid. The chosen area mask is marked on the floor around the caster, and a fire effect plays on every marked tile at the same time."></canvas><div class="hud" data-hud></div></div></div>
+    <div>
+      <div class="bbars" data-bars></div>
+      <dl class="kv" data-kv></dl>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="mask" role="group" aria-label="Mask"><button type="button" data-v="c3">Circle 3x3, 37 tiles</button><button type="button" class="on" data-v="c5">Circle 5x5, the UE, 73</button><button type="button" data-v="w4">Wave 4, 12</button><button type="button" data-v="b5">Beam</button></div>
+    <div class="seg" data-seg="face" role="group" aria-label="Caster facing"><button type="button" class="on" data-v="0">N</button><button type="button" data-v="1">E</button><button type="button" data-v="2">S</button><button type="button" data-v="3">W</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng"><span>Casters at once</span><input type="range" data-k="cast" min="1" max="30" step="1" value="1"><output data-o="cast">1</output></label>
+    <label class="rng"><span>Spectators</span><input type="range" data-k="spec" min="1" max="30" step="1" value="30"><output data-o="spec">30</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="num"> Show the mask numbers</label>
+    <label><input type="checkbox" data-k="one"> Keep one effect per tile</label>
+  </div>
+  <figcaption>A mask is a 2D Lua array. <code>1</code> is a hit tile, <code>3</code> is the caster tile and <code>0</code> is empty. Wave and beam masks put the <code>3</code> on the bottom row and the engine turns them to the caster's facing [V, S24]. The server walks the grid and sends one effect message per marked tile, so the UE costs 73 x 7 = 511 bytes per spectator in the old protocol and 730 at 10 bytes [V, S18, S26; I]. One area event of about 11 bytes would replace them [I, S12]. Raise the casters to 30 and the canvas really draws 2,190 overlapping tile effects. The HUD times those blits on your device. Our benchmark measured 0.51 / 2.87 ms for them as pixel blits, 2.2 / 14.1 ms with one <code>drawImage</code> each, and 0.060 / 0.39 ms once the client keeps one effect per tile [V, S13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG battlescript-->
+<figure class="fig" data-demo="battlescript" id="fig-battlescript">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A spell as a short script over shared sprites, in the style of Pokémon Emerald</h4><span class="illu">Script and sprites illustrative</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage"><canvas width="192" height="96" aria-label="A caster on the left and a target on the right. A stream of small ember sprites, all copies of one picture, flies from the caster to the target, the target shakes, and one shared hit splat plays at the end."></canvas><div class="hud" data-hud></div></div>
+      <div class="bbars" style="margin-top:10px">
+        <div class="bbar">355 moves draw from <b>192</b> sprite sheets<div class="tr"><i style="width:54.1%"></i></div></div>
+        <div class="bbar good">One hit splat, <code>ANIM_TAG_IMPACT</code>, is loaded <b>115</b> times<div class="tr"><i style="width:32.4%"></i></div></div>
+        <div class="bbar alt"><b>40</b> moves load no sheet at all<div class="tr"><i style="width:11.3%"></i></div></div>
+      </div></div>
+    <div><ol class="script" data-script aria-label="The script, the running line highlighted"></ol></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="el" role="group" aria-label="Element"><button type="button" class="on" data-v="0">Fire</button><button type="button" data-v="1">Ice</button><button type="button" data-v="3">Poison</button></div>
+    <label><input type="checkbox" data-k="play" checked> Play</label>
+    <label><input type="checkbox" data-k="slow"> Quarter speed</label>
+    <button type="button" class="btn ghost" data-b="step">Step 2 frames</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Emerald has no art per move. It has a library of small sprites and a script per move, run by an interpreter of 48 commands. The ones that matter are <code>loadspritegfx</code>, <code>createsprite</code>, <code>createvisualtask</code>, <code>delay</code>, <code>waitforvisualfinish</code>, <code>playse</code>, <code>monbg</code>, <code>setalpha</code> and <code>fadetobg</code> [V, S49]. The bars are our researcher's counts from the decompilation, within 10% [V, S50]. The script here is written for this page in that command set. It follows the shape our research note 02 read in the Flamethrower script the profile links: 22 copies of one ember, 2 frames apart. Switch the element and nothing changes but the ramp, which is the point: identity comes from colour and motion more than from unique art [I, note 02]. The run-time cost is the sprites a script spawns, about 0.93 µs per 16×16 <code>drawImage</code> or 0.21 µs per pixel blit [V, S13]. A real-time MMO keeps the impact part only. Thunderbolt alone carries 111 frames of explicit delay, 1.85 s [V, S50; I, note 02].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG missilechain-->
+<figure class="fig" data-demo="missilechain" id="fig-missilechain">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Diablo missile rows chain into other rows and carry a light</h4><span class="illu">Speeds, sprites and light scale illustrative</span></div>
+  <div class="stage"><canvas width="256" height="112" aria-label="A dark dungeon floor. A missile flies from left to right, lights the floor around it, and on hit spawns the next row of the table: an explosion with a larger light, or a ring of ice bolts."></canvas><div class="hud" data-hud></div></div>
+  <div class="rows" data-rows aria-live="polite"></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Spell"><button type="button" class="on" data-v="fb">Fire Bolt (Diablo II)</button><button type="button" data-v="fo">Frozen Orb (Diablo II)</button><button type="button" data-v="d1">Explosion light ramp (Diablo I)</button></div>
+    <button type="button" class="btn ghost" data-b="fire">Cast</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="light" checked> Light attached</label>
+    <label class="rng"><span>Cap on live sub-missiles</span><input type="range" data-k="cap" min="4" max="32" step="1" value="32"><output data-o="cap">32</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Diablo II keeps 742 missile rows. A row names its sprite, direction count, speed, lifetime, light and the rows to spawn next. 94 rows name a sub-missile released in flight, 89 name one on hit and 102 name an <code>ExplosionMissile</code>. Fire Bolt names <code>fireexplode</code>. Frozen Orb names <code>frozenorbbolt</code> in flight and <code>frozenorbnova</code> on expiry [V, S58, researcher's counts]. 318 rows carry a light. Fire Bolt has radius 7 in RGB 255, 178, 64 and its explosion jumps to 13. Diablo I ramps an explosion through <code>ExpLight = {2, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12}</code> [V, S58, S57]. Switch the light off and the same hit looks weaker, because the ramping light sells the hit more than the sprite does. The light is one stamp into the light map of study #5, drawn here in dithered steps [S6; I]. Deep chains are hard to budget, so lower the cap and watch the orb's bolts get refused [I]. One light unit is 3 px here.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG packets-->
+<figure class="fig" data-demo="packets" id="fig-packets">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bytes per effect event in four MMOs, and what the extra bytes buy</h4><span class="illu">Mini scenes illustrative</span></div>
+  <div class="duo wide-l">
+    <div class="pk" data-pk role="group" aria-label="Packets, click one"></div>
+    <div>
+      <div class="stage sm"><canvas width="160" height="72" aria-label="A small scene that plays what the selected packet can express: a plain flipbook, a hued and additive effect, a full and a reduced variant, or a delayed impact."></canvas><div class="hud" data-hud></div></div>
+      <div class="detail" data-det aria-live="polite"></div>
+    </div>
+  </div>
+  <figcaption>One event to one viewer, opcode included, transport framing excluded [V, S18, S21, S26, S33, S36, S42, S43; I for sums]. A bar's solid part is the smallest size and the pale part reaches the largest. Tibia sends the least and expresses the least. Ultima Online spends 28, 36 or 49 bytes on one layout and gets a hue and 8 render modes. Ragnarok sends 10 bytes and lets the client expand the id into layers, with a cheaper file named for 584 entries. Old School RuneScape adds a delay in 20 ms client cycles, so one 600 ms server tick can say "missile now, impact in 300 ms" [V, S32 to S43; I, note 01]. The Asterion rows are the study's proposal [I, S12]. Click a row to see its idea play.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG darkflash-->
+<figure class="fig" data-demo="darkflash" id="fig-darkflash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Console screen tricks: a palette blend, and the dark-then-flash beat</h4><span class="illu">Scene drawn for this page</span></div>
+  <div class="duo">
+    <div>
+      <div class="stage"><canvas width="128" height="80" aria-label="Two characters on a stone floor. A slider blends 16 palette entries toward a target colour and the picture recolours with them."></canvas></div>
+      <div class="lut-box"><canvas width="128" height="16" data-sw aria-label="The 16 palette entries before the blend on the top row and after it on the bottom row"></canvas></div>
+      <div class="ctl col">
+        <div class="seg" data-seg="tg" role="group" aria-label="Blend target"><button type="button" data-v="k">Black</button><button type="button" data-v="w">White</button><button type="button" class="on" data-v="i">Ice, RGB(0, 20, 31)</button></div>
+        <div class="seg" data-seg="who" role="group" aria-label="Which palette"><button type="button" class="on" data-v="s">Sprite palette</button><button type="button" data-v="b">Background palette</button></div>
+        <label class="rng"><span>coeff, 0 to 16</span><input type="range" data-k="k" min="0" max="16" step="1" value="7"><output data-o="k">7</output></label>
+      </div>
+      <div class="readout" data-ro aria-live="polite"></div>
+    </div>
+    <div>
+      <div class="stage"><canvas width="128" height="80" aria-label="The same scene. The background darkens, then one lightning bolt strikes the target, then the light returns."></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl col">
+        <label><input type="checkbox" data-k="dim" checked> Darken the background first</label>
+        <label class="rng"><span>coeff toward black</span><input type="range" data-k="d" min="0" max="12" step="1" value="6"><output data-o="d">6</output></label>
+        <button type="button" class="btn ghost" data-b="cast">Cast the bolt</button>
+      </div>
+      <div class="readout" data-ro2 aria-live="polite"></div>
+    </div>
+  </div>
+  <figcaption>Left: <code>BlendPalette</code> computes <code>c + (((target - c) * coeff) &gt;&gt; 4)</code> per 5-bit channel. It recolours 16 palette entries, so the cost does not depend on how many pixels use them [V, S52]. Ice Beam tints its target toward RGB(0, 20, 31) at 7 of 16. Right: Thunderbolt darkens the background to 6 of 16 before the bolts, and Ice Beam to 7 of 16 [V, S50]. The slider is that coefficient, blending the 16 background entries toward black. Switch the darken off and the same bolt has less to stand against. The readout gives the luminance of the bolt over the mean of the floor. The darken is the cheapest power cue in the whole study [I, note 02]. This demo fires one bolt with one white frame. The originals flicker, Thunderbolt at 5 Hz and Ether at 7.5 Hz, which breaks the limit of 3 flashes per second at full-screen size (F4) [I, note 02]. Measured: resolving an indexed 320×180 frame through a palette costs 0.071 / 0.45 ms, and tints and flashes become row swaps inside that pass [V, S13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dirframes-->
+<figure class="fig" data-demo="dirframes" id="fig-dirframes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pre-drawn directions against run-time rotation, zoomed</h4><span class="illu">Sprites drawn for this page</span></div>
+  <div class="tri">
+    <div><div class="stage"><canvas width="27" height="27" aria-label="The missile drawn from 8 pre-drawn frames. Its outline is always whole."></canvas><span class="tagl">8 pre-drawn</span></div><p class="ms" data-m="0"></p></div>
+    <div><div class="stage"><canvas width="27" height="27" aria-label="The missile drawn from 16 pre-drawn frames."></canvas><span class="tagl">16 baked</span></div><p class="ms" data-m="1"></p></div>
+    <div><div class="stage"><canvas width="27" height="27" aria-label="The missile rotated at run time with nearest-neighbour sampling. Its outline breaks and single pixels crawl as the angle changes."></canvas><span class="tagl">Rotated at run time</span></div><p class="ms" data-m="2"></p></div>
+  </div>
+  <div class="atlas pixgrid" style="margin-top:8px" aria-label="The 8-frame strip, the frame in use lit"><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas><canvas width="23" height="23"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="shape" role="group" aria-label="Missile sprite"><button type="button" class="on" data-v="0">Fire bolt</button><button type="button" data-v="1">Ice shard</button></div>
+    <label><input type="checkbox" data-k="auto" checked> Turn slowly, like a homing missile</label>
+    <label class="rng"><span>Angle</span><input type="range" data-k="a" min="0" max="360" step="0.5" value="20"><output data-o="a">20.0°</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>All three panels show the same missile at the same angle. The pre-drawn frames only change when the angle crosses into the next sector, so the count under them stays at zero most of the time. The rotated one resamples its source texels whenever the angle moves by a fraction of a degree. Edges gain and lose single pixels every frame, and the dark outline opens up. A homing missile is the worst case because its angle never rests [I, note 03]. Tibia picks one of 9 frames once per missile [V, S16]. If 8 look stiff on a slow missile, bake 16 offline. RotSprite scales 8x, rotates and shrinks back, and "does not introduce new colors" [V, S88]. Cost is one sprite draw either way. The 8-frame strip of a 16×16 missile is 2,048 px of texture, and a GPU batch of 480 sprites measured 0.019 ms [I, note 03; V, S13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flightpaths-->
+<figure class="fig" data-demo="flightpaths" id="fig-flightpaths">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flight paths as pure functions of time: scrub t and the missile needs no stored state</h4><span class="illu">Orbit path, amplitude and range illustrative</span></div>
+  <div class="stage"><canvas width="256" height="104" aria-label="A caster on the left of a stone floor. The whole path of the missile is dotted across the floor and the missile sits at the chosen time on it."></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="path" role="group" aria-label="Path"><button type="button" data-v="line">Straight</button><button type="button" data-v="sine">Sine</button><button type="button" class="on" data-v="helix">Mirrored pair</button><button type="button" data-v="lob">Lob</button><button type="button" data-v="orbit">Orbit</button></div>
+    <div class="seg" data-seg="spd" role="group" aria-label="Speed"><button type="button" class="on" data-v="200">200 px/s</button><button type="button" data-v="240">240 px/s</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="play" checked> Play</label>
+    <label class="rng"><span>t, share of the lifetime</span><input type="range" data-k="t" min="0" max="1" step="0.005" value="0.4"><output data-o="t">0.40</output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng"><span>Amplitude, tiles</span><input type="range" data-k="amp" min="0" max="1.5" step="0.05" value="0.8"><output data-o="amp">0.80</output></label>
+    <label class="rng"><span>Frequency</span><input type="range" data-k="fr" min="0.5" max="4" step="0.5" value="2"><output data-o="fr">2.0</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Drag the t slider backward and the missile goes backward. Nothing was stored, so nothing has to be undone. Realm of the Mad God computes <code>dist = elapsed * (speed / 10000)</code> tiles and a sideways <code>deflection = amplitude * sin(phase + elapsed / lifetime * frequency * 2π)</code>. The phase is 0 for even bullet ids and π for odd ones, so paired shots mirror into a helix [V, S44, third-party fork]. The three faint copies behind the missile are the same function at earlier times, which is also how a trail can be drawn without a buffer. Speeds are from shipped games. Shattered Pixel Dungeon throws at 240 px/s, 15 tiles of 16 px per second, and its magic bolts fly at 200 px/s, 12.5 tiles per second [V, S64, S65; converted]. The lob uses the arc of B4. A missile is a few float operations and no network traffic per frame [I, note 01].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG homing-->
+<figure class="fig" data-demo="homing" id="fig-homing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Homing with a turn limit, landing on the server's clock</h4><span class="illu">Scene and launch angle illustrative</span></div>
+  <div class="stage click"><canvas width="256" height="144" aria-label="A mage on the left fires a missile that leaves off-axis and curves toward a moving dummy. A dotted line shows the direct path the server assumes."></canvas><div class="hud" data-hud></div></div>
+  <p class="pl">Drag the dummy. Bring it close to the mage to put it inside the turning circle.</p>
+  <div class="ctl">
+    <label class="rng"><span>Turn limit, degrees per frame</span><input type="range" data-k="turn" min="0.5" max="8" step="0.5" value="3.5"><output data-o="turn">3.5</output></label>
+    <label><input type="checkbox" data-k="blend" checked> Blend onto the direct lerp over the last 40%</label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow" checked> Quarter speed</label>
+    <label><input type="checkbox" data-k="circ" checked> Show the turning circle</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The missile keeps its speed and turns toward the target by a capped angle each frame. Mindustry does exactly this with <code>homingPower = 0.08</code>, 4 degrees per tick [V, S72; converted]. The turning circle has a radius of speed divided by turn rate in radians, 2.9 tiles at 12 tiles per second and 240 degrees per second. A target inside that circle is orbited, not hit [I, note 03]. The server has already decided when the hit lands, at <code>150 x sqrt(tiles)</code> ms. So the Sandbox steers at 3.5 degrees per frame and then blends onto the direct lerp over the last 40% of the flight, and the missile arrives exactly on time [I, Sandbox]. Untick the blend to see pure steering arrive late, or never. The cost is one <code>atan2</code> and a clamp per missile per frame. A struct-of-arrays step for 500 objects measured 0.0011 / 0.0066 ms [V, S13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lob-->
+<figure class="fig" data-demo="lob" id="fig-lob">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A lobbed arc is a ground line plus a fake height, and the shadow is the true position</h4><span class="illu">Scene illustrative</span></div>
+  <div class="stage click"><canvas width="256" height="128" aria-label="A mage lobs a ball across a stone floor. The ball rises and falls on screen while its shadow slides straight along the ground to the landing tile."></canvas><div class="hud" data-hud></div></div>
+  <p class="pl">Click or tap the floor to move the landing tile.</p>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="sh" checked> Ground shadow</label>
+    <label><input type="checkbox" data-k="gl"> Show the ground line and the height</label>
+    <label><input type="checkbox" data-k="auto" checked> H is half the distance</label>
+    <label class="rng"><span>H, px</span><input type="range" data-k="H" min="8" max="48" step="1" value="32"><output data-o="H">32</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The ball travels in a straight line on the ground, <code>ground = lerp(from, to, t)</code>, and a second number lifts it on screen, <code>h = 4 * H * t * (1 - t)</code>. The shadow is drawn at <code>round(ground)</code> and the sprite at <code>round(ground - (0, h))</code>. Try H at half the distance, clamped to 8 to 48 px [I, note 03]. Untick the shadow and the same ball could be flying high toward a near tile or low toward a far one. In 3/4 view nobody can tell, so a lob with no shadow is unreadable. The flight here takes 1.33 s, the 80 ticks of a typical Mindustry artillery shell, which has no collision in flight and scales its lifetime to land on the aim point [V, S73]. The cost is two sprites per projectile. It adds three bytes on the wire if the server sends heights and none if the arc lives in the spell definition [I, note 01].</figcaption>
+</figure>
+<!--/FIG-->

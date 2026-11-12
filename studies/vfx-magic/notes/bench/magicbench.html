@@ -1,0 +1,501 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Magic bench</title></head>
+<body>
+<pre id="out">Magic and spell VFX benchmark. Call runCPU({only:'regex'}) / await runGPU({only:'regex'}) from the console or Playwright.</pre>
+<script>
+"use strict";
+// ---------------- harness (same as studies/vfx-grass/notes/bench/grassbench.html) ----------------
+// Each sample runs fn repeatedly until >= minSampleMs elapsed. Median of samples, p10/p90 reported.
+function bench(name, fn, opts = {}) {
+  const warmMs = opts.warmMs ?? 150, samples = opts.samples ?? 25, minSampleMs = opts.minSampleMs ?? 8;
+  let t0 = performance.now();
+  while (performance.now() - t0 < warmMs) fn();
+  const per = [];
+  for (let s = 0; s < samples; s++) {
+    let n = 0; const a = performance.now(); let b;
+    do { fn(); n++; b = performance.now(); } while (b - a < minSampleMs);
+    per.push((b - a) / n);
+  }
+  per.sort((x, y) => x - y);
+  return { name, median_ms: +per[samples >> 1].toFixed(4), p10_ms: +per[Math.floor(samples * 0.1)].toFixed(4), p90_ms: +per[Math.floor(samples * 0.9)].toFixed(4) };
+}
+let SINK = 0;
+function hash2(ix, iy) {
+  let h = Math.imul(ix, 374761393) + Math.imul(iy, 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+let RNG = 2463534242;
+function rnd() { RNG ^= RNG << 13; RNG ^= RNG >>> 17; RNG ^= RNG << 5; return (RNG >>> 0) / 4294967296; }
+const W = 320, H = 180;
+function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function mainCtx() { return mkCanvas(W, H).getContext('2d', { willReadFrequently: true }); }
+function sync(cx) { SINK += cx.getImageData(0, 0, 1, 1).data[1]; }
+const clampX = v => v < 1 ? 1 : v > W - 2 ? W - 2 : v, clampY = v => v < 1 ? 1 : v > H - 2 ? H - 2 : v;
+
+// ---------------- assets built in code ----------------
+// 5-step fire ramp, dark edge to white-hot core. ABGR for little-endian Uint32 writes. Index 0 = transparent.
+const RAMP = Uint32Array.of(0, 0xff1a1a5a, 0xff1f33c2, 0xff1c7af0, 0xff3fd2ff, 0xffd6f7ff);
+const RAMP_CSS = ['rgba(0,0,0,0)', '#5a1a1a', '#c2331f', '#f07a1c', '#ffd23f', '#fff7d6'];
+const RAMP_F = [0, 0, 0, .35, .1, .1, .76, .2, .12, .94, .48, .11, 1, .82, .25, 1, .97, .84];
+// flipbook: F frames of SxS ramp indices (grayscale frame quantised to the 5-step ramp). Expanding, hollowing fireball.
+function genFlip(S, F, salt) { const frames = [], cover = [];
+  for (let f = 0; f < F; f++) { const a = new Uint8Array(S * S), t = f / (F - 1), r = 0.3 + 0.7 * t; let n = 0;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const dx = (x + .5 - S / 2) / (S / 2), dy = (y + .5 - S / 2) / (S / 2), d = Math.hypot(dx, dy);
+      let v = (1 - d / r) * (1.15 - 0.9 * t) + (hash2(x * 3 + f * 17, y * 3 + S + salt) - .5) * 0.35; if (d < t * 0.9 - 0.25 || d > r) v = 0;
+      const idx = v <= 0.08 ? 0 : Math.min(5, 1 + Math.floor(v * 5)); a[y * S + x] = idx; if (idx) n++; }
+    frames.push(a); cover.push(n); }
+  return { S, F, frames, cover }; }
+const FLIP = { 32: genFlip(32, 8, 0), 64: genFlip(64, 8, 5) }, TILE = genFlip(16, 8, 9);
+// character 16x24, palette-indexed (0 transparent, 1..4)
+const CHAR = new Uint8Array(16 * 24); for (let y = 0; y < 24; y++) for (let x = 0; x < 16; x++) { const hd = Math.hypot(x - 7.5, y - 5.5); let v = 0;
+  if (hd < 4.6) v = hd > 3.6 ? 1 : 3; else if (y >= 10 && y < 22 && x >= 3 && x < 13) v = (x === 3 || x === 12 || y === 21) ? 1 : (y < 16 ? 2 : 4); else if (y >= 22 && (x === 5 || x === 6 || x === 9 || x === 10)) v = 1; CHAR[y * 16 + x] = v; }
+const CHARPAL = Uint32Array.of(0, 0xff201820, 0xffa04838, 0xff9cc4f0, 0xff603828), CHARPAL_TINT = Uint32Array.of(0, 0xff182818, 0xff58a040, 0xff8cf0a0, 0xff386830);
+// aura ring 24x12, 4 frames, split into back half (upper arc) and front half (lower arc)
+const AURA_B = [], AURA_F = []; for (let f = 0; f < 4; f++) { const b = new Uint8Array(24 * 12), fr = new Uint8Array(24 * 12);
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 24; x++) { const d = Math.hypot((x - 11.5) / 11.5, (y - 5.5) / 5.5); if (d > 0.72 && d <= 1) { const v = 2 + ((x + y + f) & 3 ? 1 : 2); (y < 6 ? b : fr)[y * 24 + x] = v; } }
+  AURA_B.push(b); AURA_F.push(fr); }
+// missile 8x8, 5 fade levels (level 0 = head, 1..4 = pre-faded ghosts)
+const MIS = []; for (let k = 0; k < 5; k++) { const a = new Uint8Array(64); for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { const d = Math.hypot(x - 3.5, y - 3.5); a[y * 8 + x] = d < 1.6 ? Math.max(1, 5 - k) : d < 3.2 ? Math.max(1, 4 - k) : d < 4 ? Math.max(1, 2 - k) * (k < 3 ? 1 : 0) : 0; } MIS.push(a); }
+// one 512x128 atlas canvas shared by Canvas2D and WebGL2: flip64 at (0,0), flip32 at (0,64), tile16 at (256,64), missile at (256,80),
+// orb 2x2 x5 at (300,80), halo 16x16 at (320,80), particle 3x3 x5 at (340,80), tinted char (360,64), char (384,64), aura back (400,64), aura front (400,76)
+const atlas = mkCanvas(512, 128), ATL = new Uint32Array(512 * 128);
+function putIdx(a, w, h, ax, ay, pal) { for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = a[y * w + x]; if (v) ATL[(ay + y) * 512 + ax + x] = pal[v]; } }
+for (let f = 0; f < 8; f++) { putIdx(FLIP[64].frames[f], 64, 64, f * 64, 0, RAMP); putIdx(FLIP[32].frames[f], 32, 32, f * 32, 64, RAMP); putIdx(TILE.frames[f], 16, 16, 256 + f * 16, 64, RAMP); }
+for (let k = 0; k < 5; k++) { putIdx(MIS[k], 8, 8, 256 + k * 8, 80, RAMP); for (let j = 0; j < 4; j++) ATL[(80 + (j >> 1)) * 512 + 300 + k * 2 + (j & 1)] = RAMP[k + 1]; for (let j = 0; j < 9; j++) ATL[(80 + (j / 3 | 0)) * 512 + 340 + k * 3 + j % 3] = RAMP[k + 1]; }
+for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x - 7.5, y - 7.5) / 8, a = d >= 1 ? 0 : ((1 - d) * (1 - d) * 150) | 0; ATL[(80 + y) * 512 + 320 + x] = (a << 24) | 0x1c7af0; }
+putIdx(CHAR, 16, 24, 360, 64, CHARPAL_TINT); putIdx(CHAR, 16, 24, 384, 64, CHARPAL);
+for (let f = 0; f < 4; f++) { putIdx(AURA_B[f], 24, 12, 400 + f * 24, 64, RAMP); putIdx(AURA_F[f], 24, 12, 400 + f * 24, 76, RAMP); }
+atlas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(ATL.buffer), 512, 128), 0, 0);
+// busy stone courtyard ground
+const ground = mkCanvas(W, H); { const g = ground.getContext('2d'); for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) { const v = hash2(x, y), e = (x % 16 < 2 || y % 16 < 2); g.fillStyle = e ? '#3a3a44' : v < 0.3 ? '#5a5a66' : v < 0.8 ? '#646472' : '#72727e'; g.fillRect(x, y, 2, 2); } }
+const groundU32 = new Uint32Array(ground.getContext('2d').getImageData(0, 0, W, H).data.buffer.slice(0));
+const vigCv = mkCanvas(W, H); { const g = vigCv.getContext('2d'), gr = g.createRadialGradient(160, 90, 60, 160, 90, 185); gr.addColorStop(0, 'rgba(120,0,0,0)'); gr.addColorStop(1, 'rgba(120,0,0,0.7)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+const VIG = new Uint8Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const d = Math.hypot((x - 160) / 185, (y - 90) / 185 * 1.6), b = ((x & 1) + (y & 1) * 2) / 4; VIG[y * W + x] = d * 3.2 - 1.4 + b * 0.5 > 1 ? (d * 3.2 - 1.4 + b * 0.5 > 2 ? 2 : 1) : 0; }
+const BAYER = Uint8Array.of(0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
+
+// ---------------- the 30-caster load ----------------
+// 1x: 30 casters, each with a missile in flight, an impact playing, an aura, 148 tile effects (4 area spells of 37 tiles), 1,300 particles, 4 chain bolts.
+function casterPos(n) { const x = new Int16Array(n), y = new Int16Array(n); for (let i = 0; i < n; i++) { x[i] = 24 + (hash2(i, 41) * (W - 48) | 0); y[i] = 30 + (hash2(i, 43) * (H - 60) | 0); } return { x, y }; }
+function LOAD(mult, clarity) { const k = clarity ? (1 + 29 * 0.4) / 30 : 1; return { mult, clarity, casters: 30 * mult, missiles: 30 * mult, impacts: 30 * mult, tiles: 148 * mult, particles: Math.round(1300 * mult * k), bolts: 4 * mult, glowImpacts: clarity ? mult : 30 * mult, glowParticles: clarity ? Math.round(1300 * mult / 30) : 1300 * mult }; }
+
+// ---------------- particles ----------------
+const EMIT = casterPos(30);
+function spawnP(P, pre) { const i = P.n++, e = (rnd() * 30) | 0, a = rnd() * 6.2832, s = 10 + rnd() * 50, m = 0.3 + rnd() * 0.5, el = m * pre * 0.98;
+  P.vx[i] = Math.cos(a) * s; P.vy[i] = Math.sin(a) * s - 10; P.x[i] = EMIT.x[e] + P.vx[i] * el; P.y[i] = EMIT.y[e] + P.vy[i] * el; P.max[i] = m; P.life[i] = m - el; }
+function makePool(cap) { const P = { n: 0, cap, x: new Float32Array(cap), y: new Float32Array(cap), vx: new Float32Array(cap), vy: new Float32Array(cap), life: new Float32Array(cap), max: new Float32Array(cap) }; while (P.n < cap) spawnP(P, rnd()); return P; }
+function simSoA(P, dt) { const { x, y, vx, vy, life, max } = P; let n = P.n;
+  for (let i = 0; i < n;) { const l = life[i] - dt; if (l <= 0) { n--; x[i] = x[n]; y[i] = y[n]; vx[i] = vx[n]; vy[i] = vy[n]; life[i] = life[n]; max[i] = max[n]; continue; }
+    life[i] = l; vx[i] *= 0.97; vy[i] = vy[i] * 0.97 + 20 * dt; x[i] += vx[i] * dt; y[i] += vy[i] * dt; i++; }
+  P.n = n; while (P.n < P.cap) spawnP(P, 0); }
+function newObj(pre) { const e = (rnd() * 30) | 0, a = rnd() * 6.2832, s = 10 + rnd() * 50, m = 0.3 + rnd() * 0.5, el = m * pre * 0.98, vx = Math.cos(a) * s, vy = Math.sin(a) * s - 10; return { x: EMIT.x[e] + vx * el, y: EMIT.y[e] + vy * el, vx, vy, life: m - el, max: m }; }
+function makeAoS(cap) { const arr = []; while (arr.length < cap) arr.push(newObj(rnd())); return { cap, arr }; }
+function simAoS(S, dt) { const out = []; for (const p of S.arr) { p.life -= dt; if (p.life <= 0) continue; p.vx *= 0.97; p.vy = p.vy * 0.97 + 20 * dt; p.x += p.vx * dt; p.y += p.vy * dt; out.push(p); } while (out.length < S.cap) out.push(newObj(0)); S.arr = out; }
+function newObjV(pre) { const o = newObj(pre); return { pos: { x: o.x, y: o.y }, vel: { x: o.vx, y: o.vy }, life: o.life, max: o.max }; }
+function makeAoSV(cap) { const arr = []; while (arr.length < cap) arr.push(newObjV(rnd())); return { cap, arr }; }
+// the "immutable vector" style: two fresh objects per particle per frame plus filter()
+function simAoSV(S, dt) { S.arr = S.arr.filter(p => (p.life -= dt) > 0); for (const p of S.arr) { p.vel = { x: p.vel.x * 0.97, y: p.vel.y * 0.97 + 20 * dt }; p.pos = { x: p.pos.x + p.vel.x * dt, y: p.pos.y + p.vel.y * dt }; } while (S.arr.length < S.cap) S.arr.push(newObjV(0)); }
+function pcol(P, i) { return 1 + ((P.life[i] / P.max[i]) * 4.99 | 0); }
+function partsFillRect(cx, P) { for (let i = 0; i < P.n; i++) { const s = 1 + i % 3; cx.fillStyle = RAMP_CSS[pcol(P, i)]; cx.fillRect(P.x[i] | 0, P.y[i] | 0, s, s); } }
+function partsFillRectByColour(cx, P) { for (let c = 1; c <= 5; c++) { cx.fillStyle = RAMP_CSS[c]; for (let i = 0; i < P.n; i++) if (pcol(P, i) === c) { const s = 1 + i % 3; cx.fillRect(P.x[i] | 0, P.y[i] | 0, s, s); } } }
+function partsPath(cx, P) { for (let c = 1; c <= 5; c++) { cx.fillStyle = RAMP_CSS[c]; cx.beginPath(); for (let i = 0; i < P.n; i++) if (pcol(P, i) === c) { const s = 1 + i % 3; cx.rect(P.x[i] | 0, P.y[i] | 0, s, s); } cx.fill(); } }
+function partsDrawImage(cx, P) { for (let i = 0; i < P.n; i++) { const s = 1 + i % 3; cx.drawImage(atlas, 340 + (pcol(P, i) - 1) * 3, 80, s, s, P.x[i] | 0, P.y[i] | 0, s, s); } }
+function partsID(u32, P, n) { const x = P.x, y = P.y; n = n ?? P.n; let wr = 0;
+  for (let i = 0; i < n; i++) { const xi = x[i] | 0, yi = y[i] | 0; if (xi < 0 || yi < 0 || xi > W - 3 || yi > H - 3) continue; const col = RAMP[pcol(P, i)], d = yi * W + xi, s = i % 3; u32[d] = col;
+    if (s > 0) { u32[d + 1] = col; u32[d + W] = col; u32[d + W + 1] = col; if (s > 1) { u32[d + 2] = col; u32[d + W + 2] = col; u32[d + 2 * W] = col; u32[d + 2 * W + 1] = col; u32[d + 2 * W + 2] = col; } } }
+}
+
+// ---------------- flipbooks and tiles ----------------
+function makeSprites(N, S, tileAligned) { const x = new Int16Array(N), y = new Int16Array(N); for (let i = 0; i < N; i++) { if (tileAligned) { x[i] = (hash2(i, 51) * 20 | 0) * 16; y[i] = (hash2(i, 53) * 11 | 0) * 16; } else { x[i] = hash2(i, 51) * (W - S) | 0; y[i] = hash2(i, 53) * (H - S) | 0; } } return { N, S, x, y }; }
+function flipDraw(cx, Sp, tick, ax, ay) { const S = Sp.S; for (let i = 0; i < Sp.N; i++) cx.drawImage(atlas, ax + ((i + tick) & 7) * S, ay, S, S, Sp.x[i], Sp.y[i], S, S); }
+function blitIdx(u32, fr, w, h, x, y, pal) { let s = 0; for (let r = 0; r < h; r++) { let d = (y + r) * W + x; for (let c = 0; c < w; c++, s++, d++) { const g = fr[s]; if (g) u32[d] = pal[g]; } } }
+function flipID(u32, Sp, tick, FB) { const S = Sp.S; for (let i = 0; i < Sp.N; i++) blitIdx(u32, FB.frames[(i + tick) & 7], S, S, Sp.x[i], Sp.y[i], RAMP); }
+// palette-ramp "additive": effects go to a Uint8 index layer; overlap takes the max and climbs one ramp step; one resolve pass paints it.
+function blitIdxAdd(L, fr, S, x, y) { let s = 0; for (let r = 0; r < S; r++) { let d = (y + r) * W + x; for (let c = 0; c < S; c++, s++, d++) { const g = fr[s]; if (g) { const v = L[d]; L[d] = v === 0 ? g : (g > v ? g : v) < 5 ? (g > v ? g : v) + 1 : 5; } } } }
+function resolveIdx(u32, L) { for (let i = 0; i < L.length; i++) { const v = L[i]; if (v) u32[i] = RAMP[v]; } }
+function coverage(N, FB) { let px = 0; for (let i = 0; i < N; i++) px += FB.cover[i & 7]; return px; }
+
+// ---------------- low-res glow buffer (Acid study F2 method: small intensity grid, blur, palette select through Bayer) ----------------
+function makeGlow(sh) { const GW = W >> sh, GH = H >> sh, r = 16 >> sh, disk = []; for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const d2 = dx * dx + dy * dy; if (d2 <= r * r) disk.push(dx, dy, 255 - (d2 * 160 / (r * r) | 0)); }
+  return { sh, GW, GH, I: new Uint8Array(GW * GH), T: new Uint16Array(GW * GH), B: new Uint16Array(GW * GH), disk }; }
+function glowSplatParts(G, P, n) { const I = G.I, sh = G.sh, GW = G.GW; for (let i = 0; i < n; i++) { const x = P.x[i], y = P.y[i]; if (x < 0 || y < 0 || x >= W || y >= H) continue; const k = (y >> sh) * GW + (x >> sh), v = 60 + pcol(P, i) * 30; if (I[k] < v) I[k] = v; } }
+function glowSplatDisks(G, Sp, n) { const I = G.I, sh = G.sh, GW = G.GW, GH = G.GH, d = G.disk, h = Sp.S >> 1; for (let i = 0; i < n; i++) { const cx = (Sp.x[i] + h) >> sh, cy = (Sp.y[i] + h) >> sh;
+    for (let j = 0; j < d.length; j += 3) { const x = cx + d[j], y = cy + d[j + 1]; if (x < 0 || y < 0 || x >= GW || y >= GH) continue; const k = y * GW + x; if (I[k] < d[j + 2]) I[k] = d[j + 2]; } } }
+function glowBlur(G) { const { I, T, B, GW, GH } = G, n = GW * GH; for (let i = 1; i < n - 1; i++) T[i] = I[i - 1] + I[i] + I[i + 1]; for (let i = GW; i < n - GW; i++) B[i] = T[i - GW] + T[i] + T[i + GW]; }
+// palette select: a pixel takes the "glow version" of its colour (half-mix toward the glow colour, one integer op) when blurred level beats the Bayer threshold
+function glowComposite(u32, G) { const { B, GW, GH, sh } = G, bs = 1 << sh, GLOWHALF = 0x7f0e3d78;
+  for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) { const lv = B[gy * GW + gx] >> 6; if (lv < 2) continue; // 0..35 after sum of 9
+      for (let yy = 0; yy < bs; yy++) { const y = (gy << sh) + yy; let d = y * W + (gx << sh); for (let xx = 0; xx < bs; xx++, d++) if (lv > BAYER[((y & 3) << 2) | (d & 3)] + 2) u32[d] = (((u32[d] & 0xfefefefe) >>> 1) + GLOWHALF) | 0xff000000; } } }
+
+// ---------------- missiles and trails ----------------
+function makeMis(M, L) { const m = { M, L, tick: 0, head: 0, hx: new Float32Array(M), hy: new Float32Array(M), ang: new Float32Array(M), ring: new Int16Array(M * L * 2) };
+  for (let i = 0; i < M; i++) { m.hx[i] = 8 + hash2(i, 61) * (W - 16); m.hy[i] = 8 + hash2(i, 63) * (H - 16); m.ang[i] = hash2(i, 65) * 6.2832; for (let k = 0; k < L; k++) { m.ring[(i * L + k) * 2] = m.hx[i]; m.ring[(i * L + k) * 2 + 1] = m.hy[i]; } }
+  for (let k = 0; k < L * 2; k++) stepMis(m); return m; }
+function stepMis(m) { const { M, L, ring } = m; m.tick++; const h = m.head = (m.head + 1) % L;
+  for (let i = 0; i < M; i++) { const a = (m.ang[i] += Math.sin(i * 1.7 + m.tick * 0.11) * 0.06); let x = m.hx[i] + Math.cos(a) * 1.6, y = m.hy[i] + Math.sin(a) * 1.6;
+    if (x < 5 || x > W - 10 || y < 5 || y > H - 10) { x = 10 + rnd() * (W - 24); y = 10 + rnd() * (H - 24); for (let k = 0; k < L; k++) { ring[(i * L + k) * 2] = x; ring[(i * L + k) * 2 + 1] = y; } }
+    m.hx[i] = x; m.hy[i] = y; ring[(i * L + h) * 2] = x; ring[(i * L + h) * 2 + 1] = y; } }
+function line(u32, x0, y0, x1, y1, col) { const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1, dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1; let err = dx + dy;
+  for (;;) { u32[y0 * W + x0] = col; if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } } }
+function lineHalo(u32, x0, y0, x1, y1, col) { const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1, dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1; let err = dx + dy;
+  for (;;) { const d = y0 * W + x0; u32[d] = col; u32[d - 1] = col; u32[d + 1] = col; u32[d - W] = col; u32[d + W] = col; if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } } }
+function trailsID(u32, m) { const { M, L, ring, head } = m; for (let i = 0; i < M; i++) { const b = i * L; for (let k = 0; k < L - 1; k++) { const p = (b + (head + 1 + k) % L) * 2, q = (b + (head + 2 + k) % L) * 2; line(u32, ring[p], ring[p + 1], ring[q], ring[q + 1], RAMP[1 + (k * 5 / (L - 1) | 0)]); } } }
+function trailsStroke(cx, m, onePath) { const { M, L, ring, head } = m; cx.lineWidth = 1; cx.strokeStyle = RAMP_CSS[3]; if (onePath) cx.beginPath();
+  for (let i = 0; i < M; i++) { const b = i * L; if (!onePath) cx.beginPath(); for (let k = 0; k < L; k++) { const p = (b + (head + 1 + k) % L) * 2; if (k) cx.lineTo(ring[p] + .5, ring[p + 1] + .5); else cx.moveTo(ring[p] + .5, ring[p + 1] + .5); } if (!onePath) cx.stroke(); }
+  if (onePath) cx.stroke(); }
+function ghostsDraw(cx, m, useAlpha) { const { M, L, ring, head } = m; for (let i = 0; i < M; i++) for (let g = 4; g >= 0; g--) { const p = (i * L + (head - g * 2 + L) % L) * 2;
+    if (useAlpha) { cx.globalAlpha = 1 - g * 0.2; cx.drawImage(atlas, 256, 80, 8, 8, ring[p] - 4, ring[p + 1] - 4, 8, 8); } else cx.drawImage(atlas, 256 + g * 8, 80, 8, 8, ring[p] - 4, ring[p + 1] - 4, 8, 8); }
+  if (useAlpha) cx.globalAlpha = 1; }
+function ghostsID(u32, m, ghosts) { const { M, L, ring, head } = m; for (let i = 0; i < M; i++) for (let g = ghosts; g >= 0; g--) { const p = (i * L + (head - g * 2 + L) % L) * 2; blitIdx(u32, MIS[g], 8, 8, ring[p] - 4, ring[p + 1] - 4, RAMP); } }
+// full-screen feedback buffer: one Uint8 ramp-index layer; each frame every lit pixel drops one ramp step, heads are stamped at full, then it is painted.
+function feedbackID(u32, FX, m, fade) { const n = W * H; if (fade) { for (let i = 0; i < n; i++) { const v = FX[i]; if (v) { FX[i] = v - 1; if (v > 1) u32[i] = RAMP[v - 1]; } } } else resolveIdx(u32, FX);
+  for (let i = 0; i < m.M; i++) { const d = (m.hy[i] | 0) * W + (m.hx[i] | 0); FX[d] = 5; FX[d + 1] = 5; FX[d + W] = 5; FX[d + W + 1] = 5; u32[d] = u32[d + 1] = u32[d + W] = u32[d + W + 1] = RAMP[5]; } }
+
+// ---------------- chain lightning: midpoint displacement, 2 branches, 3 px halo + 1 px core ----------------
+function makeBolts(N, lv) { const n = (1 << lv) + 1, per = n + 18, B = { N, lv, n, per, tick: 0, pts: new Int16Array(N * per * 2), ends: new Int16Array(N * 4) };
+  for (let b = 0; b < N; b++) { const x0 = EMIT.x[b % 30], y0 = EMIT.y[b % 30]; B.ends[b * 4] = x0; B.ends[b * 4 + 1] = y0; B.ends[b * 4 + 2] = clampX(x0 + (hash2(b, 71) - .5) * 220 | 0); B.ends[b * 4 + 3] = clampY(y0 + (hash2(b, 73) - .5) * 120 | 0); if (Math.abs(B.ends[b * 4 + 2] - x0) + Math.abs(B.ends[b * 4 + 3] - y0) < 30) B.ends[b * 4 + 2] = clampX(x0 + (x0 < 160 ? 60 : -60)); }
+  for (let b = 0; b < N; b++) genBolt(B, b); return B; }
+function subdiv(p, o, n, nx, ny, disp) { for (let step = n - 1; step > 1; step >>= 1) { const h = step >> 1; for (let i = 0; i + step < n; i += step) { const a = o + i * 2, c = o + (i + step) * 2, m = o + (i + h) * 2, r = (rnd() - .5) * disp; p[m] = clampX((p[a] + p[c]) / 2 + nx * r); p[m + 1] = clampY((p[a + 1] + p[c + 1]) / 2 + ny * r); } disp *= 0.55; } }
+function genBolt(B, b) { const n = B.n, o = b * B.per * 2, p = B.pts, x0 = B.ends[b * 4], y0 = B.ends[b * 4 + 1], x1 = B.ends[b * 4 + 2], y1 = B.ends[b * 4 + 3];
+  p[o] = x0; p[o + 1] = y0; p[o + (n - 1) * 2] = x1; p[o + (n - 1) * 2 + 1] = y1; const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+  subdiv(p, o, n, -uy, ux, len * 0.45);
+  for (let br = 0; br < 2; br++) { const si = ((n - 1) * (br + 1) / 3) | 0, bo = o + (n + br * 9) * 2, sx = p[o + si * 2], sy = p[o + si * 2 + 1], sa = br ? 0.56 : -0.56, ca = 0.83, bl = len * 0.3, vx = ux * ca - uy * sa, vy = ux * sa + uy * ca;
+    p[bo] = sx; p[bo + 1] = sy; p[bo + 16] = clampX(sx + vx * bl); p[bo + 17] = clampY(sy + vy * bl); subdiv(p, bo, 9, -vy, vx, bl * 0.5); } }
+function eachPoly(B, b, fn) { const o = b * B.per * 2; fn(o, B.n); fn(o + B.n * 2, 9); fn(o + (B.n + 9) * 2, 9); }
+function rasterBolt(u32, B, b) { const p = B.pts; eachPoly(B, b, (o, n) => { for (let i = 0; i < n - 1; i++) lineHalo(u32, p[o + i * 2], p[o + i * 2 + 1], p[o + i * 2 + 2], p[o + i * 2 + 3], 0xffd08a3c); });
+  eachPoly(B, b, (o, n) => { for (let i = 0; i < n - 1; i++) line(u32, p[o + i * 2], p[o + i * 2 + 1], p[o + i * 2 + 2], p[o + i * 2 + 3], 0xffffffff); }); }
+function boltsID(u32, B, every) { if (B.tick++ % every === 0) for (let b = 0; b < B.N; b++) genBolt(B, b); for (let b = 0; b < B.N; b++) rasterBolt(u32, B, b); }
+function boltsStroke(cx, B, every) { if (B.tick++ % every === 0) for (let b = 0; b < B.N; b++) genBolt(B, b); const p = B.pts;
+  for (let b = 0; b < B.N; b++) { cx.beginPath(); eachPoly(B, b, (o, n) => { cx.moveTo(p[o] + .5, p[o + 1] + .5); for (let i = 1; i < n; i++) cx.lineTo(p[o + i * 2] + .5, p[o + i * 2 + 1] + .5); }); cx.lineWidth = 3; cx.strokeStyle = '#3c8ad0'; cx.stroke(); cx.lineWidth = 1; cx.strokeStyle = '#fff'; cx.stroke(); } }
+
+// ---------------- full-screen CPU passes ----------------
+function flashID(u32) { for (let i = 0; i < u32.length; i++) u32[i] = (((u32[i] & 0xfefefefe) >>> 1) + 0x7f7f7f7f) | 0xff000000; }
+function vignetteID(u32) { for (let i = 0; i < u32.length; i++) { const v = VIG[i]; if (v) { const c = u32[i]; u32[i] = (v === 1 ? ((c & 0xfefefe) >>> 1) + 0x000030 : ((c & 0xfcfcfc) >>> 2) + 0x000048) | 0xff000000; } } }
+const LUT15 = new Uint32Array(32768); for (let k = 0; k < 32768; k++) { const r = (k & 31) << 3, g = ((k >> 5) & 31) << 3, b = ((k >> 10) & 31) << 3, l = (r * 3 + g * 6 + b) / 10; LUT15[k] = 0xff000000 | (Math.min(255, b * .6 + l * .5) << 16) | (Math.min(255, g * .7 + l * .3) << 8) | Math.min(255, r * .8 + l * .2); }
+function lut15ID(u32) { for (let i = 0; i < u32.length; i++) { const c = u32[i]; u32[i] = LUT15[((c >>> 3) & 31) | ((c >>> 6) & 0x3e0) | ((c >>> 9) & 0x7c00)]; } }
+const IDXFRAME = new Uint8Array(W * H), CMAP = new Uint32Array(4 * 256), LVFRAME = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) { IDXFRAME[i] = hash2(i, 81) * 64 | 0; LVFRAME[i] = VIG[i]; } for (let i = 0; i < 1024; i++) CMAP[i] = 0xff000000 | (hash2(i, 83) * 0xffffff);
+function idxResolve(u32) { for (let i = 0; i < u32.length; i++) u32[i] = CMAP[IDXFRAME[i]]; }
+function idxResolveCmap(u32) { for (let i = 0; i < u32.length; i++) u32[i] = CMAP[(LVFRAME[i] << 8) | IDXFRAME[i]]; }
+// shockwave: copy the frame, then every pixel in the ring band reads from 3 px toward the centre
+function shockID(u32, copy, cx0, cy0, r) { copy.set(u32); const r0 = (r - 4) * (r - 4), r1 = (r + 4) * (r + 4), R = r + 4;
+  for (let y = Math.max(3, cy0 - R); y < Math.min(H - 3, cy0 + R); y++) for (let x = Math.max(3, cx0 - R); x < Math.min(W - 3, cx0 + R); x++) { const dx = x - cx0, dy = y - cy0, d2 = dx * dx + dy * dy; if (d2 < r0 || d2 > r1) continue; const inv = 3 / Math.sqrt(d2); u32[y * W + x] = copy[(y - (dy * inv | 0)) * W + x - (dx * inv | 0)]; } }
+
+// ---------------- auras: back half, 6 orbiters, character, front half ----------------
+function aurasDraw(cx, C, pos, t, tint, tmp) { const f = (t * 8 | 0) & 3;
+  for (let c = 0; c < C; c++) { const x = pos.x[c], y = pos.y[c];
+    cx.drawImage(atlas, 400 + f * 24, 64, 24, 12, x - 12, y - 4, 24, 12);
+    for (let k = 0; k < 6; k++) { const a = t * 3 + k * 1.047 + c, s = Math.sin(a); if (s < 0) cx.drawImage(atlas, 300 + (k % 5) * 2, 80, 2, 2, x + Math.cos(a) * 11 | 0, y + s * 5 | 0, 2, 2); }
+    if (tint === 'cached') cx.drawImage(atlas, 360, 64, 16, 24, x - 8, y - 20, 16, 24);
+    else if (tint === 'atop') { const tc = tmp.cx; tc.globalCompositeOperation = 'copy'; tc.drawImage(atlas, 384, 64, 16, 24, 0, 0, 16, 24); tc.globalCompositeOperation = 'source-atop'; tc.fillStyle = 'rgba(60,255,60,0.5)'; tc.fillRect(0, 0, 16, 24); cx.drawImage(tmp.cv, x - 8, y - 20); }
+    else if (tint === 'getput') { const tc = tmp.cx; tc.globalCompositeOperation = 'copy'; tc.drawImage(atlas, 384, 64, 16, 24, 0, 0, 16, 24); const im = tc.getImageData(0, 0, 16, 24), d = im.data; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { d[i] >>= 1; d[i + 1] = (d[i + 1] + 255) >> 1; d[i + 2] >>= 1; } tc.putImageData(im, 0, 0); cx.drawImage(tmp.cv, x - 8, y - 20); }
+    else cx.drawImage(atlas, 384, 64, 16, 24, x - 8, y - 20, 16, 24);
+    cx.drawImage(atlas, 400 + f * 24, 76, 24, 12, x - 12, y - 4, 24, 12);
+    for (let k = 0; k < 6; k++) { const a = t * 3 + k * 1.047 + c, s = Math.sin(a); if (s >= 0) cx.drawImage(atlas, 300 + (k % 5) * 2, 80, 2, 2, x + Math.cos(a) * 11 | 0, y + s * 5 | 0, 2, 2); } } }
+function aurasID(u32, C, pos, t, pal) { const f = (t * 8 | 0) & 3;
+  for (let c = 0; c < C; c++) { const x = pos.x[c], y = pos.y[c];
+    blitIdx(u32, AURA_B[f], 24, 12, x - 12, y - 4, RAMP);
+    for (let k = 0; k < 6; k++) { const a = t * 3 + k * 1.047 + c, s = Math.sin(a); if (s < 0) { const d = (y + s * 5 | 0) * W + (x + Math.cos(a) * 11 | 0), col = RAMP[1 + k % 5]; u32[d] = u32[d + 1] = u32[d + W] = u32[d + W + 1] = col; } }
+    blitIdx(u32, CHAR, 16, 24, x - 8, y - 20, pal);
+    blitIdx(u32, AURA_F[f], 24, 12, x - 12, y - 4, RAMP);
+    for (let k = 0; k < 6; k++) { const a = t * 3 + k * 1.047 + c, s = Math.sin(a); if (s >= 0) { const d = (y + s * 5 | 0) * W + (x + Math.cos(a) * 11 | 0), col = RAMP[1 + k % 5]; u32[d] = u32[d + 1] = u32[d + W] = u32[d + W + 1] = col; } } } }
+
+// ---------------- the composed 30-caster scene, CPU ----------------
+function makeSceneState(L) { return { L, tick: 0, P: makePool(L.particles), tiles: makeSprites(L.tiles, 16, true), imp: makeSprites(L.impacts, 32), pos: casterPos(L.casters), mis: makeMis(L.missiles, 12), bolts: makeBolts(L.bolts, 5), G: makeGlow(2), copy: new Uint32Array(W * H) }; }
+function sceneID(cx, img, u32, S, parts) { const L = S.L, t = S.tick++; const lap = parts ? (k => { const n = performance.now(); parts[k] = (parts[k] || 0) + n - parts._t; parts._t = n; }) : (() => {}); if (parts) parts._t = performance.now();
+  u32.set(groundU32); lap('ground');
+  flipID(u32, S.tiles, t >> 2, TILE); lap('tiles');
+  aurasID(u32, L.casters, S.pos, t / 60, CHARPAL); lap('auras');
+  stepMis(S.mis); trailsID(u32, S.mis); ghostsID(u32, S.mis, 0); lap('missiles+trails');
+  flipID(u32, S.imp, t >> 2, FLIP[32]); lap('impacts');
+  simSoA(S.P, 1 / 60); partsID(u32, S.P); lap('particles');
+  boltsID(u32, S.bolts, 3); lap('lightning');
+  S.G.I.fill(0); glowSplatParts(S.G, S.P, Math.min(S.P.n, L.glowParticles)); glowSplatDisks(S.G, S.imp, L.glowImpacts); glowBlur(S.G); glowComposite(u32, S.G); lap('glow');
+  shockID(u32, S.copy, 160, 90, 20 + (t % 40)); vignetteID(u32); lap('screen');
+  cx.putImageData(img, 0, 0); sync(cx); lap('present'); }
+function sceneC2D(cx, S) { const L = S.L, t = S.tick++, m = S.mis;
+  cx.drawImage(ground, 0, 0); flipDraw(cx, S.tiles, t >> 2, 256, 64); aurasDraw(cx, L.casters, S.pos, t / 60, 'none');
+  stepMis(m); trailsStroke(cx, m, false); for (let i = 0; i < m.M; i++) cx.drawImage(atlas, 256, 80, 8, 8, (m.hx[i] | 0) - 4, (m.hy[i] | 0) - 4, 8, 8);
+  cx.globalCompositeOperation = 'lighter'; flipDraw(cx, S.imp, t >> 2, 0, 64);
+  for (let i = 0; i < L.glowImpacts; i++) cx.drawImage(atlas, 320, 80, 16, 16, S.imp.x[i] - 8, S.imp.y[i] - 8, 48, 48);
+  for (let i = 0; i < L.glowImpacts; i++) cx.drawImage(atlas, 320, 80, 16, 16, (m.hx[i] | 0) - 12, (m.hy[i] | 0) - 12, 24, 24);
+  cx.globalCompositeOperation = 'source-over'; simSoA(S.P, 1 / 60); partsFillRect(cx, S.P); boltsStroke(cx, S.bolts, 3); cx.drawImage(vigCv, 0, 0); sync(cx); }
+
+function runCPU(opts = {}) {
+  const only = opts.only ? new RegExp(opts.only) : null, out = { info: { userAgent: navigator.userAgent, cores: navigator.hardwareConcurrency }, results: [] };
+  const T = (name, mk, extra) => { if (only && !only.test(name)) return; const fn = mk(); const r = bench(name, fn, opts.bench); Object.assign(r, extra || {}); out.results.push(r); console.log(name, r.median_ms); };
+  const ID = () => { const cx = mainCtx(), img = cx.createImageData(W, H), u32 = new Uint32Array(img.data.buffer); return { cx, img, u32 }; };
+  const idFrame = draw => () => { const { cx, img, u32 } = ID(); return () => { u32.set(groundU32); draw(u32, cx); cx.putImageData(img, 0, 0); sync(cx); }; };
+  const c2dFrame = (draw, op) => () => { const cx = mainCtx(); cx.imageSmoothingEnabled = false; return () => { cx.drawImage(ground, 0, 0); if (op) cx.globalCompositeOperation = op; draw(cx); if (op) cx.globalCompositeOperation = 'source-over'; sync(cx); }; };
+  T('baseline c2d: ground drawImage + 1x1 sync', c2dFrame(() => {}));
+  T('baseline imagedata: ground copy + putImageData + 1x1 sync', idFrame(() => {}));
+  // Q1 particles
+  for (const N of [500, 2000, 8000, 32000]) {
+    T(`q1 sim SoA pool swap-remove N=${N} (no draw)`, () => { const P = makePool(N); return () => simSoA(P, 1 / 60); });
+    T(`q1 sim AoS objects, new array per frame N=${N} (no draw)`, () => { const S = makeAoS(N); return () => simAoS(S, 1 / 60); });
+    T(`q1 sim AoS immutable vectors + filter N=${N} (no draw)`, () => { const S = makeAoSV(N); return () => simAoSV(S, 1 / 60); });
+    const P = makePool(N);
+    T(`q1 c2d fillRect per particle, fillStyle each N=${N}`, c2dFrame(cx => partsFillRect(cx, P)));
+    T(`q1 c2d fillRect grouped by colour (5 fillStyle) N=${N}`, c2dFrame(cx => partsFillRectByColour(cx, P)));
+    T(`q1 c2d rect() path per colour + 5 fill() N=${N}`, c2dFrame(cx => partsPath(cx, P)));
+    T(`q1 c2d drawImage per particle N=${N}`, c2dFrame(cx => partsDrawImage(cx, P)));
+    T(`q1 imagedata particle writes N=${N}`, idFrame(u32 => partsID(u32, P)));
+    T(`q1 imagedata sim SoA + particle writes N=${N}`, () => { const P2 = makePool(N); return idFrame(u32 => { simSoA(P2, 1 / 60); partsID(u32, P2); })(); });
+  }
+  // Q2 flipbooks
+  for (const S of [32, 64]) for (const N of [30, 120, 480]) { const Sp = makeSprites(N, S), FB = FLIP[S], ay = S === 64 ? 0 : 64, ex = { px_effect: coverage(N, FB), px_rect: N * S * S, screen_px: W * H }; let tk = 0;
+    T(`q2 c2d flipbook drawImage normal ${S}x${S} N=${N}`, c2dFrame(cx => flipDraw(cx, Sp, tk++ >> 2, 0, ay)), ex);
+    T(`q2 c2d flipbook drawImage lighter ${S}x${S} N=${N}`, c2dFrame(cx => flipDraw(cx, Sp, tk++ >> 2, 0, ay), 'lighter'), ex);
+    T(`q2 imagedata flipbook ramp blit ${S}x${S} N=${N}`, idFrame(u32 => flipID(u32, Sp, tk++ >> 2, FB)), ex);
+    T(`q2 imagedata flipbook ramp-add index layer + resolve ${S}x${S} N=${N}`, () => { const Ly = new Uint8Array(W * H); return idFrame(u32 => { Ly.fill(0); const t = tk++ >> 2; for (let i = 0; i < N; i++) blitIdxAdd(Ly, FB.frames[(i + t) & 7], S, Sp.x[i], Sp.y[i]); resolveIdx(u32, Ly); })(); }, ex);
+  }
+  // Q3 glow
+  { const layer = mkCanvas(W, H), lg = layer.getContext('2d'); flipDraw(lg, makeSprites(120, 32), 0, 0, 64);
+    T('q3 c2d full-screen effects layer composite source-over', c2dFrame(cx => cx.drawImage(layer, 0, 0)));
+    T('q3 c2d full-screen effects layer composite lighter', c2dFrame(cx => cx.drawImage(layer, 0, 0), 'lighter'));
+    for (const N of [60, 240, 960]) { const Sp = makeSprites(N, 32);
+      T(`q3 c2d glow halos 32x32 (16x16 scaled 2x) lighter N=${N}`, c2dFrame(cx => { for (let i = 0; i < N; i++) cx.drawImage(atlas, 320, 80, 16, 16, Sp.x[i], Sp.y[i], 32, 32); }, 'lighter'));
+      T(`q3 c2d glow halos 32x32 (16x16 scaled 2x) source-over N=${N}`, c2dFrame(cx => { for (let i = 0; i < N; i++) cx.drawImage(atlas, 320, 80, 16, 16, Sp.x[i], Sp.y[i], 32, 32); })); }
+    for (const sh of [2, 1]) { const G = makeGlow(sh), P = makePool(2000), Sp = makeSprites(120, 32), tag = `${G.GW}x${G.GH}`, u = new Uint32Array(W * H); u.set(groundU32);
+      T(`q3 glow buffer ${tag} stage: clear + max-splat 2000 particles + 120 impact disks (raw)`, () => () => { G.I.fill(0); glowSplatParts(G, P, P.n); glowSplatDisks(G, Sp, 120); });
+      T(`q3 glow buffer ${tag} stage: 3x3 block-sum blur (raw)`, () => () => glowBlur(G));
+      T(`q3 glow buffer ${tag} stage: Bayer palette select to 320x180 (raw)`, () => () => glowComposite(u, G));
+      T(`q3 glow buffer ${tag} whole frame (splat + blur + select + present)`, idFrame(u32 => { G.I.fill(0); glowSplatParts(G, P, P.n); glowSplatDisks(G, Sp, 120); glowBlur(G); glowComposite(u32, G); })); } }
+  // Q4 trails
+  for (const M of [60, 240, 960]) {
+    for (const L of [8, 12, 16]) T(`q4 imagedata trail ring L=${L} Bresenham M=${M}`, () => { const m = makeMis(M, L); return idFrame(u32 => { stepMis(m); trailsID(u32, m); })(); }, { segments: M * (L - 1) });
+    T(`q4 c2d trail stroked path per missile L=12 M=${M}`, () => { const m = makeMis(M, 12); return c2dFrame(cx => { stepMis(m); trailsStroke(cx, m, false); })(); });
+    T(`q4 c2d trail one path for all missiles L=12 M=${M}`, () => { const m = makeMis(M, 12); return c2dFrame(cx => { stepMis(m); trailsStroke(cx, m, true); })(); });
+    T(`q4 c2d afterimages 4 ghosts + head, pre-faded sprites M=${M}`, () => { const m = makeMis(M, 12); return c2dFrame(cx => { stepMis(m); ghostsDraw(cx, m, false); })(); });
+    T(`q4 c2d afterimages 4 ghosts + head, globalAlpha M=${M}`, () => { const m = makeMis(M, 12); return c2dFrame(cx => { stepMis(m); ghostsDraw(cx, m, true); })(); });
+    T(`q4 imagedata afterimages 4 ghosts + head M=${M}`, () => { const m = makeMis(M, 12); return idFrame(u32 => { stepMis(m); ghostsID(u32, m, 4); })(); });
+    T(`q4 imagedata feedback buffer fade every frame M=${M}`, () => { const m = makeMis(M, 12), FX = new Uint8Array(W * H); return idFrame(u32 => { stepMis(m); feedbackID(u32, FX, m, true); })(); });
+    T(`q4 imagedata feedback buffer fade every 4th frame M=${M}`, () => { const m = makeMis(M, 12), FX = new Uint8Array(W * H); let k = 0; return idFrame(u32 => { stepMis(m); feedbackID(u32, FX, m, (k++ & 3) === 0); })(); });
+    T(`q4 c2d feedback canvas destination-out fade M=${M}`, () => { const m = makeMis(M, 12), fx = mkCanvas(W, H), fc = fx.getContext('2d'); return c2dFrame(cx => { stepMis(m); fc.globalCompositeOperation = 'destination-out'; fc.fillStyle = 'rgba(0,0,0,0.2)'; fc.fillRect(0, 0, W, H); fc.globalCompositeOperation = 'source-over'; fc.fillStyle = RAMP_CSS[5]; for (let i = 0; i < M; i++) fc.fillRect(m.hx[i] | 0, m.hy[i] | 0, 2, 2); cx.drawImage(fx, 0, 0); })(); });
+  }
+  // Q5 chain lightning
+  for (const lv of [5, 6]) for (const N of [10, 40, 160]) { const segs = N * ((1 << lv) + 16);
+    T(`q5 bolt generate only lv=${lv} N=${N} (raw)`, () => { const B = makeBolts(N, lv); return () => { for (let b = 0; b < N; b++) genBolt(B, b); }; }, { segments: segs });
+    for (const ev of [1, 3]) T(`q5 imagedata bolts lv=${lv} regen every ${ev} N=${N}`, () => { const B = makeBolts(N, lv); return idFrame(u32 => boltsID(u32, B, ev))(); }, { segments: segs });
+    if (lv === 5) for (const ev of [1, 3]) T(`q5 c2d bolts stroke 3px + 1px lv=${lv} regen every ${ev} N=${N}`, () => { const B = makeBolts(N, lv); return c2dFrame(cx => boltsStroke(cx, B, ev))(); }, { segments: segs });
+  }
+  // Q6 tile area effects
+  for (const N of [148, 220, 592, 1110, 2190, 2368]) { const Sp = makeSprites(N, 16, true), ex = { px_effect: coverage(N, TILE), px_rect: N * 256 }; let tk = 0;
+    T(`q6 c2d tile effects 16x16 drawImage N=${N}`, c2dFrame(cx => flipDraw(cx, Sp, tk++ >> 2, 256, 64)), ex);
+    T(`q6 c2d tile effects 16x16 drawImage lighter N=${N}`, c2dFrame(cx => flipDraw(cx, Sp, tk++ >> 2, 256, 64), 'lighter'), ex);
+    T(`q6 imagedata tile effects 16x16 ramp blit N=${N}`, idFrame(u32 => flipID(u32, Sp, tk++ >> 2, TILE)), ex);
+    if (N === 1110 || N === 2190) { const Sp32 = makeSprites(N, 32), ex32 = { px_effect: coverage(N, FLIP[32]), px_rect: N * 1024 };
+      T(`q6 c2d tile effects 32x32 drawImage N=${N}`, c2dFrame(cx => flipDraw(cx, Sp32, tk++ >> 2, 0, 64)), ex32);
+      T(`q6 imagedata tile effects 32x32 ramp blit N=${N}`, idFrame(u32 => flipID(u32, Sp32, tk++ >> 2, FLIP[32])), ex32); } }
+  // Q7 full-screen passes
+  T('q7 c2d screen flash fillRect rgba 0.6', c2dFrame(cx => { cx.fillStyle = 'rgba(255,255,255,0.6)'; cx.fillRect(0, 0, W, H); }));
+  T('q7 c2d screen flash fillRect lighter', c2dFrame(cx => { cx.fillStyle = '#666'; cx.fillRect(0, 0, W, H); }, 'lighter'));
+  T('q7 c2d vignette drawImage of pre-rendered gradient', c2dFrame(cx => cx.drawImage(vigCv, 0, 0)));
+  T('q7 imagedata screen flash 50% white (bit trick)', idFrame(u32 => flashID(u32)));
+  T('q7 imagedata vignette (dithered mask, 2 levels)', idFrame(u32 => vignetteID(u32)));
+  T('q7 imagedata palette LUT pass rgb555 -> 32768-entry LUT', idFrame(u32 => lut15ID(u32)));
+  T('q7 imagedata indexed frame resolve (Uint8 index -> palette)', idFrame(u32 => idxResolve(u32)));
+  T('q7 imagedata indexed resolve through colormap (level, index)', idFrame(u32 => idxResolveCmap(u32)));
+  T('q7 imagedata shockwave ring r=40 incl. frame copy', () => { const copy = new Uint32Array(W * H); return idFrame(u32 => shockID(u32, copy, 160, 90, 40))(); });
+  T('q7 imagedata frame copy only (57,600 px)', () => { const copy = new Uint32Array(W * H); return idFrame(u32 => copy.set(u32))(); });
+  // Q8 auras and status tint
+  for (const C of [30, 120]) { const pos = casterPos(C), tmpCv = mkCanvas(16, 24), tmp = { cv: tmpCv, cx: tmpCv.getContext('2d', { willReadFrequently: true }) }; let tk = 0;
+    for (const [mode, label] of [['none', 'no tint'], ['cached', 'tint (a) pre-tinted cached sprite'], ['atop', 'tint per frame via source-atop on a temp canvas'], ['getput', 'tint (b) per frame getImageData remap + putImageData']])
+      T(`q8 c2d auras back+front+6 orbiters+char, ${label} C=${C}`, c2dFrame(cx => aurasDraw(cx, C, pos, tk++ / 60, mode, tmp)), { draws: C * 9 });
+    T(`q8 imagedata auras back+front+6 orbiters+char, no tint C=${C}`, idFrame(u32 => aurasID(u32, C, pos, tk++ / 60, CHARPAL)));
+    T(`q8 imagedata auras back+front+6 orbiters+char, tint (b) palette swap C=${C}`, idFrame(u32 => aurasID(u32, C, pos, tk++ / 60, CHARPAL_TINT))); }
+  // Q9 composed scene
+  for (const mult of [1, 4, 16]) for (const clarity of [false, true]) { const L = LOAD(mult, clarity), tag = `load ${mult}x clarity=${clarity ? 'on' : 'off'}`;
+    T(`q9 scene imagedata ${tag}`, () => { const S = makeSceneState(L), { cx, img, u32 } = ID(); return () => sceneID(cx, img, u32, S); }, { load: L });
+    T(`q9 scene c2d ${tag}`, () => { const S = makeSceneState(L), cx = mainCtx(); cx.imageSmoothingEnabled = false; return () => sceneC2D(cx, S); }, { load: L });
+    if (!only || only.test(`q9 scene imagedata ${tag}`)) { const S = makeSceneState(L), { cx, img, u32 } = ID(), parts = {}; for (let i = 0; i < 60; i++) sceneID(cx, img, u32, S); for (const k in parts) delete parts[k]; const F = 200; for (let i = 0; i < F; i++) sceneID(cx, img, u32, S, parts); delete parts._t; for (const k in parts) parts[k] = +(parts[k] / F).toFixed(4); out.results.push({ name: `q9 scene imagedata ${tag} per-layer mean ms`, layers: parts }); } }
+  return out;
+}
+
+// ================= GPU (WebGL2) =================
+const VS_FULL = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+const GP = `gl_Position = vec4(gp/vec2(320.,180.)*2.-1.,0.,1.); gl_Position.y = -gl_Position.y;`; // positions are always in 320x180 game pixels
+const VS_BATCH = `#version 300 es
+precision highp float; in vec2 corner; in vec4 ia; in vec4 ib; uniform vec4 uia, uib; uniform int useSingle; out vec2 uv; out vec2 ta;
+void main(){ vec4 A = useSingle==1 ? uia : ia, B = useSingle==1 ? uib : ib; vec2 gp = floor(A.xy) + corner*A.zw; uv = (B.xy + corner*A.zw)/vec2(512.,128.); ta = B.zw; ${GP} }`;
+const FS_BATCH = `#version 300 es
+precision highp float; in vec2 uv; in vec2 ta; uniform sampler2D atlas; out vec4 o;
+void main(){ vec4 c = texture(atlas, uv); c.rgb = mix(c.rgb, vec3(.3,1.,.3), ta.x); o = vec4(c.rgb, c.a*ta.y); }`;
+const VS_PART = `#version 300 es
+precision highp float; in vec2 corner; in vec4 inst; uniform vec3 ramp[6]; out vec3 col;
+void main(){ vec2 gp = floor(inst.xy) + corner*inst.z; col = ramp[int(inst.w)]; ${GP} }`;
+const VS_STATELESS = `#version 300 es
+precision highp float; in vec2 corner; in vec4 seed; uniform float t; uniform vec3 ramp[6]; out vec3 col;
+void main(){ float life = 0.3+0.5*seed.w, age = fract(t/life + seed.z*13.), el = age*life, a = seed.z*43.98, sp = 10.+50.*fract(seed.w*17.);
+  vec2 pos = seed.xy + vec2(cos(a),sin(a))*sp*el*(1.-0.4*age) + vec2(0., 10.*el*el - 10.*el);
+  float size = 1.+floor(fract(seed.z*31.)*3.); vec2 gp = floor(pos) + corner*size; col = ramp[1+int((1.-age)*4.99)]; ${GP} }`;
+const FS_FLAT = `#version 300 es
+precision highp float; in vec3 col; out vec4 o; void main(){ o = vec4(col, .98); }`;
+const VS_SEG = `#version 300 es
+precision highp float; in vec2 corner; in vec4 ia; in vec4 ib; uniform vec3 ramp[6]; out vec3 col; out float al;
+void main(){ vec2 a = floor(ia.xy)+.5, b = floor(ia.zw)+.5, d = b-a; float l = max(length(d), .001); d /= l; vec2 n = vec2(-d.y, d.x);
+  vec2 gp = a + d*(corner.x*(l+ib.x) - ib.x*.5) + n*(corner.y-.5)*ib.x; col = ramp[int(ib.y)]; al = ib.z; ${GP} }`;
+const FS_SEG = `#version 300 es
+precision highp float; in vec3 col; in float al; out vec4 o; void main(){ o = vec4(col, al); }`;
+const FSH = `#version 300 es
+precision highp float; out vec4 o; uniform sampler2D tex; uniform sampler2D lut; uniform vec2 res; uniform vec2 dir; uniform float a, t;
+`;
+const FS_FULL = {
+  tex: `void main(){ o = vec4(texture(tex, gl_FragCoord.xy/res).rgb, a); }`,
+  flash: `void main(){ o = vec4(1.,1.,1.,a); }`,
+  vignette: `void main(){ vec2 q = gl_FragCoord.xy/res - .5; float d = length(q*vec2(1.,.6)); o = vec4(.47,0.,0., clamp((d-.25)*2.2, 0., .7)*a); }`,
+  shock: `void main(){ vec2 uv = gl_FragCoord.xy/res, q = (uv-.5)*vec2(320.,180.); float d = length(q), r = 20.+40.*fract(t), w = clamp(1.-abs(d-r)/4., 0., 1.);
+    o = vec4(texture(tex, uv - normalize(q+.0001)*w*3./vec2(320.,180.)).rgb, a); }`,
+  lut: `void main(){ vec3 c = texture(tex, gl_FragCoord.xy/res).rgb; ivec3 k = ivec3(c*31.+.5); o = vec4(texelFetch(lut, ivec2(k.b*32+k.r, k.g), 0).rgb, a); }`,
+  blur: `void main(){ vec2 uv = gl_FragCoord.xy/res, s = dir/res; vec3 c = texture(tex, uv).rgb*.227;
+    c += (texture(tex, uv+s).rgb + texture(tex, uv-s).rgb)*.1946; c += (texture(tex, uv+2.*s).rgb + texture(tex, uv-2.*s).rgb)*.1216;
+    c += (texture(tex, uv+3.*s).rgb + texture(tex, uv-3.*s).rgb)*.0541; c += (texture(tex, uv+4.*s).rgb + texture(tex, uv-4.*s).rgb)*.0162; o = vec4(c, a); }`,
+  fade: `void main(){ vec3 c = texelFetch(tex, ivec2(gl_FragCoord.xy), 0).rgb; o = vec4(max(c-.2, 0.), a); }`,
+};
+
+async function runGPU(opts = {}) {
+  const only = opts.only ? new RegExp(opts.only) : null, out = { info: {}, results: [] };
+  const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4;
+  const gl = cv.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) { out.info.error = 'no webgl2'; return out; }
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  out.info.vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+  out.info.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  out.info.version = gl.getParameter(gl.VERSION); out.info.userAgent = navigator.userAgent;
+  const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2'); out.info.timer_query = !!tq; out.info.blend = 'always on: every draw is SRC_ALPHA,ONE_MINUS_SRC_ALPHA with alpha < 1, or SRC_ALPHA,ONE (additive). Framebuffer copies use blitFramebuffer.';
+  function compile(vs, fs) { const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) + src); return s; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const U = new Proxy({}, { get: (o, k) => o[k] ?? (o[k] = gl.getUniformLocation(p, k)) }); gl.useProgram(p);
+    gl.uniform1i(U.atlas, 0); gl.uniform1i(U.tex, 2); gl.uniform1i(U.lut, 3); if (gl.getUniformLocation(p, 'ramp[0]')) gl.uniform3fv(gl.getUniformLocation(p, 'ramp[0]'), new Float32Array(RAMP_F)); return { p, U }; }
+  function mkTex(w, h, data, filt) { const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filt); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filt); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return tx; }
+  function mkFB(w, h, filt) { const tex = mkTex(w, h, null, filt ?? gl.NEAREST), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); return { fb, tex, w, h }; }
+  gl.activeTexture(gl.TEXTURE7);
+  const atlasTex = mkTex(512, 128, new Uint8Array(ATL.buffer), gl.NEAREST), groundTex = mkTex(W, H, new Uint8Array(groundU32.buffer), gl.NEAREST);
+  const lutData = new Uint8Array(1024 * 32 * 4); for (let g = 0; g < 32; g++) for (let b = 0; b < 32; b++) for (let r = 0; r < 32; r++) { const c = LUT15[r | (g << 5) | (b << 10)], i = (g * 1024 + b * 32 + r) * 4; lutData[i] = c & 255; lutData[i + 1] = (c >> 8) & 255; lutData[i + 2] = (c >> 16) & 255; lutData[i + 3] = 255; }
+  const lutTex = mkTex(1024, 32, lutData, gl.NEAREST);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, lutTex); gl.activeTexture(gl.TEXTURE2);
+  const srcTex = tx => gl.bindTexture(gl.TEXTURE_2D, tx); // unit 2 stays active
+  const PB = compile(VS_BATCH, FS_BATCH), PPu = compile(VS_PART, FS_FLAT), PPs = compile(VS_STATELESS, FS_FLAT), PSEG = compile(VS_SEG, FS_SEG);
+  const PF = {}; for (const [k, b] of Object.entries(FS_FULL)) PF[k] = compile(VS_FULL, FSH + b);
+  const fullVAO = gl.createVertexArray(); gl.bindVertexArray(fullVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const cornerBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+  // instanced batch: `stride` floats per instance split into vec4 attributes named in `names`
+  function mkBatch(P, maxN, names) { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); const lc = gl.getAttribLocation(P.p, 'corner'); gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf); gl.enableVertexAttribArray(lc); gl.vertexAttribPointer(lc, 2, gl.FLOAT, false, 0, 0);
+    const stride = names.length * 4, data = new Float32Array(Math.max(1, maxN) * stride), buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    names.forEach((nm, j) => { const l = gl.getAttribLocation(P.p, nm); if (l < 0) return; gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 4, gl.FLOAT, false, stride * 4, j * 16); gl.vertexAttribDivisor(l, 1); });
+    return { P, vao, buf, data, stride }; }
+  function drawBatch(b, n, upload, add) { if (n <= 0) return; gl.useProgram(b.P.p); gl.bindVertexArray(b.vao); if (upload) { gl.bindBuffer(gl.ARRAY_BUFFER, b.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, b.data, 0, n * b.stride); }
+    gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n); }
+  function full(P, add) { gl.useProgram(P.p); gl.bindVertexArray(fullVAO); gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  const px = new Uint8Array(4);
+  function sync() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+  function timeK(drawOnce, K) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); sync(); return performance.now() - a; }
+  function med(a) { a = a.slice().sort((x, y) => x - y); return a[a.length >> 1]; }
+  function pct(a, q) { a = a.slice().sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(a.length * q))]; }
+  async function timerQuery(drawOnce, K) {
+    const q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); for (let k = 0; k < K; k++) drawOnce(k); gl.endQuery(tq.TIME_ELAPSED_EXT);
+    for (let i = 0; i < 4000; i++) { await new Promise(r => setTimeout(r, 0)); if (gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) break; }
+    const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT); const ns = gl.getQueryParameter(q, gl.QUERY_RESULT); gl.deleteQuery(q);
+    return disjoint ? NaN : ns / 1e6; }
+  // per-frame cost = slope between batches of 1 and K frames (removes the readPixels sync). p10/p90 from per-sample slopes.
+  async function gpuBench(name, mk, extra) {
+    if (only && !only.test(name)) return; const drawOnce = mk();
+    for (let i = 0; i < 4; i++) timeK(drawOnce, 3);
+    const probe = Math.max(0.001, (timeK(drawOnce, 12) - timeK(drawOnce, 1)) / 11);
+    const K = Math.max(4, Math.min(2000, Math.round(80 / probe)));
+    const s1 = [], sK = [];
+    for (let s = 0; s < 9; s++) { s1.push(timeK(drawOnce, 1)); sK.push(timeK(drawOnce, K)); }
+    const m1 = med(s1), slopes = sK.map(v => (v - m1) / (K - 1));
+    const r = { name, median_ms: +med(slopes).toFixed(4), p10_ms: +pct(slopes, 0.1).toFixed(4), p90_ms: +pct(slopes, 0.9).toFixed(4), K, sync_ms: +m1.toFixed(3) };
+    if (tq) { const tqs = []; const KT = Math.max(Math.min(K, opts.ktMax ?? 400), 20); for (let s = 0; s < 5; s++) tqs.push((await timerQuery(drawOnce, KT)) / KT); r.timer_query_ms = +med(tqs.filter(x => !isNaN(x))).toFixed(5); r.KT = KT; }
+    Object.assign(r, extra || {}); out.results.push(r); console.log(name, r.median_ms, r.timer_query_ms ?? '');
+    await new Promise(r => setTimeout(r, 0));
+  }
+  gl.enable(gl.BLEND);
+  // ---- layers. Each returns draw(k) that assumes the target framebuffer and viewport are bound, and leaves them bound. ----
+  function ctxFor(RW, RH) { const T = mkFB(RW, RH), C = mkFB(RW, RH); const X = { RW, RH, T, C, bindT() { gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, RW, RH); } }; return X; }
+  const setRes = (P, w, h, a) => { gl.useProgram(P.p); gl.uniform2f(P.U.res, w, h); gl.uniform1f(P.U.a, a ?? 0.98); };
+  function Lground(X) { return () => { setRes(PF.tex, X.RW, X.RH); srcTex(groundTex); full(PF.tex); }; }
+  function LpartsUpload(N, sim) { const P = makePool(N), b = mkBatch(PPu, N, ['inst']), d = b.data; return () => { if (sim) simSoA(P, 1 / 60); const n = P.n; for (let i = 0, j = 0; i < n; i++, j += 4) { d[j] = P.x[i]; d[j + 1] = P.y[i]; d[j + 2] = 1 + i % 3; d[j + 3] = pcol(P, i); } drawBatch(b, n, true); }; }
+  function LpartsStateless(N) { const b = mkBatch(PPs, N, ['seed']), d = b.data; for (let i = 0; i < N; i++) { const e = (hash2(i, 91) * 30) | 0; d[i * 4] = EMIT.x[e]; d[i * 4 + 1] = EMIT.y[e]; d[i * 4 + 2] = hash2(i, 93); d[i * 4 + 3] = hash2(i, 95); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, d); return k => { gl.useProgram(PPs.p); gl.uniform1f(PPs.U.t, k * 0.0167); drawBatch(b, N, false); }; }
+  function Lflip(Sp, ax, ay, add, n) { const N = n ?? Sp.N, S = Sp.S, b = mkBatch(PB, N, ['ia', 'ib']), d = b.data; return k => { const t = k >> 2; for (let i = 0, j = 0; i < N; i++, j += 8) { d[j] = Sp.x[i]; d[j + 1] = Sp.y[i]; d[j + 2] = S; d[j + 3] = S; d[j + 4] = ax + ((i + t) & 7) * S; d[j + 5] = ay; d[j + 6] = 0; d[j + 7] = 0.98; } drawBatch(b, N, true, add); }; }
+  // auras: tint 'none' | 'attr' (per-instance attribute, 1 draw) | 'uniform' (per-sprite uniform: back batch, C separate character draws, front batch)
+  function Lauras(C, tint) { const pos = casterPos(C), b = mkBatch(PB, C * 9, ['ia', 'ib']), d = b.data, bf = mkBatch(PB, C * 5, ['ia', 'ib']), df = bf.data, one = mkBatch(PB, 1, ['ia', 'ib']);
+    const put = (D, j, x, y, w, h, u, v, tn) => { D[j] = x; D[j + 1] = y; D[j + 2] = w; D[j + 3] = h; D[j + 4] = u; D[j + 5] = v; D[j + 6] = tn; D[j + 7] = 0.98; };
+    return k => { const t = k / 60, f = (t * 8 | 0) & 3; let j = 0, jf = 0; const split = tint === 'uniform';
+      for (let pass = 0; pass < (split ? 1 : 1); pass++) for (let c = 0; c < C; c++) { const x = pos.x[c], y = pos.y[c];
+        put(d, j, x - 12, y - 4, 24, 12, 400 + f * 24, 64, 0); j += 8;
+        for (let q = 0; q < 6; q++) { const a = t * 3 + q * 1.047 + c, s = Math.sin(a); if (s < 0) { put(d, j, x + Math.cos(a) * 11, y + s * 5, 2, 2, 300 + (q % 5) * 2, 80, 0); j += 8; } }
+        if (!split) { put(d, j, x - 8, y - 20, 16, 24, 384, 64, tint === 'attr' ? 0.5 : 0); j += 8; }
+        const D = split ? df : d; let jj = split ? jf : j;
+        put(D, jj, x - 12, y - 4, 24, 12, 400 + f * 24, 76, 0); jj += 8;
+        for (let q = 0; q < 6; q++) { const a = t * 3 + q * 1.047 + c, s = Math.sin(a); if (s >= 0) { put(D, jj, x + Math.cos(a) * 11, y + s * 5, 2, 2, 300 + (q % 5) * 2, 80, 0); jj += 8; } }
+        if (split) jf = jj; else j = jj; }
+      drawBatch(b, j / 8, true);
+      if (split) { gl.useProgram(PB.p); gl.bindVertexArray(one.vao); gl.uniform1i(PB.U.useSingle, 1); for (let c = 0; c < C; c++) { gl.uniform4f(PB.U.uia, pos.x[c] - 8, pos.y[c] - 20, 16, 24); gl.uniform4f(PB.U.uib, 384, 64, (c & 1) * 0.5, 0.98); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); } gl.uniform1i(PB.U.useSingle, 0); drawBatch(bf, jf / 8, true); } }; }
+  function Ltrails(M, L, heads) { const m = makeMis(M, L), b = mkBatch(PSEG, M * (L - 1), ['ia', 'ib']), d = b.data, hb = mkBatch(PB, M, ['ia', 'ib']), hd = hb.data; const fn = () => { stepMis(m); const { ring, head } = m; let j = 0;
+      for (let i = 0; i < M; i++) { const bs = i * L; for (let k = 0; k < L - 1; k++, j += 8) { const p = (bs + (head + 1 + k) % L) * 2, q = (bs + (head + 2 + k) % L) * 2; d[j] = ring[p]; d[j + 1] = ring[p + 1]; d[j + 2] = ring[q]; d[j + 3] = ring[q + 1]; d[j + 4] = 1; d[j + 5] = 1 + (k * 5 / (L - 1) | 0); d[j + 6] = 0.98; } }
+      drawBatch(b, M * (L - 1), true);
+      if (heads) { for (let i = 0, q = 0; i < M; i++, q += 8) { hd[q] = m.hx[i] - 4; hd[q + 1] = m.hy[i] - 4; hd[q + 2] = 8; hd[q + 3] = 8; hd[q + 4] = 256; hd[q + 5] = 80; hd[q + 6] = 0; hd[q + 7] = 0.98; } drawBatch(hb, M, true); } }; fn.m = m; return fn; }
+  function Lghosts(M) { const m = makeMis(M, 12), b = mkBatch(PB, M * 5, ['ia', 'ib']), d = b.data; return () => { stepMis(m); const { ring, head, L } = m; let j = 0; for (let i = 0; i < M; i++) for (let g = 4; g >= 0; g--, j += 8) { const p = (i * L + (head - g * 2 + L) % L) * 2; d[j] = ring[p] - 4; d[j + 1] = ring[p + 1] - 4; d[j + 2] = 8; d[j + 3] = 8; d[j + 4] = 256 + g * 8; d[j + 5] = 80; d[j + 6] = 0; d[j + 7] = 0.98; } drawBatch(b, M * 5, true); }; }
+  function Lfeedback(X, M) { const m = makeMis(M, 12), fbs = [mkFB(X.RW, X.RH), mkFB(X.RW, X.RH)], hb = mkBatch(PB, M, ['ia', 'ib']), hd = hb.data; let cur = 0;
+    return () => { stepMis(m); const nx = 1 - cur; gl.bindFramebuffer(gl.FRAMEBUFFER, fbs[nx].fb); setRes(PF.fade, X.RW, X.RH); srcTex(fbs[cur].tex); full(PF.fade);
+      for (let i = 0, q = 0; i < M; i++, q += 8) { hd[q] = m.hx[i] - 1; hd[q + 1] = m.hy[i] - 1; hd[q + 2] = 2; hd[q + 3] = 2; hd[q + 4] = 308; hd[q + 5] = 80; hd[q + 6] = 0; hd[q + 7] = 0.98; } drawBatch(hb, M, true);
+      X.bindT(); setRes(PF.tex, X.RW, X.RH); srcTex(fbs[nx].tex); full(PF.tex, true); cur = nx; }; }
+  function Lbolts(N, lv, every) { const B = makeBolts(N, lv), segs = (1 << lv) + 16, b = mkBatch(PSEG, N * segs * 2, ['ia', 'ib']), d = b.data, p = B.pts; let tick = 0;
+    return () => { const regen = tick++ % every === 0; if (regen) { let j = 0; for (let pass = 0; pass < 2; pass++) for (let bi = 0; bi < N; bi++) { if (!pass) genBolt(B, bi); eachPoly(B, bi, (o, n) => { for (let i = 0; i < n - 1; i++, j += 8) { d[j] = p[o + i * 2]; d[j + 1] = p[o + i * 2 + 1]; d[j + 2] = p[o + i * 2 + 2]; d[j + 3] = p[o + i * 2 + 3]; d[j + 4] = pass ? 1 : 3; d[j + 5] = pass ? 5 : 3; d[j + 6] = pass ? 0.98 : 0.6; } }); } }
+      drawBatch(b, N * segs * 2, regen); }; }
+  // glow: sources -> G0 (bw x bh), 9-tap blur H -> G1, V -> G2, additive composite onto the target
+  function Lglow(X, bw, bh, srcDraw) { const G = [mkFB(bw, bh, gl.LINEAR), mkFB(bw, bh, gl.LINEAR), mkFB(bw, bh, gl.LINEAR)];
+    if (!srcDraw) { gl.bindFramebuffer(gl.FRAMEBUFFER, G[0].fb); gl.viewport(0, 0, bw, bh); Lflip(makeSprites(120, 32), 0, 64, true)(0); }
+    return k => { gl.viewport(0, 0, bw, bh); if (srcDraw) { gl.bindFramebuffer(gl.FRAMEBUFFER, G[0].fb); gl.clear(gl.COLOR_BUFFER_BIT); srcDraw(k); }
+      setRes(PF.blur, bw, bh); gl.bindFramebuffer(gl.FRAMEBUFFER, G[1].fb); gl.uniform2f(PF.blur.U.dir, 1, 0); srcTex(G[0].tex); full(PF.blur);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, G[2].fb); gl.uniform2f(PF.blur.U.dir, 0, 1); srcTex(G[1].tex); full(PF.blur);
+      X.bindT(); setRes(PF.tex, X.RW, X.RH, 0.6); srcTex(G[2].tex); full(PF.tex, true); }; }
+  function Lcopy(X) { return () => { gl.bindFramebuffer(gl.READ_FRAMEBUFFER, X.T.fb); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, X.C.fb); gl.blitFramebuffer(0, 0, X.RW, X.RH, 0, 0, X.RW, X.RH, gl.COLOR_BUFFER_BIT, gl.NEAREST); gl.bindFramebuffer(gl.FRAMEBUFFER, X.T.fb); }; }
+  function Lscreen(X, key, copy) { const cp = Lcopy(X), P = PF[key]; return k => { if (copy) { cp(); srcTex(X.C.tex); } setRes(P, X.RW, X.RH, key === 'flash' ? 0.6 : 0.98); gl.uniform1f(P.U.t, k / 40); full(P); }; }
+
+  for (const [RW, RH] of [[320, 180], [1280, 720]]) { const X = ctxFor(RW, RH), tag = `${RW}x${RH}`; const frame = (...layers) => () => { const ls = layers.map(f => f()); return k => { X.bindT(); for (const l of ls) l(k); }; };
+    await gpuBench(`g0 gpu baseline: ground quad ${tag}`, frame(() => Lground(X)));
+    for (const N of [500, 2000, 8000, 32000]) {
+      await gpuBench(`g1 gpu particles instanced, per-frame buffer upload N=${N} ${tag}`, frame(() => LpartsUpload(N, false)));
+      await gpuBench(`g1 gpu particles instanced, upload + JS sim N=${N} ${tag}`, frame(() => LpartsUpload(N, true)));
+      await gpuBench(`g1 gpu particles stateless (vertex shader from seed, age) N=${N} ${tag}`, frame(() => LpartsStateless(N))); }
+    for (const S of [32, 64]) for (const N of [30, 120, 480]) { const Sp = makeSprites(N, S), ex = { px_effect: coverage(N, FLIP[S]), px_rect: N * S * S };
+      await gpuBench(`g2 gpu flipbook batch alpha ${S}x${S} N=${N} ${tag}`, frame(() => Lflip(Sp, 0, S === 64 ? 0 : 64, false)), ex);
+      await gpuBench(`g2 gpu flipbook batch additive ${S}x${S} N=${N} ${tag}`, frame(() => Lflip(Sp, 0, S === 64 ? 0 : 64, true)), ex); }
+    await gpuBench(`g3 gpu separable 9-tap blur at ${tag} + additive composite (blur only, static source)`, frame(() => Lglow(X, RW, RH)));
+    for (const [bw, bh] of [[80, 45], [160, 90], [320, 180]]) if (bw < RW) await gpuBench(`g3 gpu low-res glow ${bw}x${bh}: 120 impacts redrawn + blur + composite to ${tag}`, frame(() => Lglow(X, bw, bh, Lflip(makeSprites(120, 32), 0, 64, true))));
+    await gpuBench(`g3 gpu glow as 240 additive halo quads 32x32 ${tag}`, frame(() => { const Sp = makeSprites(240, 32), b = mkBatch(PB, 240, ['ia', 'ib']), d = b.data; for (let i = 0; i < 240; i++) d.set([Sp.x[i], Sp.y[i], 32, 32, 320, 80, 0, 0.98], i * 8); let first = true; return () => { gl.useProgram(PB.p); const u = first; first = false; drawBatch(b, 240, true, true); }; }));
+    for (const M of [60, 240, 960]) {
+      await gpuBench(`g4 gpu trail ribbon segments L=12, upload M=${M} ${tag}`, frame(() => Ltrails(M, 12, false)), { instances: M * 11 });
+      await gpuBench(`g4 gpu afterimages 4 ghosts + head batch M=${M} ${tag}`, frame(() => Lghosts(M)), { instances: M * 5 });
+      await gpuBench(`g4 gpu feedback buffer (fade pass + heads + composite) M=${M} ${tag}`, frame(() => Lfeedback(X, M))); }
+    for (const N of [10, 40, 160]) for (const ev of [1, 3]) await gpuBench(`g5 gpu bolts lv=5 halo+core segment quads, regen every ${ev} N=${N} ${tag}`, frame(() => Lbolts(N, 5, ev)), { instances: N * 96 });
+    for (const N of [148, 1110, 2190]) { await gpuBench(`g6 gpu tile effects 16x16 batch N=${N} ${tag}`, frame(() => Lflip(makeSprites(N, 16, true), 256, 64, false)), { px_rect: N * 256 });
+      if (N > 148) await gpuBench(`g6 gpu tile effects 32x32 batch N=${N} ${tag}`, frame(() => Lflip(makeSprites(N, 32), 0, 64, false)), { px_rect: N * 1024 }); }
+    await gpuBench(`g7 gpu screen flash quad ${tag}`, frame(() => Lscreen(X, 'flash')));
+    await gpuBench(`g7 gpu vignette shader ${tag}`, frame(() => Lscreen(X, 'vignette')));
+    await gpuBench(`g7 gpu framebuffer copy only (blitFramebuffer) + flash ${tag}`, frame(() => { const c = Lcopy(X), f = Lscreen(X, 'flash'); return k => { c(); f(k); }; }));
+    await gpuBench(`g7 gpu shockwave distortion incl. framebuffer copy ${tag}`, frame(() => Lscreen(X, 'shock', true)));
+    await gpuBench(`g7 gpu palette LUT pass incl. framebuffer copy ${tag}`, frame(() => Lscreen(X, 'lut', true)));
+    for (const C of [30, 120]) for (const [tint, label] of [['none', 'no tint'], ['attr', 'tint (c) as vertex attribute, 1 draw'], ['uniform', 'tint (c) as per-sprite uniform, C+2 draws']])
+      await gpuBench(`g8 gpu auras back+front+6 orbiters+char, ${label} C=${C} ${tag}`, frame(() => Lauras(C, tint)), { instances: C * 9 });
+    // composed scene. At 320x180 the frame is then upscaled 4x to a 1280x720 target (nearest); at 1280x720 everything is drawn native and the blur runs at full size.
+    const SCR = RW === 320 ? mkFB(1280, 720) : null;
+    for (const mult of [1, 4, 16]) for (const clarity of [false, true]) { const L = LOAD(mult, clarity);
+      await gpuBench(`g9 gpu scene load ${mult}x clarity=${clarity ? 'on' : 'off'} ${RW === 320 ? '320x180 + 4x upscale' : 'native 1280x720'}`, () => {
+        const imp = makeSprites(L.impacts, 32), trails = Ltrails(L.missiles, 12, true);
+        const ls = [Lground(X), Lflip(makeSprites(L.tiles, 16, true), 256, 64, false), Lauras(L.casters, 'none'), trails, Lflip(imp, 0, 64, true), LpartsUpload(L.particles, true), Lbolts(L.bolts, 5, 3),
+          RW === 320 ? Lglow(X, 80, 45, Lflip(imp, 0, 64, true, L.glowImpacts)) : Lglow(X, RW, RH, Lflip(imp, 0, 64, true, L.glowImpacts)), Lscreen(X, 'shock', true), Lscreen(X, 'vignette')];
+        return k => { X.bindT(); for (const l of ls) l(k); if (SCR) { gl.bindFramebuffer(gl.FRAMEBUFFER, SCR.fb); gl.viewport(0, 0, 1280, 720); setRes(PF.tex, 1280, 720); srcTex(X.T.tex); full(PF.tex); } }; }, { load: L });
+    } }
+  return out;
+}
+window.runCPU = runCPU; window.runGPU = runGPU;
+</script>
+</body></html>

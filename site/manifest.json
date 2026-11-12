@@ -3,7 +3,7 @@
   "path": "/index.html",
   "title": "Kingsfoil Artifacts",
   "description": "Library homepage generated from catalog.json: series tabs, search, project filter, one shelf per series.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/manifest.json",
@@ -105,61 +105,61 @@
   "path": "/catalog.json",
   "title": "Catalog (v2)",
   "description": "Rich data model: items, series, tags, stats, pairs. Source of truth for the homepage.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/taxonomy.json",
   "title": "Taxonomy",
   "description": "Controlled vocabulary of facets and tag values.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/ai-rts-enemy.webp",
   "title": "Thumbnail ai-rts-enemy.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/procgen-characters.webp",
   "title": "Thumbnail procgen-characters.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/vfx-acid.png",
   "title": "Thumbnail vfx-acid.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/vfx-forest.png",
   "title": "Thumbnail vfx-forest.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/vfx-light.png",
   "title": "Thumbnail vfx-light.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/vfx-rain.png",
   "title": "Thumbnail vfx-rain.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/vfx-snow.png",
   "title": "Thumbnail vfx-snow.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/thumbs/curves-hearthguard.webp",
   "title": "Thumbnail curves-hearthguard.webp",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/curves-hearthguard.html",
@@ -177,7 +177,7 @@
   "path": "/thumbs/curves-matchrpg.png",
   "title": "Thumbnail curves-matchrpg.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/curves-matchrpg.html",
@@ -195,7 +195,7 @@
   "path": "/thumbs/vfx-fire.png",
   "title": "Thumbnail vfx-fire.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/vfx-fire-topdown-pixel.html",
@@ -213,7 +213,7 @@
   "path": "/thumbs/vfx-water.png",
   "title": "Thumbnail vfx-water.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/vfx-water-topdown-pixel.html",
@@ -231,7 +231,7 @@
   "path": "/thumbs/vfx-fog.png",
   "title": "Thumbnail vfx-fog.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/vfx-fog-topdown-pixel.html",
@@ -249,7 +249,7 @@
   "path": "/thumbs/feel-npc-dialog.png",
   "title": "Thumbnail feel-npc-dialog.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/feel-npc-dialog-topdown-pixel.html",
@@ -267,7 +267,7 @@
   "path": "/thumbs/feel-combat-juice.png",
   "title": "Thumbnail feel-combat-juice.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/feel-combat-juice-topdown-pixel.html",
@@ -285,7 +285,7 @@
   "path": "/thumbs/feel-loot-pickup.png",
   "title": "Thumbnail feel-loot-pickup.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/feel-loot-pickup-topdown-pixel.html",
@@ -303,7 +303,7 @@
   "path": "/thumbs/vfx-grass.png",
   "title": "Thumbnail vfx-grass.png",
   "description": "Card thumbnail",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/vfx-grass-topdown-pixel.html",
@@ -321,24 +321,42 @@
   "path": "/browse.html",
   "title": "Techniques and all pages",
   "description": "Technique atlas and the sortable list of every page, generated from catalog.json.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/nav.json",
   "title": "Navigation data",
   "description": "Per-page series, previous/next and study/sandbox links, generated from catalog.json and read by nav.js.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/nav.js",
   "title": "Shared top bar",
   "description": "Adds the site bar (home, series, previous/next, study/sandbox switch) and the end-of-study links to every page.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
  },
  {
   "path": "/favicon.svg",
   "title": "Favicon",
   "description": "The Kingsfoil mark for the browser tab. Linked by index.html and browse.html, added to every other page by nav.js.",
-  "date": "2026-11-11"
+  "date": "2026-11-12"
+ },
+ {
+  "path": "/thumbs/vfx-magic.png",
+  "title": "Thumbnail vfx-magic.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-12"
+ },
+ {
+  "path": "/vfx-magic-topdown-pixel.html",
+  "title": "Top-down pixel magic: tiny algorithms for spell projectiles, auras, hit sparks and readable spell feedback",
+  "description": "Missiles that fly in 150 x sqrt(tiles) ms, hit sparks on a 75 ms clock, auras in back and front slots, chain lightning, rune circles, and a clarity manager that keeps 30 casters readable, with measured costs for every layer.",
+  "date": "2026-11-12"
+ },
+ {
+  "path": "/vfx-magic-sandbox.html",
+  "title": "Top-down pixel magic Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-12"
  }
 ]
