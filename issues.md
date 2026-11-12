@@ -956,8 +956,13 @@ How to use this file:
   0.81 came from scaling the measured shares 0.23 and 0.55 by the accel ratio. The report cites the model,
   so its 2 sentences (A3 and §11) now read 0.35 and 0.82, and the study page is rebuilt. The lab is
   unchanged.
-- [ ] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
+- [x] **179.** `P6` "row 1" label hidden behind lines at 390 px. Elite circles have no legend entry (`:109`,
   `:422`). XP_PAST_LEVEL reads "9/24" at the 3/8 stop (`:255`). `REACH` is unused (`:160`).
+  Done: four small fixes. The "row 1" label moved to the right end of its line, where no series runs: 6
+  lines crossed it at 390 px and 4 at 1280 px, now 0. The power chart's hollow blue circles get a legend
+  entry, "Elite, current build". XP_PAST_LEVEL prints 24ths in lowest terms: the stops read 1/4, 7/24, 1/3,
+  9/24, 10/24, 11/24, 1/2 and now 1/4, 7/24, 1/3, 3/8, 5/12, 11/24, 1/2. The unused `REACH` table is
+  deleted.
 - [ ] **180.** `P6` (suspected) localStorage values are accepted without range checks (`:224`), so `every:0`
   would print NaN.
 
