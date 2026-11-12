@@ -648,8 +648,11 @@ How to use this file:
 - [x] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
   Done: `applyTool` clamps the wet bounding box. A pour 30 px above the canvas set `by0` to -34 and the HUD
   read "acid NaN u". Now `by0` stays 1 and the HUD reads a number.
-- [ ] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
+- [x] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
   slime cap.
+  Done: confirmed first: paused on a frame not divisible by 6, Repair gear left the chest bar at 20%. The
+  HUD now counts drawn frames, so it refreshes twice in the 12 frames after any input. 40 spawn clicks gave
+  42 slimes, now 12.
 - [ ] **124.** `P6` 8x speed with the room flooded costs 29 ms median at 6x throttle.
 
 ## vfx-rain

@@ -242,7 +242,7 @@ function burst(s){const r=rad(s)*1.5;spill(s.x|0,(s.y-2)|0,r|0,.5+s.mass*.025);f
 function split(s){const m=s.mass/2;s.mass=m;const a=rnd()*6.28;const n=newSlime(s.x+Math.cos(a)*4,s.y+Math.sin(a)*3,m);n.vx=Math.cos(a)*40;n.vy=Math.sin(a)*30;s.vx=-n.vx;s.vy=-n.vy;slimes.push(n);}
 function slimeBlocked(x,y){x|=0;y|=0;if(x<2||y<2||x>=W-2||y>=H-2)return true;const i=y*W+x;return M[i]===M_WALL||(SOL[i]&&M[i]!==M_WOOD);}
 // the spawn tool puts the slime on the nearest free pixel within 16 px, so a click on a wall or a crate lands beside it
-function spawnSlime(x,y){for(let r=0;r<=16;r++){const n=Math.max(1,r*6);for(let k=0;k<n;k++){const a=k/n*6.283,sx=x+Math.cos(a)*r,sy=y+Math.sin(a)*r;if(!slimeBlocked(sx,sy)){slimes.push(newSlime(sx,sy,16));return;}}}}
+function spawnSlime(x,y){if(slimes.length>=12)return;for(let r=0;r<=16;r++){const n=Math.max(1,r*6);for(let k=0;k<n;k++){const a=k/n*6.283,sx=x+Math.cos(a)*r,sy=y+Math.sin(a)*r;if(!slimeBlocked(sx,sy)){slimes.push(newSlime(sx,sy,16));return;}}}}
 function updateSlimes(dt){
   for(let si=slimes.length-1;si>=0;si--){const s=slimes[si];const r=rad(s);s.t-=dt;s.hurt=Math.max(0,s.hurt-dt);
     const pd=Math.hypot(player.x-s.x,player.y-s.y);
@@ -387,12 +387,13 @@ let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
 if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
 for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
 function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+let hudN=0; // counts drawn frames, so the HUD also refreshes during the frames that run while paused
 function loop(now){requestAnimationFrame(loop);if(skipFrame())return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!paused){const t0=performance.now();simAcc+=dt*60*simSpeed;let n=0;while(simAcc>=1&&n<16){simStep();simAcc--;n++;}if(simAcc>4)simAcc=0;
     if(frame%4===0)computeGlow();simMs=simMs*.9+(performance.now()-t0)*.1;
     updatePlayer(dt);updateSlimes(dt);updateParts(dt);for(const fl of flasks){if(fl.alive){const i=(fl.y+4)*W+fl.x+2;if(fl.y<40&&M[i]!==M_WOOD)breakFlask(fl);}}
     if(down&&tool!=='walk'&&tool!=='item'&&tool!=='slime')applyTool(lastPt[0],lastPt[1]);frame++;}
-  render();if(frame%6===0)hud();}
+  render();if(hudN++%6===0)hud();}
 function hud(){let tot=0;for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++)tot+=A[y*W+x];
   document.getElementById('hudt').textContent=`acid ${tot.toFixed(0)} u · slimes ${slimes.length} · sim ${simMs.toFixed(2)} ms`;
   const e=player.eq,set=(id,v)=>document.getElementById(id).style.width=Math.max(0,v*100)+'%';set('b_hp',player.hp/100);set('b_helm',e.helm.q);set('b_chest',e.chest.q);set('b_boots',e.boots.q);set('b_sword',e.sword.q);}
