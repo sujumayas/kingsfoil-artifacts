@@ -208,10 +208,12 @@ trees.forEach((t,i)=>grid[clamp((t.y/GS)|0,0,GCH-1)*GCW+clamp((t.x/GS)|0,0,GCW-1
 const DG=16,DW=WW/DG,DH=WH/DG,DEN=new Float32Array(DW*DH);for(const t of trees){if(t.u)continue;const k=((t.y/DG)|0)*DW+((t.x/DG)|0);if(k>=0&&k<DEN.length)DEN[k]+=.34;}
 {const tmp=DEN.slice();for(let y=1;y<DH-1;y++)for(let x=1;x<DW-1;x++){const i=y*DW+x;DEN[i]=Math.min(1,(tmp[i]*4+tmp[i-1]+tmp[i+1]+tmp[i-DW]+tmp[i+DW])/8);}}
 
-// ---------- ground (re-baked once per season) ----------
-const ground=document.createElement('canvas');ground.width=WW;ground.height=WH;const gctx=ground.getContext('2d');
+// ---------- ground: one canvas per season, baked once and kept ----------
+// the season on screen is baked on first use. The other three are baked in the first seconds after load, one per timer tick
+const GCACHE=[null,null,null,null];let ground=null;
+function useGround(s){const G=GCACHE[s]||genGround(s);ground=G.c;miniImg=G.mini;}
 const CM=[[128,150,110],[196,178,98],[70,118,92],[64,146,60]];
-function genGround(s){const id=gctx.createImageData(WW,WH),px=new Uint32Array(id.data.buffer);
+function genGround(s){const gc=document.createElement('canvas');gc.width=WW;gc.height=WH;const gctx=gc.getContext('2d');const id=gctx.createImageData(WW,WH),px=new Uint32Array(id.data.buffer);
   for(let y=0;y<WH;y++){const fy=Math.min(CH-1.001,y/CG),y0=fy|0,ty=fy-y0,pxp=pathX(y);
     for(let x=0;x<WW;x++){const fx=Math.min(CW-1.001,x/CG),x0=fx|0,tx=fx-x0,i0=y0*CW+x0;
       const T=(BT[i0]*(1-tx)+BT[i0+1]*tx)*(1-ty)+(BT[i0+CW]*(1-tx)+BT[i0+CW+1]*tx)*ty,M=(BM[i0]*(1-tx)+BM[i0+1]*tx)*(1-ty)+(BM[i0+CW]*(1-tx)+BM[i0+CW+1]*tx)*ty;
@@ -229,7 +231,7 @@ function genGround(s){const id=gctx.createImageData(WW,WH),px=new Uint32Array(id
   // minimap
   const mid=mctx.createImageData(CW,CH),mp=new Uint32Array(mid.data.buffer);for(let i=0;i<CW*CH;i++){let c=U(BIOMES[BB[i]].col);if(s===3&&BT[i]<.62)c=U('#cfd8e8');mp[i]=c;}
   for(const t of trees){if(t.u)continue;const i=((t.y/CG)|0)*CW+((t.x/CG)|0);const c=mp[i];mp[i]=(255<<24)|((((c>>16)&255)*.6)<<16)|((((c>>8)&255)*.6)<<8)|((c&255)*.6);}
-  for(let y=0;y<CH;y++){const x=(pathX(y*CG)/CG)|0;mp[y*CW+x]=U('#a0835e');}miniImg=mid;}
+  for(let y=0;y<CH;y++){const x=(pathX(y*CG)/CG)|0;mp[y*CW+x]=U('#a0835e');}return GCACHE[s]={c:gc,mini:mid};}
 let miniImg=null;
 
 // ---------- player sprites (normal / shade / silhouette) ----------
@@ -276,7 +278,7 @@ function drawBirdPerch(b){const x=Math.round(b.px-camX+(b.tree.sw||0)),y=Math.ro
 
 // ---------- update ----------
 function update(dt){time+=dt;if(auto){season=(season+dt*.025)%4;}
-  const gs=Math.floor(season+.5)%4;if(gs!==lastGroundSeason){lastGroundSeason=gs;genGround(gs);drawAtlas(gs);document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===gs));}
+  const gs=Math.floor(season+.5)%4;if(gs!==lastGroundSeason){lastGroundSeason=gs;useGround(gs);drawAtlas(gs);document.querySelectorAll('#sbtns [data-s]').forEach(b=>b.classList.toggle('on',+b.dataset.s===gs));}
   let ix=0,iy=0;if(keys.arrowleft||keys.a)ix--;if(keys.arrowright||keys.d)ix++;if(keys.arrowup||keys.w)iy--;if(keys.arrowdown||keys.s)iy++;
   if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<1.5)player.tx=null;else{ix=dx/L;iy=dy/L;}}
   let slow=1;nearby(player.x,player.y,8,t=>{if(!t.u)return;const dx=player.x-t.x,dy=(player.y-t.y)*1.6;if(dx*dx+dy*dy<40){slow=.7;if(player.moving){t.shake=Math.max(t.shake,.55);if(rnd()<dt*6)leafBurst(t,1);}}});
@@ -366,6 +368,7 @@ addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 spawnBirds();requestAnimationFrame(loop);
+{let k=0;const bake=()=>{while(k<4&&GCACHE[k])k++;if(k<4){genGround(k);setTimeout(bake,250);}};setTimeout(bake,400);}
 })();
 </script>
 <script src="nav.js" defer></script>

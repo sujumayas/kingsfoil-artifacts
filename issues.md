@@ -841,8 +841,12 @@ How to use this file:
   row 0. Now a bare tree forks at 45% of its crown height, 3 levels deep with a wider fan and lengths sized
   to the space, and `S()` floors. Share of a bare sprite's pixels in row 0: oak 9.4% to 2.4%, maple 12% to
   1.9%, birch 15% to 3.6%, cherry 14.1% to 3.9%. Checked in a zoomed sheet of all 30 bare sprites.
-- [ ] **160.** `P6` Each season change freezes the frame for 60 ms, 382 ms at 6x throttle. `genGround` redoes
+- [x] **160.** `P6` Each season change freezes the frame for 60 ms, 382 ms at 6x throttle. `genGround` redoes
   1280 x 960 pixels (`:276`, `:211` to `:229`). Auto year hits it every 40 s. Fix: bake the four grounds once.
+  Done: each season's ground and minimap are baked once and kept. The first one bakes on use, the other
+  three in the first 1.2 s after load. A season switch cost 49 to 62 ms (291 to 381 ms at 6x throttle) every
+  time. After the bake it costs 0.2 to 1 ms (0 to 1.8 ms throttled). Memory cost is 3 more 1280 x 960
+  canvases.
 - [ ] **161.** `P4` Moving the Wind slider makes the canopy thrash, more the longer the page is open (`:245`,
   phase is `time*wind`). Fix: accumulate a gust phase.
 - [ ] **162.** `P3` Perched birds walk off their tree over time (`:259`). Fix: clamp to the crown width.
