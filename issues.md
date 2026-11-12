@@ -674,8 +674,10 @@ How to use this file:
   edges. A noise table that drifts with the wind breaks it into wisps. The veil threshold mixes Bayer with a
   per-pixel hash, so thin mist is no longer a regular lattice. After 40 s of storm the plaza was 19% tinted
   and 37% solid mist. Now 13% tinted and 1% solid, and the plaza, the house and the player stay readable.
-- [ ] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
+- [x] **127.** `P3` Rain never fully stops after the first shower. 60 streaks keep falling because `I` never
   returns to exactly 0 (`:283`, `:345`). Fix: `I>.02`.
+  Done: `I` decays toward 0 and never reaches it (7e-10 after 60 s of sun), so 60 streaks kept falling.
+  Streaks and background hits now need `I>.02`. 60 drops alive before, 0 after.
 - [ ] **128.** `P4` The pond shows a 4 px dot lattice in sunshine that never fades. Water never dries and keeps
   feeding evaporation mist (`:185`, `:115`, `:229`, `:231`).
 - [ ] **129.** `P3` The "dry" floor under the awning gets soaked, 96% wet after 60 s of storm (`:213`, `:214`,

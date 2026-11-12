@@ -202,7 +202,7 @@ function impact(x,y,layer){x|=0;y|=0;if(x<1||y<1||x>=W-1||y>=H-1)return;const i=
 // ---------- sim step (fixed 60 Hz) ----------
 function simStep(sunny){
   // background rain hits (most of the wetting comes from these "virtual drops")
-  const n=(I*1500)|0;for(let k=0;k<n;k++){const i=(rnd()*NP)|0;const x=i%W,y=(i/W)|0;if(rnd()<EXP[i]*Math.min(1.3,curtain(x,y))){if(player.umb&&Math.abs(x-player.x)<6&&Math.abs(y-player.y)<4)continue;
+  const n=I>.02?(I*1500)|0:0;for(let k=0;k<n;k++){const i=(rnd()*NP)|0;const x=i%W,y=(i/W)|0;if(rnd()<EXP[i]*Math.min(1.3,curtain(x,y))){if(player.umb&&Math.abs(x-player.x)<6&&Math.abs(y-player.y)<4)continue;
     if(S[i]===WATER||WAT[i]>.12){if(rnd()<.35)R0[i]-=.9;}wetHit(i,(8+28*I)|0);if(S[i]===ROOF)roof=Math.min(1,roof+.00002);}}
   // walls catch splash-back at their feet in heavy rain
   if(I>.5)for(let k=0;k<60;k++){const x=26+((rnd()*87)|0),y=78+((rnd()*3)|0);WET[y*W+x]=Math.min(255,WET[y*W+x]+20);}
@@ -293,7 +293,7 @@ function updateParts(dt){for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.l
   if(p.k==='spl'||p.k==='mud'||p.k==='spark'){p.vz-=150*dt;if(p.z<0){parts.splice(k,1);continue;}}
   else if(p.k==='drip'){p.vz-=200*dt;if(p.z<=0){impact(p.x,p.y,1);const i=(p.y|0)*W+(p.x|0);if(i>0&&i<NP){WAT[i]+=.03;if(S[i]===WATER||WAT[i]>.12)R0[i]-=1.5;else if(rnd()<.5)parts.push({k:'spl',x:p.x,y:p.y,z:0,vx:(rnd()-.5)*20,vy:0,vz:14,life:.2});}parts.splice(k,1);continue;}}
   else if(p.k==='flame'){p.vx+=wind*10*dt;}}}
-function updateDrops(dt){const want=Math.min(MAXD,Math.round(I>0?60+1300*Math.pow(I,1.25):0));
+function updateDrops(dt){const want=Math.min(MAXD,Math.round(I>.02?60+1300*Math.pow(I,1.25):0));
   for(let k=0;k<MAXD;k++){if(!D.on[k]){if(k<want&&rnd()<dt*4)spawnDrop(k);continue;}
     const l=D.l[k],vz=[110,170,240][l]*(.55+.45*I);D.z[k]-=vz*dt;D.x[k]+=wind*vz*.55*dt;
     if(D.z[k]<=0){impact(D.x[k],D.y[k],l);if(k<want)spawnDrop(k);else D.on[k]=0;}}}
