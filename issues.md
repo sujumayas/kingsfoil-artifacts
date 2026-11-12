@@ -642,7 +642,9 @@ How to use this file:
   Done: border cells run the same blur with clean air outside the grid, and `buildRoom` clears `G2`. With
   the bars gone and the trench flooded at 8x for 20 s, the border peaked at 0.48 against 0.33 inside and
   kept 0.48 after Reset room. Now the border reads 0.00 and reset leaves 0.
-- [ ] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
+- [x] **121.** `P6` Spawn slime on a wall leaves it stuck inside the wall (`:395`, `:238`).
+  Done: the tool searches up to 16 px for a free pixel. Clicks on the top wall and the left wall spawned
+  slimes that were still inside the wall 5 s later. Now they land at the wall foot and walk off.
 - [ ] **122.** `P6` Dragging Pour acid above the canvas flashes "acid NaN u" (`:392`, `:383`).
 - [ ] **123.** `P6` (suspected) While paused the HUD runs every frame or never (`:382`). The spawn tool has no
   slime cap.

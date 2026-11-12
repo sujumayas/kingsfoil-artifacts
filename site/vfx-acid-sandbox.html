@@ -241,6 +241,8 @@ const rad=s=>2.5+Math.sqrt(Math.max(0,s.mass))*1.25;
 function burst(s){const r=rad(s)*1.5;spill(s.x|0,(s.y-2)|0,r|0,.5+s.mass*.025);for(let k=0;k<10;k++){const a=rnd()*6.28;parts.push({k:'drop',x:s.x,y:s.y,z:4,vx:Math.cos(a)*40,vy:Math.sin(a)*24,vz:30+rnd()*30,life:2});}}
 function split(s){const m=s.mass/2;s.mass=m;const a=rnd()*6.28;const n=newSlime(s.x+Math.cos(a)*4,s.y+Math.sin(a)*3,m);n.vx=Math.cos(a)*40;n.vy=Math.sin(a)*30;s.vx=-n.vx;s.vy=-n.vy;slimes.push(n);}
 function slimeBlocked(x,y){x|=0;y|=0;if(x<2||y<2||x>=W-2||y>=H-2)return true;const i=y*W+x;return M[i]===M_WALL||(SOL[i]&&M[i]!==M_WOOD);}
+// the spawn tool puts the slime on the nearest free pixel within 16 px, so a click on a wall or a crate lands beside it
+function spawnSlime(x,y){for(let r=0;r<=16;r++){const n=Math.max(1,r*6);for(let k=0;k<n;k++){const a=k/n*6.283,sx=x+Math.cos(a)*r,sy=y+Math.sin(a)*r;if(!slimeBlocked(sx,sy)){slimes.push(newSlime(sx,sy,16));return;}}}}
 function updateSlimes(dt){
   for(let si=slimes.length-1;si>=0;si--){const s=slimes[si];const r=rad(s);s.t-=dt;s.hurt=Math.max(0,s.hurt-dt);
     const pd=Math.hypot(player.x-s.x,player.y-s.y);
@@ -403,7 +405,7 @@ function applyTool(x,y){if(tool==='acid'){for(let yy=y-3;yy<=y+3;yy++)for(let xx
 const toCell=e=>{const r=cv.getBoundingClientRect();return [Math.floor((e.clientX-r.left)/r.width*W),Math.floor((e.clientY-r.top)/r.height*H)];};
 cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);const [x,y]=toCell(e);lastPt=[x,y];
   if(tool==='walk'){player.tx=x;player.ty=y;const near=slimes.some(s=>Math.hypot(s.x-x,s.y-y)<rad(s)+4&&Math.hypot(s.x-player.x,s.y-player.y)<22);if(near){player.tx=null;const dx=x-player.x,dy=y-player.y;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');attack();}}
-  else if(tool==='slime')slimes.push(newSlime(x,y,16));else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
+  else if(tool==='slime')spawnSlime(x,y);else if(tool==='item'){const k=document.getElementById('itemsel').value;placeItem(k,x,y);}else applyTool(x,y);});
 cv.addEventListener('pointermove',e=>{lastPt=toCell(e);});cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercancel',()=>down=false);
 // a mouse or touch on a slider, checkbox or select must not keep the keyboard: drop focus once the value is set
 let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
