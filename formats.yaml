@@ -52,3 +52,15 @@ formats:
     page: "{id}-topdown-pixel.html"
     sandbox_page: "{id}-sandbox.html"
     doc: docs/formats/feel-pixel.md
+
+  mechanics-playable:
+    status: active
+    title: Mechanics study of one Kingsfoil game, with a playable sandbox
+    use_for: The whole mechanical kit of one Kingsfoil game (movement, animation, elements, enemies, map design,
+      difficulty curve, social loops), researched as families of techniques from the games that did it best,
+      with a playable canvas sandbox the reader plays to feel each technique on and off.
+    template: mechanics-speedrunner
+    sandbox: required
+    page: "{id}.html"
+    sandbox_page: "{id}-sandbox.html"
+    doc: docs/formats/mechanics-playable.md

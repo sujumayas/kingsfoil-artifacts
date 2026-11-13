@@ -394,5 +394,23 @@
   "title": "Fire 32 Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-13"
+ },
+ {
+  "path": "/thumbs/mechanics-speedrunner.png",
+  "title": "Thumbnail mechanics-speedrunner.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/mechanics-speedrunner.html",
+  "title": "SpeedRunner mechanics: movement, animation, elements, enemies, maps, curves and the race, from the games that did it best",
+  "description": "The whole kit of a side-view samurai time attack, from the games that did it best: the jump and its forgiveness windows, a procedural rig, elements and enemies on a level clock, maps with medals and designed skips, a countdown-free restart, and ghosts, splits and leaderboards that a server can verify by re-running the inputs.",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/mechanics-speedrunner-sandbox.html",
+  "title": "SpeedRunner Mechanics Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-13"
  }
 ]

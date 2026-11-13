@@ -107,6 +107,26 @@
     "feel-loot-pickup"
    ],
    "upcoming": []
+  },
+  {
+   "id": "mechanics",
+   "title": "Game mechanics",
+   "subtitle": "One Kingsfoil game per study, the whole moving kit",
+   "blurb": "What made a genre's mechanics feel great in the games that did it best: movement, elements, enemies, maps, curves and social loops, with a playable sandbox that lets you feel each choice.",
+   "nav_label": "Mechanics series",
+   "order": [
+    "mechanics-speedrunner"
+   ],
+   "upcoming": [
+    {
+     "title": "Hearthguard mechanics",
+     "blurb": "Hero control, lanes, Town building and the campfire, from the hero defense maps and MOBAs that did them best."
+    },
+    {
+     "title": "MatchRPG mechanics",
+     "blurb": "Board feel, cascades, talents and the descent, from the match-3 RPGs that did them best."
+    }
+   ]
   }
  ],
  "items": [
@@ -2315,6 +2335,131 @@
      "damage-over-time",
      "autotile-dual-grid",
      "random-tick"
+    ]
+   },
+   "maturity": "prototype"
+  },
+  {
+   "id": "mechanics-speedrunner",
+   "type": "study",
+   "path": "/mechanics-speedrunner.html",
+   "title": "SpeedRunner mechanics: movement, animation, elements, enemies, maps, curves and the race, from the games that did it best",
+   "short": "SpeedRunner mechanics",
+   "nav": "SpeedRunner",
+   "summary": "The whole kit of a side-view samurai time attack, from the games that did it best: the jump and its forgiveness windows, a procedural rig, elements and enemies on a level clock, maps with medals and designed skips, a countdown-free restart, and ghosts, splits and leaderboards that a server can verify by re-running the inputs.",
+   "series": {
+    "id": "mechanics",
+    "number": 1
+   },
+   "date": "2026-11-13",
+   "updated": "2026-11-13",
+   "thumb": "/thumbs/mechanics-speedrunner.png",
+   "tags": {
+    "genre": [
+     "platformer",
+     "time-attack"
+    ],
+    "perspective": [
+     "side-view"
+    ],
+    "art-style": [
+     "vector-ink"
+    ],
+    "engine": [
+     "web-canvas",
+     "engine-agnostic"
+    ],
+    "platform": [
+     "web",
+     "mobile",
+     "desktop"
+    ],
+    "project": [
+     "speedrunner"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "platformer-mechanics"
+    ],
+    "technique": [
+     "coyote-time",
+     "jump-buffer",
+     "variable-jump",
+     "corner-correction",
+     "wall-jump",
+     "level-clock",
+     "instant-restart",
+     "splits",
+     "ghost-replay",
+     "input-replay-validation"
+    ]
+   },
+   "stats": {
+    "words": 29688,
+    "techniques": 40,
+    "figures": 41,
+    "games": 50,
+    "sources": 218
+   },
+   "pair": "mechanics-speedrunner-sandbox"
+  },
+  {
+   "id": "mechanics-speedrunner-sandbox",
+   "type": "sandbox",
+   "path": "/mechanics-speedrunner-sandbox.html",
+   "title": "SpeedRunner Mechanics Sandbox (playable)",
+   "series": {
+    "id": "mechanics",
+    "number": 1
+   },
+   "short": "SpeedRunner mechanics sandbox",
+   "summary": "Playable companion to the study.",
+   "pair": "mechanics-speedrunner",
+   "date": "2026-11-13",
+   "updated": "2026-11-13",
+   "thumb": "/thumbs/mechanics-speedrunner.png",
+   "tags": {
+    "genre": [
+     "platformer",
+     "time-attack"
+    ],
+    "perspective": [
+     "side-view"
+    ],
+    "art-style": [
+     "vector-ink"
+    ],
+    "engine": [
+     "web-canvas",
+     "engine-agnostic"
+    ],
+    "platform": [
+     "web",
+     "mobile",
+     "desktop"
+    ],
+    "project": [
+     "speedrunner"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "platformer-mechanics"
+    ],
+    "technique": [
+     "coyote-time",
+     "jump-buffer",
+     "variable-jump",
+     "corner-correction",
+     "wall-jump",
+     "level-clock",
+     "instant-restart",
+     "splits",
+     "ghost-replay",
+     "input-replay-validation"
     ]
    },
    "maturity": "prototype"

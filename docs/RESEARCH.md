@@ -5,7 +5,7 @@ research, writing and figures. The mechanics of ids, scaffolding, building and s
 [ADDING-A-STUDY.md](ADDING-A-STUDY.md); series and formats in [FORMATS.md](FORMATS.md); the exact report
 layout in the format doc, `docs/formats/<format>.md`.
 
-The quality bar is the newest recipe study (today `vfx-fire-32px` for `vfx-pixel`; the format template stays `vfx-light`, so replace a scaffold's `build.py` and `core.js` with the newest study's). Read its `report.md`, its
+The quality bar is the newest recipe study (today `vfx-fire-32px` for `vfx-pixel`, where the format template stays `vfx-light`, so replace a scaffold's `build.py` and `core.js` with the newest study's; `mechanics-speedrunner` for `mechanics-playable`). Read its `report.md`, its
 `notes/CONTEXT.md` and one of its notes before starting.
 
 ## 1. Scope the request

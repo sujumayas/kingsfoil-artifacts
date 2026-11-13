@@ -1,0 +1,345 @@
+<!-- Figures (Agent F): families C, D, E, F, G, H. FIG blocks mapped to sections in build.py -->
+<!--FIG spring-->
+<figure class="fig" data-demo="spring" id="fig-spring">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A spring at 1.45x the jump, with auto-jump semantics</h4><span class="illu">Course layout is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A stick samurai runs across paper, steps on a spring and launches far above the height of a plain jump. A grey dotted arc shows the plain jump, a red dotted arc the spring launch, and a bracket marks the apex in body lengths"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Spring multiplier <input type="range" min="1.2" max="1.8" step="0.05" value="1.45" data-k="mult"><output data-o="mult">1.45x</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="cut"> Player lets go of jump at once (the cut)</label>
+    <label><input type="checkbox" data-k="side"> Side booster</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The spring is a one-way tile with a launch vector. At 1.45x jumpVel it fires the hero at 1204 u/s to an apex of about 290 u, 6.3 body lengths, against 3.0 for a plain jump [K; I]. The spring compresses for 150 ms before it fires, the pre-animation every element gets [I]. Celeste's spring sets 185 px/s against a 105 px/s jump, zeroes X, sets a 0.2 s variable-jump timer and AutoJump so an early release does not cut the launch [V, S7]. Tick the cut to feel why. A player who releases by reflex multiplies vy by 0.45 and falls short [K; I]. The side booster gives 1.3x maxRun sideways with air control locked for 0.3 s, Celeste's side spring in SpeedRunner numbers [V, S7; I]. The dashed line at the top is the 545 u view, which is why every spring needs a camera zone (B3) [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG clock-->
+<figure class="fig" data-demo="clock" id="fig-clock">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Movers, a wheel and timed blocks on the level clock</h4><span class="illu">Element positions are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Two lanes show the same course with a moving platform, a wheel carrying four tiles and three timed blocks. Runner A starts first, runner B 1.3 s later. Each lane prints its own level clock in steps; at equal step counts the elements sit in the same places"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Scrub both level clocks <input type="range" min="0" max="8" step="0.01" value="0" data-k="t"><output data-o="t">0.00 s</output></label>
+    <button type="button" class="btn ghost" data-b="b">Start runner B now</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every element reads the run's clock in integer steps, never the wall clock. The mover runs a 2.6 s period, the wheel of radius 92 u carries four tiles round in 3.6 s, and the timed blocks follow the report's 4-tick cycle on a 0.5 s tick, visible two ticks and gone two, each block one sequence number apart as in Mega Man Maker [K; V, S159; I]. Runner B starts 1.3 s of wall time after runner A, so the lanes disagree on the wall clock and agree on every element at the same step count. Drag the scrub slider to set both clocks by hand; the elements follow the slider and the runners wait. The record format is the game's <code>[x, y, w, h, tag]</code> plus one optional <code>{period, phase, dir, link}</code> slot [K; I]. The mover position uses a 4096-entry sine table built with Math.fround, because <code>Math.sin</code> is not required to round the same in every engine (H3) [V, S125].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG telegraph-->
+<figure class="fig" data-demo="telegraph" id="fig-telegraph">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Pre-shakes, spike silhouettes and the 1 s warning rule</h4><span class="illu">Saw speed and the runner's reaction time are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs toward a timed block over a pit, then a spike strip, then a saw rolling toward him. A bar at the top shows the seconds from the saw becoming visible to contact against the 1 s rule. With warnings on the block shakes before it vanishes and a red triangle appears at the right edge a second before the saw"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Saw speed toward the runner <input type="range" min="200" max="1400" step="50" value="700" data-k="v"><output data-o="v">700 u/s</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="warn" checked> Warnings (pre-shake and the 1 s cue)</label>
+    <label><input type="checkbox" data-k="hb"> Show hitboxes</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Three hazards, three lead times. The timed block shakes for 0.3 s before it vanishes, so the runner reads it as gone and jumps the pit; switch warnings off and the block drops him into the pit without a cue [I]. The spike strip never moves, so it reads from afar. Its hitbox is 16 u tall and inset 4 u on each side, and the sawtooth is drawn 1 u wider than it kills [K; I]. The saw moves toward a 420 u/s runner. The view shows 621 u ahead, so a hazard closing at more than about 400 u/s is visible for under 1 s. The rule from Jetpack Joyride's missile siren and Solipskier's gate preview is that anything that fast gets a cue a second ahead [V, S75, S140, S141; K; I]. The runner here notices a hazard 250 ms after it appears or is announced, an illustrative reaction time. Push the saw past 1100 u/s with warnings off and it hits him before he can move.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG routes-->
+<figure class="fig" data-demo="routes" id="fig-routes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One designed skip per map: when the risk pays</h4><span class="illu">Skip save, fail chance and the map are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A schematic map with a long safe line and a short dashed skip over a gap onto a one-way tile. Black dots stream along the safe line, red dots take the skip and some fall. Two bars below show the expected gain per attempt with a 3.4 s restart and a 0.5 s restart"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Skip saves <input type="range" min="0" max="8" step="0.1" value="3" data-k="s"><output data-o="s">3.0 s</output></label>
+    <label class="rng">Fail chance <input type="range" min="0" max="60" step="1" value="30" data-k="p"><output data-o="p">30%</output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Placed at <input type="range" min="0" max="30" step="1" value="12" data-k="t"><output data-o="t">12 s into the run</output></label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>In a full-restart game a skip that saves s seconds and fails with probability p pays only when s(1 - p) &gt; p(t + restart), where t is how far into the run it sits [K; I]. The bars compute that for the game's 3.4 s restart and the proposed 0.5 s. Near the finish of a 25 s map at a 30% fail rate the skip must save about 12 s, at the start about 2.3 s, which is why Neon White placed its late shortcuts only where a practiced player cannot miss and hinted them after Gold [V, S66, S67; I]. Trackmania's puzzle rules keep a straightforward path beside the cuts and mappers make the lazy route narrower [V, S25, S172]. Aim for skips worth 8 to 15% of the author time; under the 6% gold band nobody bothers, over 20% the safe route dies [I]. The dots are a seeded simulation, not telemetry.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG checkpoints-->
+<figure class="fig" data-demo="checkpoints" id="fig-checkpoints">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Splits only, respawn, or both: what one death costs</h4><span class="illu">Section lengths are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Three lanes run the same four-section course. All three runners die at the red mark in section 3. The top lane restarts the whole map through a 3 s countdown, the middle lane respawns at the last checkpoint and loses its ranking, the bottom lane respawns with the timer running. Each lane shows its timer and the cost of the death"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Death position in section 3 <input type="range" min="0" max="100" step="1" value="60" data-k="pos"><output data-o="pos">60%</output></label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Three contracts. SpeedRunner's four checkpoints per map only record splits, so a death in section 3 replays sections 1 and 2 plus 0.38 s dead and a 3 s countdown [K]. Super Mario Maker (two flags per course since 2015), Celeste (every room) and VVVVVV (several per screen) respawn the player, cutting the cost of failure to the section [V, S155, S209]. Trackmania does both. Backspace respawns at the last checkpoint with the timer still running, so the lost seconds are the only penalty, and a community plugin times no-respawn runs because players want both boards [V, S194, S35]. The recommendation keeps splits for the record and adds respawn as an unranked practice tool announced before the run, matching speedrun.com's ban on save-and-quit retries on individual-level boards [V, S162; I]. Move the slider to see the cost grow with the distance from the checkpoint.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG patroller-->
+<figure class="fig" data-demo="patroller" id="fig-patroller">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A clock patroller with a 3 u inset and the two-step contact rule</h4><span class="illu">Ledge length and start delays are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A one-eyed ink blob walks back and forth on a ledge while a samurai runs in and jumps at a fixed spot. Each attempt starts a little later, so the blob is in a different place. A label counts overlapping physics steps; one step is forgiven, two kill"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Patrol speed <input type="range" min="40" max="200" step="5" value="85" data-k="speed"><output data-o="speed">85 u/s</output></label>
+    <label class="rng">Steps of overlap to hit <input type="range" min="1" max="4" step="1" value="2" data-k="steps"><output data-o="steps">2 steps</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="hb" checked> Show hitboxes</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The patroller's x is a triangle wave of the level clock, the report's <code>patrolX</code>, so it resets with the run and the ghost sees the same enemy [I]. SMB1 walks a Goomba at 0.5 px per frame against Mario's 2.5 px run, a 1:5 ratio, which scales to about 85 u/s against SpeedRunner's 420 [V, S9; I]. SMB1 also draws enemies larger than they kill, 10x12 or 12x12 inside a 16 px cell, runs player-enemy contact only on even frames and needs two consecutive overlapping frames before damage [V, S9, S11]. Here the blob's hitbox is inset 3 u per side and a hit needs two consecutive overlapping steps, 16.7 ms at 120 Hz [I]. The runner jumps at the same spot every time; only the start delay changes, so the tally shows how often the inset and the second step forgive a graze. Tick 0.25x to watch the overlap count.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG chaser-->
+<figure class="fig" data-demo="chaser" id="fig-chaser">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A chaser at 0.85x maxRun, spawned 1.5 s after the split</h4><span class="illu">Course and the runner's hesitations are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs a course with three rocks. After he passes the first checkpoint an all-black samurai with a red eye appears there and runs after him. A pace margin bar at the top shrinks whenever the runner hesitates before a rock. If the chaser reaches him the run ends"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Chaser speed <input type="range" min="0.6" max="1" step="0.01" value="0.85" data-k="mult"><output data-o="mult">0.85x maxRun</output></label>
+    <label class="rng">Spawn delay <input type="range" min="0.5" max="3" step="0.1" value="1.5" data-k="delay"><output data-o="delay">1.5 s</output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Runner stops before each rock <input type="range" min="0" max="0.8" step="0.05" value="0.3" data-k="hes"><output data-o="hes">0.30 s</output></label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The best boss in a speed game is a clock you must outrun. The Sandbox's chaser spawns at the last split 1.5 s after the player passes it and runs at 0.85x maxRun, 357 u/s, on the level clock, so it is the same threat on every attempt [I]. A runner who never stops keeps the whole 1.5 s margin; every hesitation hands the chaser 357 u per second of it. Celeste's chapter 2 chasers replay Madeline's own positions about 1.55 s behind, N's chase drone doubles its speed on sight, and Super Meat Boy's Brownie is a race against a clone [U; V, S160, S189]. Fall Guys, Trackmania and Trials ship no enemies because another player is already the threat [V, S82, S83]. For SAMURAI TRIAL the lethal version is the player's own PB shadow made deadly, deterministic because the PB is fixed [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stomp-->
+<figure class="fig" data-demo="stomp" id="fig-stomp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The stomp bounce at a full jump, a refund, and a shell as a step</h4><span class="illu">Enemy placement and the shell timing are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai jumps onto an ink blob and bounces higher than the grey plain-jump line, then meets a shell sliding toward him over a gap and uses it as a platform. Dashed lines mark the plain jump height and the bounce height in body lengths"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Bounce <input type="range" min="0.6" max="1.4" step="0.05" value="1" data-k="bm"><output data-o="bm">1.00x jumpVel</output></label>
+    <label class="rng">Jump this far before the enemy <input type="range" min="60" max="320" step="10" value="200" data-k="jd"><output data-o="jd">200 u</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="refund"> Refund: the kill sets vx to 1.2x maxRun</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A bounce enemy is a one-way tile that sets vy when landed on with vy &gt; 0, reusing the mover landing code [K; I]. SMB1's rule is "moving downward kills", decided by comparing the player's y plus 12 px with the enemy's; anything else is damage [V, S11, S9]. Pull the jump point close to the enemy and the runner clips it from the side. The report settles the bounce at a full jumpVel, 830 u/s with the apex band active, so it reads as a jump the player did not have to time; Celeste's generic bounce is 1.33x its jump speed and Shovel Knight's drop bounce adds about 4.5 tiles [I; V, S7, S93]. The refund sets vx above maxRun and lets the 500 u/s² overspeed decay bleed it, the same mechanism as the roll's speed floor, the way Dustforce refills the dash on a hit [K; I; U]. The shell slides at 1.2x the run speed, SMB1's kicked-shell ratio, and the runner lands on it mid-gap, the shell jump Mario Maker players taught each other [V, S9, S188].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG slash-->
+<figure class="fig" data-demo="slash" id="fig-slash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The 100 ms slash: 17 wind-up, 33 active, 50 recovery, vx untouched</h4><span class="illu">Bamboo placement is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Top: a samurai runs through bamboo stalks and cuts each one with a short slash, a red box showing the hitbox during the active steps. Bottom: a strip of twelve small samurai frames, one per physics step, with the blade sweeping and the active steps shaded red"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="x">Slash (X)</button>
+    <button type="button" class="btn ghost" data-b="j">Jump (cancel)</button>
+    <label><input type="checkbox" data-k="stops"> Slash stops you (the wrong way)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The katana is a 50x40 u hitbox in front of the hero, just over one body width. Two physics steps of wind-up (17 ms), four active steps (33 ms), 100 ms before the next press, usable in the air, cancelable into a jump at any time, and it never writes vx [I]. Dustforce's attack direction is independent of momentum and attacking barely affects forward speed; Pizza Tower's grab at Mach 2 is a weapon that preserves it [V, S206, S190]. Tick the clamp and every stalk becomes a stop sign at 420 u/s, which is the Sandbox's "slash stops you" toggle [I]. The strip shows the twelve steps the slash spans; because today's ghost is pose-interpolated at 30 Hz, a 100 ms slash fits inside two or three ghost samples, so the ghost frame needs a slash flag [K; I]. Katana ZERO's three to four active frames are recalled, not verified [U].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG medals-->
+<figure class="fig" data-demo="medals" id="fig-medals">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The medal ladder over the four maps' run lengths</h4><span class="illu">Author times are derived, not recorded</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="200" aria-label="A chart with one row per map. A black bar shows the pure running time at top speed, a red tick the author time, and three medal dots for gold, silver and bronze at 1.06x, 1.2x and 1.5x. A blue marker shows where your time lands"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Author time over pure running <input type="range" min="1.2" max="1.8" step="0.01" value="1.45" data-k="am"><output data-o="am">1.45x</output></label>
+    <label class="rng">Your time over the author <input type="range" min="1" max="1.8" step="0.01" value="1.15" data-k="yt"><output data-o="yt">1.15x</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>SpeedRunner's maps are 6830, 8700, 4580 and 6550 u wide, 16.3, 20.7, 10.9 and 15.6 s of pure running at 420 u/s; a clean human run is about 1.3 to 1.6x that, so author times of roughly 22 to 35 s [K; I]. Nadeo's default medals are gold 1.06x, silver 1.2x and bronze 1.5x of the author time, rounded up; a live Track of the Day shows 58.055 s author, 1:02 gold, 1:10 silver, 1:28 bronze [V, S34, S177]. Trackmania caps Weekly Shorts at a 20 s author medal and Neon White levels run "often under 30 seconds" [V, S25, S66]. The author ghost already exists as a 30 Hz recording, so the ladder costs four numbers per map [K]. The world record is the wrong author time; Neon White's team slowed their own ghosts with injected hesitation until the medals came out "surprisingly close" to real players [V, S66, S68].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG teach-->
+<figure class="fig" data-demo="teach" id="fig-teach">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Teach, develop, twist, resolve across the map set</h4></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A grid of skills against maps. Solid dots mark where a skill is taught, rings where it is used again, red dots where it is twisted and red crosses where a map demands it at speed without teaching it. A highlight sweeps across the columns"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="v" role="group" aria-label="View"><button type="button" class="btn on" data-v="today">Today</button><button type="button" class="btn" data-v="prop">Proposed</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hayashida describes Mario level design as kishotenketsu, introduction, development, twist, resolution, and SMB 1-1's first Goomba approaches slowly so the jump is taught by a cheap failure [V, S85, S185]. N++ levels "often showcase one element or move" and combine later on a grid that rises diagonally [V, S63]. Read from SpeedRunner's source, m1 is a pure teach list of seven atoms, m2 develops and twists them, m3 is a generated twist on wall jumps under spike ceilings, and m4 twists one-way tiles, movers and wheels that no earlier map taught [K; I]. Switch to Proposed for the two missing halves. A Medium map that uses movers and roof tiles safely, maps 3 and 4 swapped so the ramp reads 2, 2, 1, 9 spike strips, and SAMURAI TRIAL as the resolution that chains every atom at speed and adds nothing new [I]. The cells are a reading of the maps, not telemetry.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG readability-->
+<figure class="fig" data-demo="readability" id="fig-readability">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Gaps and drops in body lengths against the real jump</h4><span class="illu">Measured with the ported step; the report's gap numbers differ</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Top: a samurai runs off a ledge and jumps a gap marked in body lengths; the readout says whether he lands. Bottom: a tall drop seen through a blue rectangle that is the game's view; the landing label turns green when it enters the view before impact"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Gap <input type="range" min="1" max="10" step="0.25" value="5" data-k="gap"><output data-o="gap">5.00 BL</output></label>
+    <label class="rng">Drop <input type="range" min="100" max="700" step="10" value="400" data-k="drop"><output data-o="drop">400 u</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="lead"> Camera looks down while falling (vy x 0.25 s, cap 200 u)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every gap and platform should be sized in body lengths from the jump numbers, and this figure measures them by running the ported <code>step()</code> headless. A jump held from the edge at 420 u/s lands just over 6 body lengths out once the 1.65x fall gravity is in, so the report's "practical full-speed gap of 9 to 10 BL" is too generous and its rule set (safe gaps at most 6 BL, momentum gaps 7 to 9) needs re-deriving; the issue is logged for the report [K; I]. The game's own maps agree with the measurement, their widest gap is 180 u, under 4 BL [K]. Trackmania's review rules say jumps must be clear with the landing visible, and N++ is single-screen so no leap is blind [V, S25, S63]. Below, the blue box is the 970x545 u view with the feet at 62% of its height. The camera's vertical reference follows the feet with a 5 per second lerp, so at terminal velocity the hero sinks toward the bottom edge and a 400 u drop lands blind; a downward look-ahead of vy x 0.25 s brings the landing into view earlier, which is B3's proposal [K; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG daily-->
+<figure class="fig" data-demo="daily" id="fig-daily">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A seeded daily map: rhythm first, tagged chunks, bot proof</h4><span class="illu">The chunk library is a ten-piece sketch</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="At the top a strip shows the generated course as small black blocks with a tag and a cost over each chunk and red dots for the jump rhythm. Below, the camera follows the bot's replay through the course. A blue tick on the strip marks where the bot is"></canvas></div></div>
+  <div class="ctl">
+    <label>Seed <input type="number" data-k="seed" value="20261113" min="1" step="1" style="width:9em"></label>
+    <button type="button" class="btn warm" data-b="gen">Generate</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Three passes. The seed first draws a rhythm, one to four jumps per chunk along the cost ramp 1, 1, 2, 2, 3, 2, 4, rest, the Launchpad idea of generating the input rhythm before the geometry [V, S213]. Each beat then picks a hand-authored chunk of that cost from a tagged library, the Jetpack Joyride model as reconstructed for Boney the Runner, 230 chunks in four classes picked from a designer-drawn curve [V, S214]. Last, a headless bot runs the real physics through the course; if it dies, the chunk it died in is swapped for a cheaper one and the proof runs again, and the bot's time becomes the author time and ghost [I]. MarioGPT validated 88% of its levels with an A* agent [V, S217]. Chunks are about 1,450 u with a 300 u start pad and a 400 u flag pad, 20 to 40 s at 60 to 70% of top speed [I]. SpeedRunner's fixed step and run-time movers mean one seed replays identically on every device [K].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG maker-->
+<figure class="fig" data-demo="maker" id="fig-maker">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One piece per player per round, inside the 20-second format</h4><span class="illu">Players, skills and outcomes are a seeded simulation</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A level strip grows by five coloured pieces each round, one per player. Coloured dots run the level and some stop at a piece with a cross. A score table fills toward five points and a log says who scored for a goal, a solo run or a trap. A bar shows the level's length against 20 seconds"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="next">Next round</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ultimate Chicken Horse's default preset is 5 points over 12 rounds with all blocks; Goal 1, Solo 3, Postmortem 2, Trap 1, Coin 3 and Comeback 4 points, and "if nobody reaches the goal, or everyone does, no one scores" [V, S24, S146]. Each round every player places one piece, so each addition is calibrated to the table's skill and every death has an author [I]. The simulation applies goal, solo and trap only. The pieces wear their owner's colour, the same colours the rival figure gives ghosts. The bar at the bottom holds the level to Mario Maker's 20 s speedrun format, where 20-second gauntlets on the On/Off switch became a trend and across 26.6 million levels the median clear rate is 25% [V, S175, S216]. For SpeedRunner the rule maps to a weekly map the five extend one element at a time, where a split counts only if at least one friend missed it [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG restart-->
+<figure class="fig" data-demo="restart" id="fig-restart">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What 50 attempts cost with a countdown and without</h4><span class="illu">Run lengths are a seeded draw</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Two timelines fill from left to right. Black blocks are play until a death, red slivers are the dead time and the countdown, the last green block is the clear. The top lane with the 3 s countdown is much longer than the bottom lane without it"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Attempts to clear <input type="range" min="5" max="200" step="5" value="50" data-k="n"><output data-o="n">50</output></label>
+    <label class="rng">Mean run before the death <input type="range" min="3" max="30" step="1" value="12" data-k="mean"><output data-o="mean">12 s</output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Session <input type="range" min="5" max="60" step="5" value="15" data-k="budget"><output data-o="budget">15 min</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>McMillen's rule for Super Meat Boy was "the penalty is how much time it takes to start playing again"; the team removed lives, cut respawn time and kept levels short [V, S57]. VVVVVV respawns instantly, N++ resets with no fade, Hollow Knight waits a hard-coded 2.85 s [V, S209, S63, S13]. SpeedRunner is dead for 0.38 s and then replays a 3 s countdown, so death to control is about 3.4 s, 7 to 10 times the genre norm [K; I]. At one death per 20 s, 13% of a session is countdown; a hard map that takes 50 attempts spends 2.5 minutes watching numbers [I]. The Sandbox's instant mode resets state in 0.1 ms against 3,400 ms for the countdown replay [V, S3]. The session line is illustrative. It shows how many attempts a fixed budget buys under each rule, since nobody has measured when SpeedRunner's players quit.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ramp-->
+<figure class="fig" data-demo="ramp" id="fig-ramp">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The campaign ladder and the hard part inside a map</h4><span class="illu">The in-level profile is a sketch</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Left: bars for the four maps and the locked trial, by spike strips, today or proposed. Right: a difficulty profile across a 20 s map with three checkpoint chimes and a bump where the hard part sits; a red dot runs along it and the text gives the expected seconds wasted per attempt"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="v" role="group" aria-label="Ladder"><button type="button" class="btn on" data-v="today">Today</button><button type="button" class="btn" data-v="prop">Proposed</button></div>
+    <label class="rng">Hard part at <input type="range" min="0" max="100" step="1" value="85" data-k="pos"><output data-o="pos">85% of the map</output></label>
+    <label class="rng">Fail chance there <input type="range" min="2" max="40" step="1" value="10" data-k="p"><output data-o="p">10%</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>By hazard count SpeedRunner's ramp is 2, 2, 9, 1 spike strips across maps 1 to 4, and map 3 is also the shortest and most vertical, a spike rather than a sawtooth [K; I]. Swapping maps 3 and 4, or adding a Medium map, reads 2, 2, 1, 9, and SAMURAI TRIAL unlocks on three golds instead of on finishing map 4, the Trackmania gate [V, S30; I]. Inside a level the troll guide puts the hard part right before a checkpoint so it is done once; inverted for a full-restart map the hard part belongs early, where a retry costs 3 s of run rather than 15 [V, S89; I]. The waste per attempt is the fail chance times the time already spent plus the restart; move the bump to the start and it drops by an order of magnitude. N++ lets a stuck player step sideways to the next column and re-rates every level after each change [V, S63].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG troll-->
+<figure class="fig" data-demo="troll" id="fig-troll">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Honest expert, not troll: a learned-once trap against an execution test</h4><span class="illu">Both courses are sketches</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Two lanes of attempts. In the top lane a block falls from the ceiling the first time the samurai passes; from the second attempt he jumps early and never dies again. In the bottom lane two one-tile platforms fail him on a fraction of attempts set by the slider. Each lane counts attempts, deaths and the record"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Execution success per attempt <input type="range" min="20" max="95" step="5" value="60" data-k="p"><output data-o="p">60%</output></label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Syobon Action's "innocuous objects that kill the character in ways unforeseeable", I Wanna Be the Guy and Kaizo Mario World all date from 2006 and 2007, and the lineage wrote its own fairness rules. Kayin wrote that random traps are not a crutch and that they need room to breathe. Defender1031 wrote that a fair troll punishes an expectation with humour and then shows the correct action, with no softlocks and no coin flips. Modern kaizo is "first and foremost fair" [V, S143, S88, S89, S151]. On a leaderboard the audience that makes a troll funny is missing. Each player pays the hidden spike alone on attempt one, and from attempt two it is a route memory item that costs nothing, so the record measures nothing [I]. The honest jump tests execution on every attempt, which is what a ranked SAMURAI TRIAL should do, with the comedy kept in the lobby where there is no clock [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG telemetry-->
+<figure class="fig" data-demo="telemetry" id="fig-telemetry">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Deaths by section and a funnel from five testers</h4><span class="illu">Testers, skills and section difficulties are a seeded simulation</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A map strip in four sections collects coloured crosses where simulated testers died, with a red heat bar per section. Below, a funnel shows how many attempts reached each checkpoint, a list shows attempts to first clear per tester, and flags name a wall section or a tester who quit"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Section 3 difficulty <input type="range" min="5" max="90" step="5" value="55" data-k="d3"><output data-o="d3">55%</output></label>
+    <button type="button" class="btn ghost" data-b="new">New night</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>SpeedRunner's server sees starts and finishes only, but <code>splits[i]</code> already gives the section at death, so posting <code>{map, section, x, y, cause, attempt}</code> on death, about 20 bytes, or batching a deaths count on submit, turns a five-person night into a heatmap [K; I]. Mario Maker shows clears over attempts on every course, Shadow Blade's team overlaid death frequency on the level geometry, and Super Meat Boy replays forty-plus attempts at once as a reward [V, S216, S90, S57]. The thresholds are the report's. A section whose deaths exceed 3x the other sections, more than 15 attempts to a first clear on an Easy card or 40 on Hard, and any tester quitting before checkpoint 2 on a map started three or more times [I]. Five players give walls, not statistics; a map rated hard with few deaths is a readability problem, so ask for a 1 to 7 rating after each session [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG boards-->
+<figure class="fig" data-demo="boards" id="fig-boards">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Friends first, around me, percentile: four boards from one table</h4><span class="illu">Times, names and dates are seeded</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A leaderboard table with rank, name, season time, all-time time, date, the delta since the previous holder and the next target. Your row is highlighted. Buttons switch between the friends view, the ranks around you, the global top seven and a percentile view"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="v" role="group" aria-label="View"><button type="button" class="btn on" data-v="friends">Friends</button><button type="button" class="btn" data-v="around">Around me</button><button type="button" class="btn" data-v="top">Top 7</button><button type="button" class="btn" data-v="pct">Percentile</button></div>
+    <label class="rng">Your time <input type="range" min="20" max="45" step="0.1" value="27.9" data-k="you"><output data-o="you">27.9 s</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>SpeedRunner pages its per-map board by seven with the player's own rank and the world record, and <code>SEASON = 2</code> wipes scores and local ghosts [K]. With five players the page never pages and percentiles mean nothing under about fifty names, so the board becomes a feed. Friends as the default view with global as a tab, "2nd of 5" with the gap in ms, the date and the delta since the previous holder, and the next medal time beside the friend times [I]. Trackmania layers world, continent, country and region ladders over every map, rotates campaigns every three months and keeps the permanent per-map boards open when a season closes; Steam gives every title a free friends-only read filter; Neon White hides friend times until you have attempted the level [V, S26, S31, S37, S66]. Reset only a season column and keep the all-time board, because wiping local ghosts throws away the duel's history when there are only five of them [K; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rivals-->
+<figure class="fig" data-demo="rivals" id="fig-rivals">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A pickable shadow in the owner's colours, and the rival toast</h4><span class="illu">Friend paces are the same track replayed at their times</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs a course beside a translucent ghost drawn in a friend's hat and kimono colour. A pace line at the top marks where every friend, the author and the world record were at this elapsed time. Now and then a black toast says a friend beat your time with a button to race their ghost"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="g" role="group" aria-label="Ghost"><button type="button" class="btn" data-v="mine">My best</button><button type="button" class="btn on" data-v="KAEDE">KAEDE</button><button type="button" class="btn" data-v="RIN">RIN</button><button type="button" class="btn" data-v="HIRO">HIRO</button><button type="button" class="btn" data-v="author">Author</button><button type="button" class="btn" data-v="wr">WR</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Today's shadow is only your own best, drawn at 10% alpha in the run and 37.5% in the duel, while hats and kimono colours are already customisable [K]. Add a slot for "my best, friend X, WR, author", draw the friend's ghost in their colours, and put "X beat your ROCKY MOUNTAIN by 0.42 s" with a "race their ghost" button on the title screen [I]. Trackmania loads any record's ghost with one click, Mario Kart Wii downloaded rival and friend ghosts and unlocked characters for beating them, Mirror's Edge let you tap a friend's time and race it, and Doodle Jump drew other players' heights as live markers on the side of the screen, which for a horizontal time attack is the pace line at the top [V, S28, S158, S199, S79; I]. A ghost more than one screen ahead fades, the ghost-race equivalent of SpeedRunners' shrinking window [I]. Click the toast's button to switch ghosts.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG share-->
+<figure class="fig" data-demo="share" id="fig-share">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A share card, a course code and the two-tier board</h4><span class="illu">The map, the run and the friends are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Left: a share card with the map name, the time, the splits, a medal, a samurai pose, a verified or unverified badge and the run code. Right: the size of a course as JSON and deflated, and a five-name board where each row is verified by re-simulation or by a friend, with your new row unverified until one of those happens"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="submit">Submit a run</button>
+    <button type="button" class="btn ghost" data-b="legit">A friend taps "looks legit"</button>
+    <button type="button" class="btn ghost" data-b="resim">Server re-simulates</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A run shares as a URL. The summary in the fragment is a few dozen characters, and with the H2 input log the whole replay rides along in about a kilobyte, so a link replays a friend's run in the browser with no server round trip [I]. SpeedRunner's maps are <code>[x, y, w, h, tag]</code> arrays; a map of a few hundred solids is a few KB and fits a URL hash after lz-string, and the figure deflates one to show the real count [K; V, S117; I]. Super Mario Maker's manual says "you'll have to prove that you can clear it" before upload, which becomes the author medal and author ghost at zero cost [V, S51; I]. Trackmania's 2021 sweep checked over 400,000 records and traced most cheats to ten logins [V, S171]. At five players verification is social and one click. A row shows unverified until its ghost is uploaded and either re-simulated (H3) or tapped by another player [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ghostbytes-->
+<figure class="fig" data-demo="ghostbytes" id="fig-ghostbytes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A live encoder: inputs, a state track, or 18 floats at 30 Hz</h4><span class="illu">One scripted run on an illustrative course</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai replays a recorded run while five bars on a log scale grow with the recording: the game's 18-float JSON ghost, a delta-quantised version, a low-rate state track, the raw input log and the run-length input log. Dashed lines mark the Sandbox's measured numbers"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="hz" role="group" aria-label="Track rate"><button type="button" class="btn" data-v="10">10 Hz</button><button type="button" class="btn on" data-v="15">15 Hz</button><button type="button" class="btn" data-v="30">30 Hz</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The run is recorded as one input byte per physics step, left, right, jump and the one-shot press, and the figure ports the report's <code>encodeInputs</code> (state and varint duration pairs) and <code>deriveTrack</code> (a headless replay sampled at the chosen rate) and runs them on the recording. SpeedRunner stores 18 numbers at 30 Hz as JSON, about 100 KB per minute, 15 to 100 times heavier than shipped formats [K; I]. Mario Kart Wii's ghost is a fixed 10,240 bytes of run-length inputs for a two to three minute race, Dustforce stores 11 intent streams plus a drift fix every 8 frames, Trackmania stores inputs with timestamps at 100 Hz [V, S14, S15, S169]. The Sandbox measured 143 KB per minute for 30 Hz full pose as JSON against 35.4 KB delta-quantised and 2.6 KB for a 10 Hz position track [V, S3]. Deflated sizes come from <code>CompressionStream</code> where the browser has it [V, S45]. The inputs are the canonical ghost; the track is derived and can be dropped when the physics hash matches [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG validate-->
+<figure class="fig" data-demo="validate" id="fig-validate">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The plausibility ladder and server re-simulation under tampering</h4><span class="illu">One recorded run; the hashes are stand-ins</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A submission line at the top and eight rungs below it lighting up one by one, green for OK, red for a failure, grey for a review flag or a skipped rung. Buttons tamper with the time, the physics, the splits, the wall clock or the physics hash and the rungs show which check catches each"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="honest">Honest</button>
+    <button type="button" class="btn ghost" data-b="time">Edit the time</button>
+    <button type="button" class="btn ghost" data-b="maxrun">maxRun = 2000</button>
+    <button type="button" class="btn ghost" data-b="jumpvel">jumpVel = 1000</button>
+    <button type="button" class="btn ghost" data-b="splits">Swap splits</button>
+    <button type="button" class="btn ghost" data-b="early">Submit early</button>
+    <button type="button" class="btn ghost" data-b="stale">Old physics</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Nothing a browser sends can be trusted; Neon White's top boards filled with 0.06 s times within days [V, S173]. The figure ports the report's <code>plausible()</code> and <code>validateRun()</code> word for word and runs them on a real recording. The cheap filters come first. A run id issued at start, server bounds (minimum steps from the map width, monotonic splits, a per-split minimum, a wall-clock window), stripping <code>window.__sr</code>, an HMAC session and a rate limit [K; I]. Only the replay catches a client whose <code>PHYS.maxRun</code> was edited in devtools, because its inputs no longer reach the flag under the server's <code>step()</code>; the finish step and the four splits must match exactly [I]. The slowdown ratio and input statistics are review flags, never auto-bans, which is how Nadeo's 2021 investigation read steering spikes of 9 to 19 per second against a 3 per second baseline [V, S169, S171]. Determinism is the precondition, with no <code>Math.sin</code> in the sim, keys sampled once per step and the mover phase taken from the integer step count [V, S125; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG plumbing-->
+<figure class="fig" data-demo="plumbing" id="fig-plumbing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Live ghost plumbing: polling, WebSocket or WebRTC</h4><span class="illu">Framing overheads and the friend's run are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Two devices joined by a wire with packets travelling along it, through a relay or a function when the transport needs one. Below, a samurai runs a course next to a translucent friend drawn from the packets that have arrived; with the buffer off the friend snaps between packets"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="tr" role="group" aria-label="Transport"><button type="button" class="btn" data-v="poll">Polling</button><button type="button" class="btn on" data-v="ws">WebSocket</button><button type="button" class="btn" data-v="rtc">WebRTC</button></div>
+    <label class="rng">Rate <input type="range" min="1" max="30" step="1" value="10" data-k="rate"><output data-o="rate">10 Hz</output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Latency <input type="range" min="20" max="400" step="10" value="120" data-k="lat"><output data-o="lat">120 ms</output></label>
+    <label><input type="checkbox" data-k="buf" checked> 100 ms interpolation buffer</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A live ghost is a one-way stream of tiny states. <code>{step u32, x i16, y i16, state u8, phase u8}</code> is 10 bytes at 10 Hz, 100 B/s per racer, and a 60 s two-player race moves about 12 KB each way; nothing interacts, so 100 to 300 ms of latency disappears behind a 100 ms interpolation buffer [I]. Polling a Vercel function at 10 Hz is 600 invocations per racer per minute. Vercel serves WebSockets in public beta since July 2026, pinned to one instance and closing at the function's maximum duration; Cloudflare's free Durable Objects tier bills incoming WebSocket messages 20:1 and covers about 3,000 two-player races a day; Supabase Realtime's free tier allows 200 concurrent connections; PeerJS over WebRTC costs nothing but 10 to 20% of home NAT pairs need a paid TURN relay [V, vendor, S40, S41, S42; V, S114, S203; I]. Fairest of all is to send the input log and re-simulate the friend locally, so the race result is verified for free (H3) [I].</figcaption>
+</figure>
+<!--/FIG-->
