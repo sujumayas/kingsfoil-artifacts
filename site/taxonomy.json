@@ -60,6 +60,16 @@
     {
      "id": "runner",
      "label": "Runner"
+    },
+    {
+     "id": "platformer",
+     "label": "Platformer",
+     "desc": "Side-view jumping and running"
+    },
+    {
+     "id": "time-attack",
+     "label": "Time attack",
+     "desc": "Race the clock, leaderboards and ghosts"
     }
    ]
   },
@@ -115,6 +125,11 @@
     {
      "id": "3d-stylized",
      "label": "Stylized 3D"
+    },
+    {
+     "id": "vector-ink",
+     "label": "Vector ink",
+     "desc": "Flat vector shapes, ink on paper"
     }
    ]
   },
@@ -240,6 +255,11 @@
      "id": "magic",
      "label": "Magic",
      "desc": "Spell projectiles, impacts, auras and how they stay readable"
+    },
+    {
+     "id": "platformer-mechanics",
+     "label": "Platformer mechanics",
+     "desc": "Movement, elements, enemies, maps, curve and race loop of a platformer"
     }
    ]
   },
@@ -661,6 +681,81 @@
      "id": "flash-limiter",
      "label": "Flash limiter",
      "desc": "Caps full-screen flashes at 3 per second and swaps the rest for a border"
+    },
+    {
+     "id": "coyote-time",
+     "label": "Coyote time",
+     "desc": "A jump still fires for a few frames after leaving a ledge"
+    },
+    {
+     "id": "jump-buffer",
+     "label": "Jump buffer",
+     "desc": "A jump press is kept until the character can jump"
+    },
+    {
+     "id": "variable-jump",
+     "label": "Variable jump",
+     "desc": "Jump cut on release, apex hang and heavier falls"
+    },
+    {
+     "id": "corner-correction",
+     "label": "Corner correction",
+     "desc": "Nudge the character around a corner it barely clipped"
+    },
+    {
+     "id": "wall-jump",
+     "label": "Wall slide and jump",
+     "desc": "Stick, slide, wall coyote and jump variants"
+    },
+    {
+     "id": "one-way-platforms",
+     "label": "One-way platforms",
+     "desc": "Land from above, pass from below"
+    },
+    {
+     "id": "level-clock",
+     "label": "Level clock",
+     "desc": "Movers and enemies driven by run time so every attempt is the same"
+    },
+    {
+     "id": "instant-restart",
+     "label": "Instant restart",
+     "desc": "Death to control in under 100 ms, no countdown"
+    },
+    {
+     "id": "splits",
+     "label": "Splits and deltas",
+     "desc": "Checkpoint times against the best run, LiveSplit colours"
+    },
+    {
+     "id": "ghost-replay",
+     "label": "Ghost replay",
+     "desc": "Sampled or input-recorded best run drawn beside the player"
+    },
+    {
+     "id": "input-replay-validation",
+     "label": "Input replay validation",
+     "desc": "Re-simulate recorded inputs to verify a time"
+    },
+    {
+     "id": "leaderboard",
+     "label": "Leaderboards",
+     "desc": "Global, friends and around-me boards, seasons, medals"
+    },
+    {
+     "id": "teach-test-twist",
+     "label": "Teach, test, twist",
+     "desc": "Introduce, develop and twist a mechanic inside one level"
+    },
+    {
+     "id": "procedural-rig",
+     "label": "Procedural rig",
+     "desc": "Pose blending and springs on a stick figure instead of sprite frames"
+    },
+    {
+     "id": "camera-lookahead",
+     "label": "Camera look-ahead and snap",
+     "desc": "Fixed look-ahead, vertical platform snap and dead zones"
     }
    ]
   },
@@ -733,6 +828,11 @@
     {
      "id": "match-3",
      "label": "Kingsfoil Match-3"
+    },
+    {
+     "id": "speedrunner",
+     "label": "SpeedRunner",
+     "desc": "Side-view samurai time-attack platformer"
     }
    ]
   },

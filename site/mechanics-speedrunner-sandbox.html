@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpeedRunner Mechanics Sandbox</title>
+<style>
+:root{--bg:#fff;--panel:#f6f3ee;--line:#ddd6cb;--ink:#0a0a0a;--red:#d0281f;--mute:#6f6a63;--green:#1f9d55;--gold:#b8891a;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+a{color:var(--red)}
+header{max-width:1240px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:var(--mono);font-weight:800;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--ink);letter-spacing:-.5px}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;margin:0 auto;max-width:960px;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;cursor:pointer;touch-action:none}
+.hud{font:11.5px/1.45 var(--mono);background:var(--panel);padding:5px 9px;pointer-events:none;color:#2a2622;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.hud b{color:var(--red);font-weight:600}.hud .off{color:#9a938a}.hud .warn{color:var(--red)}.hud .ok{color:var(--green)}
+.bar{display:inline-block;width:80px;height:7px;background:#e4ded4;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#1f9d55}
+.touch{display:none;gap:6px;margin:8px auto 0;max-width:960px;flex-wrap:wrap;touch-action:none;user-select:none;-webkit-user-select:none}
+.touch button{flex:1 1 0;min-width:44px;height:52px;padding:2px;font:600 13px var(--mono);touch-action:none}
+.touch button small{display:block;font:500 10px system-ui,sans-serif;opacity:.75}
+body.coarse .touch{display:flex}
+body.coarse .controls button{min-height:44px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0}
+.group h3{margin:0 0 8px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.sub{font:11px var(--mono);color:var(--mute);margin:8px 0 3px;text-transform:uppercase;letter-spacing:.5px}
+button{font:500 13px system-ui,sans-serif;background:#fff;color:var(--ink);border:1px solid #cfc8bd;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--ink)}button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.red.on{background:var(--red);border-color:var(--red)}
+button kbd{font:11px var(--mono);opacity:.65;margin-right:4px}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:8px}
+label span{min-width:58px;text-align:right;font:12px var(--mono);color:var(--ink)}
+input[type=range]{flex:1;min-width:0;accent-color:#d0281f}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h4{margin:0 0 6px;font-family:var(--mono);font-size:15px;color:var(--ink)}
+.card p{margin:0;color:#3a3531;font-size:14px}
+code{font:13px var(--mono);color:var(--red)}
+.keys{color:var(--mute);font-size:13px;margin:8px auto 0;max-width:960px}
+ol.board{margin:0;padding-left:22px;font:13px/1.7 var(--mono)}
+ol.board li.me{color:var(--red);font-weight:700}
+pre.valid{margin:6px 0 0;font:11.5px/1.5 var(--mono);white-space:pre-wrap;color:#2a2622;background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px 8px;min-height:40px}
+pre.valid .ok{color:var(--green)}pre.valid .bad{color:var(--red)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;font:13px var(--mono);padding:8px 14px;border-radius:6px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92vw}
+.toast.show{opacity:1}
+@media (max-width:640px){.hud{font-size:10.5px;padding:6px 8px}main,header{padding-left:12px;padding-right:12px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>SpeedRunner Mechanics Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="mechanics-speedrunner.html">SpeedRunner mechanics study</a> · Mechanics series #1 · November 2026 · <a href="index.html">All artifacts</a></div>
+</header>
+<main>
+  <div class="stage"><canvas id="c" width="640" height="360" aria-label="A stick samurai runs a paper-white course with black blocks, a spring, a moving platform, a chimney, timed blocks, spikes and enemies"></canvas><div class="hud" id="hud">loading</div></div>
+  <div class="touch" id="touch">
+    <button id="tL">&larr;<small>Left</small></button><button id="tR">&rarr;<small>Right</small></button><button id="tJ">Spc<small>Jump</small></button><button id="tX">X<small>Slash</small></button><button id="tRe">R<small>Restart</small></button>
+  </div>
+  <p class="keys">Run with <b>A</b>/<b>D</b> or the arrows, jump with <b>Space</b>, <b>W</b> or <b>Up</b> (hold for height), slash with <b>X</b> or <b>J</b>. <b>R</b> restarts, <b>P</b> pauses, <b>M</b> slow motion, <b>V</b> cycles the views, <b>G</b> toggles the ghost. On a phone, the left quarter of the canvas runs left, the next quarter right, the right half jumps, or use the buttons.</p>
+  <div class="controls">
+    <div class="group"><h3>Presets and map</h3>
+      <div class="btns" id="presets"><button data-p="today">SpeedRunner today</button><button data-p="recommended" class="on">Recommended</button><button data-p="noforgive">No forgiveness</button><button data-p="floaty">Floaty</button><button data-p="heavy">Heavy</button></div>
+      <div class="sub">Map</div>
+      <div class="btns" id="maps"><button data-v="course" class="on">The course (20 s)</button><button data-v="practice">Practice room</button></div>
+      <div class="sub">Race loop (layer 8)</div>
+      <div class="btns" id="start"><button data-v="input" class="on">Timer on first input</button><button data-v="countdown">3-2-1 countdown (first attempt)</button></div>
+      <div class="btns" id="restart" style="margin-top:6px"><button data-v="instant" class="on">Instant restart</button><button data-v="countdown">Countdown replay (3.4 s)</button></div>
+      <div class="sub">Ghost</div>
+      <div class="btns" id="ghz"><button id="ghostOn" class="on"><kbd>G</kbd>Ghost</button><button data-v="10">10 Hz</button><button data-v="15" class="on">15 Hz</button><button data-v="20">20 Hz</button><button data-v="30">30 Hz</button><button data-v="60">60 Hz</button></div>
+      <div class="btns" id="gpose" style="margin-top:6px"><button data-v="pos">Position only</button><button data-v="full" class="on">Full pose</button></div>
+      <div id="gbytes" class="sub" style="text-transform:none;letter-spacing:0">ghost bytes: finish a run</div>
+    </div>
+    <div class="group"><h3>Movement kit (layer 2)</h3>
+      <div class="btns" id="tg"><button data-f="coyote">Coyote</button><button data-f="buffer">Buffer</button><button data-f="varJump">Variable jump</button><button data-f="apex">Apex hang</button><button data-f="fallMult">Fall gravity</button><button data-f="corner">Corner correction</button><button data-f="wallStick">Wall stick</button><button data-f="wallCoyote">Wall coyote</button><button data-f="roll">Roll</button><button data-f="wallReach">Wall reach 7 u</button><button data-f="wallKeep">Wall speed keep</button><button data-f="ceilGrace">Ceiling grace</button><button data-f="slideRamp">Slide ramp</button><button data-f="hyper">Roll-jump hyper</button><button data-f="liftBoost">Lift boost</button><button data-f="jumpBoost">Jump boost</button></div>
+      <label>Jump speed <input id="jumpVel" type="range" min="500" max="1200" step="10" value="830"><span id="jumpVell">830 u/s</span></label>
+      <label>Gravity <input id="gravity" type="range" min="1000" max="4500" step="50" value="2500"><span id="gravityl">2500</span></label>
+      <label>Top speed <input id="maxRun" type="range" min="250" max="650" step="10" value="420"><span id="maxRunl">420 u/s</span></label>
+      <label>Coyote <input id="coyote" type="range" min="0" max="250" step="10" value="100"><span id="coyotel">100 ms</span></label>
+      <label>Buffer <input id="buffer" type="range" min="0" max="300" step="10" value="130"><span id="bufferl">130 ms</span></label>
+    </div>
+    <div class="group"><h3>Simulation, elements, enemies (layers 1, 3, 4)</h3>
+      <div class="btns"><button id="hz60">60 Hz step</button><button id="interp" class="on">Render interpolation</button></div>
+      <div class="sub">Elements</div>
+      <div class="btns"><button id="telegraph" class="on">Telegraphs</button><button id="enemies" class="on">Enemies</button></div>
+      <label>Chaser speed <input id="chaser" type="range" min="50" max="100" step="5" value="85"><span id="chaserl">85%</span></label>
+      <div class="sub">Assists (mark the run as assisted)</div>
+      <div class="btns"><button id="slow"><kbd>M</kbd>Slow 0.5x</button><button id="invincible">Invincible</button><button id="infcoyote">Infinite coyote</button></div>
+    </div>
+    <div class="group"><h3>Camera (layer 5)</h3>
+      <div class="btns" id="cam"><button data-v="lock" class="on">Lock + 120 u look-ahead</button><button data-v="speed">Speed look-ahead</button><button data-v="lerp">Lerp follow</button></div>
+      <div class="btns" style="margin-top:6px"><button id="focus" class="on">Forward focus 120 to 200 u</button><button id="downlook" class="on">Downward look-ahead</button><button id="vsnap" class="on">Vertical platform snap</button><button id="camwin">Camera window overlay</button></div>
+      <div class="sub">Views</div>
+      <div class="btns" id="views"><button data-v="normal" class="on">Normal</button><button data-v="hitboxes">Hitboxes</button><button data-v="inputs">Inputs</button><button data-v="cost">Cost view</button></div>
+    </div>
+    <div class="group"><h3>Animation and audio (layers 6, 7)</h3>
+      <label>Juice <input id="juice" type="range" min="0" max="100" value="100"><span id="juicel">100%</span></label>
+      <div class="btns" id="fx"><button data-f="blend">Pose blend</button><button data-f="squash">Squash and stretch</button><button data-f="rollflip">Roll and flip</button><button data-f="dust">Dust</button><button data-f="lines">Speed lines</button><button data-f="burst">Death burst</button><button data-f="go">GO flash</button><button data-f="flash">Kimono flash</button></div>
+      <div class="sub">Audio</div>
+      <div class="btns"><button id="sound" class="on">Sound</button><button id="music" class="on">Music loop</button><button id="musicRestart">Restart music on death</button></div>
+    </div>
+    <div class="group"><h3>Leaderboard and trust (layer 9)</h3>
+      <ol class="board" id="board"></ol>
+      <div class="btns" style="margin-top:8px"><button id="share">Share link</button><button id="pause"><kbd>P</kbd>Pause</button><button id="reset"><kbd>R</kbd>Restart</button><button data-demo="showcase">Showcase</button></div>
+      <div class="sub">Validation</div>
+      <pre class="valid" id="valid">finish a run to see the server checks and the input replay</pre>
+    </div>
+  </div>
+  <div class="explain">
+    <div class="card"><h4>1 · Fixed step and input</h4><p>The world advances in steps of 1/120 s from an accumulator, and the renderer draws between the last two steps. A jump press is a one-shot flag that the next step consumes, so a tap between frames still counts. One level clock drives every mover, timed block and enemy, which is why two runs with the same inputs are the same run. The 60 Hz toggle halves the step rate so you can feel the coarser arcs.</p></div>
+    <div class="card"><h4>2 · Movement kit</h4><p>These are SpeedRunner's own numbers. Coyote time keeps a jump legal for 100 ms after a ledge, the buffer holds a press for 130 ms until the feet land, and letting go of jump cuts the rise to 45%. Apex hang softens gravity near the top, fall gravity is 1.65x on the way down, and corner correction nudges you around a block edge by up to 8 units instead of stopping you dead. Wall reach finds a wall 7 units away, wall speed keep carries your run speed into a wall jump for 60 ms, ceiling grace keeps a jump alive through a bump in its first 50 ms. Roll-jump hyper, lift boost and jump boost are the speed tech. Switch each one off and run the steps again.</p></div>
+    <div class="card"><h4>3 · Collision and elements</h4><p>Solids are axis aligned boxes resolved on x, then y, with a bounded loop so a squeeze never hangs. One-way tiles only catch feet coming from above, movers carry whoever stands on them, springs launch at 1.45x jump speed as an automatic jump with the apex band active, and timed blocks run a 0.5 s tick on a four tick cycle, 1 s there and 1 s gone, from one sequence integer each. Each element shows what it is about to do. A block shakes for the last 0.3 s before it vanishes, a spring stays compressed for 150 ms, spikes are silhouettes you can read at speed.</p></div>
+    <div class="card"><h4>4 · Enemies on level time</h4><p>The patroller walks its ledge at 85 units per second on the level clock, so it is in the same place at the same time in every attempt, and a touch only kills after two overlapping steps on a hitbox inset by 3 units. The chaser spawns at the fourth checkpoint 1.5 s after you pass it and runs at 85% of your top speed, which turns any hesitation into a visible cost. Slash is one button, 100 ms (17 ms wind-up, 33 ms active, 50 ms recovery), a 50 by 40 unit box ahead, usable in the air, cancelled by a jump, and it never touches your speed. Landing on the patroller gives a full jump with the apex band.</p></div>
+    <div class="card"><h4>5 · Camera</h4><p>The default camera is locked to the player with 120 units of look-ahead and no lag, because a lagging camera hides the next obstacle at 420 units per second. Vertically it follows a reference that updates on landing and only climbs when the feet rise 60 units above it, so a normal jump does not shake the view. Try the speed based look-ahead and the lerp follow, then switch on the window overlay to see the dead zone.</p></div>
+    <div class="card"><h4>6 · Animation and feedback</h4><p>The samurai is a stick rig with a hip height, a lean and eight limb angles, blended toward a target pose with 1 - exp(-26 dt), about 38 ms of lag. A jump stretches the figure to (0.6, 1.4), a landing squashes it toward (1.4, 0.6) in proportion to the fall speed, and both recover at 1.75 scale units per second. Rolls and flips spin the whole figure. Dust is 7 puffs on a jump, 6 on a landing faster than 575 units per second, 10 on a roll and one every 90 ms while running. The sash flashes for 120 ms when a jump, wall jump, roll, spring or stomp changes what you can do next. Speed lines appear above 90% of top speed. The Juice slider scales all of it.</p></div>
+    <div class="card"><h4>7 · Audio</h4><p>Every sound is a WebAudio oscillator or a noise burst with the game's frequencies. Jump sweeps 420 to 760 Hz, death 300 to 70 Hz, checkpoint 880 to 1320 Hz, the finish plays 523, 659, 784 and 1046 Hz. Each play is detuned by up to 4% and at most 8 voices overlap. The music loop is 4 bars and keeps playing across deaths. Switch "restart music on death" on to hear how a reset makes every death feel like a loading screen.</p></div>
+    <div class="card"><h4>8 · Race loop</h4><p>The timer counts physics steps, never the wall clock, so a slow frame cannot change a time. The timer and the level clock start together on your first horizontal or jump input, so waiting at the line gains nothing. The countdown plays only on the first attempt after a map select, R resets in place, and any input skips the 0.38 s death beat. "Countdown replay" reproduces the game today, 0.38 s dead plus a 3 s countdown, 3.4 s per death. Splits show the delta against your session best in LiveSplit colours, two decimals in the run and three on the results. The canonical record of a run is its input log, one byte per step, run-length encoded. The drawn ghost is a state track derived from it at 15 Hz, and the byte counter shows what each choice costs. Medals follow Trackmania ratios on the 20 s author run, gold 21.2 s, silver 24 s, bronze 30 s.</p></div>
+    <div class="card"><h4>9 · Leaderboard and trust</h4><p>Five friends are seeded on the board and your time slots in among them, with a toast when you pass one. The board shows rank, gap in ms, date and input device. The validation panel runs the checks a server would run. Step count against time, a minimum step count from the map length, a slowdown ratio of wall clock over simulated time flagged above 1.05, a minimum time per split from the distance, a speed cap, and a full input replay that re-simulates your recorded inputs with the same code and compares the final time. Slow motion and the other assists mark the run as assisted and the board rejects it. Share link puts the run summary in the URL.</p></div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// =====================================================================
+// TUNING: every number the sandbox uses. World units are the game's (hero 20x46, ground y 600).
+// `phys` is SpeedRunner's PHYS as served on 13 Nov 2026, copied exactly.
+// =====================================================================
+const TUNING = {
+  sim: { hz: 120, interp: 1 },
+  phys: {
+    maxRun: 420, groundAccel: 2700, turnAccel: 5200, groundFric: 3000, overspeedDecay: 500,
+    airAccel: 1900, airDrag: 160,
+    gravity: 2500, fallMult: 1.65, apexMult: 0.55, apexBand: 90, maxFall: 1150,
+    jumpVel: 830, jumpCut: 0.45, coyote: 0.10, buffer: 0.13,
+    wallSlideMax: 115, wallStick: 0.10, wallCoyote: 0.08,
+    wallJumpX: 440, wallJumpY: 790, wallJumpSameY: 330, wallLock: 0.15, wallClimbX: 190, wallClimbLock: 0.07,
+    rollFall: 230, rollTime: 0.42, rollMinSpeed: 280,
+    flipTime: 0.46, flipMinSpeed: 250,
+    cornerNudge: 8,                       // corner correction, up into ceilings and sideways onto ledge tops (A2)
+    wallReach: 7, wallKeepS: 0.06, ceilGraceS: 0.05,            // wall reach, wall speed retention, ceiling grace (A2)
+    slideRampFrom: 25, slideRampTo: 115, slideRampS: 0.8,       // optional slide ramp instead of the stick (A4)
+    hyperMult: 1.3, hyperWindow: 0.1, hyperVy: 0.75,            // roll-jump hyper (A3)
+    liftBoostX: 250, liftBoostY: 130, jumpBoost: 40,            // lift boost from movers, jump boost (A5)
+  },
+  tg: { coyote: 1, buffer: 1, varJump: 1, apex: 1, fallMult: 1, corner: 1, wallStick: 1, wallCoyote: 1, roll: 1,
+        wallReach: 1, wallKeep: 1, ceilGrace: 1, slideRamp: 0, hyper: 1, liftBoost: 1, jumpBoost: 1 },
+  el: { springMult: 1.45, springCompS: 0.15, tickS: 0.5, timedOnTicks: 2, timedOffTicks: 2, timedShake: 0.3, telegraph: 1 },
+  en: { on: 1, patrolSpeed: 85, patInset: 3, contactSteps: 2, chaserMult: 0.85, chaserCp: 3, chaserDelay: 1.5,
+        slashMs: 100, slashWindMs: 17, slashActiveMs: 33, slashW: 50, slashH: 40, bounceMult: 1.0 },
+  cam: { mode: 'lock', lookAhead: 120, focusMax: 200, focus: 1, downLook: 0.25, downCap: 200, speedLook: 220, lerpRate: 6, deadZone: 60, vsnap: 1, window: 0 },
+  anim: { juice: 1, blend: 1, squash: 1, rollflip: 1, dust: 1, lines: 1, burst: 1, go: 1, flash: 1, blendRate: 26, landS: 0.13,
+          stretchAmt: 0.4, squashAmt: 0.4, recover: 1.75, dustVy: 575, flashS: 0.12,
+          dustJump: 7, dustWall: 9, dustLand: 6, dustRoll: 10, dustDeath: 22, runDustS: 0.09 },
+  au: { on: 1, music: 1, restartMusic: 0, voices: 8, pitchVar: 0.04 },
+  race: { start: 'input', restart: 'instant', deadS: 0.38, countdownS: 3, ghost: 1, ghostHz: 15, ghostPose: 'full', ghostAlpha: 0.2,
+          medals: [30000, 24000, 21200, 20000] },   // bronze 1.5x, silver 1.2x, gold 1.06x of the 20 s author run
+  assist: { slow: 0, invincible: 0, infCoyote: 0 },
+  valid: { maxVx: 700, maxVy: 1300, minSplitSpeed: 1.6, slowdown: 1.05 },   // |vx| cap, |vy| cap, min segment time = distance / (maxRun * 1.6), wall-clock over sim ratio
+  friends: [['KAEDE', 23410, '2026-11-09', 'pad'], ['RIN', 26080, '2026-11-11', 'keyboard'], ['HIRO', 29750, '2026-11-12', 'keyboard'], ['SORA', 34200, '2026-11-10', 'touch'], ['YUI', 41900, '2026-11-13', 'keyboard']],
+};
+const BASE = JSON.parse(JSON.stringify(TUNING));
+const PHYS = TUNING.phys;
+// Presets. Each lists what differs from the recommended architecture (which is BASE).
+const PRESETS = {
+  today:       { tg: { corner: 0, wallReach: 0, wallKeep: 0, ceilGrace: 0, hyper: 0, liftBoost: 0, jumpBoost: 0 }, en: { on: 0 }, race: { start: 'countdown', restart: 'countdown', ghostHz: 30 }, cam: { focus: 0, downLook: 0 } },
+  recommended: {},
+  noforgive:   { tg: { coyote: 0, buffer: 0, apex: 0, corner: 0, wallStick: 0, wallReach: 0, wallKeep: 0, ceilGrace: 0 } },
+  floaty:      { phys: { gravity: 1500 }, tg: { fallMult: 0 } },
+  heavy:       { phys: { maxRun: 520, gravity: 3600, jumpVel: 1000, groundAccel: 3400, groundFric: 3600 } },
+};
+
+// =====================================================================
+// MAPS. Solids [x, y, w, h, tag]. Ground top G = 600. Teach, test, twist, left to right.
+// =====================================================================
+const G = 600, PW = 20, PH = 46;
+const COURSE = {
+  id: 'course', name: 'THE COURSE', width: 6800, top: -400, deathY: 700, start: { x: 120, y: G },
+  solids: [
+    [0, G, 1000, 500],                      // 1 · flat start
+    [520, G - 50, 64, 50, 'rock'],          //     a rock to jump
+    // gap 1000 -> 1140 (coyote time)
+    [1140, G, 900, 500],                    //     rising steps (jump buffer)
+    [1400, G - 60, 140, 60], [1540, G - 120, 140, 120], [1680, G - 180, 360, 180],
+    [2040, G, 480, 500],                    // 2 · spring at 2200, one-way roof tiles above
+    [2300, 380, 60, 14, 'tile'], [2380, 380, 60, 14, 'tile'], [2460, 380, 60, 14, 'tile'],
+    // gap 2520 -> 2820 with a mover on level time
+    [2820, G, 700, 500],                    // 3 · chimney
+    [2920, 180, 50, 300],                   //     hanging left wall (run under it)
+    [3120, 300, 400, 900],                  //     right wall + plateau, drop at 3520 rolls
+    [3520, G, 700, 500],
+    // gap 4220 -> 4600 with two timed blocks     4 · timing
+    [4600, G, 2200, 500],
+    [4780, 340, 320, 160],                  //     low corridor, spikes on its ceiling
+  ],
+  springs: [{ x: 2200, y: G, w: 50 }],
+  timed: [{ x: 4300, y: 560, w: 100, h: 40, seq: 0 }, { x: 4460, y: 520, w: 100, h: 40, seq: 1 }],   // seq = tick offset on the 4-tick cycle
+  movers: [{ x0: 2540, y0: 470, x1: 2700, y1: 470, w: 110, h: 18, period: 3, phase: 0 }],
+  spikes: [[4810, 500, 260, 'down'], [5200, G, 80]],
+  checkpoints: [1720, 3560, 4640, 5400],
+  patrollers: [{ x0: 5480, x1: 5760, y: G }],   // 5 · enemies: patroller, chaser from checkpoint 4
+  labels: [[60, '1 JUMP'], [1400, 'STEPS'], [2160, '2 SPRING'], [2560, 'MOVER'], [2900, '3 CHIMNEY'], [4260, '4 TIMING'], [4800, 'LOW'], [5420, '5 ENEMIES']],
+  finish: { x: 6500 },
+};
+const PRACTICE = {
+  id: 'practice', name: 'PRACTICE ROOM', width: 1400, top: -400, deathY: 700, start: { x: 100, y: G },
+  solids: [[0, G, 520, 500], [700, G, 700, 500], [1200, 200, 200, 900]],
+  springs: [], timed: [], movers: [], spikes: [], checkpoints: [], patrollers: [], labels: [[80, 'PRACTICE: A GAP, A WALL']], finish: null,
+};
+const MAPS = { course: COURSE, practice: PRACTICE };
+
+// =====================================================================
+// LAYER 1 + 2 + 3 + 4: the simulation. Pure functions of a state object S and an input record,
+// no rendering, no audio, no Math.random. Side effects go to S.ev (events the live loop drains);
+// the headless replay ignores them. This is the same code path the validation re-runs.
+// =====================================================================
+const EPS = 1e-4;
+const overlap = (ax, ay, aw, ah, b) => ax < b[0] + b[2] - EPS && ax + aw > b[0] + EPS && ay < b[1] + b[3] - EPS && ay + ah > b[1] + EPS;
+const isTile = s => s[4] === 'tile' || !!s.mv;
+const tileRise = s => s.mv && s.mv.prev ? Math.max(0, s.mv.prev[1] - s[1]) : 0;
+
+function newPlayer(x, y) {
+  return {
+    x: x - PW / 2, y: y - PH, vx: 0, vy: 0, px: x - PW / 2, py: y - PH,
+    onGround: true, coyote: 0, buffer: 0, jumpCut: true, fromGround: false, holdT: 0,
+    wallDir: 0, wallMem: 0, wallMemT: 0, wallStickT: 0, wasWall: false, wallLock: 0, lastWJ: 0,
+    facing: 1, airT: 0, peak: y, flip: 0, flipOn: false, flipPending: false, flipDir: 1,
+    roll: 0, land: 0, stretch: 0, squash: 0, phase: 0, dustT: 0, dead: false, support: null, carryVx: 0, carryVy: 0, slash: 0,
+    keptVx: 0, keptT: 0, slideT: 0, autoAir: false, touch: 0,
+  };
+}
+function newState(map, dt) {
+  const S = {
+    map, dt, mode: 'ready', t: 0, steps: 0, ms: 0, cd: 0, lastBeep: 4, deadT: 0, finT: 0,
+    cp: -1, splits: [], ev: [], maxVx: 0, maxVy: 0, assisted: false, goFlash: 0, lastSplit: null,
+    pats: map.patrollers.map(p => ({ x: p.x0 + 20, y: p.y, dir: 1, alive: true, deadT: 0, touch: 0, x0: p.x0, x1: p.x1 })),
+    chaser: { on: false, x: 0, y: G, phase: 0, at: -1 }, wallT0: 0, wallT1: 0,
+    springs: map.springs.map(s => ({ x: s.x, y: s.y, w: s.w, comp: 0 })),
+    timedOn: map.timed.map(() => true), timedShake: map.timed.map(() => 0),
+    movers: map.movers.map(m => Object.assign({}, m, { cur: null, prev: null })),
+    statics: map.solids.concat(map.timed.map((b, i) => [b.x, b.y, b.w, b.h, 'timed', i])),
+  };
+  S.P = newPlayer(map.start.x, map.start.y);
+  updateElements(S);
+  return S;
+}
+function moverAt(mv, t) {
+  const s = 0.5 - 0.5 * Math.cos(2 * Math.PI * ((t / mv.period) + (mv.phase || 0)));
+  return [mv.x0 + (mv.x1 - mv.x0) * s, mv.y0 + (mv.y1 - mv.y0) * s, mv.w, mv.h];
+}
+// Movers and timed blocks read the level clock S.t: same place at the same time in every attempt.
+function updateElements(S) {
+  for (const mv of S.movers) { mv.prev = mv.cur || moverAt(mv, S.t); mv.cur = moverAt(mv, S.t); mv.cur.mv = mv; }
+  const el = TUNING.el, on = el.timedOnTicks * el.tickS, cyc = on + el.timedOffTicks * el.tickS;
+  S.map.timed.forEach((b, i) => {
+    const ph = ((S.t - b.seq * el.tickS) % cyc + cyc) % cyc;
+    S.timedOn[i] = ph < on;
+    S.timedShake[i] = S.timedOn[i] && ph > on - el.timedShake ? (ph - (on - el.timedShake)) / el.timedShake : 0;
+  });
+  for (const sp of S.springs) sp.comp = Math.max(0, sp.comp - S.dt);
+}
+function solidAt(S, x, y, w, h, land = null) {
+  const hit = s => !isTile(s) || (land && land.vy > 0 && land.feet <= s[1] + 3 + tileRise(s));
+  for (const s of S.statics) {
+    if (s[4] === 'timed' && !S.timedOn[s[5]]) continue;
+    if (overlap(x, y, w, h, s) && hit(s)) return s;
+  }
+  for (const mv of S.movers) if (mv.cur && overlap(x, y, w, h, mv.cur) && hit(mv.cur)) return mv.cur;
+  return null;
+}
+function groundBelow(map, x) {
+  let best = G;
+  for (const s of map.solids) if (x >= s[0] && x <= s[0] + s[2] && s[1] < best + 1) best = Math.min(best, s[1]);
+  return best;
+}
+const ev = (S, ...a) => S.ev.push(a);
+
+// One simulation step. `inp` = { l, r, j (held), jp (pressed this step), sp (slash pressed) }.
+function simStep(S, inp, dt) {
+  const t0 = performance.now();
+  if (S.mode === 'countdown') {
+    S.cd -= dt; const n = Math.ceil(S.cd);
+    if (n < S.lastBeep && n > 0) { S.lastBeep = n; ev(S, 'sfx', 'beep'); }
+    if (S.cd <= 0) { S.mode = 'run'; S.goFlash = 0.5; ev(S, 'sfx', 'go'); }
+    ACC.sim += performance.now() - t0; return;
+  }
+  if (S.mode === 'dead') { S.deadT -= dt; if (inp.l || inp.r || inp.jp || inp.sp) S.deadT = 0; ACC.sim += performance.now() - t0; return; }   // the death beat is skippable
+  if (S.mode === 'ready') {
+    if (!(inp.l || inp.r || inp.jp)) { ACC.sim += performance.now() - t0; return; }   // the first horizontal or jump input starts the timer and the level clock
+    S.mode = 'run'; S.wallT0 = performance.now();
+  }
+  if (S.mode === 'run') { S.steps++; S.t += dt; S.ms = Math.round(S.steps * dt * 1000 * 1000) / 1000; }
+  if (S.mode === 'finished') { S.finT += dt; inp = { l: 0, r: S.finT < 0.4 ? 1 : 0, j: 0, jp: 0, sp: 0 }; }
+  stepPlayer(S, inp, dt);
+}
+
+function stepPlayer(S, inp, dt) {
+  const P = S.P, m = S.map, tg = TUNING.tg, A = TUNING.assist;
+  let t0 = performance.now();
+  P.px = P.x; P.py = P.y;
+  updateElements(S);
+  // ride: whatever you stand on carries you; a platform moving into you pushes you up
+  const sup = P.support && P.support.mv;
+  if (sup && P.onGround) { const dx = sup.cur[0] - sup.prev[0], dy = sup.cur[1] - sup.prev[1]; P.x += dx; P.y = sup.cur[1] - PH; P.carryVx = dx / dt; P.carryVy = dy / dt; } else { P.carryVx = 0; P.carryVy = 0; }
+  for (const mv of S.movers) {
+    const r = mv.cur; if (!overlap(P.x, P.y, PW, PH, r)) continue;
+    if (P.vy >= 0 && P.y + PH - r[1] < 6 + tileRise(r)) { P.y = r[1] - PH; P.vy = 0; P.onGround = true; P.support = r; }
+  }
+  ACC.col += performance.now() - t0; t0 = performance.now();
+
+  const control = S.mode === 'run';
+  const dir = (inp.r ? 1 : 0) - (inp.l ? 1 : 0);
+  const jumpHeld = control && inp.j;
+  if (control && inp.jp) P.buffer = tg.buffer ? PHYS.buffer : dt * 1.5;     // no buffer: the press lives one step
+  if (control && inp.sp && P.slash <= 0 && P.roll <= 0) { P.slash = TUNING.en.slashMs / 1000; ev(S, 'sfx', 'slash'); }
+  P.slash = Math.max(0, P.slash - dt);
+  P.keptT = Math.max(0, P.keptT - dt); P.squash = Math.max(0, P.squash - TUNING.anim.recover * dt);
+  P.wallLock = Math.max(0, P.wallLock - dt);
+  P.buffer = Math.max(0, P.buffer - dt);
+  const coy = A.infCoyote ? 1e9 : tg.coyote ? PHYS.coyote : 0;
+  P.coyote = P.onGround ? coy : Math.max(0, P.coyote - dt);
+  P.wallMemT = Math.max(0, P.wallMemT - dt);
+  P.land = Math.max(0, P.land - dt);
+  P.stretch = Math.max(0, P.stretch - TUNING.anim.recover * dt);
+
+  // --- horizontal ---
+  const ax = Math.abs(P.vx), sv = Math.sign(P.vx);
+  if (P.onGround) {
+    if (dir !== 0) {
+      if (sv !== 0 && sv !== dir) P.vx += dir * PHYS.turnAccel * dt;
+      else if (ax > PHYS.maxRun) P.vx -= sv * Math.min(ax - PHYS.maxRun, PHYS.overspeedDecay * dt);
+      else P.vx = dir * Math.min(PHYS.maxRun, ax + PHYS.groundAccel * dt);
+      P.facing = dir;
+    } else if (P.roll <= 0) P.vx = sv * Math.max(0, ax - PHYS.groundFric * dt);
+  } else {
+    if (dir !== 0 && P.wallLock <= 0) {
+      if (!(sv === dir && ax >= PHYS.maxRun)) P.vx = clamp(P.vx + dir * PHYS.airAccel * dt, -Math.max(PHYS.maxRun, ax), Math.max(PHYS.maxRun, ax));
+      if (!P.flipOn) P.facing = dir;
+    } else if (dir === 0) P.vx = sv * Math.max(0, ax - PHYS.airDrag * dt);
+  }
+
+  // --- jumps ---
+  if (P.buffer > 0) {
+    if (P.onGround || P.coyote > 0) {
+      const hyper = tg.hyper && P.roll > PHYS.rollTime - PHYS.hyperWindow;        // roll-jump hyper: inside the first 100 ms of a roll
+      P.vy = -PHYS.jumpVel * (hyper ? PHYS.hyperVy : 1); P.onGround = false; P.coyote = A.infCoyote ? 1e9 : 0; P.buffer = 0;
+      P.jumpCut = false; P.fromGround = true; P.holdT = 0; P.peak = P.y + PH; P.airT = 0; P.autoAir = false; P.slash = 0;
+      if (hyper) P.vx = P.facing * PHYS.maxRun * PHYS.hyperMult;
+      else if (tg.jumpBoost && dir !== 0) P.vx += dir * PHYS.jumpBoost;                 // jump boost: 40 u/s in the move direction
+      if (tg.liftBoost && P.support && P.support.mv) {                                   // lift boost: keep the mover's push, capped
+        P.vx += clamp(P.carryVx, -PHYS.liftBoostX, PHYS.liftBoostX); if (P.carryVy < 0) P.vy += Math.max(P.carryVy, -PHYS.liftBoostY);
+      }
+      P.flipPending = Math.abs(P.vx) > PHYS.flipMinSpeed; P.flipDir = P.facing;
+      P.stretch = TUNING.anim.stretchAmt; P.roll = 0; P.lastWJ = 0; P.support = null;
+      ev(S, 'dust', P.x + PW / 2, P.y + PH, TUNING.anim.dustJump, 0, -1, 1); ev(S, 'sfx', hyper ? 'wall' : 'jump'); ev(S, 'flash');
+    } else if (P.wallMemT > 0 && P.wallMem !== 0) {
+      const w = P.wallMem, same = w === P.lastWJ, toward = dir === w;
+      P.vx = -w * (toward ? PHYS.wallClimbX : Math.max(PHYS.wallJumpX, tg.wallKeep && P.keptT > 0 ? P.keptVx : 0));   // wall speed retention
+      P.vy = -(same ? PHYS.wallJumpSameY : PHYS.wallJumpY);
+      P.wallLock = toward ? PHYS.wallClimbLock : PHYS.wallLock; P.lastWJ = w; P.facing = -w; P.buffer = 0; P.wallMemT = 0;
+      P.jumpCut = true; P.fromGround = false; P.wallStickT = 0;
+      if (!same) { P.flipOn = true; P.flip = 0; P.flipDir = -w; P.flipPending = false; }
+      P.stretch = TUNING.anim.stretchAmt; P.slash = 0; P.autoAir = false; P.keptT = 0;
+      ev(S, 'dust', w > 0 ? P.x + PW : P.x, P.y + PH * 0.6, TUNING.anim.dustWall, -w, 0, 1); ev(S, 'sfx', 'wall'); ev(S, 'flash');
+    }
+  }
+  if (!P.onGround) P.holdT += dt;
+  if (tg.varJump && P.fromGround && !P.jumpCut && !jumpHeld && P.vy < 0) { P.vy *= PHYS.jumpCut; P.jumpCut = true; P.flipPending = false; }
+
+  // --- gravity ---
+  let g = PHYS.gravity;
+  if (P.vy > 0) { if (tg.fallMult) g *= PHYS.fallMult; }
+  else if (tg.apex && Math.abs(P.vy) < PHYS.apexBand && (jumpHeld || P.autoAir)) g *= PHYS.apexMult;
+  if (!P.onGround) P.vy += g * dt;
+
+  // --- wall slide ---
+  const sliding = !P.onGround && P.wallDir !== 0 && P.vy > 0;
+  if (sliding) {
+    if (!P.wasWall) { P.wallStickT = tg.wallStick && !tg.slideRamp ? PHYS.wallStick : 0; P.slideT = 0; }
+    P.slideT += dt;
+    if (tg.slideRamp) P.vy = Math.min(P.vy, lerp(PHYS.slideRampFrom, PHYS.slideRampTo, Math.min(1, P.slideT / PHYS.slideRampS)));   // ramp 25 to 115 u/s over 0.8 s
+    else if (P.wallStickT > 0) { P.wallStickT -= dt; P.vy = Math.min(P.vy, 25); }
+    else P.vy = Math.min(P.vy, PHYS.wallSlideMax);
+    P.facing = P.wallDir; P.flipOn = false; P.flipPending = false;
+    P.dustT -= dt;
+    if (P.dustT <= 0) { P.dustT = 0.06; ev(S, 'dust', P.wallDir > 0 ? P.x + PW : P.x, P.y + PH - 4, 1, 0, 0.3, 0.6); }
+  }
+  P.wasWall = sliding;
+  P.vy = Math.min(P.vy, PHYS.maxFall);
+  S.maxVx = Math.max(S.maxVx, Math.abs(P.vx)); S.maxVy = Math.max(S.maxVy, Math.abs(P.vy));
+  ACC.sim += performance.now() - t0; t0 = performance.now();
+
+  // --- integrate X ---
+  P.x += P.vx * dt;
+  let s, guard = 0;
+  while ((s = solidAt(S, P.x, P.y, PW, PH)) && guard++ < 6) {
+    // corner correction, ledge case: feet just below a block's top, pop up onto it and keep the speed
+    const over = P.y + PH - s[1];
+    if (tg.corner && over > 0 && over <= PHYS.cornerNudge && !solidAt(S, P.x, s[1] - PH, PW, PH)) { P.y = s[1] - PH; continue; }
+    if (P.vx > 0) P.x = s[0] - PW; else if (P.vx < 0) P.x = s[0] + s[2];
+    else P.x = (P.x + PW / 2 < s[0] + s[2] / 2) ? s[0] - PW : s[0] + s[2];
+    if (Math.abs(P.vx) > 0) { P.keptVx = Math.abs(P.vx); P.keptT = PHYS.wallKeepS; }   // wall speed retention window
+    P.vx = 0;
+  }
+  if (P.x < 0) { P.x = 0; P.vx = 0; }
+  if (P.x > m.width - PW) { P.x = m.width - PW; P.vx = 0; }
+
+  // --- integrate Y ---
+  const wasGround = P.onGround, land = { vy: P.vy, feet: P.y + PH };
+  P.y += P.vy * dt;
+  P.onGround = false; guard = 0;
+  while ((s = solidAt(S, P.x, P.y, PW, PH, land)) && guard++ < 6) {
+    if (P.vy > 0) { P.y = s[1] - PH; P.onGround = true; P.support = s; }
+    else {
+      // corner correction, ceiling case: a head clipping a block edge by up to 8 u slides around it
+      if (tg.corner) {
+        const ol = P.x + PW - s[0], or = s[0] + s[2] - P.x, n = PHYS.cornerNudge;
+        if (ol <= n && !solidAt(S, P.x - ol, P.y, PW, PH)) { P.x -= ol; continue; }
+        if (or <= n && !solidAt(S, P.x + or, P.y, PW, PH)) { P.x += or; continue; }
+      }
+      P.y = s[1] + s[3];
+      if (tg.ceilGrace && P.fromGround && P.holdT < PHYS.ceilGraceS) break;   // ceiling grace: a bump in the first 50 ms keeps the jump alive
+    }
+    P.vy = 0;
+  }
+  if (!P.onGround && P.vy >= 0 && (s = solidAt(S, P.x, P.y + PH, PW, 1, { vy: 1, feet: P.y + PH }))) { P.onGround = true; P.support = s; }
+  // springs are triggers: touch one from any side and it launches you at 1.35 x jump speed (a compressed frame telegraphs it)
+  for (const sp of S.springs) if (sp.comp <= 0 && overlap(P.x, P.y, PW, PH, [sp.x, sp.y - 20, sp.w, 20])) {
+    P.vy = -PHYS.jumpVel * TUNING.el.springMult; P.onGround = false; P.support = null; P.jumpCut = true; P.fromGround = false; P.autoAir = true;
+    P.peak = P.y + PH; P.airT = 0; P.roll = 0; P.flipOn = false; P.flipPending = false; P.stretch = TUNING.anim.stretchAmt; P.coyote = 0; P.y = Math.min(P.y, sp.y - 20 - PH);
+    sp.comp = TUNING.el.springCompS; ev(S, 'dust', P.x + PW / 2, sp.y, 8, 0, -1, 1.2); ev(S, 'sfx', 'spring'); ev(S, 'flash');
+  }
+  if (!P.onGround && P.support) P.support = null;
+
+  // --- leave / land ---
+  if (wasGround && !P.onGround) { P.peak = P.y + PH; P.airT = 0; }
+  if (!P.onGround) { P.airT += dt; P.peak = Math.min(P.peak, P.y + PH); }
+  if (!wasGround && P.onGround) onLand(S, land.vy);
+  if (P.onGround) P.autoAir = false;
+
+  // --- flips and rolls ---
+  if (P.flipPending && !P.onGround && P.holdT > 0.1 && jumpHeld) { P.flipOn = true; P.flip = 0; P.flipPending = false; }
+  if (P.flipOn) { P.flip += dt / PHYS.flipTime * (P.onGround ? 3 : 1); if (P.flip >= 1) { P.flipOn = false; P.flip = 0; } }
+  if (P.roll > 0) {
+    P.roll -= dt;
+    if (Math.abs(P.vx) < PHYS.rollMinSpeed * 0.85) P.vx = P.facing * PHYS.rollMinSpeed * 0.85;
+    P.dustT -= dt;
+    if (P.dustT <= 0 && P.onGround) { P.dustT = 0.035; ev(S, 'dust', P.x + PW / 2 - P.facing * 8, P.y + PH, 1, -P.facing * 0.5, -0.2, 1); }
+  }
+
+  // --- wall probe (2 u wide over the middle 30 u of the body) ---
+  P.wallDir = 0;
+  if (!P.onGround) {
+    const probeY = P.y + 8, probeH = PH - 16, reach = tg.wallReach ? PHYS.wallReach : 2;
+    if (solidAt(S, P.x - reach, probeY, reach, probeH)) P.wallDir = -1;
+    else if (solidAt(S, P.x + PW, probeY, reach, probeH)) P.wallDir = 1;
+    if (P.wallDir !== 0) { P.wallMem = P.wallDir; P.wallMemT = tg.wallCoyote ? PHYS.wallCoyote : dt * 1.5; }
+  }
+  // --- run dust ---
+  if (P.onGround && Math.abs(P.vx) > 260 && P.roll <= 0) {
+    P.dustT -= dt;
+    if (P.dustT <= 0) { P.dustT = TUNING.anim.runDustS - Math.abs(P.vx) / 10000; ev(S, 'dust', P.x + PW / 2 - Math.sign(P.vx) * 6, P.y + PH, 1, -Math.sign(P.vx) * 0.4, -0.3, 0.7); }
+  }
+  P.phase += Math.abs(P.vx) * dt * 0.042;
+  ACC.col += performance.now() - t0; t0 = performance.now();
+
+  if (S.mode !== 'run') return;
+  // --- hazards, checkpoints, finish ---
+  for (const sp of m.spikes) {
+    const box = sp[3] === 'down' ? [sp[0] + 4, sp[1], sp[2] - 8, 16] : [sp[0] + 4, sp[1] - 16, sp[2] - 8, 16];
+    if (overlap(P.x + 3, P.y, PW - 6, PH, box)) return die(S);
+  }
+  if (P.y > m.deathY) return die(S);
+  for (let i = S.cp + 1; i < m.checkpoints.length; i++) if (P.x > m.checkpoints[i]) {
+    S.cp = i; S.splits[i] = S.ms; ev(S, 'cp', i);
+    if (TUNING.en.on && i === TUNING.en.chaserCp && !S.chaser.on) S.chaser.at = S.t + TUNING.en.chaserDelay;   // spawns at the split 1.5 s later
+  }
+  if (S.chaser.at >= 0 && !S.chaser.on && S.t >= S.chaser.at) { S.chaser.on = true; S.chaser.x = m.checkpoints[TUNING.en.chaserCp]; S.chaser.y = groundBelow(m, S.chaser.x); }
+  if (m.finish && P.x + PW > m.finish.x) return finish(S);
+  stepEnemies(S, dt);
+  ACC.enm += performance.now() - t0;
+}
+function onLand(S, vy) {
+  const P = S.P, fall = (P.y + PH) - P.peak;
+  P.lastWJ = 0; P.fromGround = false; P.flipPending = false;
+  P.squash = TUNING.anim.squashAmt * Math.min(1, vy / PHYS.maxFall);     // landing squash scaled by fall speed
+  if (fall > PHYS.rollFall && P.wallDir === 0 && TUNING.tg.roll) {
+    P.roll = PHYS.rollTime; P.flipOn = false;
+    if (Math.abs(P.vx) < PHYS.rollMinSpeed) P.vx = P.facing * PHYS.rollMinSpeed;
+    ev(S, 'dust', P.x + PW / 2, P.y + PH, TUNING.anim.dustRoll, 0, -0.6, 1.2); ev(S, 'sfx', 'roll'); ev(S, 'flash');
+  } else if (fall > 50) {
+    P.land = TUNING.anim.landS; ev(S, 'sfx', 'land');
+    if (vy >= TUNING.anim.dustVy) ev(S, 'dust', P.x + PW / 2, P.y + PH, TUNING.anim.dustLand, 0, -0.5, 1);
+  }
+}
+// LAYER 4: enemies on level time. Patroller box 28x24 standing on its ledge; chaser is a 20x46 shadow.
+const patBox = p => { const k = TUNING.en.patInset; return [p.x - 14 + k, p.y - 24 + k, 28 - 2 * k, 24 - k]; };
+const slashActive = P => { const en = TUNING.en, el = en.slashMs - P.slash * 1000; return P.slash > 0 && el >= en.slashWindMs && el < en.slashWindMs + en.slashActiveMs; };
+const slashBoxOf = P => [P.facing > 0 ? P.x + PW : P.x - TUNING.en.slashW, P.y + 3, TUNING.en.slashW, TUNING.en.slashH];
+function stepEnemies(S, dt) {
+  if (!TUNING.en.on) return;
+  const P = S.P, en = TUNING.en;
+  const slashBox = slashActive(P) ? slashBoxOf(P) : null;
+  for (const p of S.pats) {
+    if (!p.alive) { p.deadT += dt; continue; }
+    p.x += p.dir * en.patrolSpeed * dt;
+    if (p.x > p.x1) { p.x = p.x1; p.dir = -1; } else if (p.x < p.x0) { p.x = p.x0; p.dir = 1; }
+    const b = patBox(p);
+    if (slashBox && overlap(slashBox[0], slashBox[1], slashBox[2], slashBox[3], b)) { p.alive = false; ev(S, 'kill', p.x, p.y - 12); ev(S, 'sfx', 'kill'); continue; }
+    if (overlap(P.x + 2, P.y, PW - 4, PH, b)) {
+      if (P.vy > 0 && P.y + PH - b[1] < 14) {                        // stomp: full jump with the apex band active
+        p.alive = false; P.vy = -PHYS.jumpVel * en.bounceMult; P.onGround = false; P.jumpCut = true; P.fromGround = false; P.autoAir = true; P.stretch = TUNING.anim.stretchAmt;
+        ev(S, 'kill', p.x, p.y - 12); ev(S, 'dust', P.x + PW / 2, P.y + PH, 6, 0, -1, 1); ev(S, 'sfx', 'bounce'); ev(S, 'flash');
+      } else if (++p.touch >= en.contactSteps) return die(S);        // a kill by contact needs 2 consecutive overlapping steps
+    } else p.touch = 0;
+  }
+  const c = S.chaser;
+  if (c.on) {
+    c.x += en.chaserMult * PHYS.maxRun * dt; c.phase += en.chaserMult * PHYS.maxRun * dt * 0.042;
+    c.y = groundBelow(S.map, c.x);
+    if (overlap(P.x, P.y, PW, PH, [c.x - PW / 2, c.y - PH, PW, PH])) return die(S);
+  }
+}
+function die(S) {
+  if (TUNING.assist.invincible) { S.assisted = true; return; }
+  const P = S.P;
+  ev(S, 'die', P.x + PW / 2, P.y + PH / 2); ev(S, 'sfx', 'die');
+  P.dead = true; S.mode = 'dead'; S.deadT = TUNING.race.restart === 'countdown' ? TUNING.race.deadS : 0;
+}
+function finish(S) {
+  S.mode = 'finished'; S.finT = 0; S.wallT1 = performance.now(); ev(S, 'finish');
+}
+// inputs packed one byte per step: bit0 left, bit1 right, bit2 jump held, bit3 jump pressed, bit4 slash pressed
+const pack = i => (i.l ? 1 : 0) | (i.r ? 2 : 0) | (i.j ? 4 : 0) | (i.jp ? 8 : 0) | (i.sp ? 16 : 0);
+const unpack = b => ({ l: b & 1, r: b & 2, j: b & 4, jp: b & 8, sp: b & 16 });
+// Headless replay: the same simStep over the recorded inputs, no rendering. Returns the final time.
+function replayRun(map, inputs, dt, startMode) {
+  const S2 = newState(map, dt);
+  if (startMode === 'countdown') { S2.mode = 'countdown'; S2.cd = TUNING.race.countdownS; }
+  for (let i = 0; i < inputs.length; i++) {
+    simStep(S2, unpack(inputs[i]), dt); S2.ev.length = 0;
+    if (S2.mode === 'finished' || S2.mode === 'dead') break;
+  }
+  return S2;
+}
+
+// =====================================================================
+// Per-frame cost accumulators (efficiency HUD). ACC collects this frame, T is the smoothed value.
+// =====================================================================
+const ACC = { sim: 0, col: 0, enm: 0, cam: 0, rSolid: 0, rHero: 0, rGhost: 0, rParts: 0, ui: 0, au: 0, total: 0 };
+const T = Object.assign({}, ACC);
+const smoothT = () => { for (const k in ACC) { T[k] = T[k] * 0.9 + ACC[k] * 0.1; ACC[k] = 0; } };
+
+// =====================================================================
+// LAYER 6: animation. Procedural stick samurai (the game's rig), pose blending, particles, speed lines.
+// =====================================================================
+let aclock = 0, flashT = 0;
+const poseIdle = t => ({ hip: 22 + Math.sin(t * 2.2) * 0.5, lean: 0.04, th: [0.12, -0.1], sh: [0.05, 0.05], ua: [0.15, -0.12], la: [0.35, 0.3] });
+let pose = poseIdle(0);
+function targetPose(P, t) {
+  const sp = Math.min(1, Math.abs(P.vx) / PHYS.maxRun);
+  let tp;
+  if (P.roll > 0) tp = { hip: 13, lean: 0.9, th: [2.1, 1.9], sh: [2.6, 2.6], ua: [1.2, 1.0], la: [1.1, 1.1] };
+  else if (P.flipOn) tp = { hip: 15, lean: 0.6, th: [2.0, 1.8], sh: [2.5, 2.5], ua: [1.3, 1.1], la: [1.0, 1.0] };
+  else if (!P.onGround && P.wallDir !== 0 && P.vy > 0) tp = { hip: 20, lean: 0.28, th: [0.75, 0.25], sh: [1.2, 0.7], ua: [2.1, -0.45], la: [0.15, 0.4] };
+  else if (!P.onGround) {
+    if (P.vy < -120) tp = { hip: 21, lean: 0.12, th: [1.15, 0.2], sh: [1.6, 0.5], ua: [2.7, -0.5], la: [0.3, 0.6] };
+    else if (P.vy < 160) tp = { hip: 21, lean: 0.12, th: [0.7, 0.05], sh: [1.0, 0.6], ua: [1.9, -1.0], la: [0.4, 0.4] };
+    else tp = { hip: 22, lean: 0.06, th: [0.35, -0.2], sh: [0.35, 0.6], ua: [1.55, -1.45], la: [0.2, 0.2] };
+  } else if (P.land > 0) { const k = P.land / TUNING.anim.landS; tp = { hip: 22 - 7 * k, lean: 0.25 + 0.2 * k, th: [0.9 * k + 0.1, 0.7 * k], sh: [1.6 * k, 1.4 * k], ua: [0.6, -0.4], la: [0.6, 0.4] }; }
+  else if (sp > 0.04) {
+    const p = P.phase, s = Math.sin(p), c = Math.cos(p);
+    tp = { hip: 22 - Math.abs(c) * 1.8 * sp, lean: 0.08 + 0.32 * sp, th: [0.95 * s * sp, -0.95 * s * sp],
+      sh: [0.25 + Math.max(0, c) * 1.5 * sp, 0.25 + Math.max(0, -c) * 1.5 * sp], ua: [-0.85 * s * sp, 0.85 * s * sp], la: [0.9 + 0.3 * sp, 0.9 + 0.3 * sp] };
+  } else tp = poseIdle(t);
+  if (P.slash > 0) { tp.ua = [1.5, -0.6]; tp.la = [0.25, 0.5]; }      // the front arm sweeps the katana
+  return tp;
+}
+function blendPose(target, k) {
+  const L = (a, b) => a + (b - a) * k;
+  pose = { hip: L(pose.hip, target.hip), lean: L(pose.lean, target.lean),
+    th: [L(pose.th[0], target.th[0]), L(pose.th[1], target.th[1])], sh: [L(pose.sh[0], target.sh[0]), L(pose.sh[1], target.sh[1])],
+    ua: [L(pose.ua[0], target.ua[0]), L(pose.ua[1], target.ua[1])], la: [L(pose.la[0], target.la[0]), L(pose.la[1], target.la[1])] };
+}
+const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+// Katana: a slim curved blade with a kissaki point and a light edge line; tsuba, wrapped tsuka, kashira.
+function katanaBlade(c, B, D, E, len, w, bow, edgeLine = true) {
+  if (len < 1) return;
+  const pt = (t, off) => { const b = bow * len * t * t; return [B[0] + D[0] * len * t + E[0] * (b + off), B[1] + D[1] * len * t + E[1] * (b + off)]; };
+  const hw = t => w / 2 * (1 - 0.35 * t);
+  c.fillStyle = '#0a0a0a'; c.beginPath();
+  let p = pt(0, -hw(0)); c.moveTo(p[0], p[1]);
+  for (let t = 0.1; t <= 1.0001; t += 0.1) { p = pt(t, -hw(t)); c.lineTo(p[0], p[1]); }
+  const tip = pt(1.05, -hw(1) * 0.6); c.lineTo(tip[0], tip[1]);
+  const k1 = pt(1.02, hw(1) * 1.2), k0 = pt(0.9, hw(0.9));
+  c.quadraticCurveTo(k1[0], k1[1], k0[0], k0[1]);
+  for (let t = 0.8; t >= -0.0001; t -= 0.1) { p = pt(t, hw(t)); c.lineTo(p[0], p[1]); }
+  c.closePath(); c.fill();
+  if (edgeLine) {
+    c.save(); c.strokeStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = Math.max(0.35, w * 0.16); c.lineCap = 'round'; c.beginPath();
+    p = pt(0.06, hw(0.06) * 0.45); c.moveTo(p[0], p[1]);
+    for (let t = 0.16; t <= 0.9; t += 0.1) { p = pt(t, hw(t) * 0.45); c.lineTo(p[0], p[1]); }
+    c.stroke(); c.restore();
+  }
+}
+function katanaHilt(c, Gp, H, len, w) {
+  const n = [-H[1], H[0]], at = (k, o = 0) => [Gp[0] + H[0] * k + n[0] * o, Gp[1] + H[1] * k + n[1] * o];
+  c.fillStyle = '#0a0a0a';
+  c.beginPath(); c.ellipse(Gp[0], Gp[1], w * 0.4, w * 1.05, Math.atan2(H[1], H[0]), 0, Math.PI * 2); c.fill();
+  const q = [at(0.6, -w / 2), at(len, -w * 0.46), at(len, w * 0.46), at(0.6, w / 2)];
+  c.beginPath(); c.moveTo(q[0][0], q[0][1]); for (const v of q.slice(1)) c.lineTo(v[0], v[1]); c.closePath(); c.fill();
+  const k0 = at(len - 0.4, -w * 0.58), k1 = at(len + 1.3, w * 0.58);
+  c.beginPath(); c.moveTo(k0[0], k0[1]); c.lineTo(at(len + 1.3, -w * 0.5)[0], at(len + 1.3, -w * 0.5)[1]); c.lineTo(k1[0], k1[1]);
+  c.lineTo(at(len - 0.4, w * 0.58)[0], at(len - 0.4, w * 0.58)[1]); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,255,255,0.75)';
+  for (let k = 2.6; k < len - 1.2; k += 2.4) {
+    const a = at(k - 0.85), b = at(k, w * 0.28), d = at(k + 0.85), e = at(k, -w * 0.28);
+    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.lineTo(d[0], d[1]); c.lineTo(e[0], e[1]); c.closePath(); c.fill();
+  }
+}
+// Stick samurai with feet-centre at (0,0), facing +x. ink = line colour (black, or grey for the ghost).
+const SAM = { leg: 1.22, torso: 17, neck: 7, head: 5.2, ua: 9.8, la: 9.2, lw: 2.1 };
+function drawSamurai(c, ps, hat, kim, flap, ink = '#0a0a0a', blade = null, grip = 1) {
+  const lw = SAM.lw;
+  const hip = [0, -ps.hip * SAM.leg];
+  const sh = [hip[0] + Math.sin(ps.lean) * SAM.torso, hip[1] - Math.cos(ps.lean) * SAM.torso];
+  const head = [sh[0] + Math.sin(ps.lean * 0.7) * SAM.neck, sh[1] - Math.cos(ps.lean * 0.7) * SAM.neck];
+  const seg = (o, a, len) => [o[0] + Math.sin(a) * len, o[1] + Math.cos(a) * len];
+  const line = (a, b, w = lw) => { c.lineWidth = w; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); };
+  c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = ink;
+  const limbs = i => {
+    const knee = seg(hip, ps.th[i] + ps.lean * 0.2, 11 * SAM.leg), foot = seg(knee, ps.th[i] - ps.sh[i], 11.5 * SAM.leg);
+    const elb = seg(sh, ps.ua[i] + ps.lean * 0.3, SAM.ua), hand = seg(elb, ps.ua[i] + ps.la[i], SAM.la);
+    return { knee, foot, elb, hand };
+  };
+  const back = limbs(1), front = limbs(0);
+  const perp = [Math.cos(ps.lean), Math.sin(ps.lean)], up = [Math.sin(ps.lean), -Math.cos(ps.lean)];
+  const ob = [lerp(hip[0], sh[0], 0.12), lerp(hip[1], sh[1], 0.12)];
+  const a0 = c.globalAlpha;
+  c.globalAlpha = a0 * 0.75;
+  line(hip, back.knee); line(back.knee, back.foot); line(sh, back.elb); line(back.elb, back.hand);
+  c.globalAlpha = a0;
+  // sash tails behind the body
+  const wv = Math.sin(aclock * 7) * 0.6, kn = [ob[0] - perp[0] * 2.5, ob[1] - perp[1] * 2.5];
+  c.strokeStyle = kim;
+  for (const [len, drop] of [[9.5, 2.2], [7.5, 5.2]]) {
+    const end = [kn[0] - perp[0] * len * (1 - flap * 0.35) - up[0] * (drop * (1 + flap) - wv), kn[1] - perp[1] * len * (1 - flap * 0.35) - up[1] * (drop * (1 + flap) - wv)];
+    const mm = [lerp(kn[0], end[0], 0.5) - up[0] * wv, lerp(kn[1], end[1], 0.5) - up[1] * wv];
+    c.lineWidth = 1.5; c.beginPath(); c.moveTo(kn[0], kn[1]); c.quadraticCurveTo(mm[0], mm[1], end[0], end[1]); c.stroke();
+  }
+  c.strokeStyle = ink;
+  line(hip, sh, lw * 1.15); line(sh, head, lw);
+  c.strokeStyle = kim; line([ob[0] - perp[0] * 3.4, ob[1] - perp[1] * 3.4], [ob[0] + perp[0] * 3.4, ob[1] + perp[1] * 3.4], 3.4); c.strokeStyle = ink;
+  line(hip, front.knee); line(front.knee, front.foot);
+  let gripAt = null;
+  if (blade == null) {                                            // katana worn at the hip, swinging with the motion
+    const e = clamp(0.42 + flap * 0.32, 0.06, 0.8), D = [perp[0] * Math.cos(e) + up[0] * Math.sin(e), perp[1] * Math.cos(e) + up[1] * Math.sin(e)];
+    const nU = [D[1], -D[0]], pv = [ob[0] + perp[0] * 4 + up[0], ob[1] + perp[1] * 4 + up[1]];
+    const at = (k, n = 0) => [pv[0] + D[0] * k + nU[0] * n, pv[1] + D[1] * k + nU[1] * n];
+    const f0 = c.fillStyle; c.save();
+    if (ink !== '#0a0a0a') c.globalAlpha = a0;                    // ghost: the blade takes the ink colour below
+    katanaBlade(c, at(0.4), [-D[0], -D[1]], nU, 30, 2.3, 0.07, ink === '#0a0a0a');
+    katanaHilt(c, at(0.4), D, 9.5, 2.9);
+    c.restore(); c.fillStyle = f0;
+    gripAt = at(5.5);
+  }
+  drawHead(c, head[0], head[1], ps.lean * 0.5 - flap * 0.06, hat, ink);
+  if (blade != null) {                                            // drawn blade in the front hand (slash)
+    const Db = [Math.sin(blade), Math.cos(blade)];
+    katanaBlade(c, front.hand, Db, [Db[1], -Db[0]], 34, 2.1, -0.05);
+    katanaHilt(c, front.hand, [-Db[0], -Db[1]], 7, 2.8);
+  }
+  if (gripAt && grip > 0.01) {                                    // the front hand rests on the grip (two-bone IK)
+    const l1 = SAM.ua, l2 = SAM.la, dx = gripAt[0] - sh[0], dy = gripAt[1] - sh[1], d = Math.min(Math.hypot(dx, dy), l1 + l2 - 0.01);
+    const a = Math.atan2(dy, dx), A = Math.acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1)), ea = a + A;
+    const E = [sh[0] + Math.cos(ea) * l1, sh[1] + Math.sin(ea) * l1], tl = Math.hypot(gripAt[0] - E[0], gripAt[1] - E[1]) || 1;
+    const H = [E[0] + (gripAt[0] - E[0]) / tl * l2, E[1] + (gripAt[1] - E[1]) / tl * l2];
+    front.elb = [lerp(front.elb[0], E[0], grip), lerp(front.elb[1], E[1], grip)];
+    front.hand = [lerp(front.hand[0], H[0], grip), lerp(front.hand[1], H[1], grip)];
+  }
+  c.strokeStyle = ink; line(sh, front.elb); line(front.elb, front.hand);
+}
+function drawHead(c, x, y, rot, hat, ink) {
+  c.fillStyle = ink;
+  c.beginPath(); c.arc(x, y, SAM.head, 0, Math.PI * 2); c.fill();
+  c.save(); c.translate(x, y); c.rotate(rot + 0.1); c.translate(0, -2.2);
+  c.fillStyle = hat; c.beginPath();
+  c.moveTo(-14, 1.6); c.quadraticCurveTo(0, -0.6, 14, 1.6); c.lineTo(1.1, -8.2); c.lineTo(-1.1, -8.2); c.closePath();
+  c.fill(); c.lineWidth = 0.9; c.strokeStyle = ink; c.stroke(); c.restore();
+}
+// one figure = position + rotation + squash + pose; the player and the ghost share it
+function playerVisual(S) {
+  const P = S.P, an = TUNING.anim, J = an.juice;
+  let rot = 0, pivot = 22;
+  if (an.rollflip) {
+    if (P.flipOn) rot = easeInOut(Math.min(1, P.flip)) * Math.PI * 2;
+    if (P.roll > 0) { rot = (1 - P.roll / PHYS.rollTime) * Math.PI * 2; pivot = 12; }
+  }
+  const st = an.squash ? P.stretch * J : 0, sq = an.squash ? P.squash * J : 0;   // stretch toward (0.6, 1.4), squash toward (1.4, 0.6)
+  return { x: P.x + PW / 2, y: P.y + PH, f: P.facing, rot, pivot, sx: 1 - st + sq, sy: 1 + st - sq, flap: P.flap || 0,
+    grip: P.wasWall || P.wallLock > 0 || P.flipOn || P.roll > 0 ? 0 : 1, pose, slash: P.slash, flash: flashT > 0 };
+}
+function drawFigure(c, v, ghost = false) {
+  c.save(); c.translate(v.x, v.y);
+  if (v.f < 0) c.scale(-1, 1);
+  if (v.rot) { c.translate(0, -v.pivot); c.rotate(v.rot); c.translate(0, v.pivot); }
+  c.scale(v.sx, v.sy);
+  const blade = v.slash > 0 ? lerp(-1.3, 1.6, clamp((TUNING.en.slashMs - v.slash * 1000 - TUNING.en.slashWindMs) / (TUNING.en.slashActiveMs + 20), 0, 1)) : null;
+  if (ghost) drawSamurai(c, v.pose, '#8a8a8a', '#8a8a8a', v.flap, '#8a8a8a', null, 1);
+  else drawSamurai(c, v.pose, '#111111', v.flash ? '#f6c9c5' : '#d0281f', v.flap, '#0a0a0a', blade, v.grip);   // the sash flashes toward white for 120 ms when a movement resource changes
+  c.restore();
+}
+// kimono flap: a spring (stiffness 160, damping 14) driven by speed and vy; cosmetic, per step
+function flapStep(P, dt) {
+  const target = clamp(-Math.abs(P.vx) / PHYS.maxRun * 0.55 + (P.onGround ? 0 : clamp(P.vy / 900, -0.6, 0.6)), -1.1, 0.8);
+  P.flapV = (P.flapV || 0) + ((target - (P.flap || 0)) * 160 - (P.flapV || 0) * 14) * dt;
+  P.flap = (P.flap || 0) + P.flapV * dt;
+}
+// particles: dust (cosmetic, seeded RNG so a replayed frame looks the same)
+let rs = 0x9e3779b9;
+const rnd = () => { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >>>= 0; return rs / 4294967296; };
+const parts = [];
+function dust(x, y, n, dx = 0, dy = -1, spread = 1) {
+  n = Math.round(n * TUNING.anim.juice); if (!TUNING.anim.dust) return;
+  for (let i = 0; i < n; i++) {
+    const a = rnd() * Math.PI * 2, sp = (40 + rnd() * 90) * spread;
+    parts.push({ x, y, vx: Math.cos(a) * sp * 0.8 + dx * 140, vy: Math.sin(a) * sp * 0.35 + dy * 60 - 20, life: 0.35 + rnd() * 0.3, t: 0, r: 1.2 + rnd() * 2.4, g: rnd() < 0.5 });
+  }
+}
+function burst(x, y) {                                            // death: 22 puffs plus an ink ring
+  if (!TUNING.anim.burst) return;
+  const n = Math.round(TUNING.anim.dustDeath * TUNING.anim.juice);
+  for (let i = 0; i < n; i++) { const a = rnd() * Math.PI * 2, sp = 120 + rnd() * 220; parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: 0.45 + rnd() * 0.35, t: 0, r: 2 + rnd() * 3, g: rnd() < 0.3 }); }
+  parts.push({ x, y, vx: 0, vy: 0, life: 0.4, t: 0, r: 0, ring: 1 });
+}
+function updParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.t += dt;
+    if (p.t >= p.life) { parts.splice(i, 1); continue; }
+    if (p.ring) continue;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; p.vy = p.vy * 0.92 + 40 * dt;
+  }
+}
+
+// =====================================================================
+// LAYER 7: audio. WebAudio synth only, the game's frequencies, pitch +-4% per play, a voice cap, a 4-bar loop.
+// =====================================================================
+let AC = null; const voices = []; let dropped = 0;
+const music = { next: 0, i: 0, bpm: 150 };
+// A minor pentatonic. 32 eighth notes = 4 bars; 0 = rest.
+const MEL = [440, 0, 523, 587, 0, 659, 0, 523, 440, 0, 392, 0, 440, 0, 0, 0, 659, 0, 587, 523, 0, 440, 0, 392, 440, 0, 523, 0, 587, 0, 0, 0];
+const BASS = [110, 110, 130.8, 130.8, 98, 98, 110, 110];
+function ensureAudio() {
+  if (AC || !TUNING.au.on) return;
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); music.next = AC.currentTime + 0.1; music.i = 0; } catch (e) { AC = null; }
+}
+function sfx(type) {
+  if (!AC || !TUNING.au.on) return;
+  if (AC.state !== 'running') { try { AC.resume(); } catch (e) {} return; }
+  const t0 = performance.now(), t = AC.currentTime, det = 1 + (rnd() * 2 - 1) * TUNING.au.pitchVar;
+  const wall = performance.now();
+  for (let i = voices.length - 1; i >= 0; i--) if (voices[i] <= wall) voices.splice(i, 1);
+  if (voices.length >= TUNING.au.voices) { dropped++; ACC.au += performance.now() - t0; return; }
+  const tone = (f1, f2, dur, vol, wave = 'triangle', delay = 0) => {
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = wave; o.frequency.setValueAtTime(f1 * det, t + delay); o.frequency.exponentialRampToValueAtTime(f2 * det, t + delay + dur);
+    g.gain.setValueAtTime(vol, t + delay); g.gain.exponentialRampToValueAtTime(0.0001, t + delay + dur);
+    o.connect(g).connect(AC.destination); o.start(t + delay); o.stop(t + delay + dur + 0.02); voices.push(wall + (delay + dur) * 1000);
+  };
+  const noise = (dur, vol, freq) => {
+    const b = AC.createBuffer(1, Math.ceil(AC.sampleRate * dur), AC.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+    f.type = 'lowpass'; f.frequency.value = freq * det; g.gain.value = vol;
+    s.buffer = b; s.connect(f).connect(g).connect(AC.destination); s.start(t); voices.push(wall + dur * 1000);
+  };
+  switch (type) {
+    case 'jump': tone(420, 760, 0.09, 0.07); break;
+    case 'wall': tone(520, 980, 0.1, 0.08, 'square'); noise(0.06, 0.12, 2400); break;
+    case 'land': noise(0.08, 0.18, 700); break;
+    case 'roll': noise(0.22, 0.14, 900); break;
+    case 'beep': tone(660, 660, 0.12, 0.08, 'sine'); break;
+    case 'go': tone(990, 990, 0.25, 0.09, 'sine'); break;
+    case 'die': tone(300, 70, 0.3, 0.09, 'sawtooth'); break;
+    case 'check': tone(880, 1320, 0.12, 0.05, 'sine'); break;
+    case 'spring': tone(300, 900, 0.14, 0.08, 'square'); break;
+    case 'bounce': tone(500, 820, 0.1, 0.07, 'triangle'); break;
+    case 'kill': noise(0.12, 0.2, 3000); tone(700, 200, 0.14, 0.06, 'sawtooth'); break;
+    case 'slash': noise(0.18, 0.25, 5000); tone(2400, 700, 0.16, 0.06, 'sawtooth'); break;
+    case 'rival': tone(660, 990, 0.12, 0.06, 'sine'); tone(990, 1320, 0.12, 0.06, 'sine', 0.1); break;
+    case 'finish': [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.22, 0.08, 'triangle', i * 0.08)); break;
+  }
+  ACC.au += performance.now() - t0;
+}
+// music scheduler: looks 0.2 s ahead; the loop never stops for a death unless "restart music" is on
+function musicTick() {
+  if (!AC || !TUNING.au.on || !TUNING.au.music || AC.state !== 'running') return;
+  const t0 = performance.now(), step = 30 / music.bpm;             // an eighth note
+  while (music.next < AC.currentTime + 0.2) {
+    const i = music.i % 32, f = MEL[i], b = BASS[(music.i >> 2) % 8];
+    const note = (freq, dur, vol, wave) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = wave; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, music.next); g.gain.exponentialRampToValueAtTime(0.0001, music.next + dur); o.connect(g).connect(AC.destination); o.start(music.next); o.stop(music.next + dur + 0.02); };
+    if (f) note(f, step * 0.9, 0.035, 'triangle');
+    if (i % 4 === 0) note(b, step * 1.6, 0.05, 'sine');
+    music.next += step; music.i++;
+  }
+  ACC.au += performance.now() - t0;
+}
+function musicRestart() { if (AC) { music.i = 0; music.next = AC.currentTime + 0.05; } }
+
+// =====================================================================
+// LAYER 5: camera. World view 970 x 545 u drawn at 640 x 360 (scale 0.66).
+// =====================================================================
+const cv = $('c'), ctx = cv.getContext('2d');
+const W = cv.width, Hc = cv.height, SC = W / 970, VW = 970, VH = Hc / SC;
+const cam = { x: 0, y: 0, px: 0, py: 0, look: 120, ref: G };
+function updCam(S, dt, snap = false) {
+  const t0 = performance.now();
+  cam.px = cam.x; cam.py = cam.y;
+  const P = S.P, m = S.map, C = TUNING.cam, feet = P.y + PH, mid = P.x + PW / 2;
+  let tx;
+  if (C.mode === 'speed') {                                       // look-ahead grows with speed and flips with direction
+    const want = clamp(P.vx / PHYS.maxRun, -1, 1) * C.speedLook;
+    cam.look = snap ? want : lerp(cam.look, want, 1 - Math.exp(-3 * dt));
+    tx = mid - VW * 0.5 + cam.look;
+  } else {                                                        // forward focus: 120 u at rest, 200 u at overspeed
+    const want = C.focus ? lerp(C.lookAhead, C.focusMax, clamp(Math.abs(P.vx) / (PHYS.maxRun * 1.3), 0, 1)) : C.lookAhead;
+    cam.look = snap ? want : lerp(cam.look, want, 1 - Math.exp(-6 * dt)); tx = mid - VW * 0.36 + cam.look;
+  }
+  tx = clamp(tx, 0, m.width - VW);
+  cam.x = C.mode === 'lerp' && !snap ? lerp(cam.x, tx, 1 - Math.exp(-C.lerpRate * dt)) : tx;
+  if (C.vsnap) {                                                  // vertical: platform snap with a dead zone for normal jumps
+    if (snap || P.onGround || P.wasWall || feet > cam.ref) cam.ref = feet;
+    else if (feet < cam.ref - C.deadZone) cam.ref = feet + C.deadZone;
+  } else cam.ref = feet;
+  const down = C.downLook && !P.onGround && P.vy > 0 ? Math.min(C.downCap, P.vy * C.downLook) : 0;   // downward look-ahead while falling
+  const base = Math.min(G - VH * 0.8, m.deathY - VH), ty = clamp(cam.ref - VH * 0.62 + down, m.top, base);   // the kill plane never enters the view
+  cam.y = snap ? ty : lerp(cam.y, ty, 1 - Math.exp(-(P.wasWall ? 9 : 5) * dt));
+  if (snap) { cam.px = cam.x; cam.py = cam.y; }
+  ACC.cam += performance.now() - t0;
+}
+
+// =====================================================================
+// LAYER 8: race loop. Timer from the step count, splits vs the session best, ghost recording and byte counts.
+// =====================================================================
+let DT = 1 / TUNING.sim.hz;
+let S = null, mapId = 'course';
+const inputs = [];                                                // one packed byte per simStep call, for the replay check
+const rec = [];                                                   // ghost frames of the current run (full pose, at ghostHz)
+let recHz = TUNING.race.ghostHz;
+const session = { best: null, goldSegs: [], beaten: new Set(), runs: 0, firstAttempt: true, device: 'keyboard' };
+let lastRestartMs = 0, toasts = [], replayStatus = 'not run yet', frozen = false, paused = false, view = 'normal', presetName = 'recommended';
+const fmt = ms => { ms = Math.max(0, Math.floor(ms)); const m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60, r = ms % 1000; return (m ? m + ':' : '') + (m ? String(s).padStart(2, '0') : String(s).padStart(2, '0')) + '.' + String(r).padStart(3, '0'); };
+const fmt2 = ms => { ms = Math.max(0, Math.floor(ms)); const m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60, cs = Math.floor((ms % 1000) / 10); return (m ? m + ':' : '') + String(s).padStart(2, '0') + '.' + String(cs).padStart(2, '0'); };
+const fmtD = d => { const a = Math.abs(d); return (d < 0 ? '-' : '+') + String(Math.floor(a / 1000)).padStart(2, '0') + '.' + String(Math.floor((a % 1000) / 10)).padStart(2, '0'); };
+const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
+function toast(msg, col = '#0a0a0a') { toasts.push({ msg, t: 2.2, col }); if (toasts.length > 3) toasts.shift(); }
+
+// A fresh attempt. The countdown plays only on the first attempt after a map select (start mode "countdown") or on every
+// attempt in the "countdown replay" restart mode (the game today). R and deaths reset in place.
+function startRun(fresh = false) {
+  const t0 = performance.now();
+  if (fresh) session.firstAttempt = true;
+  S = newState(MAPS[mapId], DT);
+  const cd = TUNING.race.restart === 'countdown' || (TUNING.race.start === 'countdown' && session.firstAttempt);
+  session.firstAttempt = false;
+  if (cd) { S.mode = 'countdown'; S.cd = TUNING.race.countdownS; S.lastBeep = 4; }
+  inputs.length = 0; rec.length = 0; recHz = TUNING.race.ghostHz; parts.length = 0; toasts.length = 0;
+  pose = poseIdle(0); S.P.flap = 0; S.P.flapV = 0;
+  updCam(S, 0, true);
+  lastRestartMs = performance.now() - t0;
+  session.runs++;
+}
+// Ghost frame: [x, y, facing, rot, pivot, sx, sy, flap, hip, lean, th0, th1, sh0, sh1, ua0, ua1, la0, la1], rounded to 0.1 u / 0.01 rad
+function ghostRecord() {
+  const v = playerVisual(S), p = v.pose;
+  rec.push([r1(v.x), r1(v.y), v.f, r2(v.rot), v.pivot, r2(v.sx), r2(v.sy), r2(v.flap), r2(p.hip), r2(p.lean), r2(p.th[0]), r2(p.th[1]), r2(p.sh[0]), r2(p.sh[1]), r2(p.ua[0]), r2(p.ua[1]), r2(p.la[0]), r2(p.la[1])]);
+}
+function ghostFrame() {
+  const b = session.best; if (!b || !TUNING.race.ghost || !S || S.mode === 'finished') return null;
+  const g = b.rec, fi = (S.mode === 'run' ? S.steps * S.dt : 0) * b.hz, i = Math.floor(fi);
+  if (i >= g.length - 1) return null;
+  const a = g[i], bb = g[i + 1], k = fi - i, L = (u, v) => u + (v - u) * k;
+  const rot = Math.abs(bb[3] - a[3]) > 3 ? bb[3] : L(a[3], bb[3]);
+  return { x: L(a[0], bb[0]), y: L(a[1], bb[1]), f: k < 0.5 ? a[2] : bb[2], rot, pivot: a[4], sx: L(a[5], bb[5]), sy: L(a[6], bb[6]), flap: L(a[7], bb[7]), slash: 0, grip: 1,
+    pose: { hip: L(a[8], bb[8]), lean: L(a[9], bb[9]), th: [L(a[10], bb[10]), L(a[11], bb[11])], sh: [L(a[12], bb[12]), L(a[13], bb[13])], ua: [L(a[14], bb[14]), L(a[15], bb[15])], la: [L(a[16], bb[16]), L(a[17], bb[17])] } };
+}
+// Byte counts, computed for real. JSON = the text the game stores today. Delta = each value quantised to an
+// integer (0.1 u, 0.01 rad), delta against the previous frame, zigzag + LEB128 varint.
+const varintBytes = v => { v = v < 0 ? (-v * 2 - 1) : v * 2; let n = 1; while (v >= 128) { v = Math.floor(v / 128); n++; } return n; };
+function ghostBytes(frames, hz) {
+  const pos = frames.map(f => [f[0], f[1], f[2]]);
+  const Q = f => f.map((v, i) => i === 2 || i === 4 ? Math.round(v) : i < 2 ? Math.round(v * 10) : Math.round(v * 100));
+  const delta = arr => { let n = 0, prev = null; for (const f of arr) { const q = Q(f); for (let i = 0; i < q.length; i++) n += varintBytes(prev ? q[i] - prev[i] : q[i]); prev = q; } return n; };
+  const secs = Math.max(0.001, frames.length / hz), pm = b => Math.round(b / secs * 60);
+  const jp = JSON.stringify(pos).length, jf = JSON.stringify(frames).length, dp = delta(pos), df = delta(frames);
+  return { jsonPos: jp, jsonFull: jf, deltaPos: dp, deltaFull: df, perMin: { jsonPos: pm(jp), jsonFull: pm(jf), deltaPos: pm(dp), deltaFull: pm(df) }, secs };
+}
+// the canonical record: the input log, one byte per step, run-length encoded as (byte, varint run) pairs
+function inputRleBytes(arr) { let n = 0, i = 0; while (i < arr.length) { let j = i; while (j < arr.length && arr[j] === arr[i]) j++; n += 1 + varintBytes(j - i); i = j; } return n; }
+const kb = b => b >= 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
+function showGhostBytes(frames, hz, label) {
+  if (frames.length < 2) return;
+  const g = ghostBytes(frames, hz), rle = inputRleBytes(inputs), rlePm = Math.round(rle / Math.max(0.001, inputs.length * DT) * 60);
+  $('gbytes').innerHTML = `${label}: input log ${inputs.length} steps, <b>${kb(inputs.length)}</b> raw, <b>${kb(rle)}</b> RLE (${kb(rlePm)} per minute, the canonical record). Drawn track ${hz} Hz, ${frames.length} frames over ${g.secs.toFixed(1)} s, per minute: position only JSON <b>${kb(g.perMin.jsonPos)}</b>, delta <b>${kb(g.perMin.deltaPos)}</b> · full pose JSON <b>${kb(g.perMin.jsonFull)}</b>, delta <b>${kb(g.perMin.deltaFull)}</b>`;
+  g.rle = rle; g.perMin.rle = rlePm; return g;
+}
+// checkpoint reached: split delta against the session best, gold when the segment beats every earlier one
+function onCheckpoint(i) {
+  sfx('check');
+  const now = S.splits[i], prev = i ? S.splits[i - 1] : 0, seg = now - prev;
+  let d = null, gold = false;
+  if (session.goldSegs[i] == null || seg < session.goldSegs[i]) { gold = session.goldSegs[i] != null; session.goldSegs[i] = seg; }
+  if (session.best && session.best.splits[i] != null) d = now - session.best.splits[i];
+  S.lastSplit = { i, d, gold, t: 2.5 };
+}
+// finished: results, best, ghost, board, validation
+function onFinish() {
+  sfx('finish');
+  const ms = S.ms, n = S.map.checkpoints.length, seg = ms - (n ? S.splits[n - 1] : 0);
+  if (session.goldSegs[n] == null || seg < session.goldSegs[n]) session.goldSegs[n] = seg;
+  const prev = session.best;
+  S.result = { ms, splits: S.splits.slice(), prev: prev ? { ms: prev.ms, splits: prev.splits } : null, assisted: S.assisted };
+  const checks = validateRun(); S.result.checks = checks;
+  const valid = checks.every(c => c.ok);
+  if (valid && (!prev || ms < prev.ms)) {
+    ghostRecord();
+    session.best = { ms, splits: S.splits.slice(), rec: rec.slice(), hz: recHz, mapId };
+    S.result.pb = true;
+  }
+  if (valid) for (const [name, t] of TUNING.friends) if (ms < t && !session.beaten.has(name)) { session.beaten.add(name); toast('RIVAL BEATEN: ' + name + ' ' + fmt(t), '#d0281f'); sfx('rival'); }
+  showGhostBytes(rec, recHz, 'Last run');
+  renderBoard(); renderValid(checks);
+}
+// LAYER 9: the plausibility checks a server would run, plus the input replay
+function validateRun() {
+  const m = S.map, V = TUNING.valid, checks = [];
+  const expSteps = Math.round(S.ms / 1000 / S.dt);
+  checks.push({ ok: expSteps === S.steps, txt: `step count ${S.steps} = ${fmt(S.ms)} / ${(S.dt * 1000).toFixed(2)} ms` });
+  const pts = [m.start.x, ...m.checkpoints, m.finish.x], ts = [0, ...S.splits, S.ms];
+  for (let i = 1; i < pts.length; i++) {
+    const minMs = (pts[i] - pts[i - 1]) / (PHYS.maxRun * V.minSplitSpeed) * 1000, got = ts[i] - ts[i - 1];
+    checks.push({ ok: got >= minMs, txt: `${i < pts.length - 1 ? 'split ' + i : 'final'} ${(got / 1000).toFixed(3)} s >= min ${(minMs / 1000).toFixed(3)} s for ${pts[i] - pts[i - 1]} u` });
+  }
+  const minSteps = Math.ceil((m.finish.x - m.start.x) / PHYS.maxRun / S.dt);
+  checks.push({ ok: S.steps >= minSteps, txt: `minimum steps ${minSteps} (distance / maxRun x ${Math.round(1 / S.dt)}) <= ${S.steps}` });
+  const ratio = (S.wallT1 - S.wallT0) / 1000 / (S.steps * S.dt);
+  checks.push({ ok: ratio <= V.slowdown, txt: `slowdown ratio ${ratio.toFixed(3)} (wall clock over simulated, flag above ${V.slowdown})` });
+  checks.push({ ok: S.maxVx <= V.maxVx && S.maxVy <= V.maxVy, txt: `max speed ${Math.round(S.maxVx)} / ${Math.round(S.maxVy)} u/s within ${V.maxVx} / ${V.maxVy}` });
+  checks.push({ ok: !S.assisted, txt: S.assisted ? 'assisted (slow motion, invincible or infinite coyote): rejected' : 'no assists' });
+  const t0 = performance.now(), R = replayRun(m, inputs, S.dt, TUNING.race.start), dtms = performance.now() - t0;
+  const same = R.mode === 'finished' && Math.abs(R.ms - S.ms) < 1e-6 && Math.abs(R.P.x - S.P.x) < 1e-6;
+  replayStatus = same ? 'PASS' : 'MISMATCH';
+  checks.push({ ok: same, txt: same ? `input replay PASS: ${inputs.length} inputs re-simulated in ${dtms.toFixed(1)} ms, same time ${fmt(R.ms)} and position`
+    : `input replay MISMATCH: replay ${R.mode} at ${fmt(R.ms)} vs ${fmt(S.ms)} (${dtms.toFixed(1)} ms)` });
+  return checks;
+}
+function renderValid(checks, head = '') {
+  $('valid').innerHTML = (head ? head + '\n' : '') + checks.map(c => `<span class="${c.ok ? 'ok' : 'bad'}">${c.ok ? 'OK  ' : 'FAIL'}</span> ${c.txt}`).join('\n');
+}
+function renderBoard() {
+  const rows = TUNING.friends.map(([n, t, d, dev]) => ({ n, t, d, dev }));
+  if (session.best) rows.push({ n: 'YOU', t: session.best.ms, d: new Date().toISOString().slice(0, 10), dev: session.device, me: true });
+  rows.sort((a, b) => a.t - b.t);
+  $('board').innerHTML = rows.map((r, i) => `<li${r.me ? ' class="me"' : ''}><span style="color:#9a938a">${i + 1} of ${rows.length}</span> ${r.n} <span style="float:right">${fmt(r.t)}${i ? ' <span style="color:#9a938a">+' + Math.round(r.t - rows[i - 1].t) + ' ms</span>' : ''}</span><br><span style="font-size:11px;color:#9a938a">${r.d} · ${r.dev}</span></li>`).join('') +
+    (session.best ? '' : '<li style="color:#9a938a;list-style:none;margin-left:-22px">your valid time slots in here</li>');
+}
+// share link: base64url of the run summary in the URL hash
+const b64u = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+function shareLink() {
+  const r = session.best || (S && S.result);
+  if (!r) { toast('FINISH A RUN FIRST'); return; }
+  const checks = S && S.result && S.result.checks ? S.result.checks.map(c => c.ok ? 1 : 0) : [];
+  const h = '#r=' + b64u(JSON.stringify({ v: 1, m: mapId, t: Math.round(r.ms), s: r.splits.map(Math.round), c: checks }));
+  history.replaceState(null, '', location.pathname + location.search + h);
+  if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(() => showToast('Share link copied: ' + location.href.slice(-40)), () => showToast('Share link is in the address bar'));
+  else showToast('Share link is in the address bar');
+}
+function readShare() {
+  const mm = /[#&]r=([A-Za-z0-9_-]+)/.exec(location.hash); if (!mm) return;
+  try {
+    const r = JSON.parse(unb64u(mm[1]));
+    const line = `Shared run on ${r.m}: ${fmt(r.t)}, splits ${r.s.map(fmt).join(' / ')}, checks ${r.c.length ? r.c.every(x => x) ? 'all passed' : r.c.filter(x => !x).length + ' failed' : 'none recorded'}`;
+    showToast(line, 6000); $('valid').textContent = line;
+  } catch (e) { showToast('Could not read the shared run in the URL'); }
+}
+let toastTimer = 0;
+function showToast(msg, ms = 3000) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
+
+// =====================================================================
+// RENDER: vector ink on paper. Blocks snap to device pixels so touching blocks share an edge.
+// =====================================================================
+const INK = '#0a0a0a';
+let showGhost = null;                                             // showcase only: a composed ghost frame
+function drawSpikes(c, sp) {
+  const [x, gy, w] = sp, n = Math.max(1, Math.round(w / 20)), step = w / n;
+  c.save(); c.translate(0, gy); if (sp[3] === 'down') c.scale(1, -1);
+  c.fillStyle = INK; c.beginPath();
+  c.moveTo(x - 6, 1); c.bezierCurveTo(x - 2, 1, x, -3.5, x + 4, -3.5);
+  c.lineTo(x + w - 4, -3.5); c.bezierCurveTo(x + w, -3.5, x + w + 2, 1, x + w + 6, 1); c.closePath();
+  for (let i = 0; i < n; i++) {
+    const cx = x + (i + 0.5) * step + (i % 2 ? 0.6 : -0.6), hw = Math.min(6, step * 0.32), h = 19 + (i % 3 === 1 ? 1.5 : 0);
+    c.moveTo(cx - hw, -2); c.quadraticCurveTo(cx - hw * 0.25, -h * 0.45, cx, -h); c.quadraticCurveTo(cx + hw * 0.25, -h * 0.45, cx + hw, -2); c.closePath();
+  }
+  c.fill(); c.restore();
+}
+function drawCheckpoint(c, x, gy, on) {
+  c.fillStyle = on ? INK : '#c4c4c4'; c.fillRect(x, gy - 70, 3, 70);
+  c.beginPath(); c.moveTo(x + 3, gy - 70); c.lineTo(x + 30, gy - 61); c.lineTo(x + 3, gy - 52); c.closePath(); c.fill();
+}
+function drawFlag(c, x, gy) {
+  c.fillStyle = INK; c.fillRect(x, gy - 130, 5, 130);
+  const wv = Math.sin(aclock * 5) * 4;
+  c.beginPath(); c.moveTo(x + 5, gy - 130); c.quadraticCurveTo(x + 30, gy - 125 + wv, x + 58, gy - 118 + wv); c.lineTo(x + 5, gy - 94); c.closePath(); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(x + 26, gy - 115 + wv * 0.5, 6, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#d0281f'; c.beginPath(); c.arc(x + 26, gy - 115 + wv * 0.5, 4.2, 0, Math.PI * 2); c.fill();
+}
+function drawRock(c, s) {
+  c.fillStyle = INK; c.beginPath();
+  c.moveTo(s[0] - 4, s[1] + s[3]); c.quadraticCurveTo(s[0] + 2, s[1] + 6, s[0] + s[2] * 0.35, s[1]);
+  c.quadraticCurveTo(s[0] + s[2] * 0.8, s[1] - 4, s[0] + s[2] + 4, s[1] + s[3]); c.closePath(); c.fill();
+}
+function drawSpring(c, sp) {
+  const comp = TUNING.el.telegraph && sp.comp > 0, h = comp ? 9 : 20, x = sp.x, y = sp.y, w = sp.w;
+  c.fillStyle = INK; c.fillRect(x, y - 6, w, 6);
+  c.strokeStyle = INK; c.lineWidth = 2.2; c.beginPath();
+  const n = 4; for (let i = 0; i <= n; i++) { const yy = y - 6 - (h - 5) * i / n, xx = x + w / 2 + (i % 2 ? -10 : 10); if (i === 0) c.moveTo(x + w / 2, y - 6); else c.lineTo(xx, yy); }
+  c.stroke();
+  c.fillStyle = '#d0281f'; c.fillRect(x - 2, y - 6 - h, w + 4, 5);
+}
+function drawTimed(c, b, on, shake) {
+  const dx = TUNING.el.telegraph && shake > 0 ? Math.sin(aclock * 90) * 3 * shake : 0;
+  if (on) {
+    c.fillStyle = INK; c.fillRect(b.x + dx, b.y, b.w, b.h);
+    c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 1.5; c.setLineDash([5, 5]); c.strokeRect(b.x + dx + 5, b.y + 5, b.w - 10, b.h - 10); c.setLineDash([]);
+  } else {
+    c.strokeStyle = '#bbb'; c.lineWidth = 1.5; c.setLineDash([4, 6]); c.strokeRect(b.x, b.y, b.w, b.h); c.setLineDash([]);
+  }
+}
+function drawPatroller(c, p, t) {
+  if (!p.alive) { if (p.deadT < 0.3) { c.globalAlpha = 1 - p.deadT / 0.3; c.strokeStyle = INK; c.lineWidth = 2; c.beginPath(); c.arc(p.x, p.y - 12, 10 + p.deadT * 80, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; } return; }
+  const bob = Math.abs(Math.sin(t * 14)) * 2;
+  c.fillStyle = INK; c.beginPath(); c.ellipse(p.x, p.y - 13 - bob, 14, 11, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.moveTo(p.x - 6, p.y - 22 - bob); c.lineTo(p.x - 3, p.y - 31 - bob); c.lineTo(p.x, p.y - 22 - bob); c.closePath(); c.fill();   // horn
+  c.lineWidth = 2.2; c.strokeStyle = INK; c.lineCap = 'round';
+  const sw = Math.sin(t * 14) * 5;
+  c.beginPath(); c.moveTo(p.x - 6, p.y - 4); c.lineTo(p.x - 6 + sw, p.y); c.moveTo(p.x + 6, p.y - 4); c.lineTo(p.x + 6 - sw, p.y); c.stroke();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(p.x + p.dir * 6, p.y - 14 - bob, 2.6, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#d0281f'; c.beginPath(); c.arc(p.x + p.dir * 6.8, p.y - 14 - bob, 1.4, 0, Math.PI * 2); c.fill();
+}
+function drawChaser(c, ch) {
+  const ph = ch.phase, s = Math.sin(ph), co = Math.cos(ph);
+  const ps = { hip: 22 - Math.abs(co) * 1.8, lean: 0.4, th: [0.95 * s, -0.95 * s], sh: [0.25 + Math.max(0, co) * 1.5, 0.25 + Math.max(0, -co) * 1.5], ua: [-0.85 * s, 0.85 * s], la: [1.2, 1.2] };
+  c.save(); c.translate(ch.x, ch.y);
+  drawSamurai(c, ps, INK, INK, -0.5, INK, null, 0);
+  c.fillStyle = '#d0281f'; c.beginPath(); c.arc(Math.sin(ps.lean) * 17 + 5, -ps.hip * SAM.leg - 17 - 7, 1.6, 0, Math.PI * 2); c.fill();
+  c.restore();
+}
+function monoText(c, txt, x, y) {
+  let dw = 0; for (const d of '0123456789') dw = Math.max(dw, c.measureText(d).width);
+  const w = ch => /[0-9]/.test(ch) ? dw : c.measureText(ch).width, total = [...txt].reduce((a, ch) => a + w(ch), 0);
+  const ta = c.textAlign; c.textAlign = 'center';
+  let cx = x - total / 2;
+  for (const ch of txt) { const cw = w(ch); c.fillText(ch, cx + cw / 2, y); cx += cw; }
+  c.textAlign = ta;
+}
+function outlined(c, txt, x, y) { c.lineJoin = 'round'; c.strokeStyle = '#fff'; c.lineWidth = 10; c.strokeText(txt, x, y); c.fillStyle = INK; c.fillText(txt, x, y); }
+
+function render(alpha) {
+  const c = ctx, m = S.map, P = S.P;
+  let t0 = performance.now();
+  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#fff'; c.fillRect(0, 0, W, Hc);
+  const cx = lerp(cam.px, cam.x, alpha), cy = lerp(cam.py, cam.y, alpha);
+  c.setTransform(SC, 0, 0, SC, 0, 0);
+  const px = 1 / SC, snap = v => Math.round(v / px) * px;
+  const block = (x, y, w, h) => { const x0 = snap(x), y0 = snap(y); c.fillRect(x0, y0, snap(x + w) - x0, snap(y + h) - y0); };
+  c.translate(-snap(cx), -snap(cy));
+  // labels, start line, checkpoints, flag
+  c.font = '700 12px system-ui, sans-serif'; c.fillStyle = '#bdbdbd'; c.textAlign = 'left';
+  for (const [lx, txt] of m.labels) c.fillText(txt, lx, groundBelow(m, lx + 10) - 150);
+  c.fillText('START', m.start.x - 54, m.start.y - 90); c.fillStyle = '#d6d6d6'; c.fillRect(m.start.x - 60, m.start.y - 82, 2, 82);
+  m.checkpoints.forEach((x, i) => drawCheckpoint(c, x, groundBelow(m, x + 30), i <= S.cp));
+  if (m.finish) drawFlag(c, m.finish.x, groundBelow(m, m.finish.x));
+  // solids
+  c.fillStyle = INK;
+  for (const s of m.solids) {
+    if (s[0] > cx + VW + 50 || s[0] + s[2] < cx - 50) continue;
+    if (s[4] === 'rock') drawRock(c, s);
+    else if (s[4] === 'tile') { block(s[0], s[1], s[2], s[3]); c.fillStyle = '#fff'; c.fillRect(s[0] + 3, s[1] + 4, s[2] - 6, 2); c.fillStyle = INK; }
+    else block(s[0], s[1], s[2], s[3]);
+  }
+  m.timed.forEach((b, i) => drawTimed(c, b, S.timedOn[i], S.timedShake[i]));
+  for (const mv of S.movers) {
+    const a = mv.prev || moverAt(mv, 0), b = mv.cur || a, x = lerp(a[0], b[0], alpha), y = lerp(a[1], b[1], alpha);
+    c.strokeStyle = '#d4d4d4'; c.lineWidth = 2; c.setLineDash([6, 8]); c.beginPath(); c.moveTo(mv.x0 + mv.w / 2, mv.y0 + mv.h / 2); c.lineTo(mv.x1 + mv.w / 2, mv.y1 + mv.h / 2); c.stroke(); c.setLineDash([]);
+    c.fillStyle = INK; block(x, y, b[2], b[3]); c.fillStyle = '#fff'; c.fillRect(x + 4, y + b[3] / 2 - 1, b[2] - 8, 2);
+  }
+  for (const sp of S.springs) drawSpring(c, sp);
+  for (const sp of m.spikes) drawSpikes(c, sp);
+  ACC.rSolid += performance.now() - t0; t0 = performance.now();
+  // enemies
+  if (TUNING.en.on) { for (const p of S.pats) drawPatroller(c, p, S.t); if (S.chaser.on) drawChaser(c, S.chaser); }
+  // particles
+  for (const p of parts) {
+    const k = 1 - p.t / p.life;
+    if (p.ring) { c.globalAlpha = k; c.strokeStyle = INK; c.lineWidth = 3 * k + 0.5; c.beginPath(); c.arc(p.x, p.y, 10 + (1 - k) * 70, 0, Math.PI * 2); c.stroke(); continue; }
+    c.globalAlpha = k * (p.g ? 0.35 : 0.6); c.fillStyle = p.g ? '#7a7a7a' : INK;
+    c.beginPath(); c.arc(p.x, p.y, p.r * (0.6 + 0.4 * k), 0, Math.PI * 2); c.fill();
+  }
+  c.globalAlpha = 1;
+  ACC.rParts += performance.now() - t0; t0 = performance.now();
+  // ghost of the session best, grey at 20%
+  const gf = showGhost || ghostFrame();
+  if (gf) {
+    c.globalAlpha = TUNING.race.ghostAlpha;
+    if (TUNING.race.ghostPose === 'pos') {                       // position only: all you can draw is a marker
+      c.fillStyle = '#8a8a8a'; c.beginPath(); c.roundRect(gf.x - 10, gf.y - 46, 20, 46, 10); c.fill();
+    } else drawFigure(c, gf, true);
+    c.globalAlpha = 1;
+  }
+  ACC.rGhost += performance.now() - t0; t0 = performance.now();
+  // speed lines behind the hero above 0.9 x maxRun
+  const vis = Object.assign(playerVisual(S), { x: lerp(P.px, P.x, alpha) + PW / 2, y: lerp(P.py, P.y, alpha) + PH });
+  if (TUNING.anim.lines && Math.abs(P.vx) > 0.9 * PHYS.maxRun && !P.dead) {
+    c.strokeStyle = '#9a9a9a'; c.lineWidth = 1.4; c.globalAlpha = 0.5 * TUNING.anim.juice; c.lineCap = 'round';
+    for (let i = 0; i < 4; i++) { const yy = vis.y - 8 - i * 11 + Math.sin(aclock * 30 + i) * 2, len = 22 + ((i * 7 + Math.floor(aclock * 20)) % 3) * 8, x0 = vis.x - P.facing * (16 + i * 4); c.beginPath(); c.moveTo(x0, yy); c.lineTo(x0 - P.facing * len, yy); c.stroke(); }
+    c.globalAlpha = 1;
+  }
+  if (!P.dead) drawFigure(c, vis);
+  if (P.slash > 0 && !P.dead) {                                    // slash arc in front of the hero
+    const k = 1 - P.slash / (TUNING.en.slashMs / 1000);
+    c.strokeStyle = INK; c.lineWidth = 2; c.globalAlpha = 1 - k; c.beginPath();
+    c.arc(vis.x + P.facing * 14, vis.y - 26, 30, P.facing > 0 ? -1.4 + k * 2.4 : Math.PI - 1 - k * 2.4, P.facing > 0 ? -1 + k * 2.4 : Math.PI - 1.4 - k * 2.4); c.stroke(); c.globalAlpha = 1;
+  }
+  ACC.rHero += performance.now() - t0; t0 = performance.now();
+  if (view === 'hitboxes' || TUNING.cam.window) drawHitboxes(c, cx, cy);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  drawHUD(c);
+  ACC.ui += performance.now() - t0;
+}
+function drawHitboxes(c, cx, cy) {
+  const P = S.P, m = S.map; c.lineWidth = 1 / SC;
+  if (view === 'hitboxes') {
+    c.strokeStyle = '#d0281f'; c.strokeRect(P.x, P.y, PW, PH);
+    c.strokeStyle = '#1f9d55'; c.strokeRect(P.x - 2, P.y + 8, 2, PH - 16); c.strokeRect(P.x + PW, P.y + 8, 2, PH - 16);   // wall probes
+    c.strokeStyle = '#d0281f';
+    for (const sp of m.spikes) { const b = sp[3] === 'down' ? [sp[0] + 4, sp[1], sp[2] - 8, 16] : [sp[0] + 4, sp[1] - 16, sp[2] - 8, 16]; c.strokeRect(b[0], b[1], b[2], b[3]); }
+    c.strokeStyle = '#1f9d55'; c.lineWidth = 3 / SC;
+    for (const s of m.solids) if (s[4] === 'tile') { c.beginPath(); c.moveTo(s[0], s[1]); c.lineTo(s[0] + s[2], s[1]); c.stroke(); }
+    for (const mv of S.movers) { c.beginPath(); c.moveTo(mv.cur[0], mv.cur[1]); c.lineTo(mv.cur[0] + mv.cur[2], mv.cur[1]); c.stroke(); }
+    c.lineWidth = 1 / SC; c.strokeStyle = '#d0281f';
+    if (TUNING.en.on) { for (const p of S.pats) if (p.alive) { const b = patBox(p); c.strokeRect(b[0], b[1], b[2], b[3]); } if (S.chaser.on) c.strokeRect(S.chaser.x - PW / 2, S.chaser.y - PH, PW, PH); }
+    if (P.slash > 0) { const b = slashBoxOf(P); c.strokeStyle = slashActive(P) ? '#b8891a' : '#d9c89a'; c.strokeRect(b[0], b[1], b[2], b[3]); }
+    m.timed.forEach((b, i) => { if (S.timedOn[i]) { c.strokeStyle = '#1f9d55'; c.strokeRect(b.x, b.y, b.w, b.h); } });
+    c.strokeStyle = '#d0281f'; c.setLineDash([6 / SC, 6 / SC]); c.beginPath(); c.moveTo(cx - 100, m.deathY); c.lineTo(cx + VW + 100, m.deathY); c.stroke(); c.setLineDash([]);
+  }
+  // camera window: the vertical dead zone band and the horizontal anchor
+  c.fillStyle = 'rgba(208,40,31,0.08)'; c.fillRect(cx, cam.ref - TUNING.cam.deadZone, VW, TUNING.cam.deadZone);
+  c.strokeStyle = 'rgba(208,40,31,0.6)'; c.setLineDash([4 / SC, 4 / SC]);
+  c.beginPath(); c.moveTo(cx, cam.ref); c.lineTo(cx + VW, cam.ref); c.stroke();
+  const ax = TUNING.cam.mode === 'speed' ? cx + VW * 0.5 - cam.look : cx + VW * 0.36 - TUNING.cam.lookAhead;
+  c.beginPath(); c.moveTo(ax, cy); c.lineTo(ax, cy + VH); c.stroke(); c.setLineDash([]);
+  c.font = '700 11px system-ui, sans-serif'; c.fillStyle = '#d0281f'; c.fillText('camera anchor', ax + 4, cy + 14); c.fillText('dead zone ' + TUNING.cam.deadZone + ' u', cx + 6, cam.ref - TUNING.cam.deadZone - 4);
+}
+// canvas HUD: timer plate, split delta, countdown, GO, toasts, results, input strip, cost bars
+function drawHUD(c) {
+  c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  const t = S.ms, hasSplit = S.lastSplit && S.lastSplit.t > 0 && S.lastSplit.d != null;
+  c.fillStyle = 'rgba(255,255,255,0.92)'; c.beginPath(); c.roundRect(W / 2 - 80, 8, 160, hasSplit ? 56 : 40, 6); c.fill();
+  c.font = '800 26px system-ui, sans-serif'; c.fillStyle = INK; monoText(c, S.mode === 'finished' ? fmt(t) : fmt2(t), W / 2, 37);
+  if (hasSplit) { const sp = S.lastSplit; c.font = '800 14px system-ui, sans-serif'; c.fillStyle = sp.gold ? '#b8891a' : sp.d < 0 ? '#1f9d55' : '#d0281f'; monoText(c, fmtD(sp.d), W / 2, 56); }
+  else if (S.lastSplit && S.lastSplit.t > 0) { c.font = '700 11px system-ui, sans-serif'; c.fillStyle = S.lastSplit.gold ? '#b8891a' : '#9a9a9a'; c.fillText(S.lastSplit.gold ? 'BEST SEGMENT' : 'SPLIT ' + (S.lastSplit.i + 1), W / 2, 56); }
+  if (S.assisted) { c.font = '700 11px system-ui, sans-serif'; c.fillStyle = '#d0281f'; c.fillText('ASSISTED', W / 2 + 110, 24); }
+  if (S.mode === 'countdown') { const n = Math.ceil(S.cd), frac = S.cd - Math.floor(S.cd); c.font = '900 ' + Math.round(70 + frac * 24) + 'px system-ui, sans-serif'; outlined(c, String(n), W / 2, Hc / 2 + 10); }
+  else if (S.goFlash > 0 && TUNING.anim.go) { c.globalAlpha = Math.min(1, S.goFlash / 0.5); c.font = '900 70px system-ui, sans-serif'; outlined(c, 'GO!', W / 2, Hc / 2 + 10); c.globalAlpha = 1; }
+  if (S.mode === 'ready' && TUNING.race.start === 'input' && !frozen) { c.font = '700 13px system-ui, sans-serif'; c.fillStyle = '#9a9a9a'; c.fillText('timer starts on your first input', W / 2, Hc / 2 + 40); }
+  if (paused && !frozen) { c.font = '800 20px system-ui, sans-serif'; outlined(c, 'PAUSED', W / 2, Hc / 2 - 30); }
+  const ty = S.mode === 'finished' && S.result ? 70 + 70 + (S.map.checkpoints.length + 2) * 16 + 16 : 86;
+  toasts.forEach((tt, i) => { c.globalAlpha = Math.min(1, tt.t * 3); c.font = '800 13px system-ui, sans-serif'; c.fillStyle = tt.col; c.fillText(tt.msg, W / 2, ty + i * 17); c.globalAlpha = 1; });
+  if (S.mode === 'finished' && S.result) drawResults(c);
+  if (view === 'inputs') drawInputs(c);
+  if (view === 'cost') drawCost(c);
+  c.textAlign = 'left';
+}
+function drawResults(c) {
+  const R = S.result, n = S.map.checkpoints.length, x0 = W / 2 - 150, y0 = 70, rows = n + 2;
+  c.fillStyle = 'rgba(255,255,255,0.95)'; c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath(); c.roundRect(x0, y0, 300, 70 + rows * 16, 6); c.fill(); c.stroke();
+  c.textAlign = 'left'; c.font = '800 13px system-ui, sans-serif'; c.fillStyle = INK; c.fillText(R.pb ? 'FINISH · SESSION BEST' : 'FINISH', x0 + 14, y0 + 20);
+  const medals = TUNING.race.medals, medal = R.ms <= medals[3] ? 'AUTHOR' : R.ms <= medals[2] ? 'GOLD' : R.ms <= medals[1] ? 'SILVER' : R.ms <= medals[0] ? 'BRONZE' : 'NO MEDAL';
+  c.textAlign = 'right'; c.fillStyle = medal === 'NO MEDAL' ? '#9a9a9a' : medal === 'AUTHOR' ? '#d0281f' : '#b8891a'; c.fillText(medal + (R.assisted ? ' · ASSISTED' : ''), x0 + 286, y0 + 20);
+  c.font = '600 11px ui-monospace, Menlo, monospace'; c.fillStyle = '#6f6a63'; c.textAlign = 'left'; c.fillText('SECTION', x0 + 14, y0 + 40); c.textAlign = 'right'; c.fillText('TIME', x0 + 170, y0 + 40); c.fillText('VS BEST', x0 + 286, y0 + 40);
+  const ts = [0, ...R.splits, R.ms], ref = R.prev ? [0, ...R.prev.splits, R.prev.ms] : null;
+  for (let i = 1; i <= n + 1; i++) {
+    const y = y0 + 40 + i * 16, seg = ts[i] - ts[i - 1], rseg = ref ? ref[i] - ref[i - 1] : null;
+    c.fillStyle = INK; c.textAlign = 'left'; c.fillText(i <= n ? 'CP ' + i : 'FINISH', x0 + 14, y); c.textAlign = 'right'; c.fillText(fmt(seg), x0 + 170, y);
+    const gold = session.goldSegs[i - 1] != null && Math.abs(seg - session.goldSegs[i - 1]) < 1e-6 && ref;
+    if (rseg != null) { const d = seg - rseg; c.fillStyle = gold ? '#b8891a' : d < 0 ? '#1f9d55' : d > 0 ? '#d0281f' : '#6f6a63'; c.fillText((d < 0 ? '-' : d > 0 ? '+' : '') + (Math.abs(d) / 1000).toFixed(3), x0 + 286, y); }
+  }
+  const y = y0 + 40 + (n + 2) * 16; c.font = '800 12px ui-monospace, Menlo, monospace'; c.fillStyle = INK; c.textAlign = 'left'; c.fillText('TOTAL', x0 + 14, y); c.textAlign = 'right'; c.fillText(fmt(R.ms), x0 + 170, y);
+  if (R.prev) { const d = R.ms - R.prev.ms; c.fillStyle = d < 0 ? '#1f9d55' : '#d0281f'; c.fillText((d < 0 ? '-' : '+') + (Math.abs(d) / 1000).toFixed(3), x0 + 286, y); }
+  c.font = '600 10px system-ui, sans-serif'; c.fillStyle = '#9a9a9a'; c.textAlign = 'center';
+  const md = TUNING.race.medals; c.fillText(`bronze ${md[0] / 1000} s · silver ${md[1] / 1000} s · gold ${md[2] / 1000} s · author ${md[3] / 1000} s · R or tap to run again`, W / 2, y0 + 70 + rows * 16 - 6);
+}
+// input display strip, like a speedrun stream: the keys held now and the last 2 s of steps
+function drawInputs(c) {
+  const y0 = Hc - 44; c.fillStyle = 'rgba(255,255,255,0.92)'; c.fillRect(0, y0, W, 44);
+  const keys = [['←', 1], ['→', 2], ['JUMP', 4], ['SLASH', 16]], cur = inputs.length ? inputs[inputs.length - 1] : 0;
+  c.font = '800 11px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  keys.forEach(([k, bit], i) => { const x = 12 + i * 56, on = cur & bit; c.fillStyle = on ? INK : '#fff'; c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath(); c.roundRect(x, y0 + 8, 50, 28, 4); c.fill(); c.stroke(); c.fillStyle = on ? '#fff' : INK; c.fillText(k, x + 25, y0 + 22); });
+  const hx = 250, n = Math.min(inputs.length, 240), per = 380 / 240;
+  c.fillStyle = '#eee'; c.fillRect(hx, y0 + 6, 380, 32);
+  for (let i = 0; i < n; i++) {
+    const b = inputs[inputs.length - n + i], x = hx + i * per * (240 / n);
+    if (b & 1) { c.fillStyle = INK; c.fillRect(x, y0 + 6, per + 0.5, 7); } if (b & 2) { c.fillStyle = INK; c.fillRect(x, y0 + 14, per + 0.5, 7); }
+    if (b & 4) { c.fillStyle = '#d0281f'; c.fillRect(x, y0 + 22, per + 0.5, 7); } if (b & 16) { c.fillStyle = '#6f6a63'; c.fillRect(x, y0 + 30, per + 0.5, 7); }
+  }
+  c.font = '600 9px system-ui, sans-serif'; c.fillStyle = '#9a9a9a'; c.textAlign = 'left'; c.fillText('L', hx - 8, y0 + 10); c.fillText('R', hx - 8, y0 + 18); c.fillText('J', hx - 8, y0 + 26); c.fillText('X', hx - 8, y0 + 34);
+  c.textBaseline = 'alphabetic';
+}
+function drawCost(c) {
+  const rows = [['simulation', T.sim], ['collision + elements', T.col], ['enemies', T.enm], ['camera + animation', T.cam], ['render solids', T.rSolid], ['render hero', T.rHero], ['render ghost', T.rGhost], ['render particles', T.rParts], ['UI + HUD', T.ui], ['audio', T.au], ['total frame', T.total]];
+  const x0 = 10, y0 = 70; c.fillStyle = 'rgba(255,255,255,0.92)'; c.fillRect(x0 - 4, y0 - 14, 230, rows.length * 14 + 10);
+  c.font = '600 10px ui-monospace, Menlo, monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  rows.forEach(([n, v], i) => { const y = y0 + i * 14; c.fillStyle = '#6f6a63'; c.fillText(n, x0, y); c.fillStyle = '#eee'; c.fillRect(x0 + 110, y - 4, 70, 8); c.fillStyle = v > 4 ? '#d0281f' : v > 1 ? '#b8891a' : '#1f9d55'; c.fillRect(x0 + 110, y - 4, Math.min(70, v / 16.7 * 70), 8); c.fillStyle = INK; c.fillText(v.toFixed(2) + ' ms', x0 + 184, y); });
+  c.textBaseline = 'alphabetic';
+}
+
+// =====================================================================
+// LIVE LOOP: fixed step from an accumulator, events drained into dust and sound, ghost sampling, HUD.
+// =====================================================================
+const KEYS = { l: 0, r: 0, j: 0 }; let jumpPressed = false, slashPressed = false;
+const TOUCH = { l: 0, r: 0, j: 0 }, ptrZone = new Map();
+function sampleInput() {
+  const i = { l: KEYS.l || TOUCH.l, r: KEYS.r || TOUCH.r, j: KEYS.j || TOUCH.j, jp: jumpPressed, sp: slashPressed };
+  jumpPressed = false; slashPressed = false; return i;
+}
+function drain() {
+  for (const e of S.ev) {
+    switch (e[0]) {
+      case 'sfx': sfx(e[1]); break;
+      case 'dust': dust(e[1], e[2], e[3], e[4], e[5], e[6]); break;
+      case 'die': burst(e[1], e[2]); if (TUNING.au.restartMusic) musicRestart(); break;
+      case 'kill': dust(e[1], e[2], 8, 0, -0.6, 1.3); break;
+      case 'cp': onCheckpoint(e[1]); break;
+      case 'flash': if (TUNING.anim.flash) flashT = TUNING.anim.flashS; break;
+      case 'finish': onFinish(); break;
+    }
+  }
+  S.ev.length = 0;
+}
+function liveStep() {
+  const inp = sampleInput();
+  if (S.mode === 'ready' || S.mode === 'run' || S.mode === 'countdown') inputs.push(pack(inp));
+  simStep(S, inp, DT);
+  if (S.mode === 'run' && (TUNING.assist.slow || TUNING.assist.invincible || TUNING.assist.infCoyote)) S.assisted = true;
+  drain();
+  if (S.mode === 'dead' && S.deadT <= 0) { startRun(); return; }   // any death is a new attempt
+  if (S.mode === 'run' && rec.length < S.steps * DT * recHz + 1e-9) ghostRecord();
+  const t0 = performance.now();
+  if (S.lastSplit) S.lastSplit.t -= DT;
+  if (S.goFlash > 0) S.goFlash -= DT;
+  flashT = Math.max(0, flashT - DT);
+  aclock += DT;
+  flapStep(S.P, DT); updParts(DT);
+  blendPose(targetPose(S.P, aclock), TUNING.anim.blend ? 1 - Math.exp(-TUNING.anim.blendRate * DT) : 1);
+  for (const tt of toasts) tt.t -= DT; while (toasts.length && toasts[0].t <= 0) toasts.shift();
+  ACC.cam += performance.now() - t0;
+  updCam(S, DT);
+}
+let last = performance.now(), acc = 0, hudN = 0, stepsThisFrame = 0;
+let onScreen = true, liveF = 12; const wakeUp = () => { liveF = 12; };
+if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; wakeUp(); }).observe(cv);
+for (const evn of ['pointerdown', 'pointermove', 'pointerup', 'keydown', 'keyup', 'input', 'change', 'click', 'resize']) addEventListener(evn, wakeUp, true);
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!onScreen) { last = now; return; }
+  if ((paused || frozen) && liveF-- <= 0) { last = now; return; }
+  const f0 = performance.now();
+  let fdt = (now - last) / 1000; last = now;
+  if (fdt > 0.1) fdt = 0.1; if (fdt < 0) fdt = 0;
+  if (paused || frozen) fdt = 0;
+  if (TUNING.assist.slow) fdt *= 0.5;
+  acc += fdt; stepsThisFrame = 0;
+  while (acc >= DT) { liveStep(); acc -= DT; stepsThisFrame++; }
+  musicTick();
+  render(frozen ? 1 : TUNING.sim.interp ? acc / DT : 1);
+  ACC.total = performance.now() - f0;
+  smoothT();
+  if (++hudN % 10 === 0) hudText();
+}
+const f2 = v => v.toFixed(2);
+function hudText() {
+  const t0 = performance.now();
+  const live = AC ? voices.filter(v => v > performance.now()).length : 0, bar = Math.min(100, T.total / 16.7 * 100).toFixed(1);
+  const gb = rec.length > 1 ? ghostBytes(rec, recHz) : null;
+  $('hud').innerHTML = `${S.map.name} · ${presetName} · ${TUNING.race.start === 'input' ? 'timer on first input' : '3-2-1 countdown'} · ${TUNING.race.restart === 'instant' ? 'instant restart' : 'countdown replay'} · ${Math.round(1 / DT)} Hz step${TUNING.sim.interp ? ', interpolated' : ''} · cam ${TUNING.cam.mode} · juice ${Math.round(TUNING.anim.juice * 100)}% · ghost ${TUNING.race.ghost ? recHz + ' Hz ' + (TUNING.race.ghostPose === 'full' ? 'full pose' : 'position only') : 'off'} · view ${view}${paused ? ' · <b>paused</b>' : ''}${S.assisted ? ' · <span class="warn">assisted</span>' : ''}${frozen ? ' · <b>showcase frame, any input resumes</b>' : ''}<br>` +
+    `simulation ${f2(T.sim)} · collision + elements ${f2(T.col)} · enemies ${f2(T.enm)} · camera + animation ${f2(T.cam)} · render ${f2(T.rSolid + T.rHero + T.rGhost + T.rParts)} (solids ${f2(T.rSolid)}, hero ${f2(T.rHero)}, ghost ${f2(T.rGhost)}, particles ${f2(T.rParts)}) · UI ${f2(T.ui)} · audio ${f2(T.au)} ms · <b>total ${f2(T.total)} ms</b> <span class="bar"><i style="width:${bar}%;background:${T.total > 16.7 ? '#d0281f' : T.total > 8 ? '#b8891a' : '#1f9d55'}"></i></span> of 16.7<br>` +
+    `steps this frame ${stepsThisFrame} · particles ${parts.length} · ghost ${rec.length} frames${gb ? ', ' + kb(gb.jsonFull) + ' JSON / ' + kb(gb.deltaFull) + ' delta' : ''} · inputs ${inputs.length} · replay ${replayStatus === 'PASS' ? '<span class="ok">PASS</span>' : replayStatus === 'MISMATCH' ? '<span class="warn">MISMATCH</span>' : replayStatus} · restart ${TUNING.race.restart === 'instant' ? lastRestartMs.toFixed(2) + ' ms, in place' : '3400 ms (0.38 s dead + 3 s countdown)'} · sounds ${AC ? live + ' playing, ' + dropped + ' dropped' : 'off until first key or tap'}`;
+  ACC.ui += performance.now() - t0;
+}
+
+// =====================================================================
+// UI wiring, presets, input, showcase
+// =====================================================================
+const mark = (sel, v) => document.querySelectorAll(sel + ' button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === String(v)));
+const group = (sel, fn) => document.querySelectorAll(sel + ' button[data-v]').forEach(b => b.addEventListener('click', () => { fn(b.dataset.v); mark(sel, b.dataset.v); }));
+const tog = (id, get, set) => { const b = $(id), sy = () => b.classList.toggle('on', !!get()); b.addEventListener('click', () => { set(!get()); sy(); }); sy(); return sy; };
+const slider = (id, fmtv, fn) => { const el = $(id), l = $(id + 'l'); const up = () => { fn(+el.value); l.textContent = fmtv(+el.value); }; el.addEventListener('input', up); return v => { el.value = v; up(); }; };
+const syncs = [];
+const clearPreset = () => { presetName = 'custom'; document.querySelectorAll('#presets button').forEach(b => b.classList.remove('on')); };
+// movement toggles
+const tgSync = () => document.querySelectorAll('#tg button').forEach(b => b.classList.toggle('on', !!TUNING.tg[b.dataset.f]));
+document.querySelectorAll('#tg button').forEach(b => b.addEventListener('click', () => { TUNING.tg[b.dataset.f] = TUNING.tg[b.dataset.f] ? 0 : 1; tgSync(); clearPreset(); }));
+const fxSync = () => document.querySelectorAll('#fx button').forEach(b => b.classList.toggle('on', !!TUNING.anim[b.dataset.f]));
+document.querySelectorAll('#fx button').forEach(b => b.addEventListener('click', () => { TUNING.anim[b.dataset.f] = TUNING.anim[b.dataset.f] ? 0 : 1; fxSync(); }));
+const setJumpVel = slider('jumpVel', v => v + ' u/s', v => { PHYS.jumpVel = v; }), setGravity = slider('gravity', v => String(v), v => { PHYS.gravity = v; });
+const setMaxRun = slider('maxRun', v => v + ' u/s', v => { PHYS.maxRun = v; }), setCoyote = slider('coyote', v => v + ' ms', v => { PHYS.coyote = v / 1000; });
+const setBuffer = slider('buffer', v => v + ' ms', v => { PHYS.buffer = v / 1000; }), setJuice = slider('juice', v => v + '%', v => { TUNING.anim.juice = v / 100; });
+const setChaser = slider('chaser', v => v + '%', v => { TUNING.en.chaserMult = v / 100; });
+for (const id of ['jumpVel', 'gravity', 'maxRun', 'coyote', 'buffer']) $(id).addEventListener('input', clearPreset);
+// a change of step rate, map, start or restart mode starts a fresh attempt (the replay needs one rate per run)
+const setHz = v => { TUNING.sim.hz = v; DT = 1 / v; $('hz60').classList.toggle('on', v === 60); startRun(); };
+$('hz60').addEventListener('click', () => setHz(TUNING.sim.hz === 60 ? 120 : 60));
+syncs.push(tog('interp', () => TUNING.sim.interp, v => { TUNING.sim.interp = v ? 1 : 0; }));
+syncs.push(tog('telegraph', () => TUNING.el.telegraph, v => { TUNING.el.telegraph = v ? 1 : 0; }));
+const syncEnemies = tog('enemies', () => TUNING.en.on, v => { TUNING.en.on = v ? 1 : 0; clearPreset(); }); syncs.push(syncEnemies);
+const syncSlow = tog('slow', () => TUNING.assist.slow, v => { TUNING.assist.slow = v ? 1 : 0; }); syncs.push(syncSlow);
+syncs.push(tog('invincible', () => TUNING.assist.invincible, v => { TUNING.assist.invincible = v ? 1 : 0; }));
+syncs.push(tog('infcoyote', () => TUNING.assist.infCoyote, v => { TUNING.assist.infCoyote = v ? 1 : 0; }));
+syncs.push(tog('vsnap', () => TUNING.cam.vsnap, v => { TUNING.cam.vsnap = v ? 1 : 0; }));
+syncs.push(tog('focus', () => TUNING.cam.focus, v => { TUNING.cam.focus = v ? 1 : 0; }));
+syncs.push(tog('downlook', () => TUNING.cam.downLook, v => { TUNING.cam.downLook = v ? BASE.cam.downLook : 0; }));
+syncs.push(tog('camwin', () => TUNING.cam.window, v => { TUNING.cam.window = v ? 1 : 0; }));
+syncs.push(tog('sound', () => TUNING.au.on, v => { TUNING.au.on = v ? 1 : 0; if (v) ensureAudio(); }));
+syncs.push(tog('music', () => TUNING.au.music, v => { TUNING.au.music = v ? 1 : 0; if (AC) { music.next = AC.currentTime + 0.05; } }));
+syncs.push(tog('musicRestart', () => TUNING.au.restartMusic, v => { TUNING.au.restartMusic = v ? 1 : 0; }));
+const syncGhost = tog('ghostOn', () => TUNING.race.ghost, v => { TUNING.race.ghost = v ? 1 : 0; }); syncs.push(syncGhost);
+const syncPause = tog('pause', () => paused, v => { if (frozen) exitShow(); else paused = v; }); syncs.push(syncPause);
+group('#maps', v => { mapId = v; startRun(true); });
+group('#start', v => { TUNING.race.start = v; clearPreset(); startRun(true); });
+group('#restart', v => { TUNING.race.restart = v; clearPreset(); });
+group('#ghz', v => { TUNING.race.ghostHz = +v; recHz = +v; });
+group('#gpose', v => { TUNING.race.ghostPose = v; });
+group('#cam', v => { TUNING.cam.mode = v; });
+const setView = v => { view = v; mark('#views', v); }; group('#views', setView);
+function preset(k) {
+  const p = PRESETS[k]; presetName = k;
+  for (const sec of ['phys', 'tg', 'el', 'en', 'race', 'cam']) Object.assign(TUNING[sec], JSON.parse(JSON.stringify(BASE[sec])), p[sec] || {});
+  recHz = TUNING.race.ghostHz; const keepHz = recHz;
+  setJumpVel(PHYS.jumpVel); setGravity(PHYS.gravity); setMaxRun(PHYS.maxRun); setCoyote(Math.round(PHYS.coyote * 1000)); setBuffer(Math.round(PHYS.buffer * 1000)); setChaser(Math.round(TUNING.en.chaserMult * 100));
+  tgSync(); for (const s of syncs) s();
+  mark('#start', TUNING.race.start); mark('#restart', TUNING.race.restart); mark('#cam', TUNING.cam.mode); mark('#ghz', keepHz); mark('#gpose', TUNING.race.ghostPose);
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('on', b.dataset.p === k));
+  presetName = k; startRun(true);
+}
+document.querySelectorAll('#presets button').forEach(b => b.addEventListener('click', () => { ensureAudio(); preset(b.dataset.p); }));
+$('share').addEventListener('click', shareLink);
+$('reset').addEventListener('click', () => { leaveShow(); startRun(); });
+document.querySelector('button[data-demo="showcase"]').addEventListener('click', showcase);
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });
+// keyboard
+const KM = { arrowleft: 'l', a: 'l', arrowright: 'r', d: 'r', arrowup: 'j', w: 'j', ' ': 'j' };
+addEventListener('keydown', e => {
+  const tg = e.target.tagName; if (tg === 'INPUT' && e.target.type !== 'range' || tg === 'SELECT' || tg === 'TEXTAREA' || e.metaKey || e.ctrlKey) return;
+  const k = e.key.toLowerCase(); ensureAudio(); session.device = 'keyboard';
+  if (frozen && (KM[k] || k === 'r' || k === 'x' || k === 'j' || k === 'escape')) { exitShow(); return; }
+  const d = KM[k];
+  if (d) { e.preventDefault(); if (d === 'j' && !e.repeat) jumpPressed = true; KEYS[d] = 1; if (S.mode === 'finished' && !e.repeat) startRun(); return; }
+  if (e.repeat) return;
+  if (k === 'x' || k === 'j') { slashPressed = true; if (S.mode === 'finished') startRun(); }
+  else if (k === 'r') startRun();
+  else if (k === 'p') { paused = !paused; syncPause(); }
+  else if (k === 'm') { TUNING.assist.slow = TUNING.assist.slow ? 0 : 1; syncSlow(); }
+  else if (k === 'v') { const V = ['normal', 'hitboxes', 'inputs', 'cost']; setView(V[(V.indexOf(view) + 1) % V.length]); }
+  else if (k === 'g') { TUNING.race.ghost = TUNING.race.ghost ? 0 : 1; syncGhost(); }
+});
+addEventListener('keyup', e => { const d = KM[e.key.toLowerCase()]; if (d) KEYS[d] = 0; });
+addEventListener('blur', () => { KEYS.l = KEYS.r = KEYS.j = 0; TOUCH.l = TOUCH.r = TOUCH.j = 0; ptrZone.clear(); });
+// touch: canvas zones (left quarter, next quarter, right half) and the buttons under the canvas
+function zoneOf(e) { const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width; return fx < 0.25 ? 'l' : fx < 0.5 ? 'r' : 'j'; }
+function refreshTouch() { TOUCH.l = TOUCH.r = TOUCH.j = 0; for (const z of ptrZone.values()) TOUCH[z] = 1; }
+cv.addEventListener('pointerdown', e => {
+  ensureAudio(); e.preventDefault(); if (e.pointerType === 'touch') session.device = 'touch';
+  if (frozen) { exitShow(); return; }
+  if (S.mode === 'finished') { startRun(); return; }
+  const z = zoneOf(e); ptrZone.set(e.pointerId, z); if (z === 'j') jumpPressed = true; refreshTouch();
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+});
+cv.addEventListener('pointermove', e => { if (!ptrZone.has(e.pointerId)) return; const z = zoneOf(e); if (z !== ptrZone.get(e.pointerId) && z !== 'j') { ptrZone.set(e.pointerId, z); refreshTouch(); } });
+for (const evn of ['pointerup', 'pointercancel', 'lostpointercapture']) cv.addEventListener(evn, e => { if (ptrZone.delete(e.pointerId)) refreshTouch(); });
+const hold = (id, z) => { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (frozen) exitShow(); TOUCH[z] = 1; if (z === 'j') jumpPressed = true; if (S.mode === 'finished') startRun(); }); for (const evn of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(evn, () => { TOUCH[z] = 0; }); };
+hold('tL', 'l'); hold('tR', 'r'); hold('tJ', 'j');
+$('tX').addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); if (frozen) exitShow(); slashPressed = true; });
+$('tRe').addEventListener('click', () => { leaveShow(); startRun(); });
+function fit() { document.body.classList.toggle('coarse', matchMedia('(pointer:coarse)').matches || innerWidth < 700); }
+addEventListener('resize', fit); fit();
+
+// Showcase: one composed frame for the thumbnail. The samurai mid wall jump in the chimney with dust and speed
+// lines, the grey ghost a step behind, timer and a green split delta, the spring and the mover in view.
+let SHOWSAVE = null;
+function leaveShow() {
+  if (!frozen) return false; frozen = false; paused = false; showGhost = null;
+  if (SHOWSAVE) { mapId = SHOWSAVE.mapId; setView(SHOWSAVE.view); TUNING.cam.window = SHOWSAVE.win; Object.assign(TUNING.anim, SHOWSAVE.anim); TUNING.race.ghostPose = SHOWSAVE.pose; setJuice(Math.round(TUNING.anim.juice * 100)); SHOWSAVE = null; fxSync(); for (const s of syncs) s(); mark('#gpose', TUNING.race.ghostPose); }
+  return true;
+}
+function exitShow() { if (leaveShow()) startRun(); }
+function showcase() {
+  leaveShow(); SHOWSAVE = { mapId, view, win: TUNING.cam.window, anim: Object.assign({}, TUNING.anim), pose: TUNING.race.ghostPose };
+  for (const k of ['blend', 'squash', 'rollflip', 'dust', 'lines', 'burst', 'go']) TUNING.anim[k] = 1;
+  TUNING.anim.juice = 1; TUNING.race.ghostPose = 'full'; fxSync(); mark('#gpose', 'full');
+  mapId = 'course'; mark('#maps', 'course'); setView('normal'); TUNING.cam.window = 0; paused = false;
+  TUNING.assist.slow = TUNING.assist.invincible = TUNING.assist.infCoyote = 0; for (const s of syncs) s();
+  startRun(); rs = 0x2545f491;
+  const P = S.P; S.mode = 'run'; S.steps = Math.round(9.84 / DT); S.t = S.steps * DT; S.ms = S.steps * DT * 1000; S.cp = 1; S.splits = [3120, 9440]; S.assisted = false;
+  updateElements(S);
+  P.x = 3034; P.y = 384 - PH; P.vx = 440; P.vy = -600; P.onGround = false; P.facing = 1; P.wallLock = 0.1; P.stretch = 0.18; P.flap = -0.5;
+  pose = { hip: 21, lean: 0.3, th: [1.15, 0.2], sh: [1.6, 0.5], ua: [2.7, -0.5], la: [0.3, 0.6] };
+  parts.length = 0; dust(2972, P.y + PH * 0.8, 9, 1, 0, 1); dust(2976, P.y + PH + 8, 5, 0.5, 0.3, 0.8);
+  for (let i = 0; i < 10; i++) updParts(1 / 60);
+  showGhost = { x: 2982, y: 462, f: -1, rot: 0, pivot: 22, sx: 1, sy: 1, flap: 0.2, slash: 0, grip: 0, pose: { hip: 20, lean: 0.28, th: [0.75, 0.25], sh: [1.2, 0.7], ua: [2.1, -0.45], la: [0.15, 0.4] } };
+  S.lastSplit = { i: 1, d: -420, gold: false, t: 2 };
+  cam.x = cam.px = 2130; cam.y = cam.py = 110; cam.ref = G;
+  frozen = true; syncPause(); render(1); hudText();
+}
+// test hook
+window.__sb = { get: () => ({ mode: S.mode, ms: S.ms, steps: S.steps, x: S.P.x, y: S.P.y, cp: S.cp, inputs: inputs.length, rec: rec.length, T: Object.assign({}, T), restartMs: lastRestartMs, replay: replayStatus, best: session.best && session.best.ms, frozen, paused }),
+  TUNING, startRun, preset, showcase, state: () => S, step: n => { for (let i = 0; i < n; i++) liveStep(); }, ghostBytes: () => rec.length > 1 ? ghostBytes(rec, recHz) : null, validate: () => S.result && S.result.checks,
+  setKeys: k => Object.assign(KEYS, k), solidAt: (x, y, w, h, land) => solidAt(S, x, y, w, h, land), inputs, press: () => { jumpPressed = true; }, slash: () => { slashPressed = true; }, finishNow: () => { S.P.x = S.map.finish.x - 30; } };
+// boot
+renderBoard(); preset('recommended'); readShare(); requestAnimationFrame(frame);
+})();
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>

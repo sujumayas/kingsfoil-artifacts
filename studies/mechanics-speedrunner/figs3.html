@@ -1,0 +1,42 @@
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar; the oldest pick drops off. Ratings are author judgement in the order Feel · Readability · Run fit · Cheapness · Evidence. Sort by Run fit and little moves, because the whole study was filtered for a time attack. Sort by Cheapness and SpeedRunner's situation shows. The two rows at 25, the jump (A1) and the countdown-free restart (F1), cost nothing, one because it is built and the other because it deletes code, while the daily map (E5) and the re-simulation validator (H3) are the expensive rows <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG matrix-->
+<figure class="fig" data-demo="matrix" id="fig-matrix">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Feel against cost for all 40 profiles, Feel plus Readability plus Run fit across, Cheapness plus Evidence up</h4></div>
+  <svg class="chart mx-chart" viewBox="0 0 600 320" role="img" aria-label="Scatter of the 40 technique profiles: feel plus readability plus run fit across, cheapness plus evidence up"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one profile at its §5 ratings. Across is how good it is in the hands and in a race, Feel plus Readability plus Run fit. Up is how cheap it is for a five-person Canvas2D team and how strong its sources are, Cheapness plus Evidence. Dots that share a cell sit side by side. Hover or tap a dot to read it and follow the link to its card. The top right corner is the first month of the backlog: the jump (A1), forgiveness (A2), the restart (F1), springs (C1), the timer (H1) and the restart engineering (H4). Re-simulation (H3) and the live plumbing (H5) sit low because they cost real server work and players never see them; the daily map (E5) is the single most expensive row <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG restartcost-->
+<figure class="fig" data-demo="restartcost" id="fig-restartcost">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Death to control across the twins, SpeedRunner's 3.4 s and the 0.5 s target</h4><span class="illu">Most rows are estimates</span></div>
+  <div class="ctl" style="margin-top:0">
+    <label><input type="checkbox" data-k="per100"> Show minutes lost per 100 deaths</label>
+    <button type="button" class="btn ghost" data-b="run">Time an in-place reset on this device</button>
+  </div>
+  <svg class="chart paper rc-chart" viewBox="0 0 600 340" role="img" aria-label="Horizontal bars of death-to-control seconds per game from section 6c, with a dashed 0.5 second target line"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a row of §6c. Hatched bars are the table's estimates; solid bars are measured or read from code, Hollow Knight's <code>DEATH_WAIT 2.85</code> plus the fade, and SpeedRunner's 0.38 s death beat plus the 3 s countdown <span class="cite"><b class="tag tv">V</b> S13<i>;</i> <b class="tag tk">K</b></span>. Super Meat Boy, Celeste, N++, VVVVVV and Trackmania all sit under about 1 s; McMillen's rule is that "the penalty is how much time it takes to start playing again" <span class="cite"><b class="tag tv">V</b> S57</span>. SpeedRunner's 3.4 s is the countdown, and at one death per 20 s of play it is 13% of a session spent watching numbers <span class="cite"><b class="tag ti">I</b></span>. The proposed row keeps the 0.38 s beat, skippable, and puts <code>R</code> under 150 ms. Jetpack Joyride's row has no seconds in the table and is listed as not timed. The button resets a player, a course and its movers in place a thousand times and reports the mean; the Sandbox measured 0.1 ms against 3,400 ms for the countdown replay <span class="cite"><b class="tag tv">V</b> S3</span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG bytes-->
+<figure class="fig" data-demo="bytes" id="fig-bytes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Ghost bytes per minute by method, on a log scale, with the same run encoded on this device</h4></div>
+  <div class="ctl" style="margin-top:0"><button type="button" class="btn ghost" data-b="run">Encode a 60 s autopilot run here</button></div>
+  <svg class="chart paper by-chart" viewBox="0 0 600 360" role="img" aria-label="Log-scale bars of ghost bytes per minute for each method in section 6d, from the game's 100 KB JSON to a sub-kilobyte input log"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every grey or black bar is a row of §6d for a 60 s run of 7,200 steps. The game today stores 18 floats per 30 Hz frame as JSON, about 100 KB per minute <span class="cite"><b class="tag tk">K</b></span>. The Sandbox measured a 30 Hz full-pose JSON ghost at 143 KB, 35.4 KB delta-quantised, a 30 Hz position-only ghost at 7.6 KB and a 10 Hz one at 2.6 KB <span class="cite"><b class="tag tv">V</b> S3</span>. Packed state and input formats are the report's estimates <span class="cite"><b class="tag ti">I</b></span>. A Mario Kart Wii ghost is a fixed 10,240 bytes of run-length inputs for a 2 to 3 minute race, drawn here per minute of a 2.5 minute race; Dustforce and Trackmania do not publish sizes <span class="cite"><b class="tag tv">V</b> S14<i>;</i> S15<i>;</i> S169</span>. The red bars appear when you press the button. The autopilot runs 7,200 steps of the real <code>step()</code> on a seeded course, and the page encodes that one run as 30 Hz full-pose JSON, a 1 byte per step input log, the §7 run-length pairs, a 3-bit bitmap and a 15 Hz position track, with deflated sizes where the browser offers <code>CompressionStream</code>. Only the input formats can be verified by re-simulation.</figcaption>
+</figure>
+<!--/FIG-->

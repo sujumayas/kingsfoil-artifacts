@@ -1,0 +1,195 @@
+<!-- Figures for build.py (Agent R): timeline, A1 to A6, B1 to B5. Each block is a FIG comment pair mapped to a section in AFTER_PROFILE. -->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five generations of platformer mechanics, 1983 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or filter by generation. The axis is linear from 1982 to 2027. Each event keeps its evidence tag and source from §3. The generations overlap because the mobile runners (Gen 3) and the makers (Gen 4) grew beside the Flash and indie precision games (Gen 2), and modern precision (Gen 5) starts with N++ in 2015.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG jumparc-->
+<figure class="fig" data-demo="jumparc" id="fig-jumparc">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The jump arc from two constants, with the cut, the apex band and the 6a arcs of Celeste, SMB1 and N++</h4></div>
+  <div class="stage click"><canvas width="640" height="360" aria-label="A stick samurai jumps along a parabola drawn in body lengths; grey arcs show the Celeste, Super Mario Bros. and N++ jumps for comparison, and readouts give height, apex time and fall time"></canvas></div>
+  <div class="ctl">
+    <label class="rng">jumpVel <input type="range" data-k="jv" min="600" max="1000" step="10" value="830"><output data-o="jv">830</output></label>
+    <label class="rng">gravity <input type="range" data-k="g" min="1500" max="3600" step="50" value="2500"><output data-o="g">2500</output></label>
+    <label class="rng">fallMult <input type="range" data-k="fm" min="1" max="3.5" step="0.05" value="1.65"><output data-o="fm">1.65</output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">apexMult <input type="range" data-k="am" min="0.2" max="1" step="0.05" value="0.55"><output data-o="am">0.55</output></label>
+    <label class="rng">jumpCut <input type="range" data-k="jc" min="0" max="1" step="0.05" value="0.45"><output data-o="jc">0.45</output></label>
+    <div class="seg" data-seg="hold" role="group" aria-label="Jump hold"><button type="button" class="on" data-v="held">Held</button><button type="button" data-v="100">Released at 100 ms</button><button type="button" data-v="tap">Tap (one step)</button></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="press">Press and hold to jump</button>
+    <label><input type="checkbox" data-k="cmp" checked> Compare the 6a arcs</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The arc is the game's gravity rule run step by step at 1/120 s. Rising gravity is <code>gravity</code>, multiplied by <code>apexMult</code> while the jump is held and the vertical speed is inside <code>apexBand</code> (90 u/s), and by <code>fallMult</code> on the way down. Releasing early multiplies the vertical speed by <code>jumpCut</code> <span class="cite"><b class="tag tk">K</b></span>. With the game's constants the analytic jump is 138 u = 3.0 body lengths with the apex at 332 ms; the stepped rule lands a few units and milliseconds under that, because gravity acts inside the launch step, and the apex band adds about 25 ms of hang. The readout shows the stepped numbers. <b>Press and hold</b> the button to jump with your own hold time. The grey arcs convert the 6a numbers to body lengths. Celeste pins its launch speed for 0.2 s and then applies one gravity both ways, SMB1 falls at about 3.5 times its rising gravity, and N++ held is a long 1.1 s float <span class="cite"><b class="tag tv">V</b> S7<i>;</i> S10<i>;</i> S12</span>. Horizontal distance assumes a run at 420 u/s, so a full jump covers about 5.5 body lengths of ground.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG forgiveness-->
+<figure class="fig" data-demo="forgiveness" id="fig-forgiveness">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Coyote time, the jump buffer and corner correction, with a slider for when the press lands</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="scene" role="group" aria-label="Scene"><button type="button" class="on" data-v="edge">Press timing at a ledge</button><button type="button" data-v="corner">Corner clip and ledge lip</button></div></div>
+  <div class="stage"><canvas width="640" height="320" aria-label="A stick samurai drops onto a short ledge and runs off its edge toward a gap; a timeline under the scene shows the buffer, ground and coyote windows and where the jump press lands"></canvas></div>
+  <div class="ctl">
+    <label class="rng" data-for="edge">Press at <input type="range" data-k="press" min="-260" max="180" step="5" value="60"><output data-o="press">+60 ms</output></label>
+    <label class="rng" data-for="corner">Block edge <input type="range" data-k="clip" min="0" max="14" step="1" value="6"><output data-o="clip">6 u</output></label>
+    <label class="rng" data-for="corner">Ledge lip <input type="range" data-k="lip" min="1" max="14" step="1" value="8"><output data-o="lip">8 u</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="coyote" checked> Coyote 100 ms</label>
+    <label><input type="checkbox" data-k="buffer" checked> Buffer 130 ms</label>
+    <label><input type="checkbox" data-k="cc"> Corner correction 8 u</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption><b>Press timing.</b> The samurai drops onto a ledge and runs 60 u to its edge at 420 u/s, so the landing comes about 143 ms before the edge. Zero on the slider is the step the feet leave the ledge. A press up to 130 ms before the landing is kept by the buffer and fires on touchdown; a press on the ledge fires at once; a press up to 100 ms after the edge still fires through coyote time; later than that the samurai falls <span class="cite"><b class="tag tk">K</b></span>. Switch the two windows off and the same press misses. Celeste's grace is also 100 ms and N++ uses 83 ms for both windows, so the three games agree within 17 ms <span class="cite"><b class="tag tv">V</b> S7<i>;</i> S12</span>. <b>Corner clip.</b> The samurai jumps under a block and runs into a raised ledge. The first slider sets how far the block's edge overlaps the rising head, the second the height of the lip. Without correction a 1 u clip stops the jump dead and a 2 u lip stops the run. With the proposed 8 u, the §7 <code>moveY</code> loop tries a sideways nudge of 1 to 8 u before cancelling the jump, and the run steps up a lip of up to 8 u, about 0.4 body widths. Celeste does the same with 4 px on an 8 px body <span class="cite"><b class="tag tv">V</b> S7<i>;</i> <b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG momentum-->
+<figure class="fig" data-demo="momentum" id="fig-momentum">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Speed over time under the game's acceleration, turn, friction and overspeed numbers</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="sc" role="group" aria-label="Scenario"><button type="button" class="on" data-v="accel">Accelerate and stop</button><button type="button" data-v="turn">Turn</button><button type="button" data-v="over">Overspeed decay</button><button type="button" data-v="air">Air control</button><button type="button" data-v="boost">Jump and lift boost</button></div></div>
+  <div class="stage"><canvas width="640" height="320" aria-label="A stick samurai runs along a strip while a chart below plots horizontal speed against time with the game's constants annotated"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="jb" checked> Jump boost 40 u/s</label>
+    <label><input type="checkbox" data-k="lb" checked> Lift boost from movers</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every curve is the game's horizontal rule stepped at 1/120 s. <b>Accelerate and stop</b> goes from 0 to 420 u/s in 156 ms at <code>groundAccel</code> 2700, then from 420 to 0 in 140 ms under <code>groundFric</code> 3000. <b>Turn</b> reverses on the ground with <code>turnAccel</code> 5200, so a full reversal takes about 160 ms. <b>Overspeed decay</b> bleeds speed above the cap at only 500 u/s², 0.19 times the ground acceleration, so 700 u/s lasts 0.56 s before it is back at 420; Celeste's <code>RunReduce</code> 400 against <code>RunAccel</code> 1000 is the same idea <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag tv">V</b> S7</span>. <b>Air control</b> uses <code>airAccel</code> 1900, which never clamps below the speed you already carry, so a reversal in the air is slower and carried speed survives. <b>Jump and lift boost</b> are the two proposed additions, a 40 u/s <code>jumpHBoost</code> on a running jump and the mover's velocity added to a jump off it, capped at 250 u/s sideways and 130 u/s up, scaled from Celeste's 250 and 130 px/s <span class="cite"><b class="tag ti">I</b></span>. The grey curve is the same scenario without the toggles. At 420 u/s the 970 u view is crossed in 2.3 s.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wallkit-->
+<figure class="fig" data-demo="wallkit" id="fig-wallkit">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The wall kit: stick or ramp, two wall jumps, the same-wall penalty and the 80 ms wall memory</h4></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="kind" role="group" aria-label="Jump kind"><button type="button" class="on" data-v="away">Jump away</button><button type="button" data-v="climb">Climb jump</button><button type="button" data-v="same">Same wall twice</button><button type="button" data-v="coyote">Wall memory</button></div>
+    <div class="seg" data-seg="slide" role="group" aria-label="Slide profile"><button type="button" class="on" data-v="today">Stick then 115 u/s</button><button type="button" data-v="ramp">Ramp 25 to 115 over 0.8 s</button></div>
+  </div>
+  <div class="stage"><canvas width="640" height="360" aria-label="A stick samurai jumps onto a wall, slides, and wall-jumps; an inset chart plots the slide speed against time and a band shows the wall memory window"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Hold on the wall <input type="range" data-k="hold" min="0" max="1200" step="20" value="300"><output data-o="hold">300 ms</output></label>
+    <label class="rng">Press after leaving <input type="range" data-k="late" min="0" max="160" step="8" value="48"><output data-o="late">48 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Today the first touch of a wall caps the fall at 25 u/s for 100 ms, then the slide runs at a flat 115 u/s, 2.5 body lengths per second <span class="cite"><b class="tag tk">K</b></span>. The ramp is the Celeste idea, a cap that grows from 25 to 115 u/s over 0.8 s, so hesitation costs height gradually instead of at a cliff; Celeste lerps from 20 to 160 px/s over 1.2 s <span class="cite"><b class="tag tv">V</b> S7<i>;</i> <b class="tag ti">I</b></span>. <b>Jump away</b> leaves at 440 u/s sideways and 790 u/s up with air control locked for 150 ms; <b>climb jump</b>, holding into the wall, leaves at 190 sideways with the same 790 up and a 70 ms lock; <b>same wall twice</b> gets only 330 u/s up, which is what stops a chimney from becoming a ladder <span class="cite"><b class="tag tk">K</b></span>. In <b>wall memory</b> the samurai pushes off the wall and presses jump later; the press fires for 80 ms after the wall probe last touched (Celeste reaches 3 px instead, Super Meat Boy added about 50 ms of grace) <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag tv">V</b> S7<i>;</i> S201</span>. Dust plays through the slide today; §7 keeps it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG speedtech-->
+<figure class="fig" data-demo="speedtech" id="fig-speedtech">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The roll-jump hyper against a plain jump after the same drop, and the time it saves</h4><span class="illu">Hyper arc illustrative</span></div>
+  <div class="stage"><canvas width="640" height="320" aria-label="Two lanes: in each a stick samurai drops five body lengths, rolls and jumps; the lower lane jumps inside the hyper window and leaves at 1.3 times run speed with a lower arc"></canvas></div>
+  <div class="ctl">
+    <label class="rng">hyperMult <input type="range" data-k="hm" min="1.1" max="1.6" step="0.05" value="1.3"><output data-o="hm">1.30x</output></label>
+    <label class="rng">hyperWindow <input type="range" data-k="hw" min="50" max="200" step="10" value="100"><output data-o="hw">100 ms</output></label>
+    <label class="rng">Press after landing <input type="range" data-k="delay" min="0" max="400" step="10" value="60"><output data-o="delay">60 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both samurai fall 230 u, which triggers the 420 ms roll that keeps at least 280 u/s, and both press jump after the delay on the slider <span class="cite"><b class="tag tk">K</b></span>. The top lane plays the game today, where the roll never exceeds 420 u/s, so the jump leaves at run speed. The bottom lane adds the proposed roll-jump hyper. A press inside the first <code>hyperWindow</code> ms of the roll leaves at <code>hyperMult</code> times <code>maxRun</code>, 546 u/s at 1.3x, with a lower arc, here 0.75 of <code>jumpVel</code>, and the 500 u/s² overspeed decay then carries the extra speed for about 0.25 s of ground after the landing <span class="cite"><b class="tag ti">I</b></span>. Move the delay past the window and the two lanes match. The readout gives the lead in units and in milliseconds after two seconds. For scale, Celeste's three constants give a dash at 2.67 times run speed, a super at 2.9 and a hyper at 3.6, and the pattern across every source is a gain of 20 to 60%, never 200%, that decays slowly <span class="cite"><b class="tag tv">V</b> S7<i>;</i> <b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG inputchain-->
+<figure class="fig" data-demo="inputchain" id="fig-inputchain">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">From key event to photon: the 120 Hz step, the render frame and the present, plus a one-thumb phone mode</h4><span class="illu">Browser and display delays illustrative</span></div>
+  <div class="phone">
+    <div>
+      <div class="stage"><canvas width="640" height="220" aria-label="An animated timeline: a key event lands at a random moment, the next 120 Hz physics step consumes it, the next render frame draws it and the next display refresh shows it; the bars add up to the latency"></canvas></div>
+      <div class="ctl">
+        <div class="seg" data-seg="hz" role="group" aria-label="Render rate"><button type="button" data-v="30">30 Hz</button><button type="button" class="on" data-v="60">60 Hz</button><button type="button" data-v="120">120 Hz</button><button type="button" data-v="144">144 Hz</button></div>
+        <label class="rng">Browser and OS delay <input type="range" data-k="os" min="0" max="120" step="5" value="35"><output data-o="os">35 ms</output></label>
+        <button type="button" class="btn ghost" data-b="press">Press now</button>
+      </div>
+      <div class="readout" data-ro aria-live="polite"></div>
+    </div>
+    <div class="shell"><div class="scr"><canvas width="180" height="320" aria-label="A portrait phone screen: the samurai auto-runs and jumps when the screen is tapped; holding the tap jumps higher"></canvas></div><p class="mute" style="font-size:12px;margin:8px 0 0;text-align:center">Tap to jump, hold for height</p></div>
+  </div>
+  <figcaption>The top bar is one press. The key event arrives somewhere inside a frame, the sticky <code>jumpPressed</code> flag waits for the next 1/120 s step (0 to 8.3 ms), the step's result waits for the next render frame at the chosen rate, and the frame waits for the next refresh. Press the button or watch the auto-presses and read the sum. Changing the render rate moves the second bar most; the physics step is already the smallest link, which is why the report keeps the 120 Hz step and the 130 ms buffer as the two levers and does not chase the frame <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The grey browser and OS bar stands for the rest of the chain, which measures 50 to 200 ms from keypress to photon on laptops <span class="cite"><b class="tag tv">V</b> S126</span>. The phone runs the one-thumb mode the report proposes instead of a virtual d-pad: auto-run at 420 u/s, tap to jump with the 0.45 cut, hold through the apex band, walls auto-stick, rolls are automatic. Super Mario Run, Super Meat Boy Forever and Jetpack Joyride all gave up an input axis the same way <span class="cite"><b class="tag tv">V</b> S91<i>;</i> S76<i>;</i> S74<i>;</i> <b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rig-->
+<figure class="fig" data-demo="rig" id="fig-rig">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The procedural rig: eight pose targets, a 38 ms blend, foot planting and the kimono spring</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="pose" role="group" aria-label="Pose target"><button type="button" data-v="idle">Idle</button><button type="button" class="on" data-v="run">Run</button><button type="button" data-v="rise">Rise</button><button type="button" data-v="apex">Apex</button><button type="button" data-v="fall">Fall</button><button type="button" data-v="wall">Wall</button><button type="button" data-v="land">Land</button><button type="button" data-v="roll">Roll</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="A large stick samurai on a treadmill blends toward the chosen pose; the ground scrolls under it, a chart plots the kimono spring, and readouts show the blend constant and the ten angles"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Blend time constant <input type="range" data-k="tau" min="8" max="240" step="2" value="38"><output data-o="tau">38 ms</output></label>
+    <label class="rng">Run speed <input type="range" data-k="sp" min="0" max="546" step="6" value="420"><output data-o="sp">420 u/s</output></label>
+    <label><input type="checkbox" data-k="plant" checked> Foot planting</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Spring stiffness <input type="range" data-k="ks" min="20" max="400" step="10" value="160"><output data-o="ks">160</output></label>
+    <label class="rng">Spring damping <input type="range" data-k="kd" min="0" max="60" step="1" value="14"><output data-o="kd">14</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The game's rig is ten numbers, a hip height, a lean and eight limb angles, blended toward a target pose with <code>1 - exp(-26·dt)</code>, a 38 ms time constant; the run cycle advances its phase by <code>|vx|·dt·0.042</code>, one stride per 150 u, 2.8 strides a second at top speed <span class="cite"><b class="tag tk">K</b></span>. Pick a target and watch the blend; raise the constant and the figure lags behind the state, which is Keren's warning about smoothing fast bodies <span class="cite"><b class="tag tv">V</b> S59</span>. <b>Foot planting</b> is the proposed addition. While a foot bears weight it is pinned to a point that moves with the ground, and the leg is solved with two <code>atan2</code> calls; switch it off and the foot slides, the most visible stick-figure flaw <span class="cite"><b class="tag ti">I</b></span>. The kimono flap is a spring driven by speed and vertical velocity. At stiffness 160 and damping 14 the damping ratio is 14 / (2·sqrt(160)) = 0.55, under-damped, so it flutters; the chart shows the flap answering a speed step. The time constant slider changes only the animation, never the simulated state.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG squash-->
+<figure class="fig" data-demo="squash" id="fig-squash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Stretch on take-off, squash by fall speed, dust only on real landings, and after-images at speed</h4></div>
+  <div class="stage"><canvas width="640" height="320" aria-label="A stick samurai hops, then drops from a high ledge; a scale readout follows the stretch and squash, dust appears on the hard landing, and faint after-images trail at speed"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="stretch" checked> Jump stretch (0.6, 1.4)</label>
+    <label><input type="checkbox" data-k="squash" checked> Landing squash by fall speed</label>
+    <label><input type="checkbox" data-k="gate" checked> Dust gate at 575 u/s</label>
+    <label><input type="checkbox" data-k="trail" checked> After-images above 0.9x maxRun</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The loop is a running hop, a drop of about 5 body lengths and a run back to the start. Celeste sets the sprite scale to (0.6, 1.4) on every jump and, on landing, squashes toward (1.6, 0.4) in proportion to <code>Speed.Y / FastMaxFall</code>; both recover toward 1 at 1.75 scale units per second, 229 ms from 1.4 and 343 ms from 0.4 <span class="cite"><b class="tag tv">V</b> S7</span>. Here the landing scales toward (1.4, 0.6) by <code>min(vy / maxFall, 1)</code>, the value the report proposes for SpeedRunner, applied about the feet so the ground contact never moves <span class="cite"><b class="tag ti">I</b></span>. Today the game spawns 6 dust on any landing over 50 u <span class="cite"><b class="tag tk">K</b></span>; with the gate on, dust appears only when the landing speed reaches 575 u/s, half of <code>maxFall</code>. The readout shows the landing speed of each drop. Measured here, 575 u/s is reached after a 40 u fall and the 2 body-length drop lands at about 880 u/s, so the gate is looser than today's 50 u rule on small steps (the 45 u step gets dust under the gate and none today) and the two agree on the big drop; the report's "about a 2 body-length drop" for the gate is a units slip. After-images are a ring buffer of the last few poses drawn faint, only above 0.9 of <code>maxRun</code>. Stretch is applied on the step the jump fires, so it adds no latency.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG camera-->
+<figure class="fig" data-demo="camera" id="fig-camera">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Three cameras on the same course, with the dead zone, the forward focus, the fall look-ahead and the kill line</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="mode" role="group" aria-label="Camera mode"><button type="button" class="on" data-v="lock">Lock and look-ahead (today)</button><button type="button" data-v="lerp">Lerp follow</button><button type="button" data-v="snap">Platform snap, no lerp</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="A scrolling ink course: the samurai runs along a high ledge, drops six hundred units to a floor and climbs back; overlays show the camera's dead zone, the forward focus line and the kill line"></canvas></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="focus"> Speed focus 120 to 200 u</label>
+    <label><input type="checkbox" data-k="fall"> Fall look-ahead vy x 0.25 s</label>
+    <label><input type="checkbox" data-k="kill"> Killbox clamp</label>
+    <label><input type="checkbox" data-k="over" checked> Overlays</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The course has a blind drop. The samurai runs along a ledge 620 u above the floor and rolls when it lands, and terminal fall crosses the whole 545 u view in 0.47 s, so with the camera as it is today the landing is out of view until the last moment <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. <b>Lock and look-ahead</b> is the served camera, locked to the player sideways with a fixed 120 u focus to the right (12% of the view), and vertically a reference that updates on landing, wall slide or when falling below it, with a 60 u dead zone for ordinary jumps and a lerp of 5 per second, 9 on walls; the view is clamped to the map top and to <code>floorView</code> <span class="cite"><b class="tag tk">K</b></span>. <b>Lerp follow</b> smooths both axes and lags at 420 u/s, hiding what is ahead. <b>Platform snap</b> without the lerp shows why the lerp exists. The three toggles are the §7 proposals: a forward focus that grows from 120 to 200 u with speed, a downward look-ahead of <code>vy x 0.25 s</code> capped at 200 u so the drop shows its landing, and Celeste's clamp that keeps the kill line (red, dashed) out of the view <span class="cite"><b class="tag tv">V</b> S7<i>;</i> S59<i>;</i> <b class="tag ti">I</b></span>. Overlays draw the dead zone band and the focus line.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG audio-->
+<figure class="fig" data-demo="audio" id="fig-audio">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The synth voices with pitch jitter, and a beat that keeps playing through a death</h4></div>
+  <div class="ctl" style="margin-top:0">
+    <label><input type="checkbox" data-k="snd" data-sound> Sound on</label>
+    <label><input type="checkbox" data-k="jit" checked> Pitch jitter ±4%</label>
+    <div class="seg" data-seg="music" role="group" aria-label="Music on death"><button type="button" class="on" data-v="keep">Music keeps playing</button><button type="button" data-v="restart">Music restarts</button></div>
+  </div>
+  <div class="stage click"><canvas width="640" height="240" aria-label="Envelope sketches of the game's synthesised sounds as frequency over time, a beat bar with four pulses, and a death marker that either interrupts the beat or lets it run"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="jump">Jump</button><button type="button" class="btn ghost" data-b="wall">Wall jump</button><button type="button" class="btn ghost" data-b="land">Land</button><button type="button" class="btn ghost" data-b="roll">Roll</button><button type="button" class="btn ghost" data-b="check">Checkpoint</button><button type="button" class="btn ghost" data-b="finish">Finish</button><button type="button" class="btn ghost" data-b="die">Die</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every sound in the game is a WebAudio oscillator or a noise burst, no samples. Jump is a triangle sweep from 420 to 760 Hz over 90 ms, wall jump a square sweep plus noise, land 80 ms of noise, roll 220 ms, die a sawtooth from 300 down to 70 Hz over 300 ms, checkpoint a sine from 880 to 1320 Hz, finish four triangle notes at 523, 659, 784 and 1046 Hz spaced 80 ms apart <span class="cite"><b class="tag tk">K</b></span>. The sketches plot each voice's frequency against time. With jitter on, the base frequency of jump, land and roll moves by up to ±4% (about 0.7 semitone) on every play while checkpoint and finish stay fixed, so the ear learns the two that matter <span class="cite"><b class="tag ti">I</b></span>. The bar below is a four-pulse beat. Press <b>Die</b>. With <b>Music restarts</b> the beat stops for the 0.38 s death beat and the 3 s countdown and starts over; with <b>Music keeps playing</b> it runs through, which is McMillen's rule for Super Meat Boy that the action never stops <span class="cite"><b class="tag tv">V</b> S57</span>. Sound is off until you switch it on.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG uimotion-->
+<figure class="fig" data-demo="uimotion" id="fig-uimotion">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">UI motion: countdown digits, split deltas in LiveSplit colours, results bars and an input display</h4><span class="illu">Split times illustrative</span></div>
+  <div class="stage click"><canvas width="640" height="320" aria-label="A HUD mock-up: countdown digits scale in, a split delta slides in coloured by sign and gold for a best segment, result bars grow with a stagger, and four key glyphs light up as the autopilot presses them"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="count">Countdown</button><button type="button" class="btn ghost" data-b="ahead">Split ahead</button><button type="button" class="btn ghost" data-b="behind">Split behind</button><button type="button" class="btn ghost" data-b="gold">Gold segment</button><button type="button" class="btn ghost" data-b="results">Results</button>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each element follows the report's timings. Countdown digits scale from 1.4 to 1 over 150 ms, the jump's stretch grammar. A split delta slides in over 100 ms, holds for about 1.5 s and fades; it is green when ahead and red when behind, in livesplit-core's default shades, with the lighter green for ahead but losing time and the lighter red for behind but gaining, and gold overrides both when the section beat its best, because gold describes the segment and not the run <span class="cite"><b class="tag tv">V</b> S16<i>;</i> S186<i>;</i> S187</span>. The results bars play in under a second with a 60 ms stagger. The four glyphs in the lower left (left, right, jump, R) are 24 px squares filled while a key is held and fading over 120 ms, drawn from the <code>keys</code> map after the step, so what is shown is what the simulation saw; here they follow the autopilot <span class="cite"><b class="tag ti">I</b></span>. Today the game shows the delta at every checkpoint against <code>pbSplits</code> and lists per-section times on the results; it lacks golds, sum of best and the input strip <span class="cite"><b class="tag tk">K</b></span>.</figcaption>
+</figure>
+<!--/FIG-->

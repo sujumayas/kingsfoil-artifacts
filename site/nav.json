@@ -528,6 +528,26 @@
     "name": "#2 Combat juice"
    },
    "next": null
+  },
+  "mechanics-speedrunner.html": {
+   "kind": "study",
+   "series": "mechanics",
+   "label": "Mechanics series",
+   "name": "#1 SpeedRunner",
+   "short": "SpeedRunner",
+   "pair": "mechanics-speedrunner-sandbox.html",
+   "prev": null,
+   "next": null
+  },
+  "mechanics-speedrunner-sandbox.html": {
+   "kind": "sandbox",
+   "series": "mechanics",
+   "label": "Mechanics series",
+   "name": "#1 SpeedRunner",
+   "short": "SpeedRunner",
+   "pair": "mechanics-speedrunner.html",
+   "prev": null,
+   "next": null
   }
  }
 }
