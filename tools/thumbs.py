@@ -5,6 +5,7 @@
   python tools/thumbs.py vfx-fire   one study
 
 from: sandbox  → run `steps` (click / fill / wait) in the sandbox, save the canvas at native resolution (.png, pixel-perfect)
+                 optional `crop` [x0, y0, x1, y1] cuts a window out of a canvas larger than 320x180
 from: page     → screenshot the study page at 1440x900 and crop `crop` [x0, y0, x1, y1] (.webp, 480x270)
 Output path = the item's "thumb" in catalog.json.
 """
@@ -28,7 +29,9 @@ async def one(pg, base, s):
             if "fill" in st: await pg.fill(st["fill"][0], st["fill"][1]); await pg.dispatch_event(st["fill"][0], "input")
             if "wait" in st: await pg.wait_for_timeout(st["wait"])
         d = await pg.evaluate(f"document.querySelector({t.get('canvas', '#c')!r}).toDataURL('image/png')")
-        Image.open(io.BytesIO(base64.b64decode(d.split(",")[1]))).save(out)
+        im = Image.open(io.BytesIO(base64.b64decode(d.split(",")[1])))
+        if t.get("crop"): im = im.crop(tuple(t["crop"]))   # a 640x360 canvas: cut a 320x180 window so the card stays pixel-perfect
+        im.save(out)
     else:
         await pg.goto(f"{base}/{s.out_name}"); await pg.wait_for_timeout(t.get("wait", 2500))
         png = await pg.screenshot(clip={"x": 0, "y": 0, "width": 1440, "height": 900})

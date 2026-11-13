@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel snow at 32 px: scaling the snow engine to 32x32 tiles and 24x32 characters</h1>
+      <p class="deck">VFX #1 stored one byte of snow depth per pixel and drew snow where the depth passed a dither threshold, on 8 px tiles. Asterion Online has 32 px tiles and 24x32 characters, so the canvas grows to 640x360 and holds 4 times the pixels. A straight port costs 4.0 to 4.3 times the old frame and fills 87 to 93% of a 16.7 ms frame on our phone proxy. This study keeps the field at 320x180, samples it bilinearly, swaps the Bayer matrix for a painted threshold map and draws the ground in one shader. The frame then costs 0.47 to 0.56 ms on the same proxy. It also resizes what the artist sees, with boot prints on the walk cycle's contact frames, a 6 px sink and flakes of 1, 2 and 3 px. Aimed at Godot 4 on the web.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-snow-32px-sandbox.html">Play the Snow 32 Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage"><canvas width="304" height="144" aria-label="A live strip of a winter scene on 32 pixel tiles. A character in a red hat, 24 by 32 pixels, walks across fresh snow and leaves two rows of boot prints. Snowflakes of 1, 2 and 3 pixels fall, and a pine and a street lamp stand by with snow caps."></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Snow field and threshold"><button type="button" data-f="1">Field 1:1</button><button type="button" data-f="2">1:2</button><button type="button" data-f="4">1:4</button><span aria-hidden="true"></span><button type="button" data-th="0">Bayer</button><button type="button" data-th="1">Art map</button></div>
+      <figcaption>Live, and timed on your device. The strip is drawn at native art pixels and shown at 2x. One byte of depth and one of packed snow per field cell, ticked by random picks at the Sandbox's rates (§8). The ground pass samples the field bilinearly, compares it with a threshold and shades the snow edge with a 1 px rim and a shadow line (A3, B5). The walker stamps a 4x6 px boot print on frames 0 and 2 of a 4-frame cycle, one per foot every 16 px (D1). Flakes are 1, 2 and 3 px (E3). Switch to 1:4 and one row of prints shrinks to slivers. Switch to Bayer and the thin cover behind the pines breaks into single pixels (B1). The HUD shows this strip's own sim tick in ms, with its cells and picks. For the full 640x360 view our benchmark measured a snowing tick of 0.067 ms at 1:2 against 0.281 ms at 1:1 on the desktop (§6a). Scene, wind and snowfall are illustrative.</figcaption>
+    </figure>
+  </div>
+</header>

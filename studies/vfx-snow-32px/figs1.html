@@ -1,0 +1,177 @@
+<!-- Figures 1 (Agent R): FIG blocks, mapped to sections in build.py -->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of snow on tiles, 1997 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or click a row in the list. The axis is compressed before 2012 and stretched after 2020, where six years hold thirteen events. Gen 1 is how shipped games still do it, with one mark per tile. Gen 4 is where this study sits. Godot 4.7 is out, and every cost on this page was measured for it in a browser, not in the engine.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG scale-->
+<figure class="fig" data-demo="scale" id="fig-scale">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same corner of the screen at 8 px tiles and at 32 px tiles</h4><span class="illu">Scene drawn for this page</span></div>
+  <div class="duo">
+    <div>
+      <div class="stage w320"><canvas width="80" height="45" aria-label="A corner of the VFX number 1 screen. Tiles are 8 pixels, the walker is 7 by 12 pixels, snow is a Bayer dusting and footprints are 2 by 2 dots."></canvas><span class="tagl">VFX #1, 8 px tiles</span></div>
+      <svg class="chart scr" viewBox="0 0 320 180" role="img" aria-label="The whole 320 by 180 screen as a grid of 40 by 22.5 tiles, with the corner shown above framed and the character drawn to scale."></svg>
+      <p class="pl" data-p="0"></p>
+    </div>
+    <div>
+      <div class="stage w320"><canvas width="160" height="90" aria-label="The same corner of the 640 by 360 screen. Tiles are 32 pixels, the walker is 24 by 32 pixels, snow grows in clusters and footprints are boot prints."></canvas><span class="tagl">This study, 32 px tiles</span></div>
+      <svg class="chart scr" viewBox="0 0 320 180" role="img" aria-label="The whole 640 by 360 screen as a grid of 20 by 11.25 tiles, with the corner shown above framed and the character drawn to scale."></svg>
+      <p class="pl" data-p="1"></p>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="win" role="group" aria-label="Window size"><button type="button" data-v="720">720p</button><button type="button" class="on" data-v="1080">1080p</button><button type="button" data-v="1440">1440p</button><button type="button" data-v="2160">4K</button></div>
+    <label><input type="checkbox" data-k="grid" checked> Show the tile grid</label>
+  </div>
+  <div class="rows" data-scl aria-live="polite"></div>
+  <figcaption>Both panels show one quarter of the screen's width and height, at the same size on your display. In the VFX #1 panel one art pixel of the old 320x180 picture is drawn 4x. In the 32 px panel one art pixel of the 640x360 picture is drawn 2x. The old engine's 1 px flakes, 2x2 dot prints and Bayer dusting suit a 7x12 px walker. Next to a 24x32 px walker they would be specks, so every one of them has to be redrawn (§6b). The tile count on screen halves in each direction and the art pixels grow from 57,600 to 230,400. Pick a window height to see which base sizes scale by a whole number. 640x360 does at all four. 480x270 fails at 720p and at 1440p [V, S125, S122]. Render work follows art pixels. Measured, the full ground shader costs 0.012 ms at 640x360 and 0.086 ms when the same pass runs at 1920x1080 on the M4 Pro GPU [V, S4]. The 6.7% is 12 px of 180.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fieldratio-->
+<figure class="fig" data-demo="fieldratio" id="fig-fieldratio">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One snow patch stored at 1:1, 1:2 and 1:4, with nearest and bilinear sampling</h4><span class="illu">Patch shape illustrative</span></div>
+  <div class="tri3">
+    <div><div class="stage click"><canvas width="144" height="80" aria-label="The snow patch drawn from a field with one cell per art pixel."></canvas><span class="tagl">Field 1:1</span></div><p class="ms" data-m="0"></p></div>
+    <div><div class="stage click"><canvas width="144" height="80" aria-label="The same patch drawn from a field with one cell per 2 by 2 art pixels."></canvas><span class="tagl">Field 1:2</span></div><p class="ms" data-m="1"></p></div>
+    <div><div class="stage click"><canvas width="144" height="80" aria-label="The same patch drawn from a field with one cell per 4 by 4 art pixels. With nearest sampling its edge is made of 4 pixel blocks."></canvas><span class="tagl">Field 1:4</span></div><p class="ms" data-m="2"></p></div>
+  </div>
+  <p class="pl">Drag on any panel. The same stroke goes into all three fields.</p>
+  <div class="ctl">
+    <div class="seg" data-seg="samp" role="group" aria-label="Sampling"><button type="button" class="on" data-v="0">Nearest</button><button type="button" data-v="1">Bilinear</button></div>
+    <div class="seg" data-seg="tool" role="group" aria-label="Tool"><button type="button" class="on" data-v="shovel">Shovel</button><button type="button" data-v="snow">Add snow</button></div>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="pic">Picture</button><button type="button" data-v="cells">Stored cells</button></div>
+    <button type="button" class="btn ghost" data-b="reset">Reset the patch</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each panel keeps its own byte field and runs its own tick. Start on Nearest. At 1:4 the snow edge and the shovelled holes are built from 4 px blocks. Switch to Bilinear and the 1:4 panel draws close to the 1:1 panel, because each art pixel blends its four nearest cells before the painted threshold map adds the pixel detail. Our edge test measured that on a smooth field. A 1:1 field gave straight boundary runs of 2.03 px. A 1:4 field gave 7.68 px with nearest sampling and 2.04 px with bilinear [V, S5]. Stored cells shows what the tick and the upload pay for. The pick counts are the VFX #1 rate of 163 per 1,000 cells, and the ms pairs are our benchmark at 640x360, desktop / 6x throttle [V, S4]. On the CPU the saving has a price. Nearest sampling costs 0.289 / 1.73 ms for the screen and bilinear with weight tables 0.867 / 5.30 ms. At 1:2 the weights are fixed at 9, 3, 3 and 1 sixteenths and the upsample drops from 0.594 to 0.135 ms. A GPU's linear filter does it in one fetch [V, S4]. The ms figures in the box under the buttons are this page's own ticks, timed in your browser.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG splitfield-->
+<figure class="fig" data-demo="splitfield" id="fig-splitfield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Boot prints in a packed field at 1:1, 1:2, 1:4 and split</h4><span class="illu">Four walkers, one per field</span></div>
+  <div class="duo wide-l">
+    <div>
+      <div class="stage mid"><canvas width="160" height="96" aria-label="Four walkers march down side by side, each on its own snow field. The prints behind them differ. At 1 to 1 each print has a heel gap. At 1 to 2 prints are clean blocks in two rows. At 1 to 4 one row is blunt and the other is thin slivers. In split mode they are clean blocks again."></canvas><div class="lanes4" aria-hidden="true"><span>1:1</span><span>1:2</span><span>1:4</span><span>Split</span></div></div>
+      <div class="stage mid lp"><canvas width="160" height="40" aria-label="The prints of each lane at twice the size."></canvas></div>
+      <p class="pl">The lower strip repeats a 20x20 px piece of each lane at twice the size. The snow is reset before each pass.</p>
+    </div>
+    <div class="rows" data-rows></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="grid"> Show the packed cells in the strip</label>
+    <label><input type="checkbox" data-k="bil" checked> Bilinear sampling</label>
+    <button type="button" class="btn ghost" data-b="clear">Fresh snow</button>
+  </div>
+  <figcaption>Every lane stamps the same 4x6 px boot on frames 0 and 2 of the walk, with the rows 6 px apart. Only the grid differs. A stamp is area-weighted, so a cell takes the share of the print that covers it. At 1:1 the print keeps its heel gap. At 1:2 it is 2x3 whole cells with 2 px of snow between the rows. At 1:4 a cell is 4 px wide. One row lands on whole cells and stays as blunt marks. The other straddles two columns, each half covered, and shrinks to slivers. Note 12 had inferred that at 1:4 the two rows would join into one trench 8 to 12 px wide [I, note 12]. The Sandbox showed that they do not [V, S3]. The split field keeps depth at 1:4 and gives only the packed trail a 1:2 grid, so the prints are crisp again. It saves nothing on the CPU. In the Sandbox's own loop its sim costs 0.04 ms against 0.11 ms at 1:2, its ground sampling 1.07 ms against 0.70 ms, and the frame 2.27 ms against 2.01 ms [V, S3]. The benchmark did not measure the split.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG autotile-->
+<figure class="fig" data-demo="autotile" id="fig-autotile">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One snow band per tile, drawn with a dual grid or with a 47-blob set</h4><span class="illu">Tiles generated for this page</span></div>
+  <div class="duo wide-l">
+    <div>
+      <div class="stage mid click"><canvas width="160" height="96" aria-label="A 5 by 3 grid of 32 pixel tiles. Each tile holds a snow band from 0 to 3. Snow edges are drawn from a small set of edge tiles and follow the bands."></canvas><div class="hud" data-hud></div></div>
+      <p class="pl">Click or drag on the tiles to paint the chosen band.</p>
+    </div>
+    <div>
+      <p class="lab2"><span>Dual grid, 15 shapes per band</span><b data-n="d"></b></p>
+      <div class="stage"><canvas width="160" height="30" data-sh="d" aria-label="The 15 dual grid shapes for each of the three bands. Shapes in use are lit."></canvas></div>
+      <p class="lab2"><span>Blob set, 47 shapes per band</span><b data-n="b"></b></p>
+      <div class="stage"><canvas width="160" height="66" data-sh="b" aria-label="The 47 blob shapes for each of the three bands. Shapes in use are lit."></canvas></div>
+      <dl class="kv" data-kv></dl>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="band" role="group" aria-label="Band to paint"><button type="button" data-v="0">Band 0, bare</button><button type="button" data-v="1">1</button><button type="button" class="on" data-v="2">2</button><button type="button" data-v="3">3, deep</button></div>
+    <div class="seg" data-seg="mode" role="group" aria-label="Tile set"><button type="button" class="on" data-v="dual">Dual grid</button><button type="button" data-v="blob">Blob set</button></div>
+    <label><input type="checkbox" data-k="grid"> Show the grids</label>
+  </div>
+  <figcaption>The server stores one band from 0 to 3 per 32 px tile. With a dual grid the drawn tiles sit half a tile off the world grid. Each one looks at the 4 world tiles it touches and picks 1 of 15 shapes, so a snow edge runs through tile centres and moves 16 px at a time. Three bands need 45 tiles [V, S113, S115, S116; I, note 12]. A blob set looks at all 8 neighbours and needs 47 shapes per band. Its edge sits inside the snow tile and moves a whole tile at a time. Tick the grids to see both. The dashed lines are the dual grid. Either way the work is four lookups per display tile, done only when a band changes, and the bands of a 640x360 view fit a data texture of 240 bytes [I, note 12]. Paint one tile and read how many drawn tiles changed. Snow arrives in steps here, not as weather, which is why §7 uses the bands for gameplay and keeps the field for the picture. Not measured.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG globallevel-->
+<figure class="fig" data-demo="globallevel" id="fig-globallevel">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One synced snow level for the whole map, two ways</h4><span class="illu">Tile art, noise values and scene illustrative</span></div>
+  <div class="duo">
+    <div>
+      <div class="stage"><canvas width="160" height="128" aria-label="A 5 by 4 grid of tiles. Each tile carries a fixed number. Tiles whose number is at or below the snow level are drawn as snow, so snow appears in patches as the level rises."></canvas><span class="tagl">Level against fixed noise</span></div>
+      <div class="ctl col">
+        <label class="rng"><span>snowStrength, 0 to 10</span><input type="range" data-k="str" min="0" max="10" step="0.1" value="3.4"><output data-o="str">3.4</output></label>
+        <label><input type="checkbox" data-k="num" checked> Show each tile's fixed noise value, in hundredths</label>
+      </div>
+      <div class="readout" data-ro aria-live="polite"></div>
+    </div>
+    <div>
+      <div class="stage"><canvas width="160" height="128" aria-label="A meadow with a hut and a pine. One snow overlay fades in evenly over the whole ground as the level rises. The hut roof and the pine show their drawn snow almost at once."></canvas><span class="tagl">One overlay, plus object layers</span></div>
+      <div class="ctl col">
+        <label class="rng"><span>Seconds of snowfall</span><input type="range" data-k="t" min="0" max="300" step="0.5" value="12"><output data-o="t">12 s</output></label>
+        <label><input type="checkbox" data-k="play" checked> Let it snow, 20 s per second</label>
+      </div>
+      <div class="readout" data-ro2 aria-live="polite"></div>
+    </div>
+  </div>
+  <figcaption>Left, Project Zomboid 41.78. Every square owns a fixed noise value. The server syncs one number, <code>snowStrength</code>, and a square has snow when its value is at or below <code>strength / 7.5</code>, capped at 1 [V, S60, S61]. Only the threshold moves, so snow arrives in patches that are the same for every player, with no per-tile state on the wire [I, note 16]. Right, Don't Starve Together. One networked float fills in 300 s at rate 1. One overlay texture lerps over the whole map, and every object tagged <code>SnowCovered</code> shows its drawn snow layer once the level reaches 0.015, which is 4.5 s into the snowfall [V, S62, S63]. Drag the right slider back to 0 and forward again. The roof and the pine turn white while the ground has barely changed. Both cost one compare per tile or per object. Neither knows about eaves or wind. §7 names the left rule as the cheapest source for the server's snow bands.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG percell-->
+<figure class="fig" data-demo="percell" id="fig-percell">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">RimWorld keeps one depth per cell and redraws only on a change above 0.15</h4><span class="illu">Map size, noise and draw style illustrative</span></div>
+  <div class="duo wide-l">
+    <div>
+      <div class="stage mid"><canvas width="160" height="96" aria-label="A 5 by 3 grid of map cells under snow. Each cell holds one depth number. The picture blends neighbouring cells, so the snow has soft edges about a cell wide. A walker crosses and leaves footprints only where the snow is deep enough."></canvas><div class="hud" data-hud></div></div>
+      <p class="pl">The numbers are hundredths. The top one is the stored depth and the bottom one is the depth in the mesh.</p>
+    </div>
+    <dl class="kv" data-kv></dl>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="spd" role="group" aria-label="Snowfall time-lapse"><button type="button" data-v="1">Snow at 1x</button><button type="button" class="on" data-v="60">60x</button><button type="button" data-v="600">600x</button></div>
+    <div class="seg" data-seg="draw" role="group" aria-label="Draw style"><button type="button" class="on" data-v="alpha">Alpha mesh</button><button type="button" data-v="thr">Threshold map</button></div>
+    <label><input type="checkbox" data-k="num" checked> Show the depths</label>
+    <button type="button" class="btn ghost" data-b="clear">Clear the snow</button>
+  </div>
+  <figcaption>RimWorld stores one float from 0 to 1 per map cell. Each tick it visits <code>ceil(area * 0.0006)</code> random cells, and a visited cell without a roof gains <code>0.046 * SnowRate * noise</code> [V, S48, S51]. That is 0.06% of the map per tick. The snowfall pass of VFX #1 picks 1.56% of its cells per frame, 26 times more [I, note 16]. The mesh has 9 vertices per cell. The centre takes the cell's depth, an edge midpoint the mean of 2 cells and a corner the mean of 4, and the depth becomes the vertex alpha [V, S49]. A section is rebuilt only when a cell has moved by more than 0.15 since the last rebuild, so most visits change nothing on screen. Watch the two numbers in a cell drift apart and snap together. The walker leaves a print every 0.632 cell for 4.88 s, and only where the depth is 0.4 or more [V, S53]. The prints are decals on a timer, not marks in the field. We did not read the snow shader, so how alpha becomes the visible edge is unknown [U, note 16]. Alpha mesh draws it as a stepped blend. Threshold map draws the same 15 numbers the way this study would, through bilinear sampling and a painted threshold (A3). The snow rate here is the XML's hard snow, 1.2 [V, S57].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rowsweep-->
+<figure class="fig" data-demo="rowsweep" id="fig-rowsweep">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The exposure bake two ways: a ray per cell against one sweep per row</h4><span class="illu">Map and obstacle heights illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="160" height="96" aria-label="A hut and a pine on bare ground. Snow fills in cell by cell as each cell walks a ray upwind to look for shelter. It is slow."></canvas><span class="tagl">Ray per cell</span></div><p class="ms" data-m="0"></p></div>
+    <div><div class="stage"><canvas width="160" height="96" aria-label="The same hut and pine. Snow fills in row by row as one sweep per row carries the last obstacle along. It finishes long before the ray version."></canvas><span class="tagl">One sweep per row</span></div><p class="ms" data-m="1"></p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="wind" role="group" aria-label="Wind"><button type="button" class="on" data-v="1">Wind from the west</button><button type="button" data-v="-1">Wind from the east</button></div>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="snow">Snow</button><button type="button" data-v="expo">Exposure map</button></div>
+    <label class="rng"><span>Cell reads per frame</span><input type="range" data-k="spf" min="2" max="120" step="2" value="16"><output data-o="spf">16</output></label>
+    <button type="button" class="btn ghost" data-b="again">Bake again</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <div class="bbars" data-bars style="margin-top:10px"></div>
+  <figcaption>Exposure says how much snowfall a ground cell receives. A wall or a trunk upwind shelters the cells in its lee, and a band past the lee collects 12% more. VFX #1 found the wall by stepping upwind from every cell, up to 3.5 tiles [V, S2]. The sweep walks each row once in the wind direction and carries the height of the last obstacle and the distance to it, so every cell is read once [V, S4]. Both panels read cells at the same rate, and snow appears where a cell is done. This map is 40x24 cells at 1:4, with a ray of 28 cells. Both end in the same map, cell for cell, which the page checks when the ray version finishes. The bars are our benchmark for a 640x360 view, one bake on the desktop. At 1:1 the ray costs 15.9 ms and the sweep 0.49 ms. On the 6x throttle those are 99.7 and 3.25 ms, six frames against a fifth of one [V, S4]. The sweep needs wind along the rows. A diagonal wind needs a sheared sweep, which we did not measure.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG upload-->
+<figure class="fig" data-demo="upload" id="fig-upload">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bytes per texture upload, and whole-field uploads against dirty chunks</h4><span class="illu">Map and walkers illustrative</span></div>
+  <div class="duo wide-l">
+    <div>
+      <div class="stage mid"><canvas width="160" height="90" aria-label="A snow depth field seen as a map, with a grid of 64 by 64 cell chunks over it. Walkers leave dark trails. Chunks that changed this tick are outlined."></canvas><div class="hud" data-hud></div></div>
+      <div class="ctl">
+        <div class="seg" data-seg="wx" role="group" aria-label="Weather"><button type="button" data-v="snow">Snowing</button><button type="button" class="on" data-v="clear">Clear sky, 6 walkers</button></div>
+      </div>
+      <div class="readout" data-ro aria-live="polite"></div>
+    </div>
+    <div>
+      <p class="lab2"><span>Our WebGL2 benchmark, one upload</span><b>bytes · Metal ms</b></p>
+      <div class="fl-bars" data-bars></div>
+      <div class="legend-mini"><span><i style="background:var(--lamp)"></i>bytes, full bar 921,600</span><span><i style="background:var(--ice2)"></i>ms, full bar 0.093</span></div>
+    </div>
+  </div>
+  <figcaption>The map is a 640x360 view's depth field at 1:4, one canvas pixel per cell, 160x90 bytes. Light is deep snow. The grid marks 64x64 cell chunks of the 1:2 field, 4,096 bytes each. Under a clear sky only the chunks a walker touches change. While it snows, picks land in every chunk on every tick. Godot's Compatibility renderer cannot use that difference. <code>texture_2d_update</code> ends in <code>glTexImage2D</code> with the full width and height, so every update sends the whole image [V, S126, S127]. That makes the field's size the upload cost. A 640x360 RGBA8 field is 921,600 bytes and a 160x90 R8 field 14,400, 64 times less [I, note 12]. Chunks would not pay even where they exist. In WebGL2, eight 64x64 chunks cost 0.039 ms against 0.020 ms for the whole 320x180 field. One upload costs 0.015 to 0.021 ms for anything up to 57,600 bytes, so fewer bytes in more calls is the slower trade [V, S4]. These are browser numbers. No measured time for Godot's <code>ImageTexture.update()</code> exists anywhere we looked [V, note 17].</figcaption>
+</figure>
+<!--/FIG-->

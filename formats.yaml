@@ -14,7 +14,8 @@ formats:
     status: active
     title: Tiny VFX study with a playable sandbox
     use_for: One visual effect or rendering concept for top-down pixel art, researched as a family of small
-      old-school algorithms, with a 320x180 canvas sandbox that plays the recommended architecture.
+      old-school algorithms, with a 320x180 canvas sandbox (640x360 for studies at 32 px tile scale) that
+      plays the recommended architecture.
     template: vfx-light
     sandbox: required
     page: "{id}-topdown-pixel.html"

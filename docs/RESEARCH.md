@@ -5,7 +5,7 @@ research, writing and figures. The mechanics of ids, scaffolding, building and s
 [ADDING-A-STUDY.md](ADDING-A-STUDY.md); series and formats in [FORMATS.md](FORMATS.md); the exact report
 layout in the format doc, `docs/formats/<format>.md`.
 
-The quality bar is the newest recipe study (today `vfx-magic` for `vfx-pixel`; the format template stays `vfx-light`, so replace a scaffold's `build.py` and `core.js` with the newest study's). Read its `report.md`, its
+The quality bar is the newest recipe study (today `vfx-snow-32px` for `vfx-pixel`; the format template stays `vfx-light`, so replace a scaffold's `build.py` and `core.js` with the newest study's). Read its `report.md`, its
 `notes/CONTEXT.md` and one of its notes before starting.
 
 ## 1. Scope the request
@@ -28,6 +28,11 @@ Also:
 - **Lists the user attaches** (for example a list of techniques from another AI): every item is required
   coverage. Check that each one exists; such lists can contain invented names or numbers.
 - **Unattended runs**: take the most reasonable reading, write it down in the report's Context section, and continue.
+- **A study that builds on an earlier one** (the same concept at another scale, engine or genre, as
+  `vfx-snow-32px` builds on `vfx-snow`): do not research the concept again. Put "what the earlier study
+  settled" in `CONTEXT.md`, split the research only over what changes (for a scale change: games at that size,
+  art craft at that size, which buffers must grow, characters, measured costs), and have the report give a
+  conversion table from the earlier study's numbers. 5 researchers, a benchmark agent and 2 gap agents were enough.
 
 Write the answers to `studies/<id>/notes/CONTEXT.md`: the user and project, the series and what earlier
 studies already covered (with URLs), the scope, the goal, and the researcher rules from §2. Every researcher reads this file.

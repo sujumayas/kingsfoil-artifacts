@@ -1,0 +1,186 @@
+<!--FIG bootprints-->
+<figure class="fig" data-demo="bootprints" id="fig-bootprints">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four walk frames, two contact frames, one boot print each</h4><span class="illu">Fade speed is illustrative</span></div>
+  <div class="s3-col">
+    <div class="stage" style="max-width:522px"><canvas width="104" height="40" aria-label="The four frames of the 24 by 32 pixel walk cycle side by side on snow. Frames 0 and 2 show a boot planted with a dark boot-shaped print under it, frames 1 and 3 show the passing pose with that print 8 pixels behind. A yellow box marks the frame that is playing"></canvas></div>
+    <div class="s3-fr" data-fr><span>0 · contact, left boot</span><span>1 · passing, body 1 px up</span><span>2 · contact, right boot</span><span>3 · passing, body 1 px up</span></div>
+  </div>
+  <div class="stage" style="max-width:642px;margin-top:10px"><canvas width="160" height="112" aria-label="A character in a red hat and blue coat walks a rectangular loop on snow and leaves two rows of boot prints that fade behind it"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="play" aria-pressed="false">Pause</button>
+    <button type="button" class="btn ghost" data-b="step">Next frame</button>
+    <div class="seg" data-seg="st" role="group" aria-label="Stamp"><button type="button" class="on" data-v="boot">Boot prints, 4x6 px</button><button type="button" data-v="dot">VFX #1 dots, 2x2 px</button></div>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The strip shows the Sandbox's walk cycle at 24x32 px [S3]. Frame 0 is the left step and frame 2 the right step. Frames 1 and 3 are passing poses with the body 1 px up [V, S94; I, note 13]. Each frame covers 8 px of travel, so one cycle is one 32 px tile and a print lands every 16 px. In the strip a contact frame has its print under the planted boot, and the passing frame after it shows the same print 8 px behind. This figure stamps at the feet, as the Sandbox does. Note 13 proposes a 4 px lead instead, which would put the prints 4 px and 20 px into the tile. A print is 4x6 px, or 6x4 px sideways, which is 2x3 whole cells of the 1:2 field. The two rows sit 6 px apart, so 2 px of snow stay between them [V, S3]. The stamp keeps 30% of the depth, marks the cells packed and spills the rest to an even ring. Switch to the VFX #1 stamp and the same walk leaves 2x2 px dots every 4 px. A dot is 1/16 of a tile wide and reads as a stray pixel [I, notes 11, 13]. Note 13 proposed 3x5 px, and the Sandbox enlarged the print because 3x5 did not read at 1x. Prints fade about 4 times faster here than in the Sandbox, where a print is gone after 13 s of heavy snow.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tilemark-->
+<figure class="fig" data-demo="tilemark" id="fig-tilemark">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One mark on the tile just left, three ways</h4><span class="illu">Print art, walkers and the 1/30 s tick are illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="104" aria-label="Characters walk from tile to tile on a 5 by 3 grid of snow tiles. Each tile they leave shows a pair of footprints for a short time, or a trampled tile picture with a countdown number"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Method"><button type="button" class="on" data-v="em">Emerald, 41 frames then blink</button><button type="button" data-v="pt">Platinum, hold 16 and fade 16</button><button type="button" data-v="tb">Tibia, 10 s tile swap</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Walkers <input type="range" data-k="n" min="1" max="6" step="1" value="2"><output data-o="n"></output></label>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The classic method stores nothing per pixel. Emerald puts one print on <code>previousCoords</code>, shows it for 41 frames and blinks it until about frame 57. Two 16x16 pictures cover four directions through flips, and one pool of 64 sprites serves everything on screen [V, S33, S34, S36, S37]. Platinum picks one of 4 models by facing, holds it 16 ticks and fades it over 16 more [V, S42, S43]. Tibia's <code>StepOut</code> script turns the snow tile into its footprint twin, which decays back after 10 s. The print has no direction, and the script runs only on clean tiles, so a busy path flickers back to clean snow every 10 s [V, S10, S11; I, note 10]. The number on a swapped tile is the seconds left. Walk over a marked tile and the number does not reset. Tibia pays two tile-change messages per print. As decals, 100 prints per second with a 10 s life would be 1,000 live sprites, 4 times Quake 3's pool of 256 marks [V, S83; I, note 13]. The 10 s comes from emulator data and was not checked against CipSoft's server [U, note 10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sink-->
+<figure class="fig" data-demo="sink" id="fig-sink">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The sink clip on a 24x32 sprite, 2 px at a time</h4></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="80" aria-label="The same character seen from the front, the side and the back stands in snow. As the sink grows the sprite drops and its boots and legs are cut off at the foot line. A magnified view on the right shows the legs of the front view"></canvas><div class="hud" data-hud></div></div>
+  <div class="s3-sl">
+    <label for="s3-sink">Sink</label><output data-o="sink" for="s3-sink"></output>
+    <input id="s3-sink" type="range" data-k="sink" min="0" max="12" step="2" value="4" list="s3-sink-marks">
+    <datalist id="s3-sink-marks"><option value="6"></option><option value="12"></option></datalist>
+    <div class="s3-marks" aria-hidden="true"><i style="left:50%"></i><span style="left:50%" class="end">6 px, weather snow</span><i style="left:100%"></i><span style="left:100%" class="end">12 px, authored deep snow</span></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="rim" checked> Front rim, 3 rows</label>
+    <label><input type="checkbox" data-k="walk"> Walk in place</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The sprite drops by the sink and the rows that fall below the foot line are discarded, so the visible sprite still ends on the old foot line and the head is lower [I, notes 11, 13; V, S3]. The legs of this sprite are 6 rows, 3 of trousers and 3 of boots, inside the 6 to 10 px that Slynyrd's head proportions leave at this size [V, S94; I, note 11]. At 6 px the legs are gone. That is the cap for snow that builds up by weather. 12 px is the cap for authored deep-snow terrain, the first of Platinum's three tiers of 12, 14 and 16 units on a 16-unit tile [V, S40, S41]. Untick the rim and the cut reads as a clipped sprite. The rim is 3 rows of snow drawn over the cut, after the character. The Sandbox reaches the cap at 120 depth units and steps in 2 px. Smooth the sampled depth over about 100 ms so the sink does not flicker. Twenty such sprites with y-sort, clip, shadow and rim cost 0.022 ms on the desktop median and 0.123 ms under the 6x throttle [V, S4]. Those are browser numbers on one machine.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG trench-->
+<figure class="fig" data-demo="trench" id="fig-trench">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Boots in shallow snow, a ploughed trench from 4 px of sink</h4><span class="illu">Depth ramp, path and refill speed are illustrative</span></div>
+  <div class="s3-col">
+    <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A character walks a zigzag from thin snow on the left, where grass still shows, to deep snow on the right. On the left it leaves boot prints. On the right it sinks and ploughs a continuous groove"></canvas><div class="hud" data-hud></div></div>
+    <div class="s3-scale" aria-hidden="true"><span style="flex:32">sink 0</span><span style="flex:54">2 px, boots</span><span style="flex:54" class="t">4 px, trench</span><span style="flex:20" class="t">6 px</span></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="b" role="group" aria-label="Brush"><button type="button" class="on" data-v="round">Round brush, radius 5 px</button><button type="button" data-v="bar">Axis-aligned bar, 10 px wide</button></div>
+    <label><input type="checkbox" data-k="cells"> Show the packed cells</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Depth rises from left to right. The walker stamps boots until the sink reaches 4 px. From there the boots are hidden, so it stops stamping feet and ploughs [I, lead]. The Sandbox's plough is a round brush of radius 5 px, stamped every 2 px of travel. It lowers the snow to a floor at 40% of the depth around the walker and spreads the spill over 10 deposits beside the two walls. It marks the cells packed 160, where a boot print marks 255, so the trench draws with the lighter channel floor <code>#a6b1c0</code> and not as a print hole. The walker reads the depth at 4 points 6 to 9 px to its sides and skips packed cells, so its own trench does not flip it back to boots [V, S3]. Note 13 had proposed a bar 10 px wide. Switch to the bar on this zigzag. The groove narrows from 10 px to about 7 px on the diagonals and its corners come out square, because the bar stays aligned to the grid while the walker does not. Both brushes write whole 2 px cells, so the edges of both step by one cell, and the round brush keeps its width in every direction. Tick "Show the packed cells" to see the 2 px cells each stamp wrote. A trench piece costs 0.28 µs at 1:2 on the desktop median and 1.66 µs under the 6x throttle [V, S4]. Where the walker switches from prints to trench the Sandbox shows a short churned patch, and this figure does too. No 2D game with a single-walker trench was found, so the 10 px width has no reference [U, note 16]. The trench fades at the Sandbox's 13 packed units per second. The refill is faster here, and this figure also caps the depth the walker reads at the ramp, so its own spill does not raise it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stride-->
+<figure class="fig" data-demo="stride" id="fig-stride">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One walk cycle per tile, and what happens when the stride does not fit</h4><span class="illu">Fade speed is illustrative</span></div>
+  <div class="s3-col">
+    <div class="stage" style="max-width:642px"><canvas width="160" height="72" aria-label="A character walks to the right across a row of 32 pixel tiles and leaves boot prints. With the matched stride the prints land on the same two spots in every tile. With the mismatched stride they land 40 pixels apart and drift across the tile seams"></canvas><div class="hud" data-hud></div></div>
+    <div class="s3-tl" data-tl aria-hidden="true"><span>frame 0<b>left print at p = 0</b></span><span>frame 1</span><span>frame 2<b>right print at p = 0.5</b></span><span>frame 3</span><i data-cur></i></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Tile time T <input type="range" data-k="t" min="250" max="600" step="50" value="400"><output data-o="t"></output></label>
+    <div class="seg" data-seg="m" role="group" aria-label="Stride"><button type="button" class="on" data-v="fit">One cycle per tile</button><button type="button" data-v="mv">1.25 tiles per step</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The bar under the scene is one tile of travel, split into the four frames. The marker is the progress <code>p</code> through the current step. The frame is <code>min(int(p * 4), 3)</code> and the foot is <code>floor(p * 2)</code>, so frame, print and tile grid all come from one number and cannot drift apart [I, note 13]. The left boot stamps at <code>p = 0</code> and the right at <code>p = 0.5</code>. The figure stamps at the feet, as the Sandbox does, so one print of each pair starts on the tile seam. Note 13 proposes a 4 px lead that would put them 4 px and 20 px into the tile [I, note 13; V, S3]. Frame time is T / 4. The slider covers Tibia's range of 250 to 600 ms per step in 50 ms steps [V, S12]. Every client turns the same move message into the same two prints, for zero bytes on the network. Now pick "1.25 tiles per step", the ratio RPG Maker MV has with its 48 px sprite [I, note 13]. The body travels 40 px per step while the drawn legs still span 16 px, so the planted boot skates, and the prints land 40 px apart and wander over the seams. Prints fade about 4 times faster here than in the Sandbox.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG smallcues-->
+<figure class="fig" data-demo="smallcues" id="fig-smallcues">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Shadow, breath, kicked snow and snow on the hat</h4><span class="illu">Scene and walk loop are illustrative</span></div>
+  <div class="stage" style="max-width:626px"><canvas width="104" height="64" aria-label="One character walks two tiles from shallow snow on the left into deep snow on the right, kicking up small specks once its boots are hidden, then stands still facing the viewer. A puff of breath appears in front of the face every few seconds, and after a while a thin white line of snow settles on the hat and the shoulders, then a second row on both"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="sh" checked> Shadow, 14x5 px <span class="s3-tag ship">shipped</span></label>
+    <label><input type="checkbox" data-k="br" checked> Breath <span class="s3-tag ship">shipped</span></label>
+    <label><input type="checkbox" data-k="ki" checked> Kicked snow <span class="s3-tag ours">this study</span></label>
+    <label><input type="checkbox" data-k="hs" checked> Snow on hat and shoulders <span class="s3-tag ours">this study</span></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Temperature <input type="range" data-k="temp" min="-10" max="5" step="1" value="-4"><output data-o="temp"></output></label>
+    <button type="button" class="btn" data-b="walk">Walk now</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Four small cues on one character. The snow is 38 units deep on the left, where the boots show, and 90 on the right, where the sink is 4 px. The shadow is a 14x5 px ellipse that switches the snow under it to the cold shadow shade, with no black blend. Emerald centres its shadow 4 px above the sprite's bottom edge [V, S33; I, notes 11, 13]. Breath has shipped twice. RimWorld throws puffs under 0 °C while a pawn stands, and Don't Starve Together emits one when the idle animation ends, at -5 °C or colder [V, S54, S64, S65]. The puff here is this study's version. It grows from 2x2 to 5x4 px over 450 ms, every 3 to 4 s when idle, below 1 °C as in the Sandbox [I, note 13; V, S3]. Kicked snow is 2 to 3 specks per contact, only at a sink of 4 px or more, living 250 to 400 ms [I, note 13]. Snow on the hat and shoulders has no shipped 2D precedent that the study found. The proposal is a 2 px cap on the hat and 2x2 px on each shoulder [I, notes 11, 13]. The figure draws what the Sandbox draws, a 1 px line of snow on hat and shoulders at 0.3 of a 9 s idle timer and a second row on both at 0.65, and the first step shakes it off [V, S3]. The cost of these cues was not measured [V, S4].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crowd-->
+<figure class="fig" data-demo="crowd" id="fig-crowd">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A crowd on one field, and what to drop first</h4><span class="illu">View size, routes and the live counters are this figure's</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="320" height="180" aria-label="A snow field of 10 by 5 and a half tiles. Up to one hundred characters walk from tile to tile and trample the snow into a packed floor of boot prints. One character wears a red hat"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Walkers <input type="range" data-k="n" min="0" max="100" step="5" value="20"><output data-o="n"></output></label>
+    <label class="rng">Drop level <input type="range" data-k="drop" min="0" max="4" step="1" value="0"><output data-o="drop"></output></label>
+  </div>
+  <ol class="s3-drop" data-drop><li>Kicked specks for other players</li><li>Breath for players more than 8 tiles away</li><li>Rim deposits around each print</li><li>Per-foot prints for other players</li></ol>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each walker crosses a tile in 400 ms and stamps two boots per tile. Twenty players make 100 boot stamps per second, about 2,500 byte writes, and 100 players about 12,500 [I, note 13]. The readout counts both live, next to the time this browser spends stamping. In the benchmark the whole frame with 23 actors against 3 moved by less than the noise, 1.36 against 1.36 ms on the desktop median for the 1:2 preset [V, S4]. So stamps are not what to cap. The drop order removes the things that are drawn per player, top to bottom [I, note 13]. The red hat is the local player, whose own prints and sink are never dropped. The full 640x360 screen holds 225 tiles, so at 2 prints each it shows at most 450 prints however many players walk. This view is 10 by 5.6 tiles, a quarter of that screen, so 100 walkers stand 4 times denser here. Do not plan on dirty-chunk uploads to pay for a crowd, because Godot cannot patch a texture (F2).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG groundcost-->
+<figure class="fig" data-demo="groundcost" id="fig-groundcost">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The ground pass at 640x360, eight ways</h4><span class="illu">Browser numbers on one machine, not Godot</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="col" role="group" aria-label="Column"><button type="button" class="on" data-v="0">Desktop median</button><button type="button" data-v="1">6x throttle median</button></div>
+  </div>
+  <svg class="chart s3-chart" viewBox="0 0 600 300" role="img" aria-label="Log-scale bars of the measured ground render costs from section 6a against the 16.7 ms frame"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="s3-live">
+    <div class="stage" style="max-width:322px"><canvas width="160" height="90" aria-label="A patch of grass where snow grows and shrinks in soft-edged clusters. The picture is a crop of a 640 by 360 buffer that this page upsamples from a 320 by 180 field on every frame"></canvas></div>
+    <p class="s3-ms" data-ms aria-live="off"></p>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a row of §6a, measured on an Apple M4 Pro in Chromium 153 [V, S4]. "Desktop median" is the report's GPU run column. "6x throttle median" is the same test under the DevTools CPU throttle, which is a low-end proxy and not a phone. These are browser JavaScript and WebGL2 numbers on one machine. They are not Godot numbers. The VFX #1 loop, moved to 640x360 as written, takes 1.44 ms on the desktop and 8.85 ms throttled, 53% of a 16.7 ms frame. Bilinear sampling with a weight table costs 3 times nearest. Hard-coding the 9/3/3/1 weights of a 1:2 field brings the upsample from 0.594 to 0.135 ms. The full 32 px renderer still costs 0.945 ms, and the same work in a WebGL2 fragment shader costs 0.012 ms of wall time. The throttle does not slow the GPU process, so the shader has no throttled figure. The small canvas is a crop of a 640x360 buffer that this page fills with the fixed 9/3/3/1 loop on every frame. Its time is measured in your browser with <code>performance.now()</code> and is not part of the report.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG nogpu-->
+<figure class="fig" data-demo="nogpu" id="fig-nogpu">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Without a GPU the big pass survives and the small quads do not</h4><span class="illu">Browser numbers on one machine. The slider row is arithmetic</span></div>
+  <svg class="chart s3-chart" viewBox="0 0 600 300" role="img" aria-label="Log-scale bars comparing the ground shader and the flake quads on a GPU and on the SwiftShader software renderer, against the 16.7 ms frame"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="ctl">
+    <label class="rng">Flake quads <input type="range" data-k="q" min="0" max="1010" step="10" value="580"><output data-o="q"></output></label>
+    <div class="seg" data-seg="pre" role="group" aria-label="Quad count presets"><button type="button" data-v="60">60 near only</button><button type="button" class="on" data-v="580">580, the bench</button><button type="button" data-v="1010">1,010, the Sandbox</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>SwiftShader is a software renderer, a CPU that pretends to be a GPU. It stands for a browser that fell back to drawing WebGL on the CPU. It is not a phone. On it the full ground shader costs 0.69 ms at 640x360, still below the 0.945 ms of the JavaScript renderer, and 6.1 ms at 1920x1080 [V, S4]. Small quads are what break. An instanced flake quad costs about 13 µs, so 580 of them cost about 8 ms and 46 actor quads about 1 ms. The fix is to draw the far flakes inside the ground shader, which adds 0.073 ms, and keep only the near flakes as sprites. The whole WebGL2 frame on SwiftShader then drops from 9.7 to 10.3 ms down to 2.8 to 3.3 ms, about a fifth of the frame budget. The darker bars add the 6x CPU throttle. The throttle slows JavaScript and not the rasteriser, so that column is a floor. The slider multiplies a quad count by 13 µs. That row is arithmetic on the report's figure, not a measurement. No real low-end laptop was measured.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The whole frame at 640x360 against the 16.7 ms line</h4><span class="illu">Browser numbers on one machine, not Godot</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="v" role="group" aria-label="Columns"><button type="button" class="on" data-v="cpu">Desktop and 6x throttle</button><button type="button" data-v="sw">No GPU, SwiftShader + 6x throttle</button></div>
+  </div>
+  <svg class="chart s3-chart" viewBox="0 0 600 300" role="img" aria-label="Log-scale bars of the whole-frame cost of the VFX 1 engine and of three presets at 640 by 360, on the desktop, under the 6x CPU throttle and on a software renderer, against the 16.7 ms frame"></svg>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each row is one line of the whole-frame table in §6a [V, S4]. One frame is one snowing tick, movement and prints for 23 actors, flakes, the ground render, the actors, the night palette pass and the present. The light bar is the "GPU run, median" column, a desktop. The dark bar is the "6x throttle, median" column, the low-end case. The percentage is the share of a 16.7 ms frame. The naive 1:1 port takes 15.3 ms throttled, 92% of the frame, with a p95 of 18.3 ms. A 1:2 field with the CPU renderer takes 8.45 ms. Moving the ground render into a WebGL2 shader brings the frame to 0.542 ms, because the ground render was the frame. The second view is the same six rows on SwiftShader with the throttle on top, where 580 flake quads push the shader preset back to 11.0 ms. The throttle is a proxy made with <code>Emulation.setCPUThrottlingRate</code>. It measured 6.1x at the median and it does not slow the GPU process. All of this is browser JavaScript and WebGL2 on one Apple M4 Pro. These are not Godot numbers, and no measured <code>ImageTexture.update()</code> time exists.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG convert-->
+<figure class="fig" data-demo="convert" id="fig-convert">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The VFX #1 numbers at another tile size</h4><span class="illu">The 16 and 48 px columns are arithmetic, not in the report</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="ts" role="group" aria-label="Tile size"><button type="button" data-v="8">8 px tiles</button><button type="button" data-v="16">16 px</button><button type="button" class="on" data-v="32">32 px</button><button type="button" data-v="48">48 px</button></div>
+  </div>
+  <div class="stage" style="max-width:642px;margin-top:8px"><canvas width="160" height="56" aria-label="A strip of snow with a tile grid at the picked tile size. A grey character shape, a row of footprint marks one half tile apart, a bar for the 3.5 tile upwind ray and a square for the flake size all change with the tile size"></canvas></div>
+  <div class="legend-mini s3-fol" data-leg></div>
+  <div class="tbl s3-conv"><table><thead><tr><th>Value</th><th>VFX #1, 8 px tiles</th><th>In tiles</th><th data-th>At 32 px tiles</th><th>Follows</th></tr></thead><tbody></tbody></table></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>This is the §6b table with a tile-size picker. The 8 px column is VFX #1 as shipped [V, S2] and the 32 px column is the report's, word for word [I]. For 16 and 48 px the figure multiplies the "in tiles" value by the tile size where the row follows the tile, repeats the value where it is constant or follows the pixel, and leaves the cell empty where the report gives no rule. Rows that follow the character stay empty, because a sprite does not grow with the tile. The 24x32 character is about 3 times the 7x12 one, not 4. The strip shows the same 160 px of ground at each size, with the stride marks half a tile apart, the 3.5-tile upwind ray and a flake of 0.1875 tile, which is the size the shipped engines of §6d keep. The grey character box is 7x12 px at 8 px tiles and 24x32 px at 32. At 16 and 48 px it is the 16x32 and 48x48 px frame that §6c lists for games at those sizes. Two traps hide in the table. Equal picks per 1,000 cells keep deposit and melt rates equal, but not drift speed. And VFX #1's near flakes fell 5.25 tiles per second, which is 168 px/s at 32 px, far past the 3.7 tiles per second that already reads as sleet in RPG Maker MV [I, note 14].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tilesizes-->
+<figure class="fig" data-demo="tilesizes" id="fig-tilesizes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tile and character sizes of the §6c games, to scale</h4><span class="illu">Grey shapes stand for frame sizes, not game art</span></div>
+  <div class="s3-games" data-games role="group" aria-label="Games with a tile size in the table"></div>
+  <p class="s3-sub">No tile size in the table</p>
+  <div class="s3-chips" data-chips role="group" aria-label="Games without a tile size in the table"></div>
+  <dl class="s3-card" data-card aria-live="polite"></dl>
+  <figcaption>Each box is drawn at one screen pixel per art pixel, or a whole multiple of it. The square is the tile and the grey shape is the character frame the table gives, standing on it. Games are sorted by tile size. Tibia, Dwarf Fortress, Factorio at scale 1 and RPG Maker VX Ace share Asterion's 32 px tile, and the outlined box is Asterion's own 32 px tile with the Sandbox's 24x32 character [S3]. Where the table has no character size the box shows the tile alone. Click a game to read its row. Only sourced cells are filled, and an empty cell stays empty [V, sources in the card]. The two cells marked [K] come from memory. Platinum's sizes are given in units, not pixels. Only Noita stores ground snow per pixel, and Noita is a falling-sand game. Everywhere else ground snow is tiles, and run-time snow is one number per tile at most.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sortable scorecard with a radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar, and the oldest pick drops off. Ratings are author judgement, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. Sort by Speed and the column does separate here, unlike in the fog, grass and magic studies. The 1:1 field (A2) scores a 2 because it fills 87 to 93% of the throttled frame, and the no-GPU case (F5) a 3 [V, S4]. Sort by Sum and the top rows all belong to characters. Boot prints (D1) lead at 24 and the trench (D4) follows at 23. The radar starts on D1 against Bayer dusting (B1), the cheapest ground pass and the worst-looking one at this size, and the ground shader (F1), a plumbing row that nobody sees and that decides whether the rest fits a phone [I].</figcaption>
+</figure>
+<!--/FIG-->

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snow 32 Sandbox: the snow engine at 32 px tiles and 24x32 characters</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a30;--line:#24304f;--ice:#cfe6ff;--ice2:#8fb4e8;--warm:#ffb86b;--txt:#e3eaf7;--mute:#97a4c2;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--ice)}
+header{max-width:1320px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--ice);letter-spacing:-.5px}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1320px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair;touch-action:none}
+.hud{position:static;font:11.5px/1.5 var(--mono);background:#080c1a;padding:6px 9px;border-top:1px solid var(--line);color:#eef3ff;overflow-wrap:anywhere}
+.hud b{color:var(--ice);font-weight:600}.hud .off{color:#7f8aa6}.hud .warn{color:#ff9a7a}
+.bar{display:inline-block;width:80px;height:7px;background:#263150;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#86d49a}.bar i.hot2{background:#ff8a6a}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0}
+.group h3{margin:0 0 8px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btns+.btns{margin-top:6px}
+button{font:500 13px system-ui,sans-serif;background:#1b2542;color:var(--txt);border:1px solid #2d3b63;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--ice2)}button.on{background:var(--ice);color:#0b1020;border-color:var(--ice)}
+button kbd{font:11px var(--mono);opacity:.65;margin-right:4px}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:8px}
+label span{min-width:3.5em;text-align:right;font:12px var(--mono)}
+input[type=range]{flex:1;min-width:0;accent-color:#9cc8ff}
+.note{font-size:12.5px;color:var(--warm);margin:7px 0 0;min-height:1.2em}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h4{margin:0 0 6px;font-family:var(--mono);font-size:16px;color:var(--ice)}
+.card p{margin:0;color:#cfd8ea;font-size:14px}
+code{font:13px var(--mono);color:var(--warm);overflow-wrap:anywhere}
+.keys{color:var(--mute);font-size:13px;margin:8px 0 0}
+@media (max-width:640px){.hud{font-size:10.5px;padding:6px 8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Snow 32 Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="vfx-snow-32px-topdown-pixel.html">snow at 32 px study</a> · VFX series #11 · November 2026 · <a href="vfx-snow-sandbox.html">the same engine at 8 px tiles</a> · <a href="index.html">All artifacts</a></div>
+</header>
+<main>
+  <div class="stage"><canvas id="c" width="640" height="360" aria-label="Snow sandbox: a winter village corner with 32 px tiles and 24 by 32 px characters"></canvas>
+    <div class="hud" id="hud">loading</div></div>
+  <p class="keys">Walk with the arrows or WASD, or tap the ground. Switch the tool to Shovel or Add snow and drag on the scene. Keys: <b>V</b> next view, <b>F</b> next field resolution, <b>T</b> next threshold style, <b>Space</b> pause. The canvas is 640 by 360 px, which is 20 by 11.25 tiles of 32 px. The snow engine is the one from VFX #1. Only the scale changed.</p>
+  <div class="controls">
+    <div class="group"><h3>Weather</h3>
+      <div class="btns" id="wbtns"><button data-w="heavy">Heavy snow</button><button data-w="light">Light snow</button><button data-w="overcast">Overcast</button><button data-w="sunny">Sunny</button><button id="auto" class="on">Auto cycle</button></div>
+      <label>Wind <input id="wind" type="range" min="-100" max="100" value="-40"><span id="windv">-0.4</span></label>
+    </div>
+    <div class="group"><h3>Time and tool</h3>
+      <label style="margin-top:0">Speed <input id="speed" type="range" min="1" max="16" value="2"><span id="speedv">2x</span></label>
+      <div class="btns" style="margin-top:8px"><button id="morning">Jump to 08:00</button><button id="dusk">Jump to 18:30</button><button id="pause">Pause</button></div>
+      <div class="btns" id="tbtns"><button data-t="walk" class="on">Walk</button><button data-t="shovel">Shovel</button><button data-t="snow">Add snow</button></div>
+      <div class="btns"><button id="reset">Clear all snow</button><button id="fill">Instant deep snow</button></div>
+    </div>
+    <div class="group"><h3>Scale: snow field</h3>
+      <div class="btns" id="fbtns"><button data-f="1"><kbd>F</kbd>1:1</button><button data-f="2" class="on">1:2</button><button data-f="4">1:4</button><button data-f="split">Split 1:4 + trails 1:2</button></div>
+      <div class="btns" id="sbtns"><button data-s="near">Nearest</button><button data-s="bilin" class="on">Bilinear</button></div>
+      <p class="note" id="fnote"></p>
+    </div>
+    <div class="group"><h3>Scale: ground look</h3>
+      <div class="btns" id="thbtns"><button data-th="0"><kbd>T</kbd>Bayer 4</button><button data-th="1">Bayer 8</button><button data-th="2" class="on">Art tile</button></div>
+      <div class="btns" id="shbtns"><button data-sh="flat">Flat shading</button><button data-sh="band" class="on">Banded shading</button></div>
+      <div class="btns" id="flbtns"><button data-fl="1">Flakes 1 px</button><button data-fl="mixed" class="on">Mixed</button><button data-fl="large">Large</button></div>
+    </div>
+    <div class="group"><h3>Scale: characters</h3>
+      <div class="btns" id="prbtns"><button data-pr="boot" class="on">Boot prints</button><button data-pr="dot">2x2 dots</button><button data-pr="tile">Tibia tile swap</button></div>
+      <div class="btns" id="skbtns"><button data-sk="0">No sinking</button><button data-sk="6" class="on">Sink 6 px</button><button data-sk="12">Sink 12 px</button></div>
+      <label>Crowd <input id="crowd" type="range" min="0" max="20" value="3"><span id="crowdv">3</span></label>
+      <div class="btns" style="margin-top:8px"><button id="tsteps">Tile steps</button></div>
+    </div>
+    <div class="group"><h3>X-ray view</h3>
+      <div class="btns" id="vbtns"><button data-v="normal" class="on"><kbd>V</kbd>Normal</button><button data-v="depth">Depth</button><button data-v="exposure">Exposure</button><button data-v="shadow">Sun shadow</button><button data-v="packed">Packed</button><button data-v="wet">Wet</button><button data-v="bands">Tile bands</button><button data-v="grid">Field grid</button><button data-v="cost">Cost view</button></div>
+      <div class="btns" style="margin-top:10px"><button data-demo="showcase">Showcase</button><button data-demo="vfx1">VFX #1 settings</button><button data-demo="art32">32 px defaults</button></div>
+    </div>
+  </div>
+  <div class="explain">
+    <div class="card"><h4>1 · Server weather and tile bands</h4><p>The server owns the weather: intensity, temperature, wind bucket, sun, time and a seed. That is 8 bytes per change. It also keeps one snow band per 32 px tile, 0 to 3, taken from the mean depth of the tile on a slow clock. 240 tiles at 2 bits is 60 bytes for the whole screen. The band sets walking speed: 100%, 85%, 70% and 50%. Everything else on this page is drawn by the client. <b>Tile bands</b> view shows what the server knows.</p></div>
+    <div class="card"><h4>2 · Baked maps at field resolution</h4><p>Exposure and sun shadow are baked bytes, one per field cell. Exposure is shelter under eaves and canopies, times a look upwind for 3.5 tiles. A tall object puts the cell in its lee. Just past the lee is a 12% drift band. The bake is one sweep along each row in the wind direction that carries the last obstacle and its distance, so it visits each cell once. It runs again only when the wind crosses a bucket. All lengths are in tiles, so the reach is 28 cells at 1:4 and 112 at 1:1. The HUD shows the last bake time.</p></div>
+    <div class="card"><h4>3 · Snow field</h4><p>Three bytes per cell: depth (cap 200), packed and wet. The field can be 640 by 360 (1:1), 320 by 180 (1:2, the VFX #1 cell count) or 160 by 90 (1:4). Each tick picks random cells: 15.6 per 1,000 cells for snowfall, 69.4 for the sandpile pass, 24.3 for wind creep, 26 for melt and 27.8 for evaporation. The rates per cell are the same at every resolution, so a tile fills at the same speed. Wind creep takes twice the picks at 1:1 and half at 1:4, so a drift moves the same pixels per second. The slope limit is 1.5 depth units per art pixel. <b>Split</b> keeps depth and wet at 1:4 and only the packed trail field at 1:2.</p></div>
+    <div class="card"><h4>4 · Ground render at art resolution</h4><p>Each of the 230,400 art pixels samples the field, compares it with a threshold and picks a palette index. Bilinear sampling at 1:2 uses fixed weights: 9/16 of the pixel's own cell and 3/16, 3/16 and 1/16 of the three nearest. At 1:4 the weights come from a 4-entry table per axis. Where two classes meet (ground, roof, canopy, rock top, fence top), 3% of the ground pixels at 1:2, a baked weight table mixes only cells of the pixel's own class, so roof snow never bleeds onto the ground. <b>Bayer 4</b> and <b>Bayer 8</b> are the old ordered dither. The <b>art tile</b> is a 128 px tileable threshold map with about 6 seed blobs per 32 px tile, stored in 2 by 2 px blocks, so snow arrives as patches that grow and merge and never as single pixels. From 4 units of depth the bare ground takes a frost tint. The dither swing is scaled by 2 over the field ratio, so an edge is as wide at 1:4 as at 1:1. Banded shading draws a 1 px light rim on north and west edges and a shadow line on south and east edges, 2 px on the south side once the snow is 14 units over its threshold. The body is one colour at any time of day. Settled snow over 34 units shows 1 or 2 short drawn drift lines per tile, each a 1 px highlight with a 1 px shadow under it. Over 62 units a longer arc of 12 to 22 px shows on about 4 tiles in 10. A slope of more than 32 units across 6 px, with no packed snow beside it, gets a lit or a shaded side. That is how an old trench or a shovelled edge still reads after its packed mark is gone.</p></div>
+    <div class="card"><h4>5 · Objects and snow caps</h4><p>Roofs, pine tiers, rock tops and fence tops are field classes with their own cells. Each object carries a drawn threshold map that says in which order snow covers it. The roof fills from the ridge down in scallops and ends in a lip that hangs 2 px over the eave. A covered roof keeps a 2 px highlight along the ridge and a shaded north slope. Each pine tier gets a cap that follows its upper edge and leaves the dark underside free. Rails get a line and posts get a cap. The object art is static and cached. Only the 23,877 cap pixels are tested each frame, about 10% of the screen.</p></div>
+    <div class="card"><h4>6 · Characters at 24 by 32</h4><p>The walk cycle has 4 frames per tile. Frames 0 and 2 are the steps. On a step the planted boot is drawn one row taller, the swinging boot lifts 2 px, the opposite arm swings 2 px and the body leans 1 px over the planted foot. Frames 1 and 3 raise the body 1 px. Each step stamps a boot print of 4 by 6 px, or 6 by 4 px when walking sideways. That is 2 by 3 cells of the 1:2 field. Left and right prints sit in two rows 6 px apart, so 2 px of snow stay between them, and a print lands every 16 px. A print keeps 30% of the depth, pushes the rest into a rim and sets the packed field to 255. It is drawn as a hole: a dark line on its north and west inner edge, a floor two ramp steps under the snow body, and a 1 px highlight on the far rim. Snowfall fades the packed field by 13 units per second, so a print turns light after 4 s and is gone after 13 s, and a trail fades from its old end. Sinking clips the legs in 2 px steps. Snow 120 units deep sinks a character by the whole cap you choose, so the 6 px cap gives 2 px per 40 units. From 4 px of sink the boots are hidden, so the character ploughs a channel with a round brush 10 px across and keeps 40% of the depth in it. The spill goes to both sides. The channel has a 2 px shadow on its sun-side wall and a highlight on the far rim. A snow rim is drawn in front of the legs. Snow settles on hats and shoulders while a character stands still. <b>2x2 dots</b> is the VFX #1 stamp at its old size. <b>Tibia tile swap</b> changes no field at all. The tile a player leaves shows drawn prints for 10 s, and the fox leaves none.</p></div>
+    <div class="card"><h4>7 · Flakes</h4><p>Three layers, all locked to the world and drawn on whole pixels. The near layer has real height. Its flakes are 3 px plus shapes, one in ten is 4 px, in pure white. They fall 2 tiles per second, cast a shadow dot and add depth where they land. The mid and far layers are hashed positions with no state, 2 px and 1 px, slower and with wind sway. Their colours are two steps of a blue-grey ramp. At heavy snow the three layers hold 1,010 flakes and cover about 0.9% of the screen, close to what RPG Maker and the VFX #1 sandbox draw. The HUD shows the live count. <b>1 px</b> keeps the old flake size and reads thin at this scale. <b>Large</b> adds 6 px flakes to the near layer.</p></div>
+    <div class="card"><h4>8 · Light and palette</h4><p>The world is drawn into a palette index buffer. Day and night retint the palette once per frame, not the 230,400 pixels. Each colour has six versions: plain, sun shadow, wet, wet in shadow, frost and frost in shadow. The lamp and the two windows pick a warm palette where a baked light map passes a threshold, in two steps with a narrow dither band between them. Shadows on snow switch to a cold shade. Nothing is blended with black.</p></div>
+    <div class="card"><h4>What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed. The ground render is the fixed cost. It touches every art pixel at any field size. The field size sets the sim cost and the upload size. Godot's Compatibility renderer uploads a whole texture on every change, so the upload per tick is the full field. That is 230,400 bytes per channel at 1:1 and 14,400 at 1:4. The HUD also shows what a sub-rectangle update of dirty 32 px chunks would move, if Godot had one. <b>Cost view</b> counts how many times each pixel was written this frame. <b>Field grid</b> draws the field cells under the art.</p></div>
+    <div class="card"><h4>What changed from VFX #1</h4><p>The canvas has 4 times the pixels and a tile has 16 times. A 1 px flake, a 2 by 2 px footprint and a Bayer dusting were sized for 8 px tiles. Press <b>VFX #1 settings</b> to see them at this scale, then <b>32 px defaults</b>. The depth field did not have to grow. At 1:2 with bilinear sampling it draws the same edges as 1:1. Boot prints are the one thing that needs 1:2. At 1:4 a cell is 4 px wide, so a 4 by 6 px print covers its cells unevenly. One row keeps blunt marks, the other shrinks to slivers, and the pair stops reading as two feet. <b>Split</b> keeps the prints by giving only the packed field the 1:2 grid.</p></div>
+  </div>
+  <p class="keys" style="margin-top:16px">Full research: <a href="vfx-snow-32px-topdown-pixel.html">Top-down pixel snow at 32 px</a> · the first snow study: <a href="vfx-snow-topdown-pixel.html">Top-down pixel snow</a> and its <a href="vfx-snow-sandbox.html">sandbox at 8 px tiles</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),W=640,H=360,NP=W*H,TW=20,TH=12,NT=TW*TH,now=()=>performance.now();
+const cv=$('c'),ctx=cv.getContext('2d'),img=ctx.createImageData(W,H),out32=new Uint32Array(img.data.buffer);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+// ---------- numbers. Lengths are in art pixels (32 per tile), rates in picks per 1,000 field cells per tick ----------
+const PRM={
+  rate:{dep:15.6,relax:69.4,wind:24.3,melt:26,evap:27.8,evapCold:5.2}, // VFX #1: 900, 4000, 1400, 1500, 1600 and 300 picks on 57,600 cells
+  repose:1.5,          // slope limit in depth units per art pixel (VFX #1: 3 per cell on a field with 2 px cells at this scale)
+  maxD:200,soft:110,   // depth cap and the depth an open cell reaches from snowfall
+  stepPx:8,            // one walk frame per 8 px: 4 frames per tile, a step every 16 px
+  speed:80,            // 2.5 tiles per second: one tile per 400 ms
+  slow:[1,.85,.7,.5],  // walking speed for server tile bands 0 to 3
+  bandAt:[10,40,80],   // mean depth where a tile enters band 1, 2 and 3
+  keep:.3,             // a boot keeps 30% of the depth
+  packFade:.22,        // packed units lost per tick at heavy snow: 13 per second. A print (255) turns light under 200 after 4 s and is gone under 84 after 13 s
+  sinkFull:120,        // the depth that sinks a character by the whole cap. Cap 6 px: 2 px per 40 units. Cap 12 px: 2 px per 20 units
+  printW:4,printL:6,   // a boot print: 2x3 cells of the 1:2 field. Left and right rows are 6 px apart, so 2 px of snow stay between them
+  trenchSink:4,trenchKeep:.4,trenchR:5,trenchEvery:2, // the plough is a round brush 10 px across
+  frost:4,             // depth where bare ground takes the frost tint
+  flakes:{far:560,mid:300,near:150}, // at heavy snow: about 2,300 flake pixels, 1% of the screen
+  fall:{far:26,mid:42,near:64},      // px per second: 0.8, 1.3 and 2 tiles per second
+  swapS:10,            // Tibia tile swap: seconds a stepped tile keeps its prints
+  bytes:{weather:8,band:2}};
+
+// ---------- RNG, hash, noise ----------
+const RS=new Int32Array([1234567]); // the state lives in a typed array: a script-level let made the sim tick 3 times slower in some JIT states
+const rnd=()=>{let r=RS[0];r^=r<<13;r^=r>>>17;r^=r<<5;RS[0]=r;return (r>>>0)/4294967296;};
+const ri=n=>(rnd()*n)|0;
+const hash2=(x,y)=>{let h=Math.imul(Math.imul(x|0,374761393)+Math.imul(y|0,668265263)|0,1274126177);h^=h>>>13;h=Math.imul(h,1274126177);return ((h^(h>>>16))>>>0)/4294967296;};
+const vnoise=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);
+  const a=hash2(xi,yi),b=hash2(xi+1,yi),c=hash2(xi,yi+1),d=hash2(xi+1,yi+1);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+const BAYER=new Uint8Array([0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5]);
+const bay4=(x,y)=>BAYER[(y&3)*4+(x&3)];
+const bay8=(x,y)=>4*BAYER[(y&3)*4+(x&3)]+[0,2,3,1][((y>>2)&1)*2+((x>>2)&1)];
+
+// ---------- palette: base colours, six versions of each ----------
+const BASE=['#000000'];const C=h=>{BASE.push(h);return BASE.length-1;};
+const OUTL=C('#1e1a2e'),
+GR_X=C('#22382f'),GR_D=C('#2d4b3d'),GR_A=C('#3a5d47'),GR_B=C('#4a704d'),GR_T=C('#6b8f57'),FLW=C('#e3d6a2'),
+DIRT_D=C('#4b382f'),DIRT_A=C('#6b5343'),DIRT_B=C('#7e6650'),DIRT_L=C('#987e62'),
+ICE_D=C('#4f6f9e'),ICE_A=C('#7ea3c8'),ICE_B=C('#9dbfdc'),ICE_C=C('#c6dcec'),
+// snow ramp: warm highlight V 95%, cool body V 86%, light shadow V 72%, blue-violet deep shadow V 59%. Saturation stays under 20%. White is kept for sparkles and near flakes
+SN_HI=C('#f2f1ec'),SN_BASE=C('#cbd3dc'),SN_MID=C('#9eabb8'),SN_SH=C('#7d7a96'),SN_DEEP=C('#5a5674'),SN_PACK=C('#a6b1c0'),SN_PSH=C('#7b8199'),SN_PDK=C('#575b76'),SPARK=C('#ffffff'),
+ROOF_L=C('#b65e4a'),ROOF_A=C('#934242'),ROOF_B=C('#71303a'),ROOF_D=C('#4c2031'),
+WALL_L=C('#b48d60'),WALL_A=C('#93704c'),WALL_B=C('#76573d'),WALL_D=C('#513b2d'),DOOR_A=C('#6b4631'),
+WIN=C('#7c9cbc'),WIN_D=C('#566f96'),
+ROCK_L=C('#abafba'),ROCK_A=C('#888d9b'),ROCK_B=C('#676c7e'),ROCK_C=C('#484c61'),
+CAN_L=C('#4c8c5c'),CAN_A=C('#2f6e52'),CAN_B=C('#235742'),CAN_D=C('#173c35'),TRUNK=C('#5f402d'),TRUNK_D=C('#402b23'),
+LAMP_P=C('#2e2c3b'),LAMP_H=C('#4d4b64'),LAMP_L=C('#ffd27a'),
+HAT=C('#c8443c'),HAT_L=C('#e2695a'),HAT_D=C('#8d2b38'),HATB=C('#eee6dc'),HATB_D=C('#c4bcc2'),SKIN=C('#f0c09a'),SKIN_D=C('#cd9072'),
+SCARF=C('#f2c14e'),SCARF_D=C('#c18a35'),COAT=C('#3c6fb4'),COAT_L=C('#5b90d1'),COAT_D=C('#2a4c85'),LEG=C('#3a3c54'),LEG_D=C('#2a2b40'),
+V_HAT=C('#7b5737'),V_COAT=C('#4f7a3a'),V_COAT_L=C('#6d9b4d'),V_COAT_D=C('#365930'),
+PUR_L=C('#9a79c9'),PUR_A=C('#7555a9'),PUR_D=C('#4d3979'),
+FOX=C('#d9733a'),FOX_D=C('#a94f2d'),
+FLAKE_M=C('#dfe6f2'),FLAKE_F=C('#b4c1d8'),SMOKE=C('#b9bcc7'),SMOKE_D=C('#8f93a5'),BREATH=C('#e6ebf3');
+const N=BASE.length,NV=6; // versions: 0 plain, 1 sun shadow, 2 wet, 3 wet in shadow, 4 frost, 5 frost in shadow
+const RGB=new Float32Array(N*NV*3);
+for(let i=0;i<N;i++){const h=BASE[i],r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);
+  const fr=r*.74+190*.26,fg=g*.74+208*.26,fb=b*.74+226*.26;
+  const v=[[r,g,b],[r*.7,g*.74,b*.9+10],[r*.66,g*.68,b*.74],[r*.45,g*.48,b*.62+10],[fr,fg,fb],[fr*.7,fg*.74,fb*.9+10]];
+  for(let k=0;k<NV;k++){const o=(i+k*N)*3;RGB[o]=v[k][0];RGB[o+1]=v[k][1];RGB[o+2]=v[k][2];}}
+const pal=new Uint32Array(N*NV),palL1=new Uint32Array(N*NV),palL2=new Uint32Array(N*NV);
+const pack=(r,g,b)=>(255<<24)|(clamp(b|0,0,255)<<16)|(clamp(g|0,0,255)<<8)|clamp(r|0,0,255);
+
+// ---------- world maps at art resolution (static, built once) ----------
+const GROUND=0,PATH=1,ICE=2,ROOF=3,CANOPY=4,ROCKTOP=5,FENCETOP=6,SOLID=9;
+const S=new Uint8Array(NP),B=new Uint8Array(NP),Hgt=new Uint8Array(NP),O=new Int16Array(NP).fill(-1),Cm=new Uint8Array(NP),WOB=new Uint8Array(NP);
+const SHL=new Float32Array(NP).fill(1),SHA=new Uint8Array(NP),Lm=new Uint8Array(NP),TK=new Uint8Array(NP),MK=new Uint8Array(NP);
+const CT=new Uint8Array(NP),CFL=new Uint8Array(NP);          // cap threshold and cap flags (1 = low tone, 2 = thick lip)
+const TH0=new Uint8Array(NP),TH1=new Uint8Array(NP),TH2=new Uint8Array(NP),THS=[TH0,TH1,TH2];
+const THB=[new Float32Array(NP),new Float32Array(NP),new Float32Array(NP)]; // threshold swing above its floor, before the field ratio scales it
+const THF=[new Float32Array(NP),new Float32Array(NP),new Float32Array(NP)]; // the part of the threshold that does not scale
+const BASEE=[1,1,.42,1,.9,1,1]; // open ice holds less than half: wind keeps a pond half clear, so it stays readable
+const holds=s=>s<SOLID,grp=s=>s<=ICE?1:s;
+
+// ground tiles: 6 grass tiles of 32x32, picked by a position hash
+const NVAR=6,GT=[],GTK=[];
+const TUFTS=[["l...l",".l.l.",".lml.",".xmx."],["l.l",".l.",".x."],[".l...l.","l.l.l.l",".lmlml.","..xmx.."],["l..",".ll",".mx"],["..l..","l.l.l",".lml.",".xmx."]];
+function buildTiles(){for(let v=0;v<NVAR;v++){const t=new Uint8Array(1024),k=new Uint8Array(1024);
+  for(let gy=0;gy<3;gy++)for(let gx=0;gx<3;gx++){if(hash2(v*31+gx*7+1,gy*13+v*5+2)<.34)continue;
+    const T=TUFTS[(hash2(gx+v*3,gy+9+v)*TUFTS.length)|0],tw=T[0].length,th=T.length;
+    const x0=2+gx*10+((hash2(gx*5+v,gy*3+1)*(11-tw))|0),y0=2+gy*10+((hash2(gx+11,gy*7+v)*(11-th))|0);
+    for(let r=0;r<th;r++)for(let c=0;c<tw;c++){const ch=T[r][c];if(ch==='.')continue;const px=x0+c,py=y0+r;if(px>31||py>31)continue;
+      t[py*32+px]=ch==='l'?GR_T:ch==='m'?GR_B:GR_X;k[py*32+px]=1;}}
+  // dark specks in pairs, and one small detail per tile
+  for(let n=0;n<3;n++){const x=3+((hash2(v+n*9,77)*24)|0),y=3+((hash2(v*3+n,91)*24)|0);if(!t[y*32+x]&&!t[y*32+x+1]){t[y*32+x]=GR_D;t[y*32+x+1]=GR_D;if(n===0)t[(y+1)*32+x+1]=GR_D;}}
+  if(v===2||v===5){const x=6+((hash2(v,5)*18)|0),y=6+((hash2(v,6)*18)|0);if(!k[y*32+x]){t[y*32+x]=FLW;t[y*32+x+1]=FLW;t[(y+1)*32+x]=FLW;t[(y+1)*32+x+1]=SCARF_D;k[y*32+x]=k[y*32+x+1]=k[(y+1)*32+x]=k[(y+1)*32+x+1]=1;}}
+  if(v===3){const x=5+((hash2(v,8)*18)|0),y=5+((hash2(v,9)*18)|0);if(!k[y*32+x]){t[y*32+x]=ROCK_A;t[y*32+x+1]=ROCK_L;t[y*32+x+2]=ROCK_A;t[(y+1)*32+x]=ROCK_C;t[(y+1)*32+x+1]=ROCK_B;t[(y+1)*32+x+2]=ROCK_C;}}
+  GT.push(t);GTK.push(k);}}
+const inPath=(x,y)=>{const wv=Math.round(Math.sin(y*.071)*2.6+Math.sin(y*.19+1)*1.2),wh=Math.round(Math.sin(x*.043)*3+Math.sin(x*.13+2)*1.4);
+  return (y>=126&&y<=222+wh&&x>=129+wv&&x<=158+wv)||(x>=129+wv&&y>=193+wh&&y<=222+wh);};
+const PCX=492,PCY=304,PRX=72,PRY=40;
+const pondR=(x,y)=>{const dx=(x-PCX)/PRX,dy=(y-PCY)/PRY;return dx*dx+dy*dy+(vnoise(x/15,y/13)-.5)*.2;};
+function buildGround(){buildTiles();
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,n=vnoise(x/52,y/44)*.6+vnoise(x/19,y/16)*.4;
+    let b=n<.37?GR_D:n>.64?GR_B:GR_A;const v=(hash2((x>>5)+3,(y>>5)+7)*NVAR)|0,ti=(y&31)*32+(x&31),tv=GT[v][ti];
+    if(tv)b=tv;TK[i]=GTK[v][ti];B[i]=b;S[i]=GROUND;}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(inPath(x,y)){const i=y*W+x;S[i]=PATH;TK[i]=0;
+    let b=vnoise(x/9,y/7)>.6?DIRT_B:DIRT_A;if(!inPath(x,y-1)||!inPath(x-1,y)||!inPath(x,y-2))b=DIRT_D;else if(!inPath(x,y+1)||!inPath(x+1,y))b=DIRT_B;B[i]=b;}
+  for(let gy=0;gy<H;gy+=12)for(let gx=0;gx<W;gx+=14){if(hash2(gx,gy)<.55)continue;const x=gx+2+((hash2(gx+1,gy)*8)|0),y=gy+2+((hash2(gx,gy+1)*6)|0);
+    if(!inPath(x-1,y-1)||!inPath(x+3,y+2)||!inPath(x-1,y+2)||!inPath(x+3,y-1))continue;const w=hash2(gx+5,gy+5)<.5?2:3;
+    for(let k=0;k<w;k++){B[y*W+x+k]=DIRT_L;B[(y+1)*W+x+k]=DIRT_D;TK[y*W+x+k]=TK[(y+1)*W+x+k]=1;}}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const r=pondR(x,y),i=y*W+x;if(r>=1.07)continue;
+    if(r>=1){B[i]=GR_X;TK[i]=0;continue;}
+    S[i]=ICE;TK[i]=0;const s=x-y*1.5,band=((s%56)+56)%56,dx=x-PCX,dy=y-PCY;let b=ICE_A;
+    if(band<10&&vnoise(x/22,y/22)>.36)b=ICE_B;if(band>=3&&band<5&&b===ICE_B&&hash2(x>>2,y>>1)<.5)b=ICE_C;
+    if(r>.86){b=(dy<-PRY*.1||dx<-PRX*.55)?ICE_D:ICE_C;if(r<.92&&b===ICE_C)b=ICE_B;}
+    B[i]=b;}
+  const crack=(x0,y0,pts)=>{let x=x0,y=y0;for(const[dx,dy]of pts){const n=Math.max(Math.abs(dx),Math.abs(dy));for(let k=0;k<=n;k++){const px=Math.round(x+dx*k/n),py=Math.round(y+dy*k/n),i=py*W+px;if(S[i]===ICE&&pondR(px,py)<.84)B[i]=ICE_D;}x+=dx;y+=dy;}};
+  crack(462,292,[[14,5],[9,-3],[12,7],[10,1]]);crack(485,297,[[-4,10],[6,8]]);crack(516,318,[[12,-6],[9,2]]);crack(470,318,[[-12,4]]);}
+
+// objects are drawn into small stamps, outlined with one dark pixel, then written into the world maps
+function mkStamp(w,h){return {w,h,c:new Uint8Array(w*h),s:new Uint8Array(w*h).fill(255),t:new Uint8Array(w*h),f:new Uint8Array(w*h)};}
+function sset(st,x,y,col,cls,thr,flag){x|=0;y|=0;if(x<0||y<0||x>=st.w||y>=st.h)return;const i=y*st.w+x;st.c[i]=col;st.s[i]=cls===undefined?SOLID:cls;st.t[i]=clamp((thr||0)|0,0,255);st.f[i]=flag||0;}
+function soutline(st){const {w,h,s}=st,add=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(s[i]!==255)continue;
+  if((x>0&&s[i-1]!==255)||(x<w-1&&s[i+1]!==255)||(y>0&&s[i-w]!==255)||(y<h-1&&s[i+w]!==255))add.push(i);}
+  for(const i of add){st.c[i]=OUTL;st.s[i]=SOLID;}}
+function sblit(st,wx,wy,o){for(let y=0;y<st.h;y++)for(let x=0;x<st.w;x++){const k=y*st.w+x;if(st.s[k]===255)continue;const X=wx+x,Y=wy+y;if(X<0||Y<0||X>=W||Y>=H)continue;const i=Y*W+X;
+  S[i]=st.s[k];B[i]=st.c[k];Hgt[i]=o.hgt;O[i]=o.oy;CT[i]=st.t[k];CFL[i]=st.f[k];TK[i]=0;MK[i]=0;if(o.col&&o.col(x,y)){Cm[i]=1;if(o.wob)WOB[i]=Math.max(WOB[i],o.wob);}}}
+const scal=x=>{const q=Math.floor(x/3)*3;return .5+.3*Math.sin(q*.21)+.2*Math.sin(q*.083+1.3);}; // lumps in 3 px steps, 0 to 1
+
+const HX=70,HY=10,HBASE=127;
+function buildHouse(){const st=mkStamp(148,120),P=(x,y,c,s,t,f)=>sset(st,x,y,c,s,t,f);
+  // roof: north slope, ridge, south slope in 8 px shingle courses. Snow covers it from the ridge down
+  for(let y=14;y<=77;y++)for(let x=2;x<=145;x++){const ry=y-14;let c,t,f=0;
+    if(ry<10){c=ry<2?ROOF_D:(((x+ry*3)%14)<2?ROOF_D:ROOF_B);t=4+ry*.6+scal(x+40)*5;f=1;}  // the north slope takes the light shadow tone
+    else if(ry<13){c=ry===10?ROOF_L:ry===11?ROOF_A:ROOF_D;t=3+scal(x)*4;if(ry<12)f=3;}  // a 2 px highlight along the ridge
+    else{const q=ry-13,co=q%8,ci=(q/8)|0;c=co===7?ROOF_D:ROOF_A;
+      if(co<7&&((x+(ci&1)*6)%12)===0)c=ROOF_B;
+      if(co===0&&hash2(x>>2,ci)<.5)c=ROOF_L;
+      if(x>134&&c===ROOF_A)c=ROOF_B;
+      t=9+q*1.02+scal(x)*12+(vnoise(x/11,q/7)>.7&&q<22?16:0);if(co===7&&hash2(x>>3,ci+9)<.6&&q<46)f=1;if(q>=47)f=2;}
+    P(x,y,c,ROOF,t,f);}
+  // log wall
+  for(let y=78;y<=117;y++)for(let x=10;x<=137;x++){const ly=(y-78)%8;let c=ly===0?WALL_L:ly<5?WALL_A:ly<7?WALL_B:WALL_D;
+    if(ly>=2&&ly<=4&&hash2(x>>2,y>>1)<.1)c=WALL_B;
+    if(x<18||x>129){const e=x<18?x-10:x-130;c=e<2?WALL_L:e<5?WALL_A:WALL_B;if(ly===7)c=WALL_D;if(e===7||e===0&&x>129)c=WALL_D;}
+    if(y<82){c=c===WALL_L?WALL_A:c===WALL_A?WALL_B:WALL_D;}
+    if(y>=115)c=y===115?ROCK_A:(((x+(y&1)*5)%10)===0?ROCK_C:ROCK_B);
+    P(x,y,c);}
+  // door
+  for(let y=85;y<=117;y++)for(let x=60;x<=87;x++){let c=-1;
+    if(y===85)c=WALL_L;else if(x>=62&&x<=85&&y>=86){c=(x<64||x>83||y<88)?WALL_D:DOOR_A;
+      if(c===DOOR_A){if(x===70||x===77)c=WALL_D;if(x>80)c=WALL_D===c?c:(x===83?WALL_D:c);if((y===93||y===94||y===108||y===109)&&x<74)c=LAMP_P;if((x===80||x===81)&&(y===102||y===103))c=SCARF;}
+      if(y>=116)c=ROCK_A;}
+    if(c>=0)P(x,y,c);}
+  // windows with a sill that holds snow
+  for(const wx of [20,104]){for(let y=87;y<=110;y++)for(let x=wx-3;x<=wx+26;x++){let c=-1,s=SOLID,t=0;const ix=x-wx,iy=y-88;
+      if(iy>=0&&iy<=19&&ix>=0&&ix<=23){c=(ix<2||iy<2)?WALL_L:(ix>21||iy>17)?WALL_B:WIN;
+        if(c===WIN){if(ix===11||ix===12)c=ix===11?WALL_L:WALL_D;else if(iy===9)c=WALL_D;else if(ix+iy>27&&ix>12||ix+iy>20&&ix<11&&iy>9)c=WIN_D;else if((ix-iy===3||ix-iy===4)&&ix<11&&iy<9)c=ICE_C;}
+        if(ix===0&&iy===0||ix===23&&iy===19)c=WALL_A;}
+      else if(y===87&&ix>=-1&&ix<=24)c=OUTL;
+      else if((ix===-1||ix===24)&&iy>=0&&iy<=19)c=OUTL;
+      else if(iy===20&&ix>=-3&&ix<=26){c=WALL_L;s=FENCETOP;t=22+scal(x*2)*14;}
+      else if(iy===21&&ix>=-3&&ix<=26)c=WALL_D;
+      else if(iy===22&&ix>=-2&&ix<=25)c=OUTL;
+      if(c>=0)P(x,y,c,s,t);}}
+  // chimney
+  for(let y=2;y<=31;y++)for(let x=105;x<=122;x++){const top=y<=5;if(!top&&(x<106||x>121))continue;let c,s=SOLID,t=0;
+    if(top){c=y===2?ROCK_L:y===5?ROCK_C:(x>117?ROCK_B:ROCK_A);if(y<=4){s=ROCKTOP;t=8+(y-2)*22+Math.abs(x-113.5)*1.5;}}
+    else{const by=(y-6)%6;c=by===5?ROCK_C:(((x+(((y-6)/6)|0)*4)%8)===0?ROCK_C:ROCK_A);if(x<108&&c===ROCK_A)c=ROCK_L;if(x>118&&c===ROCK_A)c=ROCK_B;if(y<8)c=ROCK_C;}
+    P(x,y,c,s,t);}
+  soutline(st);
+  // the snow lip: the eave outline row, then one row over the wall top, broken into scallops
+  for(let x=2;x<=145;x++){sset(st,x,78,OUTL,ROOF,66+scal(x+17)*8,2);if(x>=11&&x<=136){const g=scal(x*1.7+5);sset(st,x,79,WALL_D,ROOF,g>.42?80+g*8:255,2);}}
+  sblit(st,HX,HY,{hgt:110,oy:HBASE,wob:30,col:(x,y)=>y>=40&&y<=118&&x>=2&&x<=145});
+  // eaves keep the first 24 px south of the wall almost bare
+  for(let y=HBASE+1;y<=HBASE+24;y++)for(let x=HX+6;x<=HX+141;x++)SHL[y*W+x]*=Math.min(1,.15+(y-HBASE-1)/24);}
+
+function buildPine(bx,by,hw,h,seed){const hc=h-8,cx=hw+4,st=mkStamp(2*hw+9,h+6),nT=4,yb=[],ya=[],hws=[];
+  for(let k=0;k<nT;k++){yb[k]=Math.round(hc-k*hc*.215)+2;hws[k]=hw*(1-k*.2);ya[k]=k===nT-1?2:Math.round(yb[k]-hc*.44);}
+  const tooth=(x,k)=>[0,1,2,3,2,1][(((x+k*3+seed)%6)+6)%6];
+  const inTier=(k,x,y)=>{if(y<ya[k])return false;const u=Math.abs(x-cx+.5),f=(y-ya[k])/(yb[k]-ya[k]);if(f>1.25)return false;const w=hws[k]*Math.pow(Math.min(1,f),.8)+.6;
+    if(u>w)return false;return y<=yb[k]-tooth(x,k)+Math.round(u/hws[k]*2.2);};
+  for(let y=hc;y<=hc+10;y++)for(let x=cx-3;x<=cx+2;x++)sset(st,x,y,x<cx?TRUNK:TRUNK_D);
+  sset(st,cx-4,hc+10,TRUNK);sset(st,cx+3,hc+10,TRUNK_D);
+  const own=new Int8Array(st.w*st.h).fill(-1),fr=new Uint8Array(st.w*st.h);
+  for(let k=0;k<nT;k++){
+    if(k>0)for(let y=0;y<st.h;y++)for(let x=0;x<st.w;x++)if(own[y*st.w+x]>=0&&inTier(k,x,y-3)&&!inTier(k,x,y))st.c[y*st.w+x]=CAN_D;
+    for(let y=ya[k];y<=yb[k]+4;y++)for(let x=0;x<st.w;x++){if(!inTier(k,x,y))continue;const u=(x-cx+.5)/hws[k];
+      const fringe=!inTier(k,x,y+2),fr1=!inTier(k,x,y+1);
+      let c=u<-.3?(hash2((x>>1)+seed,(y>>1)+k*7)<.42?CAN_L:CAN_A):u<.28?(hash2((x>>1)+seed,(y>>1)+k*5)<.16?CAN_B:CAN_A):CAN_B;
+      if(fringe)c=u<0?CAN_B:CAN_D;if(fr1&&u>-.5)c=CAN_D;
+      sset(st,x,y,c,CANOPY,255,u>.5?1:0);own[y*st.w+x]=k;fr[y*st.w+x]=fringe?1:0;}}
+  // one cap per tier. It starts at the top of what shows of the tier in each column and grows down with depth, with a lumpy lower edge. The dark fringe stays free
+  for(let x=0;x<st.w;x++)for(let k=0;k<nT;k++){let y1=-1,y2=-1;for(let y=0;y<st.h;y++)if(own[y*st.w+x]===k){if(y1<0)y1=y;y2=y;}if(y1<0)continue;
+    const vis=y2-y1+1,lump=scal(x*1.6+seed*5+k*9);for(let y=y1;y<=y2;y++){const i=y*st.w+x,dT=y-y1;
+      if(fr[i]||dT>vis*.62+1||vis<4)continue;st.t[i]=clamp(8+dT*(8.5+lump*5)+(k===nT-1?0:6),0,254)|0;}}
+  soutline(st);
+  sblit(st,bx-cx,by-(hc+10),{hgt:Math.min(250,h),oy:by,wob:20,col:(x,y)=>y>=hc+5&&Math.abs(x-cx+.5)<=6});
+  // shelter under the lowest tier, and a wider wind obstacle than the trunk
+  const rx=hw+5,ry=hw*.55;for(let y=by-ry-4|0;y<=by+ry;y++)for(let x=bx-rx;x<=bx+rx;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=(x-bx)/rx,dy=(y-by+3)/ry,r=Math.sqrt(dx*dx+dy*dy);if(r<1)SHL[y*W+x]*=.12+.88*r*r;}
+  for(let y=by-7;y<=by+3;y++)for(let x=bx-hw+2;x<=bx+hw-2;x++)if(x>=0&&x<W&&y>=0&&y<H)WOB[y*W+x]=Math.max(WOB[y*W+x],20);}
+
+function buildRock(cx,cy,w,h,seed){const st=mkStamp(w+2,h+2),rx=w/2,ry=h/2,ys=[];
+  for(let x=0;x<w;x++){ys[x]=-1;for(let y=0;y<h;y++){const dx=(x+.5-rx)/rx,dy=(y+.5-ry*1.02)/ry;if(dx*dx+dy*dy<1+(hash2(seed+(x>>2),y>>2)-.5)*.16){if(ys[x]<0)ys[x]=y;
+    const top=y<h*.5-Math.abs(dx)*h*.1;let c=top?(dx<.15?ROCK_L:ROCK_A):(dx>.35||y>h*.8?ROCK_C:ROCK_B);if(top&&dx<.15&&hash2(seed+(x>>1),y>>1)<.2)c=ROCK_A;
+    if(!top&&Math.abs(y-h*.5+Math.abs(dx)*h*.1)<1)c=ROCK_B;
+    sset(st,x+1,y+1,c,top?ROCKTOP:SOLID,top?5+(y-ys[x])*11+Math.max(0,Math.abs(dx)-.7)*90:0,dx>.3?1:0);}}}
+  for(let k=0;k<5;k++)sset(st,1+(rx+2+k*.6)|0,1+(h*.5+k)|0,ROCK_C);
+  soutline(st);sblit(st,cx-(w>>1)-1,cy-h-1,{hgt:24,oy:cy,wob:6,col:(x,y)=>y>=h*.45});}
+
+const FX0=264,FX1=424,FY=178;
+function buildFence(){const w=FX1-FX0+7,st=mkStamp(w,26);
+  for(const ry of [5,13])for(let x=1;x<w-1;x++){sset(st,x,ry,WALL_L,FENCETOP,16+scal(x*2+ry)*20);sset(st,x,ry+1,WALL_A);sset(st,x,ry+2,WALL_A);sset(st,x,ry+3,WALL_D);if(hash2(x>>2,ry)<.2)sset(st,x,ry+1,WALL_B);}
+  for(let px=0;px<w-5;px+=32)for(let y=1;y<=24;y++)for(let x=0;x<6;x++){if(y===1&&(x===0||x===5))continue;const top=y<=3;
+    sset(st,px+x+.5|0,y,x<2?WALL_L:x<4?WALL_A:WALL_B,top?FENCETOP:SOLID,top?(y===1?8:y===2?26:44)+Math.abs(x-2.5)*3:0);if(y===24)sset(st,px+x,y,WALL_D);}
+  soutline(st);sblit(st,FX0-1,FY-25,{hgt:32,oy:FY,wob:8,col:(x,y)=>y>=20});}
+
+const LX=466,LY=188;
+function buildLamp(){const st=mkStamp(17,60);
+  for(let y=15;y<=54;y++){sset(st,7,y,LAMP_H);sset(st,8,y,LAMP_P);sset(st,9,y,LAMP_P);}
+  for(let x=5;x<=11;x++){sset(st,x,55,LAMP_H);sset(st,x,56,LAMP_P);sset(st,x,57,LAMP_P);}sset(st,6,54,LAMP_P);sset(st,10,54,LAMP_P);
+  for(let y=5;y<=13;y++)for(let x=5;x<=11;x++)sset(st,x,y,(x===5||x===11||y===13)?LAMP_P:(x===8?LAMP_H:LAMP_L));
+  sset(st,6,14,LAMP_P);sset(st,7,14,LAMP_P);sset(st,8,14,LAMP_P);sset(st,9,14,LAMP_P);sset(st,10,14,LAMP_P);
+  for(let x=4;x<=12;x++)sset(st,x,4,x<8?LAMP_H:LAMP_P,ROCKTOP,255);
+  for(let x=5;x<=11;x++)sset(st,x,3,x<8?LAMP_H:LAMP_P,ROCKTOP,30+Math.abs(x-8)*3);
+  for(let x=6;x<=10;x++)sset(st,x,2,x<8?LAMP_H:LAMP_P,ROCKTOP,10+Math.abs(x-8)*3);
+  sset(st,8,1,LAMP_P);
+  soutline(st);sblit(st,LX-8,LY-57,{hgt:56,oy:LY,wob:0,col:(x,y)=>y>=53});}
+
+const WX=348,WY=108;
+function buildWell(){const st=mkStamp(46,54),cx=22.5;
+  // stone ring
+  for(let y=30;y<=50;y++)for(let x=4;x<=41;x++){const dx=(x+.5-cx)/18,dt=(y-37)/7,db=(y-44)/7,inTop=dx*dx+dt*dt<1,inBody=inTop||(dx*dx+db*db<1)||(Math.abs(dx)<1&&y>=37&&y<=44);if(!inBody)continue;
+    if(inTop){const ix=(x+.5-cx)/12.5,iy=(y-37)/4.2;if(ix*ix+iy*iy<1){sset(st,x,y,(y>=38&&x>20&&x<27&&y<40)?ICE_D:OUTL);continue;}
+      sset(st,x,y,dx<.1?ROCK_L:ROCK_A,ROCKTOP,10+(dt>0?26:0)+Math.abs(dx)*10);}
+    else{let c=(((y-38)%5)===0||((x+(((y-38)/5)|0)*4)%9)===0)?ROCK_C:(dx>.35?ROCK_B:ROCK_A);sset(st,x,y,c);}}
+  // posts, bar, rope, bucket
+  for(let y=14;y<=36;y++){sset(st,7,y,WALL_L);sset(st,8,y,WALL_A);sset(st,9,y,WALL_D);sset(st,36,y,WALL_L);sset(st,37,y,WALL_A);sset(st,38,y,WALL_D);}
+  for(let x=10;x<=35;x++){sset(st,x,16,WALL_A);sset(st,x,17,WALL_D);}
+  for(let y=18;y<=27;y++)sset(st,22,y,WALL_L);
+  for(let y=28;y<=33;y++)for(let x=20;x<=25;x++)sset(st,x,y,y===28?WALL_L:(x>23?WALL_D:WALL_A));
+  // little roof
+  for(let y=3;y<=13;y++){const hw=10+(y-3)*1.25;for(let x=Math.round(cx-hw);x<=Math.round(cx+hw-1);x++){const c=y===3?ROOF_L:(y===13?ROOF_D:(((y-4)%4)===3?ROOF_B:(x>cx+hw*.45?ROOF_B:ROOF_A)));
+    sset(st,x,y,c,ROOF,6+(y-3)*6.2+scal(x*2)*8,y>=11?2:0);}}
+  soutline(st);sblit(st,WX-23,WY-51,{hgt:50,oy:WY,wob:8,col:(x,y)=>y>=38});}
+
+function buildWorld(){buildGround();buildHouse();
+  for(const[x,y,hw,h,sd]of[[246,118,22,72,1],[30,104,24,78,2],[40,268,22,70,3],[262,354,26,82,4],[424,92,24,76,5],[560,72,22,66,6],[606,168,24,78,7],[622,300,22,70,8]])buildPine(x,y,hw,h,sd);
+  buildFence();buildWell();buildLamp();
+  for(const[x,y,w,h,sd]of[[452,130,26,18,1],[196,302,30,20,2],[590,252,22,15,3],[48,174,24,16,4],[372,324,20,14,5]])buildRock(x,y,w,h,sd);
+  // light map: lamp pool and two window pools, 0 to 255
+  const pool=(cx,cy,rx,ry,k)=>{for(let y=Math.max(0,cy-ry|0);y<=Math.min(H-1,cy+ry);y++)for(let x=Math.max(0,cx-rx|0);x<=Math.min(W-1,cx+rx);x++){const dx=(x-cx)/rx,dy=(y-cy)/ry,r=Math.sqrt(dx*dx+dy*dy);if(r<1){const v=Math.pow(1-r,1.25)*255*k|0,i=y*W+x;if(v>Lm[i])Lm[i]=v;}}};
+  pool(LX,LY+2,92,56,1);pool(LX,LY-46,13,13,1.6);pool(HX+32,HBASE+12,34,24,.8);pool(HX+116,HBASE+12,34,24,.8);
+  // sun shadow at art resolution (sun in the upper left): each object pixel is projected along its own height
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!Hgt[i]||O[i]<0)continue;const t=Math.min(O[i]-y,Hgt[i]);if(t<0)continue;
+    for(let k=0;k<=t;k++){const sx=Math.round(x+k*.7),sy=Math.round(O[i]+1+k*.28);if(sx>=W||sy>=H)break;const j=sy*W+sx;if(S[j]<=ICE&&O[j]<0)SHA[j]=1;}}
+  buildThresholds();buildMarks();}
+
+// ground thresholds. Bayer 4 and Bayer 8 are the old dither. The art tile is a 128 px tileable map built from seed blobs in 2x2 px blocks
+function seedDist(x,y){const cs=12.8,gx=Math.floor(x/cs),gy=Math.floor(y/cs);let best=99;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const cx=gx+dx,cy=gy+dy,hx=((cx%10)+10)%10,hy=((cy%10)+10)%10;
+    const sx=(cx+.15+hash2(hx+21,hy+4)*.7)*cs,sy=(cy+.15+hash2(hx+8,hy+33)*.7)*cs,r=1+hash2(hx+60,hy+2)*3,d=Math.hypot(x-sx,(y-sy)*1.3)-r;if(d<best)best=d;}
+  return Math.max(0,best);}
+function buildThresholds(){
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,s=S[i];
+    if(s>ICE){for(let k=0;k<3;k++){THF[k][i]=CT[i];THB[k][i]=0;}continue;}
+    const tuft=TK[i]?5:0,bx=x>>1,by=y>>1,X=bx*2+1,Y=by*2+1;
+    // tufts count per 2x2 block for the art tile, so a tuft stays out as a block and not as lone pixels
+    const tb=(TK[by*2*W+bx*2]|TK[by*2*W+bx*2+1]|TK[Math.min(H-1,by*2+1)*W+bx*2]|TK[Math.min(H-1,by*2+1)*W+bx*2+1])?1:0;
+    if(s===ICE){THF[0][i]=.3;THB[0][i]=bay4(x,y)*.4;THF[1][i]=.3;THB[1][i]=bay8(x,y)*.1;
+      THF[2][i]=6+Math.pow(vnoise(X/34,Y/6+9),1.5)*110;THB[2][i]=bay4(bx,by)/15*2;}
+    else{THF[0][i]=.5+tuft;THB[0][i]=bay4(x,y)*.55+hash2(x+7,y+3)*2.5;
+      THF[1][i]=.5+tuft;THB[1][i]=bay8(x,y)*.17;
+      const d=seedDist(X,Y),lf=(vnoise(X/88,Y/70)-.5)*10;
+      THF[2][i]=Math.max(2,(s===PATH?3+d*3:4+d*4.6+tb*10)+lf);THB[2][i]=bay4(bx,by)/15*2.2;}}}
+function scaleThresholds(){const k=2/FS; // the swing follows the field ratio, so a snow edge keeps its width in art pixels
+  for(let m=0;m<3;m++){const T=THS[m],F=THF[m],Bv=THB[m];for(let i=0;i<NP;i++)T[i]=clamp(Math.floor(F[i]+Bv[i]*k),0,255);}}
+// drawn drift lines: a 1 px highlight with a 1 px shadow under it, 1 or 2 short ones per tile on settled snow and a longer arc on 4 tiles in 10 on deep snow
+// MK: 1 shadow and 2 highlight from depth 34, 3 shadow and 4 highlight from depth 62
+const MARKS=[["hhhhh","mmmmm"],[".hhhh.","hmmmmh","m....m"],["hhh..","mmmhh","...mm"],["..hhh","hhmmm","mm..."]];
+const PAD=3*W+4; // padding of the coverage and depth buffers: index i + PAD
+function buildMarks(){const free=(x,y)=>x>=1&&y>=1&&x<W-1&&y<H-1&&S[y*W+x]===GROUND&&!MK[y*W+x]&&!TK[y*W+x];
+  for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){
+    if(hash2(tx*3+11,ty*7+5)<.4){const L=12+((hash2(tx+31,ty+17)*11)|0),a=2+hash2(tx+5,ty+41)*1.6,x0=tx*32+((hash2(tx*9+2,ty+8)*16)|0),y0=ty*32+6+((hash2(tx+6,ty*9+1)*20)|0);let ok=true;const pts=[];
+      for(let q=0;q<L;q++){const x=x0+q,y=y0-Math.round(a*Math.sin(Math.PI*q/(L-1)));pts.push(x,y);if(!free(x,y)||!free(x,y+1)||!free(x,y-1)||!free(x,y+2))ok=false;}
+      if(ok)for(let q=0;q<pts.length;q+=2){MK[pts[q+1]*W+pts[q]]=4;MK[(pts[q+1]+1)*W+pts[q]]=3;}}
+    const n=1+((hash2(tx*5+1,ty*3+2)*2)|0);
+    for(let k=0;k<n;k++){const M=MARKS[(hash2(tx+k*7,ty+k*13)*MARKS.length)|0],x0=tx*32+2+((hash2(tx*9+k,ty+4)*24)|0),y0=ty*32+2+((hash2(tx+2,ty*9+k)*26)|0);let ok=true;
+      for(let r=-2;r<=M.length+1&&ok;r++)for(let c=-2;c<=M[0].length+1;c++)if(!free(x0+c,y0+r)){ok=false;break;}
+      if(!ok)continue;
+      for(let r=0;r<M.length;r++)for(let c=0;c<M[r].length;c++){const ch=M[r][c];if(ch!=='.')MK[(y0+r)*W+x0+c]=ch==='m'?1:2;}}}}
+
+// ---------- the snow field. FS art pixels per cell. The packed field can be finer than depth (split mode) ----------
+let FS=2,sh=1,FW=320,FH=180,NF=FW*FH,PS=2,psh=1,PW=320,PH=180,NPF=PW*PH,PK=1;
+let D=new Uint8Array(1),P=new Uint8Array(1),Wt=new Uint8Array(1),Sf=new Uint8Array(1),E=new Float32Array(1),LIM=new Uint8Array(1),SHf=new Uint8Array(1),SHLf=new Float32Array(1),WOBf=new Uint8Array(1),LIMN=new Float32Array(1),CH=new Uint8Array(1),PG=new Uint8Array(1);
+const CN=new Int32Array(NP),CI=new Int32Array(NP),CW=new Uint32Array(NP),CNp=new Int32Array(NP),CIp=new Int32Array(NP),CWp=new Uint32Array(NP),SHR=new Uint8Array(NP),KIND=new Uint8Array(NP);
+const PROW=new Uint8Array(H+2),DIRT=new Uint8Array(NT),BAND=new Uint8Array(NT),SWT=new Float32Array(NT),SWD=new Uint8Array(NT);
+let fieldMode='2',bilin=true,windBucket=99,bakeMs=0,tableMs=0;
+function setField(mode,keep){const oD=D,oP=P,oW=Wt,oFW=FW,oFH=FH,oPW=PW,oPH=PH,oFS=FS,oPS=PS;fieldMode=mode;
+  FS=mode==='1'?1:mode==='2'?2:4;PS=mode==='split'?2:FS;sh=FS===1?0:FS===2?1:2;psh=PS===1?0:PS===2?1:2;PK=FS/PS;
+  FW=W/FS;FH=H/FS;NF=FW*FH;PW=W/PS;PH=H/PS;NPF=PW*PH;
+  D=new Uint8Array(NF);P=new Uint8Array(NPF);Wt=new Uint8Array(NF);Sf=new Uint8Array(NF);E=new Float32Array(NF);LIM=new Uint8Array(NF);SHf=new Uint8Array(NF);SHLf=new Float32Array(NF);WOBf=new Uint8Array(NF);LIMN=new Float32Array(NF);CH=new Uint8Array(NF);PG=new Uint8Array(NPF);
+  const cnt=new Int32Array(10);
+  for(let cy=0;cy<FH;cy++)for(let cx=0;cx<FW;cx++){const c=cy*FW+cx;cnt.fill(0);let shl=0,gn=0,wob=0,sha=0;
+    for(let y=cy*FS;y<cy*FS+FS;y++)for(let x=cx*FS;x<cx*FS+FS;x++){const i=y*W+x;cnt[S[i]]++;if(S[i]<=ICE){shl+=SHL[i];gn++;}if(WOB[i]>wob)wob=WOB[i];sha+=SHA[i];}
+    let best=SOLID,bn=0;for(let s=0;s<=FENCETOP;s++)if(cnt[s]>bn){bn=cnt[s];best=s;}
+    Sf[c]=best;SHLf[c]=gn?shl/gn:1;WOBf[c]=wob;SHf[c]=sha*255/(FS*FS);
+    LIMN[c]=.8+.4*vnoise((cx+.5)*FS/36+30,(cy+.5)*FS/28+11);CH[c]=((cy*FS)>>5)*TW+((cx*FS)>>5);}
+  for(let cy=0;cy<PH;cy++)for(let cx=0;cx<PW;cx++){let g=0;for(let y=cy*PS;y<cy*PS+PS;y++)for(let x=cx*PS;x<cx*PS+PS;x++)if(S[y*W+x]<=ICE)g=1;PG[cy*PW+cx]=g;}
+  if(keep){const rs2=(src,sw,sh2,sfs,dst,dw,dh,dfs)=>{for(let cy=0;cy<dh;cy++)for(let cx=0;cx<dw;cx++){
+      if(dfs>sfs){const k=dfs/sfs;let a=0;for(let y=0;y<k;y++)for(let x=0;x<k;x++)a+=src[(cy*k+y)*sw+cx*k+x];dst[cy*dw+cx]=a/(k*k);}
+      else dst[cy*dw+cx]=src[Math.min(sh2-1,(cy*dfs/sfs)|0)*sw+Math.min(sw-1,(cx*dfs/sfs)|0)];}};
+    rs2(oD,oFW,oFH,oFS,D,FW,FH,FS);rs2(oW,oFW,oFH,oFS,Wt,FW,FH,FS);rs2(oP,oPW,oPH,oPS,P,PW,PH,PS);
+    for(let c=0;c<NF;c++)if(!holds(Sf[c])){D[c]=0;Wt[c]=0;}for(let c=0;c<NPF;c++)if(!PG[c])P[c]=0;}
+  PROW.fill(1);windBucket=Math.round(wind*2);computeExposure(windBucket/2);scaleThresholds();buildTables();
+  $('fnote').textContent=FS===4&&PS===4?'Boot prints need 1:2. At 1:4 a cell is 4 px wide, so a 4x6 px print covers its cells unevenly and one row of prints shrinks to slivers.':mode==='split'?'Depth and wet stay at 1:4 (14,400 cells). Only the packed trail field is 1:2.':FS===1?'At 1:1 bilinear and nearest read the same cell.':'';}
+// sampling tables: nearest cell and 4 bilinear weights (sum 128) per art pixel, mixing only cells of the pixel's own surface class
+function buildTables(){const t0=now();
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,s=S[i],cx=x>>sh,cy=y>>sh;let c0=cy*FW+cx;
+    { // packed field: plain bilinear
+      let fx=(x+.5)/PS-.5,fy=(y+.5)/PS-.5,x0=clamp(Math.floor(fx),0,PW-2),y0=clamp(Math.floor(fy),0,PH-2);const tx=clamp(fx-x0,0,1),ty=clamp(fy-y0,0,1);
+      const a=Math.round((1-tx)*(1-ty)*128),b=Math.round(tx*(1-ty)*128),c=Math.round((1-tx)*ty*128),d=128-a-b-c;
+      CIp[i]=y0*PW+x0;CWp[i]=(a|b<<8|c<<16|d<<24)>>>0;CNp[i]=(y>>psh)*PW+(x>>psh);}
+    KIND[i]=s>ICE?2:1;
+    if(s>=SOLID){CN[i]=c0;CI[i]=Math.min(c0,NF-FW-2);CW[i]=128;continue;}
+    const g=grp(s);
+    if(grp(Sf[c0])!==g){let best=-1,bd=9;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=FW||ny>=FH)continue;const c=ny*FW+nx;if(grp(Sf[c])===g){const dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=c;}}}if(best>=0)c0=best;}
+    CN[i]=c0;
+    const fx=(x+.5)/FS-.5,fy=(y+.5)/FS-.5;let x0=clamp(Math.floor(fx),0,FW-2),y0=clamp(Math.floor(fy),0,FH-2);const tx=clamp(fx-x0,0,1),ty=clamp(fy-y0,0,1);
+    let j=y0*FW+x0,w0=(1-tx)*(1-ty),w1=tx*(1-ty),w2=(1-tx)*ty,w3=tx*ty;
+    if(g===1&&fx>=0&&fy>=0&&fx<=FW-1&&fy<=FH-1&&x>=FS&&y>=FS&&x<W-FS&&y<H-FS&&Sf[j]<=ICE&&Sf[j+1]<=ICE&&Sf[j+FW]<=ICE&&Sf[j+FW+1]<=ICE)KIND[i]=0;
+    if(grp(Sf[j])!==g)w0=0;if(grp(Sf[j+1])!==g)w1=0;if(grp(Sf[j+FW])!==g)w2=0;if(grp(Sf[j+FW+1])!==g)w3=0;
+    let sum=w0+w1+w2+w3;
+    if(sum<.001){const nx=c0%FW,ny=(c0/FW)|0;x0=clamp(nx,0,FW-2);y0=clamp(ny,0,FH-2);j=y0*FW+x0;const k=(nx-x0)+(ny-y0)*2;w0=k===0?1:0;w1=k===1?1:0;w2=k===2?1:0;w3=k===3?1:0;sum=1;}
+    let q0=Math.round(w0/sum*128),q1=Math.round(w1/sum*128),q2=Math.round(w2/sum*128),q3=Math.round(w3/sum*128);const e=128-q0-q1-q2-q3;
+    if(q0>=q1&&q0>=q2&&q0>=q3)q0+=e;else if(q1>=q2&&q1>=q3)q1+=e;else if(q2>=q3)q2+=e;else q3+=e;
+    CI[i]=j;CW[i]=(q0|q1<<8|q2<<16|q3<<24)>>>0;}
+  // sun shadow drawn from the field copy: bilinear, then cut at half
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
+    if(!bilin||FS===1){SHR[i]=SHf[(y>>sh)*FW+(x>>sh)]>127?1:0;continue;}
+    const fx=(x+.5)/FS-.5,fy=(y+.5)/FS-.5,x0=clamp(Math.floor(fx),0,FW-2),y0=clamp(Math.floor(fy),0,FH-2),tx=clamp(fx-x0,0,1),ty=clamp(fy-y0,0,1),j=y0*FW+x0;
+    SHR[i]=(SHf[j]*(1-tx)*(1-ty)+SHf[j+1]*tx*(1-ty)+SHf[j+FW]*(1-tx)*ty+SHf[j+FW+1]*tx*ty)>127?1:0;}
+  tableMs=now()-t0;}
+// exposure: shelter times an upwind ray of 3.5 tiles, baked per wind bucket. Also the depth each cell can reach from snowfall
+function computeExposure(wind){const t0=now(),dir=Math.sign(wind),mag=Math.abs(wind),R=(112/FS)|0,K=4/FS,ray=mag>.15&&dir!==0;
+  // a row sweep in the wind direction carries the last obstacle and its distance: the same map as one ray per cell, at one visit per cell
+  for(let y=0;y<FH;y++){let lastX=-1,lastH=0;
+    for(let n=0;n<FW;n++){const x=dir<0?FW-1-n:n,i=y*FW+x,s=Sf[i],h0=WOBf[i];
+      if(!holds(s)){E[i]=0;LIM[i]=0;}
+      else{let e=BASEE[s]*(s<=ICE?SHLf[i]:1);
+        if(ray&&s<=ICE&&lastX>=0){const d=n-lastX;if(d<=R){const L=(lastH*1.1*mag+2)*K;if(d<L){const f=d/L;e*=.15+.85*f*f;}else if(d<L*1.8)e*=1.12;}}
+        E[i]=Math.min(1.3,e);LIM[i]=Math.min(PRM.maxD,(PRM.soft*E[i]*LIMN[i]+6)|0);}
+      if(h0>0){lastX=n;lastH=h0;}}}
+  bakeMs=now()-t0;}
+
+// ---------- state ----------
+let clock=9*60,speed=2,paused=false,auto=true,weather='heavy',wTimer=110,intensity=1,temp=-3,wind=-.4,windT=-.4,tool='walk',view='normal',frameN=0,simT=0;
+let thrStyle=2,THc=TH2,shade='band',flakeSz='mixed',printMode='boot',sinkCap=6,crowdN=3,tileSteps=false;
+let printsSec=0,printsRate=0,bandChg=0,bandRate=0,wxMsgs=0,wxBytes=0,wxRate=0,wxSec=0,dirtyAvg=0,picksTick=0,flakePx=0,effK=1,lastW='';
+const CYCLE=[['heavy',110],['light',60],['overcast',40],['sunny',220],['overcast',30]];let cycI=0;
+const keys={l:0,r:0,u:0,d:0};
+const parts=[];
+
+// ---------- snow ops ----------
+const pOf=i=>PK===1?P[i]:P[((i/FW)|0)*2*PW+(i%FW)*2];
+function pClear(i){if(PK===1)P[i]=0;else{const j=((i/FW)|0)*2*PW+(i%FW)*2;P[j]=P[j+1]=P[j+PW]=P[j+PW+1]=0;}}
+function deposit(i,a){const l=LIM[i];if(l===0)return;if(Wt[i]>90&&rnd()<.6){Wt[i]-=3;return;}const d=D[i];if(d>=l)return;D[i]=d+a>l?l:d+a;DIRT[CH[i]]=1;}
+const TC=new Int32Array(64),TN=new Uint8Array(64);
+// a stamp given as art pixels. Each cell loses depth by the share of it the stamp covers, and the packed field takes the same share
+function stampMask(x0,y0,mask,keep,packV){let n=0,m=0,spill=0;const area=FS*FS,parea=PS*PS;
+  for(let k=0;k<mask.length;k+=2){const px=x0+mask[k],py=y0+mask[k+1];if(px<1||py<1||px>=W-1||py>=H-1)continue;const c=(py>>sh)*FW+(px>>sh);let q=0;for(;q<n;q++)if(TC[q]===c)break;if(q===n){if(n>=32)continue;TC[n]=c;TN[n]=0;n++;}TN[q]++;}
+  for(let q=0;q<n;q++){const c=TC[q];if(Sf[c]>ICE)continue;const cov=Math.min(1,TN[q]/area),d=D[c],nd=(d*(1-cov*(1-keep))+.5)|0;spill+=d-nd;D[c]=nd;DIRT[CH[c]]=1;}
+  for(let k=0;k<mask.length;k+=2){const px=x0+mask[k],py=y0+mask[k+1];if(px<1||py<1||px>=W-1||py>=H-1)continue;const c=(py>>psh)*PW+(px>>psh);let q=32;for(;q<32+m;q++)if(TC[q]===c)break;if(q===32+m){if(m>=32)continue;TC[q]=c;TN[q]=0;m++;}TN[q]++;}
+  for(let q=32;q<32+m;q++){const c=TC[q];if(!PG[c])continue;const pv=(packV*Math.min(1,TN[q]/parea))|0;if(pv>P[c]){P[c]=pv;PROW[((c/PW)|0)+1]=1;}}
+  return spill;}
+function rim(cx,cy,r,spill,side){if(spill<=0)return;const K=FS===1?36:FS===2?10:8,per=Math.max(1,Math.round(spill/K)),a0=rnd()*6.283;
+  for(let k=0;k<K&&spill>0;k++){let px,py;if(side){const sg=k&1?1:-1,rr=r+((k>>1)%4)*FS,j=(ri(3)-1)*FS;px=Math.round(cx+side[0]*sg*rr-side[1]*j);py=Math.round(cy+side[1]*sg*rr+side[0]*j);}
+    else{const a=a0+k*6.283/K,rr=FS===1&&(k&1)?r+1.3:r;px=Math.round(cx+Math.cos(a)*rr);py=Math.round(cy+Math.sin(a)*rr*.9);}
+    if(px<0||py<0||px>=W||py>=H)continue;const c=(py>>sh)*FW+(px>>sh);if(Sf[c]<=ICE&&pOf(c)<200){const add=Math.min(per,spill,PRM.maxD-D[c]);D[c]+=add;spill-=add;DIRT[CH[c]]=1;}}}
+function rectCells(x0,y0,w,h,fn){const a=clamp(Math.round(x0/FS),0,FW-1),b=clamp(Math.max(a,Math.round((x0+w)/FS)-1),0,FW-1),c=clamp(Math.round(y0/FS),0,FH-1),d=clamp(Math.max(c,Math.round((y0+h)/FS)-1),0,FH-1);
+  for(let y=c;y<=d;y++)for(let x=a;x<=b;x++)fn(y*FW+x);}
+function rectP(x0,y0,w,h,v){const a=clamp(Math.round(x0/PS),0,PW-1),b=clamp(Math.max(a,Math.round((x0+w)/PS)-1),0,PW-1),c=clamp(Math.round(y0/PS),0,PH-1),d=clamp(Math.max(c,Math.round((y0+h)/PS)-1),0,PH-1);
+  for(let y=c;y<=d;y++){PROW[y+1]=1;for(let x=a;x<=b;x++){const q=y*PW+x;if(PG[q]&&P[q]<v)P[q]=v;}}}
+// the VFX #1 stamp: whole cells, 2x2 art px, keep 30%
+function stampDot(x,y,w,h,keep,packV){let spill=0;rectCells(x,y,w,h,c=>{if(Sf[c]>ICE)return;const nd=(D[c]*keep)|0;spill+=D[c]-nd;D[c]=nd;DIRT[CH[c]]=1;});rectP(x,y,w,h,packV);rim(x+w/2,y+h/2,Math.max(w,h)*.5+FS*.8+.6,spill);}
+function brush(cx,cy,r,mode){let col=0;const r2=r*r;
+  for(let y=Math.max(0,(cy-r)>>sh);y<=Math.min(FH-1,(cy+r)>>sh);y++)for(let x=Math.max(0,(cx-r)>>sh);x<=Math.min(FW-1,(cx+r)>>sh);x++){const dx=(x+.5)*FS-cx,dy=(y+.5)*FS-cy;if(dx*dx+dy*dy>r2)continue;const i=y*FW+x;if(!holds(Sf[i]))continue;
+    if(mode==='snow')D[i]=Math.min(PRM.maxD,D[i]+5);else{col+=D[i];D[i]=0;pClear(i);}DIRT[CH[i]]=1;}
+  if(mode==='shovel'&&col>0){const n=FS===1?120:FS===2?40:16,per=Math.max(1,(col/n)|0);for(let k=0;k<n;k++){const a=rnd()*6.283,rr=r+2+rnd()*6,x=Math.round(cx+Math.cos(a)*rr),y=Math.round(cy+Math.sin(a)*rr);
+    if(x<0||y<0||x>=W||y>=H)continue;const i=(y>>sh)*FW+(x>>sh);if(holds(Sf[i]))D[i]=Math.min(PRM.maxD,D[i]+per);}}}
+function simStep(sunF){const R=PRM.rate,kc=NF/1000,fw=FW,span=NF-2*FW-2,rt=PRM.repose*FS;let n,picks=0;
+  // 1) snowfall: random picks accepted by exposure, up to the depth the cell's exposure allows
+  n=(R.dep*kc*intensity)|0;picks+=n;for(let k=0;k<n;k++){const i=ri(NF);if(rnd()<E[i])deposit(i,1);}
+  // 2) sandpile: one unit slides to a lower neighbour when the slope is over the limit
+  n=(R.relax*kc)|0;picks+=n;for(let k=0;k<n;k++){const i=fw+1+ri(span),s=Sf[i];if(s>=SOLID)continue;const r=ri(4),j=r===0?i+1:r===1?i-1:r===2?i+fw:i-fw,t=Sf[j];
+    if(t>=SOLID||grp(t)!==grp(s))continue;if(D[i]>D[j]+rt){D[i]--;D[j]++;DIRT[CH[i]]=1;}}
+  // 3) wind creep: loose snow moves one cell downwind and stops against obstacles. The pick count follows 2/FS so the drift speed in px is the same
+  const wm=Math.abs(wind);if(wm>.35&&intensity>.05){const dir=Math.sign(wind);n=(R.wind*kc*wm*2/FS)|0;picks+=n;for(let k=0;k<n;k++){const i=fw+1+ri(span);if(D[i]<4||E[i]<.75*BASEE[Sf[i]]||pOf(i)>100)continue;const j=i+dir;
+    if(holds(Sf[j])&&grp(Sf[j])===grp(Sf[i])&&D[j]<=D[i]+2&&D[j]<PRM.maxD){D[i]--;D[j]++;DIRT[CH[i]]=1;}}}
+  // 4) melt: temperature x sun x shade x packed x open neighbours
+  if(temp>0){n=(R.melt*kc*Math.min(temp,6)/4*(.35+.65*sunF))|0;picks+=n;for(let k=0;k<n;k++){const i=fw+1+ri(span);if(!D[i])continue;const s=Sf[i];
+    let rate=(SHf[i]>127&&sunF>.4?.25:1)*(pOf(i)>100?.5:1);if(s===ROOF||s===ROCKTOP)rate*=1.4;if(s===CANOPY)rate*=1.6;if(s===ICE)rate*=1.3;
+    let c=0;if(D[i-1]<3)c++;if(D[i+1]<3)c++;if(D[i-fw]<3)c++;if(D[i+fw]<3)c++;rate*=.35+c*.5;
+    if(rnd()<rate){D[i]--;if(s<=ICE)Wt[i]=Math.min(255,Wt[i]+5);if(!D[i])pClear(i);DIRT[CH[i]]=1;}}}
+  // 5) wet ground dries
+  n=((temp>0?R.evap*(.3+sunF):R.evapCold)*kc)|0;picks+=n;for(let k=0;k<n;k++){const i=ri(NF);if(Wt[i]&&!D[i])Wt[i]=Wt[i]>2?Wt[i]-2:0;}
+  // 6) snowfall fades the packed field evenly, 13 units per second in heavy snow. A print goes from dark to light to gone, and a trail fades from its old end. (VFX #1 took 14 units per snowflake hit, which left rubble at this scale)
+  fadeAcc+=PRM.packFade*intensity;if(fadeAcc>=1){const f=fadeAcc|0;fadeAcc-=f;for(let r=0;r<PH;r++){if(!PROW[r+1])continue;for(let q=r*PW,e=q+PW;q<e;q++){const v=P[q];if(v)P[q]=v>f?v-f:0;}}}
+  picksTick=picks;let dn=0;for(let t=0;t<NT;t++){dn+=DIRT[t];DIRT[t]=0;}dirtyAvg+=(dn-dirtyAvg)*.05;}
+// server tile bands on a slow clock: 8 tiles per frame, the whole screen every 30 frames
+let bandCur=0,fadeAcc=0;
+function bandSweep(n){const k=32/FS;for(let q=0;q<n;q++){const t=bandCur;bandCur=(bandCur+1)%NT;const tx=t%TW,ty=(t/TW)|0;let s=0,c=0;
+  for(let y=ty*k;y<Math.min(FH,ty*k+k);y++)for(let x=tx*k;x<tx*k+k;x++){const i=y*FW+x;if(Sf[i]<=ICE){s+=D[i];c++;}}
+  const m=c?s/c:0,A=PRM.bandAt,nb=m<A[0]?0:m<A[1]?1:m<A[2]?2:3;if(nb!==BAND[t]){BAND[t]=nb;bandChg++;}}}
+
+// ---------- sprites: 24x32 frames built from row templates, outlined in code ----------
+const UP_F=["..........wwww..........",".........wwwwWW.........",".......hhhwwWWhhh.......","......hLLhhhhhhhhH......",".....hLLhhhhhhhhhHH.....","....hhLhhhhhhhhhhhHH....","....wwwwwwwwwwwwwwWW....","....wwwwwwwwwwwwwWWW....","....kssssssssssssssk....","....kssEEssssssEEssk....","....sssEEssssssEEsSs....","....sSssssssssssssSs....",".....ssssssSSsssssS.....","......yyyyyyyyyyyY......","....llyyyyyyyyyyyYCC....","...lccccyyyYYycccccCC...","...lccoccyyYYccccoCCC...","...lccocccyyYccccoCCC...","...cccocccccccccCoCCC...","...cccocccccccccCoCCC...","...gggoccccccccCCoGGG...","....gg.cccccccCCC.GG....",".......ccccccCCCC......."];
+const UP_B=["..........wwww..........",".........wwwwWW.........",".......hhhwwWWhhh.......","......hLLhhhhhhhhH......",".....hLLhhhhhhhhhHH.....","....hhLhhhhhhhhhhhHH....","....hhhhhhhhhhhhhhHH....","....wwwwwwwwwwwwwwWW....","....wwwwwwwwwwwwwWWW....","....kkkkkkkkkkkkkkKK....","....kkkkkkkkkkkkkKKK....",".....kkkkkkkkkkkKKK.....","......ssssssssssSS......","......yyyyyyyyyyyY......","....llyyyyyyyyyyyYCC....","...lccccyyYccccccccCC...","...lccoccyyYcccccoCCC...","...lccoccyyYcccccoCCC...","...cccocccyYccccCoCCC...","...cccocccccccccCoCCC...","...gggoccccccccCCoGGG...","....gg.cccccccCCC.GG....",".......ccccccCCCC......."];
+const UP_S=["........wwww............",".......wwwwWW...........","......hhwwWWhhhhh.......",".....hLLhhhhhhhhhH......","....hLLhhhhhhhhhhhHH....","....hhhhhhhhhhhhhhHH....","....wwwwwwwwwwwwwwWWW...","....wwwwwwwwwwwwwWWW....","....kkkkkssssssssss.....","....kkkksssssssEEss.....","....kkkkssssssSEEsss....",".....kkksssssssssss.....","......kkssssssssSS......","......yyyyyyyyyyyY......","...YYyyyyyyyyyyyYY......","..YY...lcccccccccC......","..Y....lccccccccCC......",".......lccccccccCC......",".......ccccccccCCC......",".......ccccccccCCC......",".......ccccccccCCC......","........ccccccCCC.......","........ccccccCCC......."];
+const ARM_S=["ollC.","ollC.","ollC.","ollC.","ollC.","oggG.",".oo.."];
+const LF_I=[".......pppp..pPPP.......",".......pppp..pPPP.......",".......pppp..pPPP.......","......bbbbb..bbbbB......","......bbbbb..bbbbB......","......bBBBB..bBBBB......"];
+// step frames: the planted boot is one row taller and 1 px wider (it is the forward foot), the swinging boot is lifted 2 px
+const LF_L=[".......pppp..pPPP.......",".......pppp..pPPP.......","......bbbbb..bbbbB......","......bbbbb..bBBBB......",".....bbbbbb.............",".....bbBBBB............."]; // viewer-left foot planted
+const LF_R=[".......pppp..pPPP.......",".......pppp..pPPP.......","......bbbbb..bbbbB......","......bBBBB..bbbbB......",".............bbbbbB.....",".............bbBBBB....."];
+const LS_I=["........pppPPP..........","........pppPPP..........","........pppPPP..........","........bbbbBBB.........","........bbbbbBBB........","........bBBBBBBB........"];
+const LS_N=[".......PPPppppp.........","......PPP...pppp........",".....PPP.....pppp.......","....BBB.......bbbb......","...BBBB.......bbbbb.....","...BBB........bBBBBB...."]; // near leg forward
+const LS_NP=["........pppPPP..........","........ppppPP..........",".......PPpppp...........","......BBBbbbb...........","......BB.bbbbb..........",".........bBBBBB........."];
+const LS_F=[".......pppppPPP.........","......ppp...PPPP........",".....ppp.....PPPP.......","....bbb.......BBBB......","...bbbb.......BBBBB.....","...bBB........BBBBBB...."]; // far leg forward
+const LS_FP=["........PPPppp..........","........PPpppp..........",".......ppPPPP...........","......bbbBBBB...........","......bB.BBBBB..........",".........BBBBBB........."];
+// frame 0 is the left step, frame 2 the right step, 1 and 3 are passing poses, 4 is idle
+const UPS=[UP_F,UP_B,UP_S],LEGS=[[LF_R,LF_I,LF_L,LF_I,LF_I],[LF_L,LF_I,LF_R,LF_I,LF_I],[LS_F,LS_FP,LS_N,LS_NP,LS_I]];
+const FOXT=[["...............d.d..","..............ffdff.","..............fffff.",".ww..........ffffEff","wwff..fffffffffffwwd",".wfffffffffffffffww.","..ffffffffffFFFwww..","...ffffffffFFFFF....","....ffFF...fFF......","....dD......dD......","....dD......dD......","...................."],
+  ["...............d.d..","..............ffdff.","..............fffff.",".ww..........ffffEff","wwff..fffffffffffwwd",".wfffffffffffffffww.","..ffffffffffFFFwww..","...ffffffffFFFFF....","...fFF.......fFF....","..dD..........dD....",".dD............dD...","...................."]];
+const mkMap=(hat,hatL,hatD,coat,coatL,coatD,scarf,scarfD,hair,brim,brimD)=>({h:hat,L:hatL,H:hatD,w:brim||HATB,W:brimD||HATB_D,k:hair,K:TRUNK_D,s:SKIN,S:SKIN_D,E:OUTL,y:scarf,Y:scarfD,c:coat,l:coatL,C:coatD,g:SKIN,G:SKIN_D,p:LEG,P:LEG_D,b:DOOR_A,B:WALL_D,o:OUTL});
+const MAPS=[mkMap(HAT,HAT_L,HAT_D,COAT,COAT_L,COAT_D,SCARF,SCARF_D,TRUNK),
+  mkMap(V_HAT,WALL_A,WALL_D,V_COAT,V_COAT_L,V_COAT_D,HAT,HAT_D,ROCK_B,WALL_L,WALL_A),
+  mkMap(CAN_A,CAN_L,CAN_B,ROOF_A,ROOF_L,ROOF_B,HATB,HATB_D,TRUNK),
+  mkMap(PUR_A,PUR_L,PUR_D,WALL_A,WALL_L,WALL_B,COAT,COAT_D,TRUNK_D),
+  mkMap(SCARF,FLW,SCARF_D,PUR_A,PUR_L,PUR_D,HAT,HAT_D,TRUNK),
+  mkMap(COAT,COAT_L,COAT_D,ROCK_A,ROCK_L,ROCK_B,SCARF,SCARF_D,WALL_D),
+  mkMap(ROCK_B,ROCK_A,ROCK_C,CAN_A,CAN_L,CAN_B,FOX,FOX_D,TRUNK,ROCK_L,ROCK_A)];
+function outlineSprite(px,w,h){const add=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(px[i])continue;if((x>0&&px[i-1])||(x<w-1&&px[i+1])||(y>0&&px[i-w])||(y<h-1&&px[i+w]))add.push(i);}for(const i of add)px[i]=OUTL;}
+function mkFrames(map){const out=[],hatSet=new Set([map.h,map.L,map.H,map.w,map.W]),coatSet=new Set([map.c,map.l,map.C]);
+  for(let d=0;d<3;d++){const up=UPS[d],fr=[];
+    for(let f=0;f<5;f++){const px=new Uint8Array(768),m=new Uint8Array(768),bob=(f===1||f===3)?1:0,y0=2-bob;
+      const row=(str,y,xo)=>{if(str.length!==24)console.error('sprite row length',str);for(let x=0;x<24;x++){const ch=str[x],X=x+(xo|0);if(ch!=='.'&&y>=0&&y<32&&X>=0&&X<24)px[y*24+X]=map[ch];}};
+      const g=up.map(r=>r.split(''));g.push(new Array(24).fill('.'),new Array(24).fill('.'));let sway=0;
+      if(d<2&&(f===0||f===2)){ // front and back step frames: the arm opposite the planted foot swings 2 px forward, the other arm rises 1 px, and the body leans 1 px over the planted foot
+        const plantRight=(f===0)===(d===0),fa=plantRight?3:17,ba=plantRight?17:3;sway=plantRight?1:-1;
+        for(let r=21;r>=15;r--)for(let x=fa;x<fa+4;x++)g[r+2][x]=g[r][x];
+        for(let r=15;r<=20;r++)for(let x=ba;x<ba+4;x++)g[r][x]=g[r+1][x];for(let x=ba;x<ba+4;x++)g[21][x]='.';}
+      for(let r=0;r<25;r++)row(g[r].join(''),y0+r,sway);
+      if(d===2){const sw=f===0?3:f===2?-3:0;for(let r=0;r<ARM_S.length;r++){const s=ARM_S[r],xo=Math.round(sw*r/6);for(let x=0;x<5;x++)if(s[x]!=='.')px[(y0+15+r)*24+10+xo+x]=map[s[x]];}} // side view: the arm swings as a slanted line, the hand 3 px ahead or behind
+      const L=LEGS[d][f];if(bob)row(L[0],24);for(let r=0;r<6;r++)row(L[r],25+r);
+      // where snow settles: 2 px on the top of the hat, 2 px on each shoulder
+      for(let x=0;x<24;x++){let r0=-1;for(let y=0;y<10;y++)if(px[y*24+x]){r0=y;break;}if(r0>=0&&hatSet.has(px[r0*24+x])){m[r0*24+x]=1;if(hatSet.has(px[(r0+1)*24+x]))m[(r0+1)*24+x]=2;}}
+      for(let y=y0+13;y<=y0+16;y++)for(let x=0;x<24;x++)if(coatSet.has(px[y*24+x])&&!px[(y-1)*24+x]){m[y*24+x]=3;if(coatSet.has(px[(y+1)*24+x]))m[(y+1)*24+x]=4;}
+      outlineSprite(px,24,32);fr.push({px,m});}
+    out.push(fr);}
+  return out;}
+const FR=MAPS.map(mkFrames);
+const FOXF=FOXT.map(T=>{const px=new Uint8Array(22*14),map={f:FOX,F:FOX_D,w:HATB,d:TRUNK_D,D:OUTL,E:OUTL};for(let r=0;r<12;r++){if(T[r].length!==20)console.error('fox row length',T[r]);for(let c=0;c<20;c++)if(T[r][c]!=='.')px[(r+1)*22+c+1]=map[T[r][c]];}outlineSprite(px,22,14);return px;});
+// boot prints: 4x6 px, one mask per walking direction (0 down, 1 up, 2 right, 3 left). The 1:1 field also takes the heel gap
+const mkMask=rows=>{const m=[];for(let y=0;y<rows.length;y++)for(let x=0;x<rows[y].length;x++)if(rows[y][x]==='#')m.push(x,y);return m;};
+const BOOT1=[mkMask(["####","....","####","####","####",".##."]),mkMask([".##.","####","####","####","....","####"]),mkMask(["#.###.","#.####","#.####","#.###."]),mkMask([".###.#","####.#","####.#",".###.#"])];
+const BOOTV=mkMask(["####","####","####","####","####","####"]),BOOTH=mkMask(["######","######","######","######"]);
+const PAW=mkMask(["##","##"]);
+
+// ---------- actors ----------
+const mkActor=(x,y,set)=>({x,y,set,dir:0,fr:0,ph:0,moving:false,foot:0,dist:0,trd:0,snowy:0,snowLv:0,breath:rnd()*2,amb:0,sink:0,route:null,ri:0,wait:0,tx:null,ty:null,tile:-1,speed:PRM.speed});
+const player=mkActor(300,246,0),vill=mkActor(144,134,1),crowd=[];
+for(let k=0;k<20;k++){const a=mkActor(0,0,2+k%5);a.speed=56+hash2(k,5)*22;a.wait=rnd()*3;crowd.push(a);}
+const VWP=[[144,134],[144,208],[300,208],[474,206],[624,208],[474,206],[300,208],[144,208]];vill.wp=0;vill.wait=2;vill.speed=44;
+const fox={on:false,x:-20,y:120,by:120,t:6,dist:0,foot:0,anim:0,vx:1};
+function blocked(x,y){x|=0;y|=0;if(x<8||x>=W-8||y<12||y>=H-2)return true;for(let xx=x-6;xx<=x+6;xx+=3)if(Cm[y*W+xx]||Cm[(y-3)*W+xx])return true;return false;}
+const TB=new Uint8Array(NT),tcx=t=>(t%TW)*32+16,tcy=t=>((t/TW)|0)*32+24,tileAt=(x,y)=>clamp(y>>5,0,TH-1)*TW+clamp(x>>5,0,TW-1);
+function buildTileMap(){for(let t=0;t<NT;t++){const x=tcx(t),y=tcy(t);let b=y>=H-6?1:0;if(!b)for(let yy=y-8;yy<=y+3&&!b;yy++)for(let xx=x-10;xx<=x+10;xx+=2)if(Cm[yy*W+xx]){b=1;break;}TB[t]=b;}}
+const BQ=new Int16Array(NT),BP=new Int16Array(NT);
+function bfs(from,to){if(TB[to]||from===to)return null;BP.fill(-1);let qh=0,qt=0;BQ[qt++]=from;BP[from]=from;
+  while(qh<qt){const t=BQ[qh++];if(t===to)break;const x=t%TW,y=(t/TW)|0;
+    for(let k=0;k<4;k++){const nx=x+(k===0?1:k===1?-1:0),ny=y+(k===2?1:k===3?-1:0);if(nx<0||ny<0||nx>=TW||ny>=TH)continue;const n=ny*TW+nx;if(TB[n]||BP[n]>=0)continue;BP[n]=t;BQ[qt++]=n;}}
+  if(BP[to]<0)return null;const path=[];for(let t=to;t!==from;t=BP[t])path.push([tcx(t),tcy(t)]);path.reverse();return path;}
+function freeTile(){for(let k=0;k<40;k++){const t=ri(NT);if(!TB[t])return t;}return tileAt(300,246);}
+function ambient(x,y){let s=0,n=0,s2=0,n2=0;for(let k=0;k<4;k++){const px=(x+[-9,9,-6,6][k])|0,py=(y+[-1,-1,3,3][k])|0;if(px<0||py<0||px>=W||py>=H)continue;const c=(py>>sh)*FW+(px>>sh);if(Sf[c]>ICE)continue;
+  s2+=D[c];n2++;if(P[(py>>psh)*PW+(px>>psh)]<110){s+=D[c];n++;}}return n?s/n:n2?s2/n2:0;}
+function puffs(x,y,n,z,sp){for(let k=0;k<n;k++)parts.push({k:'puff',x:x+(rnd()-.5)*6,y:y+(rnd()-.5)*3,z,vx:(rnd()-.5)*sp,vy:(rnd()-.5)*sp*.4,vz:10+rnd()*22,life:.5+rnd()*.4});}
+function footfall(c,f){const fx=Math.round(c.x),fy=Math.round(c.y),d=c.dir,g=~(PS-1);let px,py;
+  // two rows of prints 6 px apart, each print snapped to the packed field's cells so it fills them whole
+  if(d<2){const xl=(fx-5)&g;px=((f===0)===(d===0))?xl+6:xl;py=(d===0?fy-4:fy-6)&g;}
+  else{const yt=(fy-8)&g;py=f===0?yt:yt+6;px=(d===2?fx:fx-6)&g;}
+  const sp=stampMask(px,py,PS===1?BOOT1[d]:d<2?BOOTV:BOOTH,PRM.keep,255);rim(px+(d<2?2:3),py+(d<2?3:2),Math.max(4.8,FS*1.9),sp);printsSec++;
+  if(c.amb>24)puffs(px+2,py+2,2,2,22);}
+// in snow that hides the boots the character ploughs a channel with a round brush 10 px across, so diagonals have smooth edges. The spill goes to both sides
+function trench(c,mx,my){const R=PRM.trenchR,cx=Math.round(c.x),cy=Math.round(c.y)-3,lvl=(c.amb*PRM.trenchKeep)|0,r2=R*R,m=Math.hypot(mx,my)||1;let spill=0;
+  for(let y=Math.max(0,(cy-R)>>sh);y<=Math.min(FH-1,(cy+R)>>sh);y++)for(let x=Math.max(0,(cx-R)>>sh);x<=Math.min(FW-1,(cx+R)>>sh);x++){const dx=(x+.5)*FS-cx,dy=(y+.5)*FS-cy;if(dx*dx+dy*dy>r2)continue;const q=y*FW+x;if(Sf[q]>ICE)continue;const d=D[q];if(d>lvl){spill+=d-lvl;D[q]=lvl;DIRT[CH[q]]=1;}}
+  for(let y=Math.max(0,(cy-R)>>psh);y<=Math.min(PH-1,(cy+R)>>psh);y++){let any=0;for(let x=Math.max(0,(cx-R)>>psh);x<=Math.min(PW-1,(cx+R)>>psh);x++){const dx=(x+.5)*PS-cx,dy=(y+.5)*PS-cy;if(dx*dx+dy*dy>r2)continue;const q=y*PW+x;if(PG[q]&&P[q]<160){P[q]=160;any=1;}}if(any)PROW[y+1]=1;}
+  rim(cx,cy,R+Math.max(2,FS),spill,[-my/m,mx/m]);}
+function shake(c){puffs(c.x,c.y-2,7,26,26);}
+function idle(c){if(c.moving){c.moving=false;}c.fr=4;}
+function walk(c,vx,vy,dt,noclip){const sl=PRM.slow[BAND[tileAt(c.x|0,(c.y-2)|0)]];vx*=sl;vy*=sl;let mx=0,my=0;const nx=c.x+vx*dt,ny=c.y+vy*dt;
+  if(noclip||!blocked(nx,c.y)){mx=nx-c.x;c.x=nx;}if(noclip||!blocked(c.x,ny)){my=ny-c.y;c.y=ny;}
+  const m=Math.hypot(mx,my);if(m<.001){idle(c);return 0;}
+  if(Math.abs(vx)>Math.abs(vy)+.01)c.dir=vx>0?2:3;else c.dir=vy>0?0:1;
+  const deep=c.sink>=PRM.trenchSink&&printMode==='boot';
+  if(!c.moving){c.moving=true;c.ph=0;c.fr=0;if(c.snowy>.3)shake(c);if(printMode==='boot'&&!deep)footfall(c,0);} // a walk starts on a step pose
+  else{c.ph+=m/PRM.stepPx;const f=(c.ph|0)&3;if(f!==c.fr){c.fr=f;if((f===0||f===2)&&printMode==='boot'&&!deep)footfall(c,f);}}
+  if(deep){c.trd+=m;if(c.trd>=PRM.trenchEvery){c.trd=0;trench(c,mx,my);if(rnd()<.25)puffs(c.x,c.y-1,1,3,26);}}
+  if(printMode==='dot'){c.dist+=m;if(c.dist>=4){c.dist=0;c.foot^=1;const side=c.foot?1:-1,hz=Math.abs(mx)>Math.abs(my);stampDot(c.x+(hz?0:side*1.5)-1,c.y+(hz?side*.8:0)-1,2,2,PRM.keep,255);printsSec++;}}
+  if(printMode==='tile'){const t=tileAt(c.x|0,(c.y-2)|0);if(t!==c.tile){if(c.tile>=0){SWT[c.tile]=PRM.swapS;SWD[c.tile]=Math.abs(mx)>Math.abs(my)?1:0;printsSec++;}c.tile=t;}}
+  return m;}
+function follow(c,dt){if(!c.route||c.ri>=c.route.length)return true;const p=c.route[c.ri],dx=p[0]-c.x,dy=p[1]-c.y,l=Math.hypot(dx,dy);
+  if(l<1.2){c.x=p[0];c.y=p[1];c.ri++;return c.ri>=c.route.length;}walk(c,dx/l*c.speed,dy/l*c.speed,Math.min(dt,l/(c.speed*.5)),true);return false;}
+function updateActor(c,dt){c.amb=ambient(c.x,c.y);c.sink=sinkCap?Math.min(sinkCap,2*((c.amb*sinkCap/(2*PRM.sinkFull))|0)):0;
+  const snowing=intensity>.2;c.snowy=clamp(c.snowy+dt*(c.moving?-2.5:snowing?.11*intensity:-.04),0,1);
+  c.breath-=dt;if(c.breath<=0&&temp<1){c.breath=1.6+rnd()*.9;if(c.dir!==1){const fx=c.dir===3?-9:c.dir===2?9:0;parts.push({k:'breath',x:c.x+fx,y:c.y+(c.dir===0?1:0),z:15-c.sink,vx:fx*.9+wind*9,vy:c.dir===0?4:0,vz:5,life:1.1});}}}
+function updateEntities(dt){
+  // player: free 8-way movement, or tile to tile
+  let ix=keys.r-keys.l,iy=keys.d-keys.u;
+  if(tileSteps){const p=player;if(!p.route||p.ri>=p.route.length){const t=tileAt(p.x|0,(p.y-2)|0);
+      if(Math.abs(p.x-tcx(t))>1.5||Math.abs(p.y-tcy(t))>1.5)p.route=[[tcx(t),tcy(t)]],p.ri=0;
+      else if(ix||iy){const tx=(t%TW)+ix,ty=((t/TW)|0)+iy;if(tx>=0&&ty>=0&&tx<TW&&ty<TH){const n=ty*TW+tx,ok=!TB[n]&&(!ix||!iy||(!TB[t+ix]&&!TB[t+iy*TW]));if(ok){p.route=[[tcx(n),tcy(n)]];p.ri=0;p.tx=null;}else{p.dir=ix?(ix>0?2:3):(iy>0?0:1);}}}
+      else if(p.tx!==null){const r=bfs(t,tileAt(p.tx|0,p.ty|0));p.tx=null;if(r){p.route=r;p.ri=0;}}}
+    if(p.route&&p.ri<p.route.length){if(follow(p,dt)&&!(ix||iy)&&p.tx===null)idle(p);}else idle(p);}
+  else{player.route=null;if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<2)player.tx=null;else{ix=dx/L;iy=dy/L;}}
+    if(ix||iy){const L=Math.hypot(ix,iy);if(!walk(player,ix/L*PRM.speed,iy/L*PRM.speed,dt,false))player.tx=null;}else idle(player);}
+  updateActor(player,dt);
+  // villager walks the path between the door and the lamp
+  if(vill.hold){idle(vill);}
+  else if(vill.wait>0){vill.wait-=dt;idle(vill);}
+  else{if(!vill.route||vill.ri>=vill.route.length){vill.wp=(vill.wp+1)%VWP.length;const p=VWP[vill.wp];
+      if(tileSteps){vill.route=bfs(tileAt(vill.x|0,(vill.y-2)|0),tileAt(p[0],p[1]))||[];}else vill.route=[p];vill.ri=0;}
+    if(follow(vill,dt)){vill.route=null;vill.wait=vill.wp===0||vill.wp===3?3+rnd()*4:.15;if(vill.wait>1)idle(vill);}}
+  updateActor(vill,dt);
+  // crowd: other players on random errands, tile to tile
+  for(let k=0;k<crowdN;k++){const c=crowd[k];if(!c.live){const t=freeTile();c.x=tcx(t);c.y=tcy(t);c.live=true;c.route=null;c.tile=-1;}
+    if(c.wait>0){c.wait-=dt;idle(c);}
+    else{if(!c.route){c.route=bfs(tileAt(c.x|0,(c.y-2)|0),freeTile());c.ri=0;if(!c.route){c.wait=.5;}}
+      if(c.route&&follow(c,dt)){c.route=null;c.wait=.4+rnd()*2.5;idle(c);}}
+    updateActor(c,dt);}
+  // fox crosses now and then and leaves paw prints (none in tile swap mode: monsters leave no prints in Tibia)
+  if(!fox.on){fox.t-=dt;if(fox.t<=0){fox.on=true;fox.vx=rnd()<.5?1:-1;fox.x=fox.vx>0?-14:W+14;fox.by=40+rnd()*280;fox.y=fox.by;}}
+  else{fox.x+=fox.vx*104*dt;fox.y=fox.by+Math.sin(fox.x*.022)*14;fox.anim+=dt*11;fox.dist+=104*dt;
+    if(fox.dist>9){fox.dist=0;fox.foot^=1;if(printMode==='boot'){const sp=stampMask((fox.x-fox.vx*5)|0,(fox.y-(fox.foot?3:1))|0,PAW,.45,210);rim(fox.x-fox.vx*5,fox.y-1,Math.max(2.4,FS*1.3),sp);}
+      else if(printMode==='dot')stampDot(fox.x-fox.vx*4,fox.y-(fox.foot?2:0),1,1,.45,200);}
+    if(fox.x<-18||fox.x>W+18){fox.on=false;fox.t=10+rnd()*16;}}
+  // chimney smoke and particles
+  if(rnd()<dt*5)parts.push({k:'smoke',x:HX+113+rnd()*3,y:HBASE,z:HBASE-HY-4,vx:wind*18,vy:0,vz:13+rnd()*6,life:3.4,r:2});
+  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.life-=dt;if(p.life<=0){parts[k]=parts[parts.length-1];parts.pop();continue;}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.k==='puff'){p.vz-=110*dt;if(p.z<0){p.life=0;}}if(p.k==='smoke'){p.vx+=wind*14*dt;p.r=Math.min(7,p.r+dt*1.7);}}
+  for(let t=0;t<NT;t++)if(SWT[t]>0)SWT[t]-=dt;}
+
+// ---------- flakes: a near layer with height, and two hashed layers with no state ----------
+const NEAR_MAX=180,FN={x:new Float32Array(NEAR_MAX),y:new Float32Array(NEAR_MAX),z:new Float32Array(NEAR_MAX),ph:new Float32Array(NEAR_MAX),on:new Uint8Array(NEAR_MAX),sh:new Uint8Array(NEAR_MAX)};
+const HMAX=640,HXa=new Float32Array(HMAX*2),HYa=new Float32Array(HMAX*2),HPa=new Float32Array(HMAX*2);for(let k=0;k<HMAX*2;k++){HXa[k]=rnd();HYa[k]=rnd();HPa[k]=rnd();}
+const offX=[0,0],offY=[0,0];let nearAlive=0;
+function spawnFlake(k,top){FN.x[k]=rnd()*(W+120)-60;FN.y[k]=rnd()*(H+130);FN.z[k]=top?118+rnd()*20:rnd()*136;FN.ph[k]=rnd()*6.28;FN.sh[k]=(rnd()*100)|0;}
+for(let k=0;k<NEAR_MAX;k++){spawnFlake(k,false);FN.on[k]=k<PRM.flakes.near?1:0;}
+function updateFlakes(dt){const active=Math.round(PRM.flakes.near*Math.min(1,intensity*1.1));let alive=0;
+  for(let k=0;k<NEAR_MAX;k++){if(!FN.on[k]){if(k<active&&rnd()<dt*2){spawnFlake(k,true);FN.on[k]=1;}continue;}alive++;
+    FN.z[k]-=PRM.fall.near*dt*(.85+.3*Math.sin(FN.ph[k]));FN.x[k]+=(wind*44+Math.sin(FN.ph[k]+simT*3)*8)*dt;FN.y[k]+=Math.cos(FN.ph[k]*1.3+simT*1.8)*3*dt;
+    if(FN.z[k]<=0){const x=FN.x[k]|0,y=FN.y[k]|0;if(x>=0&&y>=0&&x<W&&y<H){const i=(y>>sh)*FW+(x>>sh);if(rnd()<E[i])deposit(i,2);}
+      if(k<active)spawnFlake(k,true);else FN.on[k]=0;}
+    if(FN.x[k]<-70)FN.x[k]+=W+130;else if(FN.x[k]>W+70)FN.x[k]-=W+130;}
+  nearAlive=alive;
+  offX[0]+=wind*14*dt;offY[0]+=PRM.fall.far*dt;offX[1]+=wind*26*dt;offY[1]+=PRM.fall.mid*dt;}
+
+// ---------- weather and time ----------
+const daylight=t=>{const h=t/60;return clamp(Math.sin((h-6)/12*Math.PI)*1.6,0,1);};
+const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
+function setWeather(w){weather=w;mark('#wbtns [data-w]','w',w);}
+const windEl=$('wind');
+function updateWeather(gm,dt){
+  if(auto){wTimer-=gm;if(wTimer<=0){cycI=(cycI+1)%CYCLE.length;setWeather(CYCLE[cycI][0]);wTimer=CYCLE[cycI][1];}
+    if(rnd()<dt*.08)windT=(rnd()*2-1)*(weather==='heavy'?.9:.5);wind+=(windT-wind)*Math.min(1,dt*.4);windEl.value=Math.round(wind*100);$('windv').textContent=wind.toFixed(1);}
+  else wind=windEl.value/100;
+  const ti={heavy:1,light:.35}[weather]||0;intensity+=(ti-intensity)*Math.min(1,dt*.5*Math.max(1,speed/2));
+  const dl=daylight(clock),tt=weather==='sunny'?-2+8*dl:weather==='overcast'?-1:-3.5;temp+=(tt-temp)*Math.min(1,gm*.02);
+  const wb=Math.round(wind*2);if(wb!==windBucket){windBucket=wb;computeExposure(wb/2);}
+  const key=weather+wb;if(key!==lastW){lastW=key;wxMsgs++;wxBytes+=PRM.bytes.weather;wxSec+=PRM.bytes.weather;}}
+function buildPalette(){const dl=daylight(clock),nf=1-Math.min(1,dl*1.4),sunny=weather==='sunny';
+  const warm=Math.max(0,1-Math.abs(dl-.18)/.18)*(sunny||weather==='overcast'?1:.5);
+  let r=.42+.58*dl+.14*warm,g=.47+.53*dl+.02*warm,b=.72+.28*dl-.07*warm;
+  if(!sunny){const k=Math.min(1,intensity*.6+(weather==='overcast'?.5:.2));r*=1-.08*k;g*=1-.06*k;b*=1-.02*k;}
+  const lk=Math.min(1,nf*2.4),L1=lk*.4,L2=lk*.85,lk0=nf>.1?lk:0;
+  for(let i=0;i<N*NV;i++){const o=i*3,base=i%N;let R=RGB[o]*r,G=RGB[o+1]*g,Bc=RGB[o+2]*b;
+    if(base===WIN||base===WIN_D||base===LAMP_L){const e=base===LAMP_L?Math.max(lk0,.3):lk0,k=base===WIN_D?.86:1;R=R*(1-e)+255*k*e;G=G*(1-e)+(base===LAMP_L?214:196)*k*e;Bc=Bc*(1-e)+(base===LAMP_L?130:96)*k*e;}
+    pal[i]=pack(R,G,Bc);const wr=RGB[o]*1.02+16,wg=RGB[o+1]*.84+6,wb=RGB[o+2]*.6;
+    palL1[i]=pack(R+(wr-R)*L1,G+(wg-G)*L1,Bc+(wb-Bc)*L1);palL2[i]=pack(R+(wr-R)*L2,G+(wg-G)*L2,Bc+(wb-Bc)*L2);}
+  return {dl,nf,sunny};}
+
+// ---------- render ----------
+const COV=new Uint8Array(NP+2*PAD),DS=new Uint8Array(NP+2*PAD),IDX=new Uint16Array(NP),SPR=new Uint8Array(NP),OD=new Uint8Array(NP);
+let CAPL=new Int32Array(0),CAPC=new Uint8Array(0),CAPM=new Uint8Array(NP);
+function buildCapList(){const l=[];for(let i=0;i<NP;i++)if(S[i]>ICE&&S[i]<SOLID){l.push(i);CAPM[i]=1;}CAPL=Int32Array.from(l);CAPC=new Uint8Array(l.length);for(let k=0;k<l.length;k++)CAPC[k]=64+S[l[k]]*8;}
+// pass A: sample the field at every ground pixel and test it against the threshold. Codes: 0 bare, 1 snow, 3 packed (trench floor, old print), 7 boot print, 16 not ground
+// KIND per art pixel: 0 = ground pixel whose 4 bilinear cells are all ground (fixed weights), 1 = ground pixel at a class or screen border (weight table), 2 = not ground
+function slowPx(i,k,TH){const d_=D,p_=P,j=CI[i],w=CW[i],d=(d_[j]*(w&255)+d_[j+1]*(w>>>8&255)+d_[j+FW]*(w>>>16&255)+d_[j+FW+1]*(w>>>24)+64)>>7;DS[k]=d;
+  let p=0;if(d>2){const q=CIp[i],v=CWp[i];p=(p_[q]*(v&255)+p_[q+1]*(v>>>8&255)+p_[q+PW]*(v>>>16&255)+p_[q+PW+1]*(v>>>24))>>7;}
+  COV[k]=p>84?(p_[CNp[i]]>200?7:3):(d+(p>>1)>TH[i]?1:0);return d;}
+const WO4=new Uint8Array([5,7,7,5]);
+function passA(){const TH=THc,cov=COV,ds=DS,d_=D,p_=P,kd=KIND,fw=FW,pr=PROW;let dp=0;
+  if(!bilin||FS===1){for(let y=0;y<H;y++){const anyP=pr[(y>>psh)+1];let i=y*W,k=i+PAD;
+      for(let x=0;x<W;x++,i++,k++){if(kd[i]===2){cov[k]=16;ds[k]=dp;continue;}const d=d_[CN[i]];ds[k]=dp=d;
+        const p=anyP&&d>2?p_[CNp[i]]:0;if(p>84)cov[k]=p>200?7:3;else cov[k]=d+(p>>1)>TH[i]?1:0;}}}
+  else if(FS===2){ // 1:2: each art pixel takes 9/16 of its own cell and 3/16, 3/16, 1/16 of the three nearest. Two pixels per cell share two reads, and no table is read
+    for(let y=0;y<H;y++){const cy=y>>1,sy=(y&1)?1:-1,vy=sy*fw,anyP=pr[cy+1]|pr[cy+1+sy];let i=y*W,k=i+PAD,j=cy*fw;
+      for(let cx=0;cx<fw;cx++,j++,i+=2,k+=2){
+        if((kd[i]|kd[i+1])===0){const b=9*d_[j]+3*d_[j+vy]+8,d0=(b+3*d_[j-1]+d_[j+vy-1])>>4,d1=(b+3*d_[j+1]+d_[j+vy+1])>>4;ds[k]=d0;ds[k+1]=dp=d1;let p0=0,p1=0,pc=0;
+          if(anyP&&(d0>2||d1>2)){pc=p_[j];const pv=p_[j+vy],pl=p_[j-1],pvl=p_[j+vy-1],prr=p_[j+1],pvr=p_[j+vy+1];if(pc|pv|pl|pvl|prr|pvr){const pb=9*pc+3*pv;p0=(pb+3*pl+pvl)>>4;p1=(pb+3*prr+pvr)>>4;}}
+          cov[k]=p0>84?(pc>200?7:3):(d0+(p0>>1)>TH[i]?1:0);cov[k+1]=p1>84?(pc>200?7:3):(d1+(p1>>1)>TH[i+1]?1:0);} // packed snow hides the ground like deeper snow does, so a print never shows grass around it
+        else for(let q=0;q<2;q++){const kind=kd[i+q];if(kind===2){cov[k+q]=16;ds[k+q]=dp;}else dp=slowPx(i+q,k+q,TH);}}}}
+  else{ // 1:4: weights 5/8 and 7/8 for the own cell by phase, from a 4-entry table. The packed field is 1:4, or 1:2 in split mode
+    const pw=PW,split=PS===2;
+    for(let y=0;y<H;y++){const py=y&3,sy=py<2?-1:1,vy=sy*fw,woy=WO4[py],wny=8-woy,rj=(y>>2)*fw,psy=(y&1)?1:-1,pvy=split?psy*pw:vy,rq=split?(y>>1)*pw:rj;
+      const anyP=split?pr[(y>>1)+1]|pr[(y>>1)+1+psy]:pr[(y>>2)+1]|pr[(y>>2)+1+sy];let i=y*W,k=i+PAD;
+      for(let x=0;x<W;x++,i++,k++){const kind=kd[i];
+        if(kind===0){const px=x&3,hx=px<2?-1:1,wox=WO4[px],wnx=8-wox,j=rj+(x>>2);
+          const d=((d_[j]*wox+d_[j+hx]*wnx)*woy+(d_[j+vy]*wox+d_[j+vy+hx]*wnx)*wny+32)>>6;ds[k]=dp=d;let p=0,pc=0;
+          if(anyP&&d>2){if(split){const q=rq+(x>>1),qh=(x&1)?1:-1;pc=p_[q];const ph=p_[q+qh],pv=p_[q+pvy],pd=p_[q+pvy+qh];if(pc|ph|pv|pd)p=(9*pc+3*ph+3*pv+pd)>>4;}
+            else{pc=p_[j];const ph=p_[j+hx],pv=p_[j+vy],pd=p_[j+vy+hx];if(pc|ph|pv|pd)p=((pc*wox+ph*wnx)*woy+(pv*wox+pd*wnx)*wny)>>6;}}
+          cov[k]=p>84?(pc>200?7:3):(d+(p>>1)>TH[i]?1:0);}
+        else if(kind===1)dp=slowPx(i,k,TH);
+        else{cov[k]=16;ds[k]=dp;}}}}}
+// PROW: 1 for every row of the packed field that may hold a trail. A row with no trail skips the packed samples. Stamps set it at once, a slow sweep clears it
+function sweepPRows(){const f=frameN&15;for(let r=f;r<PH;r+=16){let a=0;for(let q=r*PW,e=q+PW;q<e;q++)a|=P[q];PROW[r+1]=a?1:0;}}
+// pass B: shade. Banded: light rim on north and west edges, shadow line on south and east edges, one body colour, thin drawn drift lines
+function passB(env){const cov=COV,ds=DS,TH=THc,W2=2*W,W3=3*W,shadowOn=env.sunny&&env.dl>.25,sparkOn=env.sunny&&env.dl>.3,slot=Math.imul(frameN>>3,2654435761),band=shade==='band',frost=PRM.frost,N2=2*N,N4=4*N,wt=Wt;
+  for(let i=0,k=PAD;i<NP;i++,k++){const c=cov[k];
+    if(c>=16){IDX[i]=B[i];continue;}
+    let idx;
+    if(c===0){idx=B[i];if(wt[CN[i]]>50)idx+=N2;else if(ds[k]>=frost)idx+=N4;
+      if((shadowOn&&SHR[i])||(band&&cov[k-W]===1&&ds[k-W]>TH[i-W]+14))idx+=N; // a line of darkened ground under the south edge of deep snow
+      IDX[i]=idx;continue;}
+    const d=ds[k];
+    if(band){const n=cov[k-W],w=cov[k-1],s=cov[k+W],e=cov[k+1];
+      if(c===7)idx=(n&2)&&(w&2)?SN_PSH:SN_PDK; // a boot print is a hole: dark line on the north and west inner edge, floor two ramp steps under the snow body
+      else if(c&2)idx=(n&2)+(w&2)+(s&2)+(e&2)<4?SN_BASE:((n===1||w===1||cov[k-W2]===1||cov[k-2]===1)&&(s&2)&&(e&2))?SN_PSH:SN_PACK; // a channel: 2 px shadow on the sun-side wall, packed floor. A lone packed pixel is drawn as plain snow
+      else if(s===0||e===0){idx=((n===0)+(w===0)+(s===0)+(e===0)>=3)?SN_BASE:d>TH[i]+14?SN_SH:SN_MID;}
+      else if(n===0||w===0)idx=SN_HI;
+      else if(((n&2)&&(cov[k-W2]&2))||((w&2)&&(cov[k-2]&2)))idx=SN_HI; // the far rim of a print or a channel, only beside packed snow at least 2 px thick
+      else if(cov[k+W2]===0&&d>TH[i]+14)idx=SN_SH;
+      else{const sl=(ds[k+3]-ds[k-3])+(ds[k+W3]-ds[k-W3]); // slope over 6 px, so one noisy cell does not draw a line
+        // body: one colour. A steep slope with no packed snow beside it (an old trench, a shovelled edge) gets a lit or a shaded side. Thin drawn lines show on settled snow
+        idx=SN_BASE;
+        if((sl>32||sl<-32)&&!((cov[k+3]|cov[k-3]|cov[k+W3]|cov[k-W3])&2))idx=sl>0?SN_HI:SN_MID;
+        else if(d>=34){const m=MK[i];if(m&&(m<3||d>=62))idx=(m&1)?SN_MID:SN_HI;}
+        if(sparkOn&&(Math.imul(i^slot,2246822519)>>>22)===0)idx=SPARK;}}
+    else{const sl=(ds[k+1]-ds[k-1])+(ds[k+W]-ds[k-W]);
+      if(c&2)idx=sl<-5?SN_PSH:SN_PACK;else if(d<TH[i]+4)idx=SN_BASE;else idx=sl>6?SN_HI:sl>=-6?SN_BASE:sl>=-13?SN_MID:sl>=-22?SN_SH:SN_DEEP;
+      if(sparkOn&&sl>=0&&(Math.imul(i^slot,2246822519)>>>23)===0)idx=SPARK;}
+    if(shadowOn&&SHR[i])idx+=N;
+    IDX[i]=idx;}}
+// Tibia tile swap: a stepped tile shows drawn prints for 10 s. No field is changed
+const SWM=[new Uint8Array(1024),new Uint8Array(1024)];
+(()=>{const put=(m,x,y,rows)=>{for(let r=0;r<rows.length;r++)for(let c=0;c<rows[r].length;c++){const ch=rows[r][c];if(ch!=='.')m[((y+r)&31)*32+((x+c)&31)]=ch==='d'?2:ch==='h'?3:1;}};
+  const V=["dddd.","dppph","dppph","dppph","dppph","dppph",".hhhh"],Hh=["dddddd.","dppppph","dppppph","dppppph",".hhhhhh"];
+  put(SWM[0],17,2,V);put(SWM[0],11,18,V);put(SWM[1],2,9,Hh);put(SWM[1],18,15,Hh);})();
+function tileSwapPass(){for(let t=0;t<NT;t++){if(SWT[t]<=0)continue;const m=SWM[SWD[t]],x0=(t%TW)*32,y0=((t/TW)|0)*32;
+  for(let y=0;y<32&&y0+y<H;y++)for(let x=0;x<32;x++){const v=m[y*32+x];if(!v)continue;const i=(y0+y)*W+x0+x;if(COV[i+PAD]!==1)continue;IDX[i]=v===1?SN_PSH:v===2?SN_PDK:SN_HI;}}}
+// caps: only the listed cap pixels are tested. The shape comes from each object's drawn threshold map
+function capPass(){const cov=COV,n=CAPL.length,TH=THc,d_=D,fw=FW,band=shade==='band',near=!bilin||FS===1,W2=2*W,W3=3*W;
+  for(let k=0;k<n;k++){const i=CAPL[k];let d;if(near)d=d_[CN[i]];else{const j=CI[i],w=CW[i];d=(d_[j]*(w&255)+d_[j+1]*(w>>>8&255)+d_[j+fw]*(w>>>16&255)+d_[j+fw+1]*(w>>>24)+64)>>7;}
+    cov[i+PAD]=d>TH[i]?CAPC[k]:16;}
+  for(let k=0;k<n;k++){const i=CAPL[k],q=i+PAD,c=cov[q];if(c===16)continue;const f=CFL[i];let idx;
+    if(!band)idx=f===1?SN_MID:SN_BASE;
+    else if(cov[q+W]!==c)idx=SN_MID;
+    else if(cov[q-W]!==c||cov[q-1]!==c)idx=SN_HI;
+    else if(cov[q+1]!==c)idx=SN_MID;
+    else if(f===2&&(cov[q+W2]!==c||cov[q+W3]!==c))idx=SN_MID;   // the lip shows its thickness: 3 px of light shadow
+    else idx=f===1?SN_MID:f===3?SN_HI:SN_BASE;
+    if(f===1&&idx===SN_HI)idx=SN_BASE;
+    IDX[i]=idx;}}
+function spx(i,v){IDX[i]=v;SPR[i]=1;OD[i]++;}
+const SHW=[3,6,7,6,3];
+function drawChar(c){const fx=Math.round(c.x),fy=Math.round(c.y),sk=c.sink|0,F=FR[c.set][c.dir===0?0:c.dir===1?1:2][c.moving?c.fr:4],px=F.px,mk=F.m,flip=c.dir===3,x0=fx-12,y0=fy-30+sk;
+  // shadow: a 14x5 px ellipse 3 px above the feet, switched to the cold shadow version of whatever is there
+  const shr=(sk>>2);for(let r=0;r<5;r++){const y=fy-5+r,hw=SHW[r]-shr;if(y<0||y>=H||hw<1)continue;for(let x=fx-hw;x<fx+hw;x++){if(x<0||x>=W)continue;const i=y*W+x;if(O[i]>fy||SPR[i])continue;const v=IDX[i],q=(v/N)|0;if(!(q&1)&&q!==2){IDX[i]=v+N;OD[i]++;}}}
+  const lv=c.snowy>.65?4:c.snowy>.3?1:0,last=30-sk;
+  for(let r=0;r<=last;r++){const y=y0+r;if(y<0||y>=H)continue;for(let cx=0;cx<24;cx++){const sc=flip?23-cx:cx;let v=px[r*24+sc];if(!v)continue;const x=x0+cx;if(x<0||x>=W)continue;const i=y*W+x;if(O[i]>fy)continue;
+      if(lv){const m=mk[r*24+sc];if(m&&(lv===4||m===1||m===3))v=(m===1||m===3)?SN_HI:SN_BASE;}
+      spx(i,v);}}
+  // the rim in front of the clipped legs: 2 px of snow with a light top
+  if(sk>=2){const hw=6;for(let r=0;r<3;r++){const y=fy-2+r;if(y<0||y>=H)continue;const w=r===0?hw-2:hw;for(let x=fx-w;x<fx+w;x++){if(x<0||x>=W)continue;const i=y*W+x;if(O[i]>fy)continue;
+      if(r===0&&((x+fx)%5===0))continue;spx(i,r===0?SN_HI:(x===fx-w||x===fx+w-1)?SN_MID:r===1?SN_HI:SN_BASE);}}}}
+function drawFox(){const fy=Math.round(fox.y),fx=Math.round(fox.x),sk=sinkCap?Math.min(4,2*((ambient(fox.x,fox.y)/40)|0)):0,px=FOXF[(fox.anim|0)&1],flip=fox.vx<0;
+  for(let x=fx-6;x<fx+6;x++){if(x<0||x>=W||fy-1<0||fy-1>=H)continue;const i=(fy-1)*W+x;if(O[i]>fy)continue;const v=IDX[i],q=(v/N)|0;if(!(q&1)&&q!==2)IDX[i]=v+N;}
+  for(let r=0;r<13-sk;r++){const y=fy-12+sk+r;if(y<0||y>=H)continue;for(let c=0;c<22;c++){const v=px[r*22+(flip?21-c:c)];if(!v)continue;const x=fx-11+c;if(x<0||x>=W)continue;const i=y*W+x;if(O[i]>fy)continue;spx(i,v);}}}
+const ents=[];
+function drawActors(){ents.length=0;ents.push(player,vill);for(let k=0;k<crowdN;k++)ents.push(crowd[k]);if(fox.on)ents.push(fox);ents.sort((a,b)=>a.y-b.y);
+  for(const c of ents){if(c===fox)drawFox();else drawChar(c);}
+  for(const p of parts){const x=Math.round(p.x),y=Math.round(p.y-p.z);
+    if(p.k==='smoke'){const r=p.r|0,a=p.life/3.4;for(let yy=-r;yy<=r;yy++)for(let xx=-r;xx<=r;xx++){if(xx*xx+yy*yy>r*r+1)continue;const qx=x+xx,qy=y+yy;if(qx<0||qy<0||qx>=W||qy>=H)continue;if(bay4(qx>>1,qy>>1)<a*15)spx(qy*W+qx,(xx+yy>r*.5)?SMOKE_D:SMOKE);}}
+    else if(p.k==='breath'){const r=p.life>.75?1:p.life>.4?2:3;for(let yy=-r+1;yy<r;yy++)for(let xx=-r;xx<=r;xx++){if(Math.abs(xx)+Math.abs(yy)*2>r+1)continue;const qx=x+xx,qy=y+yy;if(qx<0||qy<0||qx>=W||qy>=H)continue;if(p.life>.55||((qx>>1)+(qy>>1))&1)spx(qy*W+qx,BREATH);}}
+    else{if(x<1||y<1||x>=W-1||y>=H-1)continue;spx(y*W+x,SN_HI);spx(y*W+x+1,SN_HI);if(p.life>.45){spx((y+1)*W+x,SN_BASE);spx((y+1)*W+x+1,SN_BASE);}}}}
+// flake shapes: 1 px, 2x2, 3 px plus, 4 px round, 6 px round
+const SHAPES=[mkMask(["#"]),mkMask(["##","##"]),mkMask([".#.","###",".#."]),mkMask([".##.","####","####",".##."]),mkMask(["..##..",".####.","######","######",".####.","..##.."])];
+function putShape(x,y,sp,col,col2){const m=SHAPES[sp];let n=0;for(let k=0;k<m.length;k+=2){const px=x+m[k],py=y+m[k+1];if(px<0||py<0||px>=W||py>=H)continue;spx(py*W+px,(sp>=3&&m[k+1]>=(sp===3?3:4))?col2:col);n++;}return n;}
+function drawFlakes(){let n=0;const one=flakeSz==='1',large=flakeSz==='large',act=Math.min(1,intensity*1.1);
+  for(let l=0;l<2;l++){const cnt=Math.round((l===0?PRM.flakes.far:PRM.flakes.mid)*act),o=l*HMAX,col=l===0?FLAKE_F:FLAKE_M,ww=W+40,hh=H+20,sw=l===0?5:9;
+    for(let k=0;k<cnt;k++){const ph=HPa[o+k]*6.283,x=((((HXa[o+k]*ww+offX[l]+Math.sin(ph+simT*(1+HPa[o+k])))*1+Math.sin(ph+simT*1.3)*sw)%ww)+ww)%ww-20|0,y=((HYa[o+k]*hh+offY[l]*(.8+.4*HPa[o+k]))%hh)-10|0;
+      const sp=one?0:l===0?(large&&HPa[o+k]>.6?1:0):(large&&HPa[o+k]>.7?2:1);n+=putShape(x,y,sp,col,col);}}
+  for(let k=0;k<NEAR_MAX;k++){if(!FN.on[k])continue;const gx=FN.x[k]|0,gy=FN.y[k]|0,x=gx,y=(FN.y[k]-FN.z[k])|0,h=FN.sh[k];
+    const sp=one?0:large?(h<20?4:h<45?3:2):(h<10?3:2);
+    if(gx>=0&&gy>=0&&gx<W-1&&gy<H&&FN.z[k]<70){const i=gy*W+gx;for(let q=0;q<(one?1:2);q++){const v=IDX[i+q],vq=(v/N)|0;if(!SPR[i+q]&&!(vq&1)&&vq!==2)IDX[i+q]=v+N;}}
+    n+=putShape(x-(sp>1?1:0),y-(sp>1?1:0),sp,SPARK,FLAKE_M);}
+  flakePx=n;}
+const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255,r=t<.5?20+t*2*40:60+(t-.5)*2*195,g=t<.5?24+t*2*150:174+(t-.5)*2*81,b=t<.5?60+t*2*170:230+(t-.5)*2*25;HEAT[i]=pack(r,g,b);}
+const COSTC=[pack(16,22,52),pack(22,38,84),pack(28,58,120),pack(36,110,150),pack(70,170,140),pack(170,210,100),pack(245,200,80),pack(255,110,70)];
+const BANDC=[[60,90,70],[90,140,200],[160,190,240],[245,248,255]];
+const LmD=new Uint8Array(NP);
+const dim=(c,k)=>(255<<24)|((((c>>16)&255)*k)<<16)|((((c>>8)&255)*k)<<8)|(((c&255)*k)|0);
+function finalPass(env){const nf=env.nf;
+  if(view==='normal'){if(nf>.1){const k=Math.min(1,nf*2.6),t1=Math.round(255-225*k),t2=Math.round(255-150*k);
+      for(let i=0;i<NP;i++){const l=LmD[i],v=IDX[i];out32[i]=l>t1?(l>t2?palL2[v]:palL1[v]):pal[v];}}
+    else for(let i=0;i<NP;i++)out32[i]=pal[IDX[i]];}
+  else if(view==='cost'){for(let i=0;i<NP;i++){const n=3+2*CAPM[i]+OD[i];out32[i]=COSTC[n>9?7:n-2];}} // ground: sample, shade, palette = 3 writes. A cap adds 2, each sprite or flake pixel adds 1
+  else if(view==='grid'){for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(SPR[i]){out32[i]=pal[IDX[i]];continue;}const cx=x>>sh,cy=y>>sh,c=cy*FW+cx;
+      let col=holds(Sf[c])?HEAT[clamp((D[c]*1.9)|0,0,255)]:dim(pal[IDX[i]],.3);if((cx+cy)&1)col=dim(col,.8);if((x&31)===0||(y&31)===0)col=pack(255,184,107);out32[i]=col;}}
+  else if(view==='bands'){for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,c=pal[IDX[i]];if(SPR[i]){out32[i]=c;continue;}const b=BANDC[BAND[(y>>5)*TW+(x>>5)]];
+      out32[i]=((x&31)===0||(y&31)===0)?pack(20,24,44):pack(((c&255)*.35+b[0]*.65),(((c>>8)&255)*.35+b[1]*.65),(((c>>16)&255)*.35+b[2]*.65));}}
+  else{for(let i=0;i<NP;i++){const s=S[i];let v=-1;if(holds(s)&&!SPR[i]){const c=CN[i];v=view==='depth'?D[c]/130:view==='exposure'?E[c]/1.3:view==='shadow'?SHf[c]/255:view==='packed'?P[CNp[i]]/255:Wt[c]/255;}
+      out32[i]=v<0?(SPR[i]?pal[IDX[i]]:dim(pal[IDX[i]],.35)):HEAT[clamp((v*255)|0,0,255)];}}
+  ctx.putImageData(img,0,0);}
+let gaMs=0,gbMs=0;const A={sim:0,ground:0,obj:0,chars:0,flakes:0,pal:0},T={sim:0,ground:0,obj:0,chars:0,flakes:0,pal:0,total:0};
+function render(){let t0=now(),t;const env=buildPalette();t=now();A.pal+=t-t0;t0=t;
+  passA();t=now();gaMs+=(t-t0-gaMs)*.08;A.ground+=t-t0;t0=t;passB(env);if(printMode==='tile')tileSwapPass();t=now();gbMs+=(t-t0-gbMs)*.08;A.ground+=t-t0;t0=t;
+  capPass();t=now();A.obj+=t-t0;t0=t;
+  SPR.fill(0);OD.fill(0);drawActors();t=now();A.chars+=t-t0;t0=t;
+  drawFlakes();t=now();A.flakes+=t-t0;t0=t;
+  finalPass(env);A.pal+=now()-t0;}
+
+// ---------- loop and HUD ----------
+let last=now(),simAcc=0,hudN=0,secT=0;const f2=v=>v.toFixed(2),nf0=v=>Math.round(v).toLocaleString('en-US');
+// frame gate: nothing runs while the canvas is off-screen. While paused, only the 12 frames after an input or resize run
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+function step(dt){const gm=dt*2*speed;clock=(clock+gm)%1440;simT+=dt;
+  let t0=now(),t;updateWeather(gm,dt);const sunF=weather==='sunny'?daylight(clock):weather==='overcast'?.15:0;
+  simAcc+=dt*60*speed;let n=0;while(simAcc>=1&&n<32&&(n<1||now()-t0<7)){simStep(sunF);simAcc--;n++;}if(simAcc>4)simAcc=0;
+  effK+=((n/Math.max(1,Math.round(dt*60*speed)))-effK)*.1;bandSweep(8);sweepPRows();
+  t=now();A.sim+=t-t0;t0=t;updateEntities(dt);t=now();A.chars+=t-t0;t0=t;updateFlakes(dt);A.flakes+=now()-t0;frameN++;}
+const WN={heavy:'Heavy snow',light:'Light snow',overcast:'Overcast',sunny:'Sunny'},THN=['Bayer 4','Bayer 8','art tile'];
+function hudText(){const hh=String((clock/60)|0).padStart(2,'0'),mm=String((clock%60)|0).padStart(2,'0'),over=T.total>16.7;
+  const ch=PK===2?`depth and wet ${FW}x${FH}, packed ${PW}x${PH}`:`${FW}x${FH}`,fb=NF*2+NPF,full=NF*2+NPF,chunk=(32/FS)*(32/FS)*2+(32/PS)*(32/PS);
+  const pb=player,band=BAND[tileAt(pb.x|0,(pb.y-2)|0)];
+  return `${hh}:${mm} · ${WN[weather]} · ${temp.toFixed(1)} °C · wind ${wind<-.15?'←':wind>.15?'→':'·'} ${Math.abs(wind).toFixed(1)} · field ${fieldMode==='split'?'split':'1:'+FS} (${ch}) = ${nf0(NF)} cells, ${nf0(fb)} B · ${bilin&&FS>1?'bilinear':'nearest'} · ${THN[thrStyle]} · ${shade==='band'?'banded':'flat'} · flakes ${flakeSz==='1'?'1 px':flakeSz} · ${printMode==='boot'?'boot prints 4x6 px':printMode==='dot'?'2x2 px dots':'tile swap'} · sink cap ${sinkCap} px${paused?' · paused':''}${FS===4&&PS===4&&printMode==='boot'?' · <span class="warn">prints need 1:2</span>':''}<br>`+
+  `sim ${f2(T.sim)} · ground ${f2(T.ground)} (sample ${f2(gaMs)}, shade ${f2(gbMs)}) · objects and caps ${f2(T.obj)} · characters and prints ${f2(T.chars)} · flakes ${f2(T.flakes)} · palette and light ${f2(T.pal)} ms<br>`+
+  `<b>total ${f2(T.total)} ms</b> <span class="bar"><i class="${over?'hot2':''}" style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7${effK<.85&&!paused?` · <span class="warn">over budget, sim runs ${(speed*effK).toFixed(1)}x of ${speed}x</span>`:''} · picks per tick ${nf0(picksTick)} (${(picksTick/NF*1000).toFixed(0)} per 1,000 cells) · upload per tick ${nf0(full)} B (Godot Compatibility sends the whole field; 640x360 RGBA8 would be 921,600 B) · a sub-rectangle update, if Godot had one, would move ${dirtyAvg.toFixed(0)} of 240 chunks = ${nf0(Math.min(full,dirtyAvg*chunk))} B<br>`+
+  `prints ${printsRate}/s · flakes ${nearAlive+Math.round((PRM.flakes.far+PRM.flakes.mid)*Math.min(1,intensity*1.1))} alive, ${nf0(flakePx)} px = ${(flakePx/NP*100).toFixed(2)}% of the screen · tile bands ${bandRate} changes/s = ${bandRate*PRM.bytes.band} B/s, full set 60 B · weather ${wxRate} B/s (${wxMsgs} messages, ${wxBytes} B) · exposure bake ${bakeMs.toFixed(1)} ms · sampling tables ${tableMs.toFixed(0)} ms per rebuild · cap pixels ${nf0(CAPL.length)}<br>`+
+  `you: tile band ${band} (speed ${Math.round(PRM.slow[band]*100)}%) · depth ${pb.amb.toFixed(0)} · sunk ${pb.sink} px${pb.sink>=PRM.trenchSink&&printMode==='boot'?' · ploughing a trench':''} · crowd ${crowdN}${tileSteps?' · tile steps':''}${view==='cost'?' · cost view: dark blue is 3 writes per pixel, teal 5, green 6, yellow 8, red 9 or more':''}`;}
+function loop(tn){requestAnimationFrame(loop);if(skipFrame())return;let dt=(tn-last)/1000;last=tn;if(dt>.05)dt=.05;if(dt<0)dt=0;
+  for(const k in A)A[k]=0;if(!paused)step(dt);render();
+  let tot=0;for(const k in A){T[k]+=(A[k]-T[k])*.08;tot+=A[k];}T.total+=(tot-T.total)*.08;
+  secT+=dt;if(secT>=1){secT-=1;printsRate=printsSec;printsSec=0;bandRate=bandChg;bandChg=0;wxRate=wxSec;wxSec=0;}
+  if(++hudN%10===0)$('hud').innerHTML=hudText();}
+
+// ---------- UI ----------
+const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
+const setFieldMode=m=>{setField(m,true);mark('#fbtns button','f',m);},setSampling=v=>{bilin=v==='bilin';mark('#sbtns button','s',v);buildTables();};
+const setThr=v=>{thrStyle=+v;THc=THS[thrStyle];mark('#thbtns button','th',v);},setShade=v=>{shade=v;mark('#shbtns button','sh',v);},setFlakes=v=>{flakeSz=v;mark('#flbtns button','fl',v);};
+const setPrints=v=>{printMode=v;mark('#prbtns button','pr',v);if(v!=='tile')SWT.fill(0);},setSink=v=>{sinkCap=+v;mark('#skbtns button','sk',v);},setView=v=>{view=v;mark('#vbtns button','v',v);},setTool=v=>{tool=v;mark('#tbtns button','t',v);};
+group('#fbtns button','f',setFieldMode);group('#sbtns button','s',setSampling);group('#thbtns button','th',setThr);group('#shbtns button','sh',setShade);group('#flbtns button','fl',setFlakes);
+group('#prbtns button','pr',setPrints);group('#skbtns button','sk',setSink);group('#vbtns button','v',setView);group('#tbtns button','t',setTool);
+const setAuto=v=>{auto=v;$('auto').classList.toggle('on',v);};
+group('#wbtns [data-w]','w',w=>{setAuto(false);setWeather(w);});$('auto').onclick=()=>setAuto(!auto);
+windEl.oninput=()=>{setAuto(false);$('windv').textContent=(windEl.value/100).toFixed(1);};
+const setSpeed=v=>{speed=+v;$('speed').value=v;$('speedv').textContent=v+'x';};$('speed').oninput=e=>setSpeed(e.target.value);
+$('morning').onclick=()=>clock=8*60;$('dusk').onclick=()=>clock=18.5*60;
+const setPaused=v=>{paused=v;$('pause').textContent=v?'Resume':'Pause';$('pause').classList.toggle('on',v);};$('pause').onclick=()=>setPaused(!paused);
+const setCrowd=v=>{crowdN=+v;$('crowd').value=v;$('crowdv').textContent=v;for(let k=crowdN;k<20;k++)crowd[k].live=false;};$('crowd').oninput=e=>setCrowd(e.target.value);
+const setTileSteps=v=>{tileSteps=v;$('tsteps').classList.toggle('on',v);player.route=null;player.tx=null;vill.route=null;};$('tsteps').onclick=()=>setTileSteps(!tileSteps);
+function clearSnow(){D.fill(0);P.fill(0);Wt.fill(0);}
+function fillSnow(k){for(let i=0;i<NF;i++)if(holds(Sf[i]))D[i]=Math.min(PRM.maxD,(LIM[i]*k+hash2(i,3)*5)|0);P.fill(0);}
+$('reset').onclick=clearSnow;$('fill').onclick=()=>fillSnow(.82);
+function art32(){setThr(2);setShade('band');setFlakes('mixed');setPrints('boot');setSink(6);setSampling('bilin');if(fieldMode!=='2')setFieldMode('2');}
+function vfx1(){setThr(0);setShade('flat');setFlakes('1');setPrints('dot');}
+// showcase: late afternoon, heavy snow. The ground holds 54 to 62 units, so boots sink 2 px and stay visible, and a trail of paired boot prints leads from the door to the player
+function showcase(){art32();setView('normal');setTool('walk');setAuto(false);setWeather('heavy');intensity=1;wind=windT=-.4;windEl.value=-40;$('windv').textContent='-0.4';temp=-4;setSpeed(1);setPaused(false);setCrowd(0);setTileSteps(false);
+  clock=16.9*60;windBucket=Math.round(wind*2);computeExposure(windBucket/2);lastW=weather+windBucket;fillSnow(.86);Wt.fill(0);
+  for(let i=0;i<NF;i++)if(Sf[i]<=PATH)D[i]=Math.min(D[i],54+((hash2(i,9)*8)|0));
+  parts.length=0;fox.on=false;fox.t=30;SWT.fill(0);
+  vill.x=LX+20;vill.y=LY+16;vill.dir=3;vill.hold=true;vill.snowy=1;vill.moving=false;vill.route=null;
+  Object.assign(player,{x:144,y:138,dir:0,moving:false,ph:0,fr:0,snowy:0,route:null,tx:null,ty:null,trd:0});
+  for(let k=0;k<NT*2;k++)bandSweep(8);
+  const go=(tx,ty,maxF)=>{player.tx=tx;player.ty=ty;for(let f=0;f<maxF&&player.tx!==null;f++){updateEntities(1/60);updateFlakes(1/60);if(f%4===0)simStep(0);simT+=1/60;frameN++;}};
+  go(144,206,900);go(196,252,900);go(330,270,1400);player.tx=392;player.ty=276;for(let f=0;f<14;f++)updateEntities(1/60);
+  for(const k in A)A[k]=0;render();$('hud').innerHTML=hudText();}
+group('button[data-demo]','demo',d=>{if(d==='showcase')showcase();else if(d==='vfx1')vfx1();else art32();});
+function canvasXY(e){const r=cv.getBoundingClientRect();return[clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1)];}
+let down=false;const act=e=>{const[x,y]=canvasXY(e);if(tool==='walk'){player.tx=x;player.ty=clamp(y,14,H-4);vill.hold=false;}else brush(x,y,tool==='shovel'?11:13,tool);};
+cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);act(e);e.preventDefault();});
+cv.addEventListener('pointermove',e=>{if(down&&tool!=='walk')act(e);});
+cv.addEventListener('pointerup',()=>down=false);cv.addEventListener('pointercancel',()=>down=false);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
+const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'},VS=['normal','depth','exposure','shadow','packed','wet','bands','grid','cost'],FM=['1','2','4','split'];
+// a mouse or touch on a slider must not keep the keyboard: drop focus once the value is set
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(KM[k]){keys[KM[k]]=1;vill.hold=false;e.preventDefault();return;}
+  if(k==='v')setView(VS[(VS.indexOf(view)+1)%VS.length]);
+  else if(k==='f'){if(!e.repeat)setFieldMode(FM[(FM.indexOf(fieldMode)+1)%FM.length]);}
+  else if(k==='t')setThr((thrStyle+1)%3);
+  else if(k===' '){setPaused(!paused);e.preventDefault();}});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;});
+addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
+// whole-number canvas scale: the stage is a multiple of 640 px wide plus its 2 px border. Narrower screens shrink the canvas to fit
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=640?Math.floor(w/640)*640+2+'px':'';}
+addEventListener('resize',fit);fit();
+
+// ---------- start ----------
+buildWorld();buildCapList();buildTileMap();
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;LmD[i]=Lm[i]?clamp(Lm[i]+(bay8(x,y)-32)*.45,1,255):0;}
+setField('2',false);setWeather('heavy');lastW=weather+windBucket;
+// start with a thin cover, so the threshold style shows at once
+for(let i=0;i<NF;i++)if(holds(Sf[i]))D[i]=Math.min(LIM[i],(LIM[i]*.42+hash2(i,1)*4)|0);
+window.snow32={T,PRM,FR,FOXF,pal,stats:()=>({ga:gaMs,gb:gbMs,tablePx:KIND.reduce((a,v)=>a+(v===1?1:0),0),groundPx:KIND.reduce((a,v)=>a+(v<2?1:0),0),fieldMode,FS,PS,NF,picksTick,dirtyAvg,printsRate,flakePx,nearAlive,bandRate,bakeMs,tableMs,caps:CAPL.length,palette:N,sink:player.sink,amb:player.amb,px:player.x,py:player.y,effK}),
+  // bench(n): n frames back to back, without waiting for the display. Returns mean ms per layer
+  bench:n=>{const r={sim:0,ground:0,obj:0,chars:0,flakes:0,pal:0,sample:0,shade:0};for(let f=0;f<n;f++){for(const k in A)A[k]=0;step(1/60);const a0=now();passA();const a1=now();passB(buildPalette());const a2=now();render();for(const k in A)r[k]+=A[k];r.sample+=a1-a0;r.shade+=a2-a1;}let tot=0;for(const k in A){r[k]=+(r[k]/n).toFixed(3);tot+=r[k];}r.sample=+(r.sample/n).toFixed(3);r.shade=+(r.shade/n).toFixed(3);r.total=+tot.toFixed(3);return r;},
+  player,vill,setPaused,fillSnow,clearSnow,setWeather:w=>{setAuto(false);setWeather(w);},setClock:m=>{clock=m;}};
+requestAnimationFrame(loop);
+})();
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>
