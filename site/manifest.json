@@ -412,5 +412,23 @@
   "title": "SpeedRunner Mechanics Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-13"
+ },
+ {
+  "path": "/thumbs/mechanics-speedrunner-verbs.png",
+  "title": "Thumbnail mechanics-speedrunner-verbs.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/mechanics-speedrunner-verbs.html",
+  "title": "SpeedRunner verbs: dash, crawl, grapple, dive, draw and the other mechanics the great runners added, and which ones fit a samurai time attack",
+  "description": "A complement to Mechanics #1: the verbs the great runners added (dash, crawl, slide, dive, ground pound, ledge grab, wall run, climb, grapple, glide, thrust, charged jump, katana verbs), each with its numbers, its cancels and its cost, and a sandbox where every one is a toggle on a verbs gym.",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/mechanics-speedrunner-verbs-sandbox.html",
+  "title": "SpeedRunner Verbs Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-13"
  }
 ]
