@@ -1,0 +1,411 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Fire 32 bench</title></head>
+<body>
+<pre id="out">Fire at 32 px benchmark. Call await runCPU({only:'regex'}) or await runGPU({only:'regex'}) from the console or Playwright.</pre>
+<script>
+"use strict";
+// ---------------- harness (copied from studies/vfx-snow-32px/notes/bench/snowbench.html) ----------------
+// Each sample runs fn until minSampleMs has passed and stores the mean ms per call. The median and p95 are over the samples.
+function stats(per) { per = per.slice().sort((a, b) => a - b); const n = per.length, q = p => per[Math.min(n - 1, Math.floor(n * p))];
+  return { median_ms: +q(0.5).toFixed(5), p95_ms: +q(0.95).toFixed(5), p10_ms: +q(0.1).toFixed(5), p90_ms: +q(0.9).toFixed(5), min_ms: +per[0].toFixed(5), samples: n }; }
+function bench(name, fn, opts = {}) {
+  const warmMs = opts.warmMs ?? 200, samples = opts.samples ?? 31, minSampleMs = opts.minSampleMs ?? 10;
+  let t0 = performance.now(); while (performance.now() - t0 < warmMs) fn();
+  const per = []; let calls = 0;
+  for (let s = 0; s < samples; s++) { let n = 0; const a = performance.now(); let b; do { fn(); n++; b = performance.now(); } while (b - a < minSampleMs); per.push((b - a) / n); calls += n; }
+  return Object.assign({ name }, stats(per), { calls });
+}
+let SINK = 0;
+function sync(cx) { SINK += cx.getImageData(0, 0, 1, 1).data[1]; }
+function timerResolution() { let best = 1e9; let last = performance.now(); for (let i = 0; i < 200000; i++) { const t = performance.now(); if (t > last) { if (t - last < best) best = t - last; last = t; } } return best; }
+
+// RNG state in a typed array (snow bench lesson). Hot loops copy it to a local and write it back.
+const RS = new Int32Array([1234567]);
+const rnd = () => { let s = RS[0]; s ^= s << 13; s ^= s >>> 17; s ^= s << 5; RS[0] = s; return (s >>> 0) / 4294967296; };
+const ri = n => (rnd() * n) | 0;
+// fresh(f): every engine instance is compiled from its own source text (snow bench lesson).
+let FRESH_N = 0;
+const fresh = f => (0, eval)('/*' + (++FRESH_N) + '*/(' + f.toString() + ')');
+const hashf = (x, y) => { let h = Math.imul(x * 374761393 + y * 668265263, 1274126177); h ^= h >>> 13; h = Math.imul(h, 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const vnoise = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const a = hashf(xi, yi), b = hashf(xi + 1, yi), c = hashf(xi, yi + 1), d = hashf(xi + 1, yi + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+
+// ---------------- palette: 256 indices x 4 light banks (index | bank << 8) ----------------
+const F0 = 200, EMBER = 210, SCORCH = 211, SMK_L = 212, SMK_D = 213;
+const pack = (r, g, b) => (255 << 24) | (Math.max(0, Math.min(255, b | 0)) << 16) | (Math.max(0, Math.min(255, g | 0)) << 8) | Math.max(0, Math.min(255, r | 0));
+const PAL = new Uint32Array(1024);
+for (let i = 0; i < 256; i++) { const r = 40 + ((i * 37) % 160), g = 50 + ((i * 59) % 150), b = 30 + ((i * 23) % 120);
+  for (let k = 0; k < 4; k++) PAL[i + (k << 8)] = pack(r + k * 22, g + k * 10, b - k * 6); }
+
+// ---------------- art buffers (palette-index world at 640x360 or 320x180) ----------------
+const ARTS = {};
+function art(W) { if (ARTS[W]) return ARTS[W]; const H = W * 9 / 16, NP = W * H, IDX = new Uint16Array(NP), BASE = new Uint16Array(NP), CHAR = new Uint16Array(NP), ASH = new Uint16Array(NP);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, h = hashf(x >> 1, y >> 1); BASE[i] = 1 + ((h * 40) | 0); CHAR[i] = 60 + ((h * 8) | 0); ASH[i] = 80 + ((hashf(x >> 1, (y >> 1) + 999) * 8) | 0); }
+  IDX.set(BASE);
+  const img = new ImageData(W, H), out32 = new Uint32Array(img.data.buffer);
+  const cvS = document.createElement('canvas'); cvS.width = W; cvS.height = H; const cxS = cvS.getContext('2d', { willReadFrequently: true });
+  const cvG = document.createElement('canvas'); cvG.width = W; cvG.height = H; const cxG = cvG.getContext('2d');
+  return ARTS[W] = { W, H, NP, IDX, BASE, CHAR, ASH, img, out32, cxS, cxG }; }
+
+// ---------------- 1. DOOM fire buffers ----------------
+// list = [[x0, y0], ...] screen positions, one buffer each. w x h = buffer cells. sc = 1 (1:1) or 2 (half resolution drawn as 2x2 px).
+// Heat 0..36, copy from the cell below into a column shifted -1/0/+1, minus a decay from a 16-entry table whose mean is sized so the flame fills ~85% of the buffer height.
+function mkDoom(A, list, w, h, sc, tones) {
+  const n = list.length, IDX = A.IDX, AW = A.W, BS = [], X0 = new Int32Array(n), Y0 = new Int32Array(n), R = new Int32Array([(w * 7919 + h * 104729) | 1]);
+  for (let k = 0; k < n; k++) { const b = new Uint8Array(w * h); for (let x = 0; x < w; x++) b[(h - 1) * w + x] = 36; BS.push(b); X0[k] = list[k][0]; Y0[k] = list[k][1]; }
+  const mean = 36 / (h * 0.85), DECT = new Uint8Array(16); for (let i = 0; i < 16; i++) DECT[i] = Math.floor((i + 0.5) / 16 * 2 * mean + ((i * 5) % 16) / 16);
+  // palette quantize: heat -> one of `tones` fire indices (0 stays transparent)
+  const TL = new Uint16Array(37); for (let v = 1; v < 37; v++) TL[v] = F0 + Math.min(tones - 1, (v * tones / 37) | 0);
+  const step = () => { let s = R[0];
+    for (let k = 0; k < n; k++) { const B = BS[k];
+      for (let y = 1; y < h; y++) { const row = y * w, up = row - w;
+        for (let x = 0; x < w; x++) { const p = B[row + x]; if (p === 0) { B[up + x] = 0; continue; }
+          s ^= s << 13; s ^= s >>> 17; s ^= s << 5;
+          const r = s & 3; let dx = r === 0 ? x - 1 : r === 3 ? x + 1 : x; if (dx < 0 || dx >= w) dx = x;
+          const nv = p - DECT[(s >>> 8) & 15]; B[up + dx] = nv > 0 ? nv : 0; } } }
+    R[0] = s; };
+  const draw = sc === 1 ? () => { for (let k = 0; k < n; k++) { const B = BS[k]; let o = Y0[k] * AW + X0[k], q = 0;
+      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { const t = TL[B[q++]]; if (t) IDX[o + x] = t; } o += AW; } } }
+    : () => { for (let k = 0; k < n; k++) { const B = BS[k]; let o = Y0[k] * AW + X0[k], q = 0;
+      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { const t = TL[B[q++]]; if (t) { const j = o + 2 * x; IDX[j] = t; IDX[j + 1] = t; IDX[j + AW] = t; IDX[j + AW + 1] = t; } } o += 2 * AW; } } };
+  const lit = () => { let c = 0; for (const B of BS) for (let i = 0; i < B.length; i++) if (B[i]) c++; return +(c / (n * w * h)).toFixed(3); };
+  return { step, draw, lit };
+}
+
+// ---------------- 2. hand-drawn loops ----------------
+function genFlame(w, h, f, nf) { const a = new Uint8Array(w * h), cx = (w - 1) / 2, ph = f * 2 * Math.PI / nf, tip = h * (.84 + .16 * Math.sin(ph + .6));
+  for (let y = 0; y < h; y++) { const v = (h - 1 - y) / tip; if (v > 1) continue; const hw = (w / 2 + .3) * Math.sqrt(1 - v) * Math.min(1, .62 + v * 1.7), sx = Math.sin(v * 3.4 + ph) * v * v * w * .2;
+    for (let x = 0; x < w; x++) { const d = Math.abs(x - cx - sx) / hw; if (d >= 1) continue; const q = 1 - d - v * .55 + (v < .3 ? .14 : 0); a[y * w + x] = q > .8 ? 5 : q > .56 ? 4 : q > .3 ? 3 : q > .07 ? 2 : 1; } }
+  return a; }
+// sizes at 640x360 (32 px tiles): torch 6x10, grass flame 12x16, campfire-ish 16x24, house flame 24x32. Six frames each.
+const LOOP_SIZES_640 = [[6, 10], [12, 16], [16, 24], [24, 32]], LOOP_SIZES_320 = [[3, 5], [6, 8], [8, 12], [12, 16]];
+const loopSprites = sizes => sizes.map(([w, h]) => { const fr = []; for (let f = 0; f < 6; f++) { const t = genFlame(w, h, f, 6), u = new Uint16Array(w * h); for (let i = 0; i < t.length; i++) u[i] = t[i] ? F0 - 1 + t[i] : 0; fr.push(u); } return { w, h, fr }; });
+const loopOpaque = sizes => { let o = 0, a = 0; for (const s of loopSprites(sizes)) for (const f of s.fr) { a += f.length; for (let i = 0; i < f.length; i++) if (f[i]) o++; } return { mean_box_px: a / (sizes.length * 6), mean_opaque_px: +(o / (sizes.length * 6)).toFixed(1) }; };
+function mkLoopsIdx(A, n, sizes) { const W = A.W, H = A.H, IDX = A.IDX, SPR = loopSprites(sizes), ns = sizes.length;
+  const PX = new Int32Array(n), PY = new Int32Array(n), PS = new Uint8Array(n), PH = new Uint8Array(n);
+  for (let k = 0; k < n; k++) { PS[k] = k % ns; const sp = SPR[PS[k]]; PX[k] = (hashf(k, 1) * (W - sp.w)) | 0; PY[k] = (hashf(k, 2) * (H - sp.h)) | 0; PH[k] = (hashf(k, 3) * 60) | 0; }
+  let t = 0;
+  return () => { t++; for (let k = 0; k < n; k++) { const sp = SPR[PS[k]], fr = sp.fr[(((t + PH[k]) / 6) | 0) % 6], w = sp.w, h = sp.h; let o = PY[k] * W + PX[k], q = 0;
+    for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { const v = fr[q++]; if (v) IDX[o + x] = v; } o += W; } } }; }
+// canvas sources for the drawImage variants (built once in initCanvasSources)
+const CSRC = {};
+async function initCanvasSources() { if (CSRC.done) return; const SPR = loopSprites(LOOP_SIZES_640);
+  const toCanvas = (u, w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const id = new ImageData(w, h), d32 = new Uint32Array(id.data.buffer); for (let i = 0; i < u.length; i++) d32[i] = u[i] ? PAL[u[i]] : 0; c.getContext('2d').putImageData(id, 0, 0); return c; };
+  CSRC.small = SPR.map(s => s.fr.map(f => toCanvas(f, s.w, s.h)));
+  const at = document.createElement('canvas'); at.width = 6 * 24; at.height = 82; const ax = at.getContext('2d'); CSRC.rects = []; let yy = 0;
+  SPR.forEach((s, si) => { CSRC.rects.push([]); s.fr.forEach((f, fi) => { ax.drawImage(CSRC.small[si][fi], fi * 24, yy); CSRC.rects[si].push([fi * 24, yy, s.w, s.h]); }); yy += s.h; });
+  CSRC.atlas = at; CSRC.bitmap = await createImageBitmap(at); CSRC.done = true; }
+function mkLoopsCanvas(A, n, accel, src) { const W = A.W, H = A.H, cx = accel ? A.cxG : A.cxS, ns = 4;
+  const PX = new Int32Array(n), PY = new Int32Array(n), PS = new Uint8Array(n), PH = new Uint8Array(n);
+  for (let k = 0; k < n; k++) { PS[k] = k % ns; const [w, h] = LOOP_SIZES_640[PS[k]]; PX[k] = (hashf(k, 1) * (W - w)) | 0; PY[k] = (hashf(k, 2) * (H - h)) | 0; PH[k] = (hashf(k, 3) * 60) | 0; }
+  let t = 0; const S = CSRC.small, R = CSRC.rects, img = src === 'bitmap' ? CSRC.bitmap : CSRC.atlas;
+  return src === 'small' ? () => { t++; for (let k = 0; k < n; k++) cx.drawImage(S[PS[k]][(((t + PH[k]) / 6) | 0) % 6], PX[k], PY[k]); sync(cx); }
+    : () => { t++; for (let k = 0; k < n; k++) { const r = R[PS[k]][(((t + PH[k]) / 6) | 0) % 6]; cx.drawImage(img, r[0], r[1], r[2], r[3], PX[k], PY[k], r[2], r[3]); } sync(cx); }; }
+
+// ---------------- 3. burn front at art resolution ----------------
+// 128x128 burn-order map: value noise sampled per 2x2 px block (clusters of at least 2x2) plus 25% per-block jitter
+const BO = new Uint8Array(128 * 128); for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) { const bx = x >> 1, by = y >> 1; BO[y * 128 + x] = Math.min(255, (vnoise(bx / 5, by / 5) * .75 + hashf(bx, by) * .25) * 255) | 0; }
+// 8 directional ramps over a 32x32 tile: low on the side the fire came from
+const DXS = [1, 1, 0, -1, -1, -1, 0, 1], DYS = [0, 1, 1, 1, 0, -1, -1, -1];
+const DRS = []; for (let d = 0; d < 8; d++) { const r = new Uint8Array(1024), nx = DXS[d] / Math.hypot(DXS[d], DYS[d]), ny = DYS[d] / Math.hypot(DXS[d], DYS[d]);
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) r[y * 32 + x] = Math.max(0, Math.min(255, 128 - ((x - 15.5) * nx + (y - 15.5) * ny) * 5.6)) | 0; DRS.push(r); }
+const BAYV = new Uint8Array(16); for (let i = 0; i < 16; i++) BAYV[i] = BAYER[i] * 16 + 8;
+// frac of the 20x12 tiles burning (hash-picked). mode: 'art' (burn-order map), 'bayer' (4x4 Bayer instead of the map), 'tile' (whole-tile swap)
+function mkFront(A, frac, mode) { const W = A.W, H = A.H, IDX = A.IDX, BASE = A.BASE, CHAR = A.CHAR, ASH = A.ASH, TS = W / 20, TW = 20, TH = Math.ceil(H / TS);
+  const all = []; for (let t = 0; t < TW * TH; t++) all.push(t); all.sort((a, b) => hashf(a, 77) - hashf(b, 77));
+  const n = Math.round(frac * TW * TH), TX = new Int32Array(n), TY = new Int32Array(n), TP = new Uint16Array(n), TD = new Uint8Array(n);
+  let px = 0; for (let k = 0; k < n; k++) { TX[k] = all[k] % TW; TY[k] = (all[k] / TW) | 0; TP[k] = (hashf(k, 5) * 384) | 0; TD[k] = (hashf(k, 6) * 8) | 0; px += TS * (Math.min(H, TY[k] * TS + TS) - TY[k] * TS); }
+  const sh = TS === 32 ? 0 : 1; // at 320x180 a tile is 16 px: sample the 32x32 ramp and the map at half steps
+  const fn = mode === 'tile' ? () => { for (let k = 0; k < n; k++) { const P = TP[k] = (TP[k] + 1) % 384; const src = P < 128 ? BASE : P < 224 ? CHAR : ASH; const x0 = TX[k] * TS, y0 = TY[k] * TS, y1 = Math.min(H, y0 + TS);
+        for (let y = y0; y < y1; y++) { const r = y * W + x0; for (let x = 0; x < TS; x++) IDX[r + x] = src[r + x]; } } }
+    : mode === 'art' ? () => { for (let k = 0; k < n; k++) { const P = TP[k] = (TP[k] + 1) % 384, DR = DRS[TD[k]], x0 = TX[k] * TS, y0 = TY[k] * TS, y1 = Math.min(H, y0 + TS);
+        for (let y = y0; y < y1; y++) { const r = y * W, bo = (y & 127) << 7, dr = ((y - y0) << sh) << 5;
+          for (let xx = 0; xx < TS; xx++) { const x = x0 + xx, i = r + x, d = P - ((BO[bo + (x & 127)] * 3 + DR[dr + (xx << sh)] * 5) >> 3);
+            IDX[i] = d < 0 ? BASE[i] : d < 4 ? EMBER : d < 16 ? SCORCH : d < 96 ? CHAR[i] : ASH[i]; } } } }
+    : () => { for (let k = 0; k < n; k++) { const P = TP[k] = (TP[k] + 1) % 384, DR = DRS[TD[k]], x0 = TX[k] * TS, y0 = TY[k] * TS, y1 = Math.min(H, y0 + TS);
+        for (let y = y0; y < y1; y++) { const r = y * W, bb = (y & 3) << 2, dr = ((y - y0) << sh) << 5;
+          for (let xx = 0; xx < TS; xx++) { const x = x0 + xx, i = r + x, d = P - ((BAYV[bb + (x & 3)] * 3 + DR[dr + (xx << sh)] * 5) >> 3);
+            IDX[i] = d < 0 ? BASE[i] : d < 4 ? EMBER : d < 16 ? SCORCH : d < 96 ? CHAR[i] : ASH[i]; } } } };
+  fn.info = { tiles: n, pixels: px, screen_share: +(px / (W * H)).toFixed(3) }; return fn; }
+
+// ---------------- 4. spread grid (active-list CA, integer hash RNG) ----------------
+function mkSpread(GW, GH, nBurn, fullSweep) {
+  const NC = GW * GH, MAT = new Uint8Array(NC), FUEL = new Uint8Array(NC), MOIST = new Uint8Array(NC), STA = new Uint8Array(NC), PEND = new Uint8Array(NC), TIM = new Uint8Array(NC);
+  let A = new Int32Array(NC), NA = new Int32Array(NC); const CAND = new Int32Array(NC); let na = 0; const TK = new Int32Array(1);
+  const NONE = 0, IGN = 1, BURN = 2, EMB = 3, ASHS = 4, IGN16 = new Int32Array([0, 30000, 45000, 20000]), FUELT = [0, 4, 3, 8], EMBT = [0, 2, 2, 6], BASEM = new Uint8Array([0, 40, 10, 60]), SEED = 4242;
+  const DX = new Int32Array([1, 1, 0, -1, -1, -1, 0, 1]), DY = new Int32Array([0, 1, 1, 1, 0, -1, -1, -1]), WF = new Int32Array(8), windV = 4;
+  for (let d = 0; d < 8; d++) { const ct = Math.cos(d * Math.PI / 4); WF[d] = Math.round(1024 * Math.exp(windV * (0.045 + 0.131 * (ct - 1))) * (d & 1 ? .7 : 1)); }
+  for (let c = 0; c < NC; c++) { const m = rnd() < .75 ? 1 + ri(3) : 0; MAT[c] = m; FUEL[c] = FUELT[m]; MOIST[c] = BASEM[m]; }
+  let placed = 0; while (placed < nBurn) { const c = ri(NC); if (!MAT[c] || STA[c]) continue; STA[c] = BURN; FUEL[c] = 1 + ri(FUELT[MAT[c]]); A[na++] = c; placed++; }
+  const S0 = [MAT.slice(), FUEL.slice(), MOIST.slice(), STA.slice(), TIM.slice()], A0 = A.slice(0, na), na0 = na;
+  const restore = () => { MAT.set(S0[0]); FUEL.set(S0[1]); MOIST.set(S0[2]); STA.set(S0[3]); TIM.set(S0[4]); A.set(A0); na = na0; };
+  const tick = () => { const tk = ++TK[0]; let nc = 0;
+    if (fullSweep) for (let c = 0; c < NC; c++) { const b = BASEM[MAT[c]]; if (MOIST[c] > b) MOIST[c]--; else if (MOIST[c] < b && (tk & 3) === 0) MOIST[c]++; }
+    for (let k = 0; k < na; k++) { const c = A[k]; if (STA[c] !== BURN) continue; const cy = (c / GW) | 0, cx = c - cy * GW;
+      for (let d = 0; d < 8; d++) { const nx = cx + DX[d], ny = cy + DY[d]; if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue; const n = ny * GW + nx;
+        const m = MAT[n]; if (m === 0 || STA[n] !== NONE || FUEL[n] === 0 || PEND[n]) continue;
+        let thr = (IGN16[m] * (255 - MOIST[n])) >> 8; thr = (thr * WF[d]) >> 10;
+        let h = Math.imul(nx, 374761393) + Math.imul(ny, 668265263) + Math.imul(tk, -2048144777) + Math.imul(SEED + d, -1028477379);
+        h = Math.imul(h ^ (h >>> 15), 1274126177); h ^= h >>> 16;
+        if ((h & 0xffff) < thr) { PEND[n] = 1; CAND[nc++] = n; } } }
+    let m = 0;
+    if (fullSweep) { for (let k = 0; k < nc; k++) { const c = CAND[k]; PEND[c] = 0; STA[c] = IGN; }
+      for (let k = 0; k < na; k++) { const c = A[k], s = STA[c]; if (s === BURN) { if (--FUEL[c] === 0) { STA[c] = EMB; TIM[c] = EMBT[MAT[c]]; } } else if (s === EMB) { if (--TIM[c] === 0) STA[c] = ASHS; } else if (s === IGN) STA[c] = BURN; }
+      for (let c = 0; c < NC; c++) { const s = STA[c]; if (s >= IGN && s <= EMB) NA[m++] = c; } }
+    else { for (let k = 0; k < na; k++) { const c = A[k], s = STA[c];
+        if (s === IGN) { STA[c] = BURN; NA[m++] = c; }
+        else if (s === BURN) { if (--FUEL[c] === 0) { STA[c] = EMB; TIM[c] = EMBT[MAT[c]]; } NA[m++] = c; }
+        else if (s === EMB) { if (--TIM[c] === 0) STA[c] = ASHS; else NA[m++] = c; } }
+      for (let k = 0; k < nc; k++) { const c = CAND[k]; PEND[c] = 0; STA[c] = IGN; NA[m++] = c; } }
+    const t = A; A = NA; NA = t; na = m; };
+  const burning = () => { let b = 0; for (let k = 0; k < na; k++) { const s = STA[A[k]]; if (s === IGN || s === BURN) b++; } return b; };
+  return { tick, restore, burning, active: () => na };
+}
+
+// ---------------- 5. smoke field ----------------
+// (a) the VFX #6 sandbox smokeStep as written: three Float32 channels, bilinear semi-Lagrangian advect, Math.sin wobble per cell, decay
+function mkSmokeF(FW, FH) { const FN = FW * FH; let SM = new Float32Array(FN), SO = new Float32Array(FN), SS = new Float32Array(FN), SM2 = new Float32Array(FN), SO2 = new Float32Array(FN), SS2 = new Float32Array(FN);
+  const SRC = new Int32Array(20); for (let k = 0; k < 20; k++) SRC[k] = (((.3 + .6 * hashf(k, 8)) * FH) | 0) * FW + ((hashf(k, 9) * FW) | 0);
+  const sc = FW / 80; let tt = 0; const dt = 1 / 60, windX = 1, windY = 0, windV = 4;
+  return () => { tt += dt; for (let k = 0; k < 20; k++) { SM[SRC[k]] += .1; SS[SRC[k]] += k < 3 ? .2 : 0; }
+    const ux = windX * windV * .28 * sc, uy = (windY * windV * .12 - 3.4) * sc;
+    for (let y = 0; y < FH; y++) { const tu = ux + Math.sin(y * .55 / sc + tt * 1.7) * .5 * sc; for (let x = 0; x < FW; x++) { const tv = uy + Math.sin(x * .45 / sc + tt * 1.3) * .4 * sc;
+      const sx = x - tu * dt, sy = y - tv * dt, x0 = Math.floor(sx), y0 = Math.floor(sy), fx = sx - x0, fy = sy - y0; let a = 0, b = 0, c = 0;
+      for (let q = 0; q < 4; q++) { const xx = x0 + (q & 1), yy = y0 + (q >> 1); if (xx < 0 || yy < 0 || xx >= FW || yy >= FH) continue; const w = ((q & 1) ? fx : 1 - fx) * ((q >> 1) ? fy : 1 - fy), k = yy * FW + xx; a += SM[k] * w; b += SO[k] * w; c += SS[k] * w; }
+      const k = y * FW + x; SM2[k] = Math.min(2, a * .984); SO2[k] = Math.min(2, b * .988); SS2[k] = Math.min(2, c * .93); } }
+    let t = SM; SM = SM2; SM2 = t; t = SO; SO = SO2; SO2 = t; t = SS; SS = SS2; SS2 = t; }; }
+// (b) one Uint8 channel, fixed-point (8.8) bilinear advect, wobble from per-row / per-column tables built once per tick, decay x254/256 (floor, so at least -1 per tick), 30 sources
+function mkSmokeB(FW, FH, INJ = 200, DEC = 254, NS = 30) { const FN = FW * FH, F = { FW, FH, D: new Uint8Array(FN) }; let D2 = new Uint8Array(FN);
+  const SRC = new Int32Array(NS); for (let k = 0; k < NS; k++) SRC[k] = (((.3 + .6 * hashf(k, 8)) * FH) | 0) * FW + ((hashf(k, 9) * FW) | 0);
+  const sc = FW / 80, TU = new Int32Array(FH), TV = new Int32Array(FW); let tt = 0; const dt = 1 / 60;
+  const bs = Math.max(1, sc | 0);
+  F.step = () => { tt += dt; const D = F.D; for (let k = 0; k < NS; k++) for (let by = 0; by < bs; by++) for (let bx = 0; bx < bs; bx++) { const j = SRC[k] + by * FW + bx; D[j] = Math.min(255, D[j] + INJ); }
+    for (let y = 0; y < FH; y++) TU[y] = ((1.12 + Math.sin(y * .55 / sc + tt * 1.7) * .5) * sc * dt * 256) | 0;
+    for (let x = 0; x < FW; x++) TV[x] = ((-3.4 + Math.sin(x * .45 / sc + tt * 1.3) * .4) * sc * dt * 256) | 0;
+    for (let y = 0; y < FH; y++) { const tu = TU[y]; for (let x = 0; x < FW; x++) { const sx = (x << 8) - tu, sy = (y << 8) - TV[x];
+      let x0 = sx >> 8, y0 = sy >> 8; const fx = sx & 255, fy = sy & 255; if (x0 < 0) x0 = 0; if (y0 < 0) y0 = 0; let x1 = x0 + 1, y1 = y0 + 1; if (x1 >= FW) x1 = FW - 1; if (y1 >= FH) y1 = FH - 1; if (x0 >= FW) x0 = FW - 1; if (y0 >= FH) y0 = FH - 1;
+      const r0 = y0 * FW, r1 = y1 * FW, top = D[r0 + x0] * (256 - fx) + D[r0 + x1] * fx, bot = D[r1 + x0] * (256 - fx) + D[r1 + x1] * fx;
+      D2[y * FW + x] = (((top * (256 - fy) + bot * fy + 32768) >>> 16) * DEC) >> 8; } }
+    const t = F.D; F.D = D2; D2 = t; };
+  // stress field for the draw tests: smooth noise at a 48 px scale, about a third of the screen above threshold
+  F.fillNoise = () => { const c = 640 / FW; for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) F.D[y * FW + x] = Math.max(0, Math.min(255, (vnoise(x * c / 48, y * c / 48 + 50) - .42) * 700)) | 0; };
+  return F; }
+// cluster threshold: 16x16 Bayer drawn in 2x2 px blocks = 32x32 tile (no single isolated pixels); and plain 4x4 Bayer
+const B16 = new Uint8Array(256); { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { let v = 0, xx = x, yy = y; for (let b = 0; b < 4; b++) { v = (v << 2) | (BAYER[(yy & 3) * 4 + (xx & 3)] >> 2 & 3); xx >>= 2; yy >>= 2; } B16[y * 16 + x] = v; } }
+const CL32 = new Uint8Array(1024); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) CL32[y * 32 + x] = 20 + ((B16[(y >> 1) * 16 + (x >> 1)] * 200) >> 8);
+const BY4 = new Uint8Array(16); for (let i = 0; i < 16; i++) BY4[i] = 20 + ((BAYER[i] * 16 * 200) >> 8);
+// draw the byte field at art resolution. samp 'bil' = separable bilinear (one field row blend per art row, then per pixel), 'near' = nearest cell
+function mkSmokeDraw(A, F, thr, samp) { const W = A.W, H = A.H, IDX = A.IDX, FW = F.FW, FH = F.FH, c = W / FW, sh = Math.round(Math.log2(c));
+  const X0 = new Int32Array(W), WX = new Int32Array(W), Y0 = new Int32Array(H), WY = new Int32Array(H), TR = new Int32Array(FW);
+  for (let x = 0; x < W; x++) { let f = (x + .5) / c - .5; if (f < 0) f = 0; let i = Math.floor(f); if (i >= FW - 1) { i = FW - 2; f = FW - 1; } X0[x] = i; WX[x] = Math.round((f - i) * 256); }
+  for (let y = 0; y < H; y++) { let f = (y + .5) / c - .5; if (f < 0) f = 0; let i = Math.floor(f); if (i >= FH - 1) { i = FH - 2; f = FH - 1; } Y0[y] = i; WY[y] = Math.round((f - i) * 256); }
+  const T = thr === 'cluster' ? CL32 : BY4, tm = thr === 'cluster' ? 31 : 3, ts = thr === 'cluster' ? 5 : 2; let cov = 0;
+  const bil = () => { const D = F.D; let w = 0;
+    for (let y = 0; y < H; y++) { const r0 = Y0[y] * FW, r1 = r0 + FW, wy = WY[y]; let any = 0;
+      for (let i = 0; i < FW; i++) { const v = D[r0 + i] * (256 - wy) + D[r1 + i] * wy; TR[i] = v; any |= v; }
+      if (any === 0) continue; const row = y * W, tr = (y & tm) << ts;
+      for (let x = 0; x < W; x++) { const i0 = X0[x], wx = WX[x], d = (TR[i0] * (256 - wx) + TR[i0 + 1] * wx) >>> 16, th = T[tr + (x & tm)];
+        if (d > th) { IDX[row + x] = d > th + 70 ? SMK_D : SMK_L; w++; } } } cov = w; };
+  const near = () => { const D = F.D; let w = 0;
+    for (let y = 0; y < H; y++) { const r = (y >> sh) * FW, row = y * W, tr = (y & tm) << ts;
+      for (let x = 0; x < W; x++) { const d = D[r + (x >> sh)], th = T[tr + (x & tm)]; if (d > th) { IDX[row + x] = d > th + 70 ? SMK_D : SMK_L; w++; } } } cov = w; };
+  // 'bilspan': the same bilinear row sweep, but the c-px span between two field columns is skipped when both columns are 0 in the blended row
+  const XS = new Int32Array(FW + 1); for (let i = 0; i <= FW; i++) { let x = 0; while (x < W && X0[x] < i) x++; XS[i] = x; }
+  const bilspan = () => { const D = F.D; let w = 0;
+    for (let y = 0; y < H; y++) { const r0 = Y0[y] * FW, r1 = r0 + FW, wy = WY[y]; let any = 0;
+      for (let i = 0; i < FW; i++) { const v = D[r0 + i] * (256 - wy) + D[r1 + i] * wy; TR[i] = v; any |= v; }
+      if (any === 0) continue; const row = y * W, tr = (y & tm) << ts;
+      for (let i = 0; i < FW - 1; i++) { if ((TR[i] | TR[i + 1]) === 0) continue; const a = TR[i], b = TR[i + 1], xe = XS[i + 1];
+        for (let x = XS[i]; x < xe; x++) { const wx = WX[x], d = (a * (256 - wx) + b * wx) >>> 16, th = T[tr + (x & tm)];
+          if (d > th) { IDX[row + x] = d > th + 70 ? SMK_D : SMK_L; w++; } } } } cov = w; };
+  const fn = samp === 'bil' ? bil : samp === 'bilspan' ? bilspan : near; fn.coverage = () => +(cov / (W * H)).toFixed(3); return fn; }
+
+// ---------------- 6. light map ----------------
+// 30 sources: 20 torches (r 2.5 tiles), 6 campfires/braziers (r 4 tiles), 4 burning houses (r 6 tiles); r in tiles, scaled by tile px
+const LIGHTS = []; for (let k = 0; k < 30; k++) LIGHTS.push({ x: hashf(k, 11), y: hashf(k, 12), r: k < 20 ? 2.5 : k < 26 ? 4 : 6, i: k < 20 ? 170 : k < 26 ? 220 : 255 });
+function mkLight(A, c, samp) { const W = A.W, H = A.H, IDX = A.IDX, TS = W / 20, LW = Math.ceil(W / c) + 1, LH = Math.ceil(H / c) + 1, L = new Uint16Array(LW * LH), L8 = new Uint8Array(LW * LH), sh = Math.round(Math.log2(c));
+  const n = LIGHTS.length, SX = new Float32Array(n), SY = new Float32Array(n), SR = new Float32Array(n), SI = new Float32Array(n);
+  for (let k = 0; k < n; k++) { SX[k] = LIGHTS[k].x * W / c; SY[k] = LIGHTS[k].y * H / c; SR[k] = LIGHTS[k].r * TS / c; SI[k] = LIGHTS[k].i; }
+  const BT = new Uint8Array(16); for (let i = 0; i < 16; i++) BT[i] = BAYER[i] * 4; // dither band: 64 levels per tier, 4x4 Bayer offset
+  let fr = 0;
+  const build = () => { fr++; L.fill(0);
+    for (let k = 0; k < n; k++) { const fl = .9 + .1 * hashf(k, fr >> 2), r = SR[k] * fl, r2 = r * r, it = SI[k] * fl, cx = SX[k], cy = SY[k];
+      const xa = Math.max(0, Math.floor(cx - r)), xb = Math.min(LW - 1, Math.ceil(cx + r)), ya = Math.max(0, Math.floor(cy - r)), yb = Math.min(LH - 1, Math.ceil(cy + r));
+      for (let y = ya; y <= yb; y++) { const dy = y + .5 - cy, dy2 = dy * dy, row = y * LW; for (let x = xa; x <= xb; x++) { const dx = x + .5 - cx, d2 = dx * dx + dy2; if (d2 < r2) L[row + x] += (it * (1 - d2 / r2)) | 0; } } }
+    for (let i = 0; i < L.length; i++) { const v = L[i]; L8[i] = v > 255 ? 255 : v; } };
+  const X0 = new Int32Array(W), WX = new Int32Array(W), TR = new Int32Array(LW);
+  for (let x = 0; x < W; x++) { const f = Math.max(0, (x + .5) / c - .5), i = Math.min(LW - 2, Math.floor(f)); X0[x] = i; WX[x] = Math.round((f - i) * 256); }
+  // 'span': nearest, but a run of c px inside one light cell is written without the dither lookup when its tier cannot change (l>>6 equals (l+60)>>6), and skipped when l is 0
+  const span = () => { for (let y = 0; y < H; y++) { const lr = (y >> sh) * LW, br = (y & 3) << 2, row = y * W;
+      for (let cx = 0; cx < LW - 1; cx++) { const l = L8[lr + cx]; if (l === 0) continue; const x0 = cx << sh, x1 = Math.min(W, x0 + c), t0 = l >> 6;
+        if (t0 === (l + 60) >> 6) { if (t0 === 0) continue; const tb = (t0 > 3 ? 3 : t0) << 8; for (let x = x0; x < x1; x++) { const i = row + x; IDX[i] = (IDX[i] & 255) | tb; } }
+        else for (let x = x0; x < x1; x++) { let t = (l + BT[br + (x & 3)]) >> 6; if (t) { if (t > 3) t = 3; const i = row + x; IDX[i] = (IDX[i] & 255) | (t << 8); } } } } };
+  const lit = () => { let n = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (L8[(y >> sh) * LW + (x >> sh)]) n++; return +(n / (W * H)).toFixed(3); };
+  const apply = samp === 'span' ? span : samp === 'near' ? () => { for (let y = 0; y < H; y++) { const lr = (y >> sh) * LW, br = (y & 3) << 2, row = y * W;
+        for (let x = 0; x < W; x++) { const l = L8[lr + (x >> sh)]; if (l === 0) continue; let t = (l + BT[br + (x & 3)]) >> 6; if (t) { if (t > 3) t = 3; const i = row + x; IDX[i] = (IDX[i] & 255) | (t << 8); } } } }
+    : () => { for (let y = 0; y < H; y++) { const f = Math.max(0, (y + .5) / c - .5), y0 = Math.min(LH - 2, Math.floor(f)), wy = Math.round((f - y0) * 256), r0 = y0 * LW, r1 = r0 + LW; let any = 0;
+        for (let i = 0; i < LW; i++) { const v = L8[r0 + i] * (256 - wy) + L8[r1 + i] * wy; TR[i] = v; any |= v; } if (any === 0) continue; const br = (y & 3) << 2, row = y * W;
+        for (let x = 0; x < W; x++) { const i0 = X0[x], wx = WX[x], l = (TR[i0] * (256 - wx) + TR[i0 + 1] * wx) >>> 16; if (l === 0) continue; let t = (l + BT[br + (x & 3)]) >> 6; if (t) { if (t > 3) t = 3; const i = row + x; IDX[i] = (IDX[i] & 255) | (t << 8); } } } };
+  return { build, apply, lit, cells: LW * LH, LW, LH }; }
+
+// ---------------- 7. embers ----------------
+function mkEmbers(A, N, mixed) { const W = A.W, H = A.H, IDX = A.IDX, k = W / 320, X = new Float32Array(N), Y = new Float32Array(N), VX = new Float32Array(N), VY = new Float32Array(N), LF = new Float32Array(N), ML = new Float32Array(N), R = new Int32Array([987654321]);
+  const SX = new Float32Array(20), SY = new Float32Array(20); for (let s = 0; s < 20; s++) { SX[s] = (.05 + .9 * hashf(s, 21)) * W; SY[s] = (.3 + .65 * hashf(s, 22)) * H; }
+  const dt = 1 / 60, wpx = 12 * k;
+  for (let j = 0; j < N; j++) { LF[j] = ML[j] = .2 + 1.4 * rnd(); X[j] = SX[j % 20]; Y[j] = SY[j % 20] - rnd() * 40 * k; VX[j] = (rnd() - .5) * 16 * k; VY[j] = -(18 + rnd() * 24) * k; }
+  const update = () => { let s = R[0];
+    for (let j = 0; j < N; j++) { if (LF[j] <= 0) { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; const u = (s >>> 0) / 4294967296, src = (s >>> 3) % 20; X[j] = SX[src] + (u - .5) * 10 * k; Y[j] = SY[src]; VX[j] = (u - .5) * 16 * k; VY[j] = -(18 + u * 24) * k; LF[j] = ML[j] = .7 + .9 * u; }
+      VY[j] -= 16 * k * dt; VX[j] += (wpx - VX[j]) * .8 * dt; VX[j] *= .99; VY[j] *= .985; X[j] += VX[j] * dt; Y[j] += VY[j] * dt; LF[j] -= dt; }
+    R[0] = s; };
+  const draw = () => { for (let j = 0; j < N; j++) { const x = X[j] | 0, y = Y[j] | 0; if (x < 0 || y < 0 || x >= W - 1 || y >= H - 1) continue; const a = LF[j] / ML[j], t = F0 + ((a * 4.99) | 0), i = y * W + x; IDX[i] = t;
+    if (mixed && a > .6) { IDX[i + 1] = t; IDX[i + W] = t; IDX[i + W + 1] = t; } } };
+  return { update, draw }; }
+
+// ---------------- 8. palette pass ----------------
+function mkPal(A) { const IDX = A.IDX, out32 = A.out32, NP = A.NP; return () => { for (let i = 0; i < NP; i++) out32[i] = PAL[IDX[i]]; }; }
+
+// ---------------- 10. whole frame ----------------
+const LAYER_NAMES = ['spread tick (4 Hz, 1 in 15 frames)', 'ground copy (stand-in)', 'burn front (art map, 20%)', 'drawn loops (150)', 'embers (512, mixed)', 'smoke 80x45 advect + draw (bilinear, zero spans skipped)', 'light map 8 px build + apply (flat runs)', 'palette pass', 'putImageData + 1 px sync'];
+function mkFrame(W) { const A = art(W), c8 = W / 80, sp = fresh(mkSpread)(20, 12, 48, false), front = fresh(mkFront)(A, .2, 'art'), loops = fresh(mkLoopsIdx)(A, 150, W === 640 ? LOOP_SIZES_640 : LOOP_SIZES_320),
+    em = fresh(mkEmbers)(A, 512, true), sm = fresh(mkSmokeB)(80, 45), smd = fresh(mkSmokeDraw)(A, sm, 'cluster', 'bilspan'), li = fresh(mkLight)(A, c8, 'span'), pal = fresh(mkPal)(A);
+  for (let i = 0; i < 300; i++) sm.step();
+  let f = 0, tk = 0;
+  const layers = [() => { if (++f % 15 === 0) { sp.tick(); if (++tk % 8 === 0) sp.restore(); } }, () => A.IDX.set(A.BASE), front, loops, () => { em.update(); em.draw(); }, () => { sm.step(); smd(); }, () => { li.build(); li.apply(); }, pal, () => { A.cxS.putImageData(A.img, 0, 0); sync(A.cxS); }];
+  const run = () => { for (let i = 0; i < layers.length; i++) layers[i](); }; run.layers = layers; return run; }
+function layerBreakdown(fr, frames) { for (let i = 0; i < 60; i++) fr(); const L = fr.layers, acc = new Float64Array(L.length);
+  for (let f = 0; f < frames; f++) { let t = performance.now(); for (let i = 0; i < L.length; i++) { L[i](); const n = performance.now(); acc[i] += n - t; t = n; } }
+  const o = {}; LAYER_NAMES.forEach((nm, i) => o[nm] = +(acc[i] / frames).toFixed(4)); return o; }
+
+// ---------------- CPU run ----------------
+async function runCPU(opts = {}) {
+  await initCanvasSources();
+  const only = opts.only ? new RegExp(opts.only) : null, out = { info: { userAgent: navigator.userAgent, cores: navigator.hardwareConcurrency, timer_resolution_ms: timerResolution(), loops640: loopOpaque(LOOP_SIZES_640), loops320: loopOpaque(LOOP_SIZES_320) }, results: [] };
+  const T = (name, mk, extra) => { if (only && !only.test(name)) return; let r; try { const fn = mk(); r = bench(name, fn, opts.bench); if (typeof extra === 'function') extra = extra(); Object.assign(r, extra || {}); } catch (e) { r = { name, error: String(e && e.stack || e) }; console.error(name, r.error); } out.results.push(r); console.log(name, r.median_ms, r.p95_ms); };
+  const A = art(640), A3 = art(320);
+
+  // 1. DOOM buffers. Positions keep the buffer on screen.
+  const SIZES = [['torch', 8, 24], ['campfire', 32, 48], ['bonfire', 64, 96], ['house front', 128, 96], ['full-width band', 640, 120]];
+  for (const [nm, w, h] of SIZES) for (const sc of [1, 2]) { const bw = w / sc, bh = h / sc, pos = [[(640 - w) >> 1, 360 - h - 8]];
+    let d; T(`doom/${nm} ${w}x${h}/1:${sc} (${bw}x${bh} cells)/step`, () => { d = fresh(mkDoom)(A, pos, bw, bh, sc, 5); return d.step; }, () => ({ cells: bw * bh, lit_share: d.lit() }));
+    T(`doom/${nm} ${w}x${h}/1:${sc} (${bw}x${bh} cells)/step + quantize 5 tones + draw`, () => { const e = fresh(mkDoom)(A, pos, bw, bh, sc, 5); return () => { e.step(); e.draw(); }; }, { cells: bw * bh });
+    T(`doom/${nm} ${w}x${h}/1:${sc} (${bw}x${bh} cells)/quantize 5 tones + draw only`, () => { const e = fresh(mkDoom)(A, pos, bw, bh, sc, 5); for (let i = 0; i < 100; i++) e.step(); return e.draw; }, { cells: bw * bh }); }
+  for (const tones of [4, 6]) for (const [nm, w, h] of [SIZES[1], SIZES[4]]) T(`doom/${nm} ${w}x${h}/1:1/quantize ${tones} tones + draw only`, () => { const e = fresh(mkDoom)(A, [[(640 - w) >> 1, 360 - h - 8]], w, h, 1, tones); for (let i = 0; i < 100; i++) e.step(); return e.draw; });
+  const TPOS = []; for (let k = 0; k < 20; k++) TPOS.push([12 + k * 31, 40 + (k % 4) * 70]);
+  for (const sc of [1, 2]) T(`doom/20 torches 8x24/1:${sc}/step + quantize 5 tones + draw`, () => { const e = fresh(mkDoom)(A, TPOS, 8 / sc, 24 / sc, sc, 5); return () => { e.step(); e.draw(); }; }, { cells: 20 * 192 / sc / sc });
+
+  // 2. drawn loops
+  for (const n of [50, 150, 200, 800]) T(`loops/index-buffer copy from Uint16 frames/${n} flames`, () => fresh(mkLoopsIdx)(A, n, LOOP_SIZES_640), { flames: n });
+  for (const accel of [false, true]) { const cv = accel ? 'accelerated 2D canvas' : 'software 2D canvas (willReadFrequently)';
+    T(`loops/${cv}/1 px getImageData sync only`, () => { const cx = accel ? A.cxG : A.cxS; return () => { cx.fillRect(0, 0, 1, 1); sync(cx); }; });
+    for (const src of ['small', 'atlas', 'bitmap']) for (const n of [50, 200, 800]) T(`loops/${cv}/drawImage from ${src === 'small' ? 'small canvases' : src === 'atlas' ? 'one atlas canvas' : 'one atlas ImageBitmap'}/${n} flames`, () => fresh(mkLoopsCanvas)(A, n, accel, src), { flames: n }); }
+
+  // 3. burn front
+  for (const frac of [.1, .2, .5, 1]) for (const mode of ['art', 'bayer', 'tile']) { if (frac === .2 && mode !== 'art') continue; let f;
+    T(`front/640x360/${Math.round(frac * 100)}% of tiles burning/${mode === 'art' ? 'art burn-order map' : mode === 'bayer' ? 'Bayer 4 threshold' : 'whole-tile swap'}`, () => (f = fresh(mkFront)(A, frac, mode)), () => f.info); }
+  for (const mode of ['art', 'tile']) { let f; T(`front/320x180/20% of tiles burning/${mode === 'art' ? 'art burn-order map' : 'whole-tile swap'}`, () => (f = fresh(mkFront)(A3, .2, mode)), () => f.info); }
+
+  // 4. spread grid. The state is restored every 8 ticks so the burning count stays near the target.
+  const SP = [['32 px tiles on screen', 20, 12, 48], ['16 px cells on screen', 40, 23, 184], ['8 px cells on screen', 80, 45, 720], ['server area 256x256 tiles', 256, 256, 1000], ['server area 256x256 tiles', 256, 256, 2500], ['server area 256x256 tiles', 256, 256, 5000]];
+  for (const [nm, gw, gh, nb] of SP) for (const sweep of [false, true]) { if (sweep && gw !== 256) continue; let g;
+    T(`spread/${nm} (${gw}x${gh})/${nb} seeded burning/${sweep ? 'active list + full moisture sweep + full rebuild (VFX #6 sandbox shape)' : 'active list only'}`, () => { g = fresh(mkSpread)(gw, gh, nb, sweep); let n = 0; return () => { g.tick(); if ((++n & 7) === 0) g.restore(); }; },
+      () => { g.restore(); let b = 0, a = 0; for (let i = 0; i < 8; i++) { g.tick(); b += g.burning(); a += g.active(); } g.restore(); return { cells: gw * gh, mean_burning: Math.round(b / 8), mean_active: Math.round(a / 8) }; }); }
+  T('spread/server area 256x256 tiles/restore only (harness overhead, paid once per 8 ticks)', () => { const g = fresh(mkSpread)(256, 256, 2500, false); return g.restore; });
+
+  // 5. smoke
+  for (const [c, fw, fh] of [[4, 160, 90], [8, 80, 45], [16, 40, 23]]) {
+    T(`smoke/${c} px cells (${fw}x${fh})/advect + decay, VFX #6 sandbox as written (3 Float32 channels)`, () => fresh(mkSmokeF)(fw, fh), { cells: fw * fh, bytes: fw * fh * 4 * 6 });
+    T(`smoke/${c} px cells (${fw}x${fh})/advect + decay, 1 Uint8 channel fixed point`, () => fresh(mkSmokeB)(fw, fh).step, { cells: fw * fh, bytes: fw * fh * 2 });
+    for (const fill of ['plumes', 'noise']) for (const [thr, samp] of [['cluster', 'bil'], ['cluster', 'bilspan'], ['bayer', 'bil'], ['cluster', 'near']]) { let d;
+      T(`smoke/${c} px cells (${fw}x${fh})/draw at 640x360, ${fill === 'plumes' ? '30 plumes after 300 ticks' : 'noise-filled stress field'}, ${thr === 'cluster' ? '2x2 cluster threshold' : '4x4 Bayer'}, ${samp === 'bil' ? 'bilinear' : samp === 'bilspan' ? 'bilinear, zero spans skipped' : 'nearest'}`, () => { const F = fresh(mkSmokeB)(fw, fh); for (let i = 0; i < 300; i++) F.step(); if (fill === 'noise') F.fillNoise(); d = fresh(mkSmokeDraw)(A, F, thr, samp); return d; }, () => ({ coverage: d.coverage() })); } }
+
+  // 6. light map
+  for (const c of [32, 8, 4]) { let l;
+    T(`light/${c} px cells/build from 30 sources`, () => (l = fresh(mkLight)(A, c, 'near')).build, () => ({ cells: l.cells, grid: l.LW + 'x' + l.LH }));
+    for (const samp of ['near', 'span', 'bil']) { let m; T(`light/${c} px cells/apply at 640x360, ${samp === 'near' ? 'nearest' : samp === 'span' ? 'nearest, flat runs per cell' : 'bilinear'}, 4x4 Bayer band`, () => { m = fresh(mkLight)(A, c, samp); m.build(); return m.apply; }, () => ({ lit_share: m.lit() })); }
+    T(`light/${c} px cells/build + apply nearest`, () => { const m = fresh(mkLight)(A, c, 'near'); return () => { m.build(); m.apply(); }; }); }
+
+  // 7. embers
+  for (const n of [256, 512, 1024, 4096]) { T(`embers/${n}/update`, () => fresh(mkEmbers)(A, n, true).update); T(`embers/${n}/draw (mixed 1 px and 2x2)`, () => { const e = fresh(mkEmbers)(A, n, true); e.update(); return e.draw; });
+    T(`embers/${n}/update + draw (mixed)`, () => { const e = fresh(mkEmbers)(A, n, true); return () => { e.update(); e.draw(); }; }); }
+
+  // 8. palette pass + putImageData
+  for (const B of [A, A3]) { const tag = `${B.W}x${B.H}`;
+    T(`palette/${tag}/Uint16 index -> RGBA via Uint32 lookup`, () => fresh(mkPal)(B), { bytes_out: B.NP * 4 });
+    for (const accel of [false, true]) T(`palette/${tag}/putImageData + 1 px sync, ${accel ? 'accelerated' : 'software'} canvas`, () => { const cx = accel ? B.cxG : B.cxS; return () => { cx.putImageData(B.img, 0, 0); sync(cx); }; }); }
+
+  // 10. whole frame
+  for (const W of [640, 320]) { let fr; T(`frame/default at ${W}x${W * 9 / 16}`, () => (fr = mkFrame(W)), () => ({ layers_ms: layerBreakdown(fr, 600) })); }
+  out.info.sink = SINK; return out;
+}
+
+// ---------------- GPU run: noise fire shader and texture uploads ----------------
+async function runGPU(opts = {}) {
+  const only = opts.only ? new RegExp(opts.only) : null, out = { info: {}, results: [] };
+  const cv = document.createElement('canvas'); cv.width = 8; cv.height = 8;
+  const gl = cv.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) { out.info.error = 'no webgl2'; return out; }
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  out.info.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); out.info.userAgent = navigator.userAgent;
+  const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2'); out.info.timer_query = !!tq;
+  out.info.blend = 'on (SRC_ALPHA, ONE_MINUS_SRC_ALPHA, alpha 0.98) so a tile-based GPU cannot drop repeated draws';
+  const VS = `#version 300 es
+layout(location=0) in vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
+  // FBM value noise fire: 1 noise unit = 1 tile (32 px), scrolls up 1.5 tiles/s, heat = fbm - height, 5-tone ramp, pixel-snapped to `snap` px
+  const FS_FIRE = `#version 300 es
+precision highp float;out vec4 o;uniform float tm,snap,oct,tile;uniform vec2 res;uniform vec3 ramp[5];
+float h(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+void main(){vec2 q=floor(gl_FragCoord.xy/snap)*snap;vec2 pp=q/tile*vec2(1.,.8)+vec2(0.,-tm*1.5);float f=0.,a=.5;
+for(int i=0;i<6;i++){if(float(i)>=oct)break;f+=a*vn(pp);pp=pp*2.03+vec2(1.7,9.2);a*=.5;}
+float heat=f*1.4-q.y/res.y*1.1;if(heat<.25)discard;int t=int(clamp((heat-.25)*7.,0.,4.));o=vec4(ramp[t],.98);}`;
+  const FS_TEX = `#version 300 es
+precision highp float;out vec4 o;uniform sampler2D t0;void main(){o=vec4(texture(t0,vec2(.5)).rgb,.98);}`;
+  function compile(vs, fs) { const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const U = new Proxy({}, { get: (o, k) => o[k] ?? (o[k] = gl.getUniformLocation(p, k)) }); return { p, U }; }
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  function mkTex(w, h, fmt, data) { const tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texStorage2D(gl.TEXTURE_2D, 1, fmt === 'R8' ? gl.R8 : gl.RGBA8, w, h);
+    if (data) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, w, h, fmt === 'R8' ? gl.RED : gl.RGBA, gl.UNSIGNED_BYTE, data);
+    for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST); return tx; }
+  const FBS = {}; function fbo(w, h) { const k = w + 'x' + h; if (FBS[k]) return FBS[k]; const tex = mkTex(w, h, 'RGBA8', null), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); return FBS[k] = { fb, tex }; }
+  const PFIRE = compile(VS, FS_FIRE), PTEX = compile(VS, FS_TEX);
+  const vao = gl.createVertexArray(); gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  const px = new Uint8Array(4);
+  function syncGL() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+  function timeK(drawOnce, K) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); syncGL(); return performance.now() - a; }
+  async function timerQuery(drawOnce, K) { const q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); for (let k = 0; k < K; k++) drawOnce(k); gl.endQuery(tq.TIME_ELAPSED_EXT);
+    for (let i = 0; i < 4000; i++) { await new Promise(r => setTimeout(r, 0)); if (gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) break; }
+    const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT); const ns = gl.getQueryParameter(q, gl.QUERY_RESULT); gl.deleteQuery(q); return disjoint ? NaN : ns / 1e6; }
+  // wall ms per frame = slope between a batch of 1 frame and a batch of K frames, each batch ending in a 1x1 readPixels (copied from the snow bench)
+  async function gpuBench(name, mk, extra) { if (only && !only.test(name)) return; let r;
+    try { const drawOnce = mk(); for (let i = 0; i < 4; i++) timeK(drawOnce, 3);
+      const probe = Math.max(0.001, (timeK(drawOnce, 12) - timeK(drawOnce, 1)) / 11); const K = Math.max(4, Math.min(3000, Math.round(60 / probe)));
+      const s1 = [], sK = []; for (let s = 0; s < 21; s++) { s1.push(timeK(drawOnce, 1)); sK.push(timeK(drawOnce, K)); }
+      const m1 = stats(s1).median_ms, slopes = sK.map(v => (v - m1) / (K - 1));
+      r = Object.assign({ name }, stats(slopes), { K, sync_ms: +m1.toFixed(3) });
+      const js = []; for (let s = 0; s < 11; s++) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); js.push((performance.now() - a) / K); syncGL(); } r.js_ms = stats(js).median_ms;
+      if (tq) { const tqs = []; const KT = Math.max(Math.min(K, 400), 20); for (let s = 0; s < 5; s++) tqs.push((await timerQuery(drawOnce, KT)) / KT); const ok = tqs.filter(x => !isNaN(x)); if (ok.length) r.timer_query_ms = +stats(ok).median_ms.toFixed(5); }
+      if (typeof extra === 'function') extra = extra(); Object.assign(r, extra || {});
+    } catch (e) { r = { name, error: String(e && e.stack || e) }; console.error(name, r.error); }
+    out.results.push(r); console.log(name, r.median_ms, r.js_ms, r.timer_query_ms ?? ''); await new Promise(r => setTimeout(r, 0)); }
+  const RAMP = new Float32Array([.36, .08, .06, .72, .2, .05, .93, .45, .1, .99, .75, .25, 1, .95, .7]);
+  const fire = (RW, RH, vw, vh, snap, oct) => () => { const T = fbo(RW, RH); gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, vw, vh); gl.useProgram(PFIRE.p);
+    gl.uniform1f(PFIRE.U.snap, snap); gl.uniform1f(PFIRE.U.oct, oct); gl.uniform1f(PFIRE.U.tile, RW === 640 ? 32 : 16); gl.uniform2f(PFIRE.U.res, vw, vh); gl.uniform3fv(PFIRE.U.ramp, RAMP); gl.bindVertexArray(vao);
+    return k => { gl.uniform1f(PFIRE.U.tm, k / 60); gl.drawArrays(gl.TRIANGLES, 0, 3); }; };
+  for (const oct of [3, 5]) await gpuBench(`glfire/640x360 target, full screen, 1 px snap/${oct} octaves`, fire(640, 360, 640, 360, 1, oct), { pixels: 230400 });
+  await gpuBench('glfire/640x360 target, full screen, 2 px snap (still one invocation per pixel)/5 octaves', fire(640, 360, 640, 360, 2, 5), { pixels: 230400 });
+  await gpuBench('glfire/640x120 band (viewport)/5 octaves', fire(640, 360, 640, 120, 1, 5), { pixels: 76800 });
+  await gpuBench('glfire/320x180 target (1:2, upscaled later)/5 octaves', fire(320, 180, 320, 180, 1, 5), { pixels: 57600 });
+  await gpuBench('glfire/128x96 house front (viewport)/5 octaves', fire(640, 360, 128, 96, 1, 5), { pixels: 12288 });
+  // texSubImage2D upload of a field + a 1 px draw that samples it, so the upload must land
+  const prep = tx => { const T = fbo(64, 64); gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, 1, 1); gl.useProgram(PTEX.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tx); gl.bindVertexArray(vao); };
+  await gpuBench('upload/none (1 px draw only)', () => { prep(mkTex(4, 4, 'R8', new Uint8Array(16))); return () => gl.drawArrays(gl.TRIANGLES, 0, 3); }, { bytes: 0 });
+  for (const [w, h, fmt] of [[80, 45, 'R8'], [160, 90, 'R8'], [128, 96, 'R8'], [640, 120, 'R8'], [320, 180, 'R8'], [640, 360, 'R8'], [320, 180, 'RGBA8'], [640, 360, 'RGBA8']]) { const bpp = fmt === 'R8' ? 1 : 4, GF = fmt === 'R8' ? gl.RED : gl.RGBA;
+    await gpuBench(`upload/${w}x${h} ${fmt}/whole texture`, () => { const d = new Uint8Array(w * h * bpp); for (let i = 0; i < d.length; i++) d[i] = Math.imul(i, 2654435761) >>> 24; const tx = mkTex(w, h, fmt, d); prep(tx);
+      return k => { d[(k * 97) % d.length] ^= 1; gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, w, h, GF, gl.UNSIGNED_BYTE, d); gl.drawArrays(gl.TRIANGLES, 0, 3); }; }, { bytes: w * h * bpp }); }
+  return out;
+}
+</script>
+</body></html>

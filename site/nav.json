@@ -169,6 +169,22 @@
     "href": "vfx-magic-topdown-pixel.html",
     "name": "#10 Magic"
    },
+   "next": {
+    "href": "vfx-fire-32px-topdown-pixel.html",
+    "name": "#12 Fire 32"
+   }
+  },
+  "vfx-fire-32px-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#12 Fire 32",
+   "short": "Fire 32",
+   "pair": "vfx-fire-32px-sandbox.html",
+   "prev": {
+    "href": "vfx-snow-32px-topdown-pixel.html",
+    "name": "#11 Snow 32"
+   },
    "next": null
   },
   "vfx-snow-sandbox.html": {
@@ -338,6 +354,22 @@
    "prev": {
     "href": "vfx-magic-sandbox.html",
     "name": "#10 Magic"
+   },
+   "next": {
+    "href": "vfx-fire-32px-sandbox.html",
+    "name": "#12 Fire 32"
+   }
+  },
+  "vfx-fire-32px-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#12 Fire 32",
+   "short": "Fire 32",
+   "pair": "vfx-fire-32px-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-snow-32px-sandbox.html",
+    "name": "#11 Snow 32"
    },
    "next": null
   },

@@ -1,0 +1,156 @@
+<!-- Figures 1 (Agent R): FIG blocks, mapped to sections in build.py -->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Four generations of fire on tiles, 1991 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or click a row in the list. The axis is compressed before 2008 and stretched after 2017, where ten years hold most of the events. Gen 1 is still how Tibia plays, with fire as an item on a 32 px tile and effects on a fixed frame time. Gen 4 is where this study sits. Godot 4.7 is out, and every cost on this page was measured for it in a browser, not in the engine.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG scale-->
+<figure class="fig" data-demo="scale" id="fig-scale">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same burning corner at 8 px cells and at 32 px tiles</h4><span class="illu">Scene drawn for this page</span></div>
+  <div class="duo">
+    <div>
+      <div class="stage w320"><canvas width="80" height="45" aria-label="A corner of the VFX number 6 screen. Cells are 8 pixels, the walker is 7 by 12 pixels, flames are 4 tones and 8 pixels tall, embers are single pixels and the burn is a Bayer speckle."></canvas><span class="tagl">VFX #6, 8 px cells</span></div>
+      <svg class="chart scr" viewBox="0 0 320 180" role="img" aria-label="The whole 320 by 180 screen as a grid of 40 by 22.5 cells, with the corner shown above framed and the walker drawn to scale."></svg>
+      <p class="pl" data-p="0"></p>
+    </div>
+    <div>
+      <div class="stage w320"><canvas width="160" height="90" aria-label="The same corner of the 640 by 360 screen. Tiles are 32 pixels, the walker is 24 by 32 pixels and carries a torch, flames are 5 tones and overflow the tile, embers are 2 by 2 pixels and the burn edge is drawn per pixel."></canvas><span class="tagl">This study, 32 px tiles</span></div>
+      <svg class="chart scr" viewBox="0 0 320 180" role="img" aria-label="The whole 640 by 360 screen as a grid of 20 by 11.25 tiles, with the corner shown above framed and the walker drawn to scale."></svg>
+      <p class="pl" data-p="1"></p>
+    </div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="grid" checked> Show the cell grid</label>
+  </div>
+  <div class="grow2">
+    <div><p class="lab2"><span>Grows 4 times with the art pixels</span></p><div class="rows" data-g="1"></div></div>
+    <div><p class="lab2"><span>Stays the same size</span></p><div class="rows" data-g="0"></div></div>
+  </div>
+  <figcaption>Both panels show one quarter of the screen's width and height at the same size on your display. In the VFX #6 panel one art pixel of the old 320x180 picture is drawn 4x. In the 32 px panel one art pixel of the 640x360 picture is drawn 2x. A 4-tone flame 8 px tall, 1 px embers and a Bayer burn suit a 7x12 px walker. Next to a 24x32 px walker they look thin, so every one of them is redrawn (§6b). The lists sort the fire buffers by what they follow. The ratios are our benchmark's desktop cost at 640x360 against 320x180, so a pass tied to art pixels lands near 4 and a field stays near 1 [I, note 16, measured]. The bytes are one update of each buffer for a 640x360 view [I, note 16].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG spreadroll-->
+<figure class="fig" data-demo="spreadroll" id="fig-spreadroll">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One fuel strip, three ways to roll spread, and a walker who has to outrun it</h4><span class="illu">Strip and art illustrative, rules from §4 A2</span></div>
+  <div class="stage mid"><canvas width="256" height="144" aria-label="Three lanes of the same fuel. In each lane a fire starts at the left edge and a walker starts one tile ahead of it. The top lane uses 8 pixel cells rolled 4 times a second, the middle lane 32 pixel tiles rolled 4 times a second and the bottom lane 32 pixel tiles rolled once a second."></canvas><div class="lanes3" aria-hidden="true"><span>VFX #6: 8 px cells, rolled at 4 Hz</span><span>Same table on 32 px tiles at 4 Hz</span><span>32 px tiles, each rolled once a second</span></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mat" role="group" aria-label="Fuel"><button type="button" data-v="0">Green grass</button><button type="button" class="on" data-v="1">Dry grass</button><button type="button" data-v="2">Hay</button><button type="button" data-v="3">Dead brush</button><button type="button" data-v="4">Oil</button></div>
+    <button type="button" class="btn ghost" data-b="again">Light it again</button>
+  </div>
+  <div class="rows" data-rows aria-live="polite"></div>
+  <figcaption>All three lanes run VFX #6's rule with its table. Each burning cell rolls its 8 neighbours with chance p, diagonals times 0.7, and a cell that catches flips to burning only at the end of the tick. Each lane simulates a band 16 tiles deep with wrapped edges and shows one row of it, so the front behaves as on an open meadow. The top lane is VFX #6 as it shipped, 8 px cells at 4 Hz. The middle lane keeps the table and the 4 Hz tick on cells 4 times wider, so the front runs 4 times faster in px/s. Note 15 measured 2.1 tiles/s for green grass and 3.7 for dry grass, and 4.0 for brush and oil [I, note 15, measured]. The bottom lane is the Fire 32 Sandbox's rule as built. Each tile rolls once a second, the first roll one full second after it caught, and burns a fixed number of rolls, 5 for green grass and 2 for dry grass [V, S6]. That brings the front back to VFX #6's speed in px/s. The Sandbox measured 0.47 tiles/s for green grass and 0.91 for dry grass at 32 px tiles, and the same within 0.05 at 16 and 8 px cells [V, S6]. The walker moves at Asterion's 2.5 tiles/s, 80 px/s, and starts one tile ahead. Only the middle lane catches him, and only on dry fuel. The speeds in the rows are measured live from this page's own lanes, from the leading tip of the front between 64 and 224 px, as note 15 did. The middle lane crosses that stretch in about 1.5 s on 4 Hz ticks, so a single run reads coarse, and the mean of the runs settles.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fieldres-->
+<figure class="fig" data-demo="fieldres" id="fig-fieldres">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Smoke and light fields at three cell sizes over the same scene</h4><span class="illu">Scene, sources and wind illustrative</span></div>
+  <div class="tri3">
+    <div><div class="stage"><canvas width="144" height="96" aria-label="The scene with its field at the finest cell size."></canvas><span class="tagl" data-t="0"></span></div><p class="ms" data-m="0"></p></div>
+    <div><div class="stage"><canvas width="144" height="96" aria-label="The same scene with its field at the middle cell size."></canvas><span class="tagl" data-t="1"></span></div><p class="ms" data-m="1"></p></div>
+    <div><div class="stage"><canvas width="144" height="96" aria-label="The same scene with its field at the coarsest cell size."></canvas><span class="tagl" data-t="2"></span></div><p class="ms" data-m="2"></p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="fld" role="group" aria-label="Field"><button type="button" class="on" data-v="smoke">Smoke field</button><button type="button" data-v="light">Light map</button></div>
+    <div class="seg" data-seg="samp" role="group" aria-label="Sampling"><button type="button" data-v="0">Nearest</button><button type="button" class="on" data-v="1">Bilinear</button></div>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="pic">Picture</button><button type="button" data-v="cells">Stored cells</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each panel keeps its own field and builds it every frame. The picture is drawn at art resolution through the same threshold in all three. A field shows features down to about 2 cells, and a moving one steps unless it is about 4 cells wide, so the smallest clean smoke shape is about 16 px at 4 px cells, 32 px at 8 px and 64 px at 16 px [I, note 12]. Watch the plume at 16 px cells crawl in blocks. The light map at 32 px cells is OTClient's one texel per tile [V, S39]. With nearest sampling its pools jump a whole tile when the flicker moves them. With bilinear sampling they move 1 to 2 px, and the dither band stays 2 to 3 px wide at every map size because it comes from the light range δ ≈ 0.026, not from the cells [I, note 12]. The readout gives the cells and bytes of a full 640x360 view and our benchmark's costs, desktop / 6x throttle. Building the map grows with its cells. Applying it touches every art pixel, so it costs the same at any map size [I, note 16, measured]. The ms under each panel are this page's own, for a 144x96 strip.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG framecost-->
+<figure class="fig" data-demo="framecost" id="fig-framecost">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The measured fire frame by layer, desktop against the 6x throttle, 640x360 against 320x180</h4><span class="illu">Totals measured, splits derived</span></div>
+  <div class="fc-bars" data-bars></div>
+  <div class="ctl">
+    <div class="seg" data-seg="zoom" role="group" aria-label="Scale"><button type="button" class="on" data-v="17">Whole 16.7 ms frame</button><button type="button" data-v="5">Zoom to 5 ms</button><button type="button" data-v="1">Zoom to 1 ms</button></div>
+    <label><input type="checkbox" data-k="gpu"> Show the shader path estimate</label>
+  </div>
+  <div class="legend-mini" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The default frame of our benchmark holds the spread grid at 32 px, a ground copy, the burn front on 20% of the tiles, 150 drawn loops, 512 embers, an 8 px smoke field, an 8 px light map from 30 sources with nearest apply, the palette pass and <code>putImageData</code>. Each bar's length is a measured frame median, 0.624 / 4.90 ms at 640x360 and 0.206 / 1.24 ms at 320x180 [I, note 16, measured]. The split inside the 640x360 desktop bar is note 16's shares. Light build plus apply is 44%, smoke 18%, the burn front 12%, the palette pass 10%, drawn loops and <code>putImageData</code> 6% each, embers and the ground copy 1% each. The other three bars reuse those shares, and the 320x180 bars divide each layer by its measured 640 against 320 ratio. Those splits are our arithmetic. The throttled layers measured one by one add up to 3.76 ms, not 4.90, so read the colours as shares only [I, note 16]. The shader path moves light apply and smoke draw into the final fragment shader, an estimate of 0.24 ms on the desktop and 1.6 ms throttled that nobody built [I, note 16]. Tap a segment to read it.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG uploads-->
+<figure class="fig" data-demo="uploads" id="fig-uploads">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bytes per whole-texture upload, field by field, and what WebGL2 charges for it</h4><span class="illu">WebGL2 numbers, not Godot</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="rate" role="group" aria-label="Rate"><button type="button" class="on" data-v="one">One upload</button><button type="button" data-v="sec">Per second at its update rate</button></div>
+  </div>
+  <div class="fl-bars" data-bars></div>
+  <div class="legend-mini"><span><i style="background:var(--lamp)"></i>bytes, log scale, full bar 921,600</span><span><i style="background:var(--cool)"></i>Metal wall ms, measured</span><span><i style="background:#7a6252"></i>ms from the fixed cost, estimated</span></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Godot's Compatibility renderer replaces a whole texture on every update. <code>ImageTexture.update()</code> needs the same size and format, and on GLES3 it ends in <code>glTexImage2D</code> for the full image. The proposal for partial updates is still open [V, S169, S188, S187]. So a field's size is its upload. Every upload also pays a fixed cost of about 0.015 ms in WebGL2, so anything under about 15 KB costs the same as an empty one [I, note 16, measured]. The blue bars are our WebGL2 benchmark on the Metal run, wall time. The grey bars are fields the benchmark did not upload on their own, priced at that fixed cost. Keep every live field small and in one byte per cell, and put the DOOM patches in one atlas. The 128x128 burn-order map is painted once and uploaded once. These are browser numbers. No measured <code>ImageTexture.update()</code> time on the web exists [I, note 12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lights-->
+<figure class="fig" data-demo="lights" id="fig-lights">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">N fires on one ground item: PointLight2D's 15 lights per item against a baked 8 px light map</h4><span class="illu">Scene and light order illustrative</span></div>
+  <div class="duo">
+    <div><div class="stage"><canvas width="160" height="96" aria-label="A night meadow with burning torches. Each torch that the item's 15 light slots can hold lights the ground. The rest burn with no light around them."></canvas><span class="tagl">PointLight2D, 15 per item</span></div><p class="ms" data-m="0"></p></div>
+    <div><div class="stage"><canvas width="160" height="96" aria-label="The same meadow lit by a baked light map with one cell per 8 pixels. Every torch lights the ground."></canvas><span class="tagl">Baked 8 px light map</span></div><p class="ms" data-m="1"></p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng"><span>Fires on screen</span><input type="range" data-k="n" min="1" max="40" step="1" value="18"><output data-o="n">18</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>In Godot 4.7-stable, 2D lights are applied in each canvas item's own pass. An item gathers up to <code>MAX_LIGHTS_PER_ITEM - 1</code> = 15 lights, and a render holds 256, or 64 when the GPU's uniform buffer is under 64 KB [V, S174, S175]. Here the ground is one item. Raise the count past 15 and the extra fires still burn, but their pools vanish. Which 15 survive depends on the order the renderer lists them, and this figure keeps the first 15 placed. The baked map is the study's proposal. Fires write into an 80x45 R8 texture at 8 px cells, 3,600 bytes per update for a 640x360 view, and the ground shader reads it once per pixel [I, note 12]. Our benchmark built it from 30 sources in 0.021 / 0.142 ms, desktop / 6x throttle [I, note 16, measured]. PointLight2D's fill cost was not measured. A baked map casts no sharp shadows, so keep PointLight2D, if at all, for one or two hero lights [I, note 12]. The ms under each panel are this page's own.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pingpong-->
+<figure class="fig" data-demo="pingpong" id="fig-pingpong">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The DOOM fire in place on the CPU against two GPU buffers that take turns</h4><span class="illu">Both run here in JavaScript</span></div>
+  <div class="pp">
+    <div><div class="stage"><canvas width="64" height="128" aria-label="A DOOM fire computed in place, one buffer, each write read again at once. It burns taller."></canvas><span class="tagl">In place</span></div><p class="ms" data-m="0"></p></div>
+    <div><div class="stage"><canvas width="64" height="128" aria-label="A DOOM fire computed by gathering from the other buffer, two buffers swapping each frame. It burns shorter."></canvas><span class="tagl">Gather, A and B</span></div><p class="ms" data-m="1"></p></div>
+    <div class="pp-side"><p class="lab2"><span>Buffers this frame</span></p><div class="abuf"><canvas width="16" height="32" aria-label="Buffer A"></canvas><canvas width="16" height="32" aria-label="Buffer B"></canvas></div><p class="pl" data-ab></p><dl class="kv" data-kv></dl></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="draw" role="group" aria-label="Draw"><button type="button" class="on" data-v="5">5 tones after a 3x3 average</button><button type="button" data-v="37">Raw 37 tones</button></div>
+    <label><input type="checkbox" data-k="line" checked> Mark the half-lit row</label>
+  </div>
+  <figcaption>Both buffers start from a source row held at L = 36. The left one is Sanglard's loop, which writes into the buffer it is reading. A write that loses no heat lands in a column not yet processed and is read again at once, so the flame burns taller [I, notes 12, 18, measured]. The right one is what a fragment shader can do. It cannot scatter, so each pixel gathers <code>out(x, y) = in(x + o, y + 1) - d</code>, with o from -1 to 2 and d from a hash, reading buffer A and writing buffer B, then swapping [I, note 12, measured]. The dashed line marks the row where half the columns are lit, the height measure the study settled on. Note 12 measured 95 rows in place, 73 for a double-buffered copy and 71 for the gather, at L = 36 [I, notes 12, 18, measured]. Godot 4.7's <code>DrawableTexture2D</code> would hold the two buffers on the GPU. It was merged on 30 Jan 2026, its <code>blit_rect</code> calls are experimental, GLES3 implements it, and nobody has tested it on the web [V, S180, S178, S181]. Before 4.7, two SubViewports with <code>CLEAR_MODE_NEVER</code> do the same [V, S177].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG maskseed-->
+<figure class="fig" data-demo="maskseed" id="fig-maskseed">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A buffer fire seeded from the burning part of a roof and a tree crown</h4><span class="illu">Sprites, map and fire drawn for this page</span></div>
+  <div class="duo wide-l">
+    <div><div class="stage mid"><canvas width="160" height="96" aria-label="A small house and a pine at dusk. Flames rise from the burning part of the roof and the crown. With the painted cooling map the tongues rise in fixed places."></canvas><div class="hud" data-hud></div></div></div>
+    <div>
+      <p class="lab2"><span>Cooling map, 32x64, scrolling up</span><b data-cm></b></p>
+      <div class="stage cmap"><canvas width="32" height="64" aria-label="The cooling map. Dark is little cooling, where flame tongues rise."></canvas></div>
+      <dl class="kv" data-kv></dl>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="seed" role="group" aria-label="Burning part"><button type="button" data-v="ridge">Roof ridge</button><button type="button" class="on" data-v="roof">Whole roof</button><button type="button" data-v="crown">Tree crown</button><button type="button" data-v="both">Roof and crown</button></div>
+    <div class="seg" data-seg="cool" role="group" aria-label="Cooling"><button type="button" class="on" data-v="paint">Painted cooling map</button><button type="button" data-v="rand">Random cooling</button></div>
+  </div>
+  <figcaption>The heat buffer covers the strip at 1:1, 160x96 cells. Each frame the top edge of the burning part of the sprite mask is set to full heat, so a roof fire burns in the roof's shape. Lode seeds object edges the same way for flaming text [V, S160; I, note 12]. Each cell then takes the average of the cells below it, which smooths the grain before the 5-tone lookup, and subtracts a cooling value [I, note 12]. Hugo Elias's cooling map is smoothed random noise scrolled up with the flames, and shapes painted into it appear in flame [V, S161]. Here an artist's 32x64 tileable map has three dark channels, so with the painted map the tongues rise in the same three places every second. Random cooling gives the same heat a shapeless top. It costs one extra read per pixel [I, note 12]. No shipped game at this scale does it [I, note 12]. The HUD shows this page's own ms per frame for the buffer.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG convert-->
+<figure class="fig" data-demo="convert" id="fig-convert">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">VFX #6's numbers converted to 32 px tiles, coloured by what they follow</h4></div>
+  <div class="ctl">
+    <div class="seg" data-seg="cs" role="group" aria-label="Cell size"><button type="button" data-v="8">VFX #6, 8 px cells</button><button type="button" class="on" data-v="32">At 32 px tiles</button></div>
+  </div>
+  <div class="chips cv-chips" role="group" aria-label="Filter by what a value follows" data-chips></div>
+  <div class="cv-list" data-list></div>
+  <figcaption>Every row of the §6b table. Switch between the value VFX #6 stated at 320x180 with 8 px cells and the value this study uses at 640x360 with 32 px tiles. The colour says what the value follows. Tile values scale with the 32 px tile, character values with the 24x32 sprite, and a pixel rule stays tied to the art pixel whatever the tile size. Field cells and the crowd keep their own counts, and constants do not change. Tap a chip to show only one kind. Converted values are arithmetic or proposals unless a source is cited [I]. Two traps hide in the table. Per-tick rates silently scale with the cell, which is why the spread table needs the 1 Hz roll. And the DOOM height VFX #6 quoted belongs to a different loop than the one it wrote down.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG spreadspeed-->
+<figure class="fig" data-demo="spreadspeed" id="fig-spreadspeed">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Spread speed by game in tiles per second, against a 2.5 tiles/s walk</h4></div>
+  <svg class="chart sp-chart" viewBox="0 0 720 330" role="img" aria-label="Spread speeds of nine games and rules on a log axis of tiles per second, with the 1 tile per second cap of the 1 Hz roll and the 2.5 tiles per second walking speed marked."></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each bar is one row of §6d, converted into tiles per second for a 32 px tile [V for the rule; I for the conversion]. The axis is logarithmic. The shaded bands are the designer's ladder of note 15, from smouldering creep at 0.1 tiles/s to scripted fire above 2.5 [I, note 15]. The dashed line at 1 tile/s is the cap of the 1 Hz roll. A tile lights a neighbour at most once per roll, so the axis speed is at most 1 tile per roll. The solid line is Asterion's walk of 400 ms per tile [S3]. Rows with no number in the table stay empty. Sigil of Kings counts cells per turn and Far Cry 2 metres per second, so their bars carry their own units. Tap a bar to read its rule and source.</figcaption>
+</figure>
+<!--/FIG-->

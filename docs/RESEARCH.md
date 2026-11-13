@@ -5,7 +5,7 @@ research, writing and figures. The mechanics of ids, scaffolding, building and s
 [ADDING-A-STUDY.md](ADDING-A-STUDY.md); series and formats in [FORMATS.md](FORMATS.md); the exact report
 layout in the format doc, `docs/formats/<format>.md`.
 
-The quality bar is the newest recipe study (today `vfx-snow-32px` for `vfx-pixel`; the format template stays `vfx-light`, so replace a scaffold's `build.py` and `core.js` with the newest study's). Read its `report.md`, its
+The quality bar is the newest recipe study (today `vfx-fire-32px` for `vfx-pixel`; the format template stays `vfx-light`, so replace a scaffold's `build.py` and `core.js` with the newest study's). Read its `report.md`, its
 `notes/CONTEXT.md` and one of its notes before starting.
 
 ## 1. Scope the request
@@ -32,7 +32,8 @@ Also:
   `vfx-snow-32px` builds on `vfx-snow`): do not research the concept again. Put "what the earlier study
   settled" in `CONTEXT.md`, split the research only over what changes (for a scale change: games at that size,
   art craft at that size, which buffers must grow, characters, measured costs), and have the report give a
-  conversion table from the earlier study's numbers. 5 researchers, a benchmark agent and 2 gap agents were enough.
+  conversion table from the earlier study's numbers. 5 researchers, a benchmark agent and 2 gap agents were enough
+  (`vfx-fire-32px` used 6, since fire has more systems: flames, spread, smoke, characters, combat).
 
 Write the answers to `studies/<id>/notes/CONTEXT.md`: the user and project, the series and what earlier
 studies already covered (with URLs), the scope, the goal, and the researcher rules from §2. Every researcher reads this file.
@@ -98,6 +99,11 @@ The recipe and the validator enforce the mechanics. These are the content rules:
 - Figures use only facts from the report. Label illustrative numbers as illustrative.
 - No game screenshots, logos or copyrighted art. Each game gets a "See it in action ↗" link; original abstract illustrations are fine.
 - Animations use `requestAnimationFrame` and pause offscreen (IntersectionObserver).
+- A figure plays on its own when nobody touches it. One that waits for a click (cast a spell, ignite a house)
+  auto-plays after about 2 s idle and hands control back on a click. A looping simulation (the hero) must not
+  run out: regrow and relight instead of stopping on an empty end state. `vfx-fire-32px` fixed three figures for this.
+- Have each figure agent port the report's §7 pseudocode literally and run it. In `vfx-snow-32px` and
+  `vfx-fire-32px` this found 10 and 20 report problems (event order, iteration-order dependence, wrong units).
 - The sandbox, when the study has one, is a playable version of the report's recommended architecture.
 
 - **Parallel builders need a shared contract.** Before the report is written, put the sandbox spec in
