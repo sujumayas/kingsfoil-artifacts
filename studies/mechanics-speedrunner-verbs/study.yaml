@@ -1,0 +1,15 @@
+# Study config — read by studykit and by the recipe (build.py) via studykit.ctx(__file__).
+id: mechanics-speedrunner-verbs   # must match the item id in site/catalog.json (run `python -m studykit register mechanics-speedrunner-verbs`)
+format: mechanics-playable   # formats.yaml; layout and rules in docs/formats/mechanics-playable.md
+kind: recipe
+page: mechanics-speedrunner-verbs.html
+report: report.md
+sandbox:
+  page: mechanics-speedrunner-verbs-sandbox.html
+  source: sandbox.html
+qa:
+  max_page_kb: 900
+thumb:                          # homepage card: grab of the sandbox canvas on the showcase frame
+  from: sandbox
+  canvas: '#c'
+  steps: [{wait: 600}, {click: 'button[data-demo="showcase"]'}, {wait: 1500}]

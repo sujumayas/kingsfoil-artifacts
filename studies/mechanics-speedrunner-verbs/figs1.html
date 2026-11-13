@@ -1,0 +1,146 @@
+<!-- Figures for build.py (Agent R): timeline, A1 to A6, B1 to B5. Each block is a FIG comment pair mapped to a section in AFTER_PROFILE. -->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Five generations of verbs, 1988 to 2026</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or filter by generation. The axis is linear from 1986 to 2027. Each event keeps its evidence tag and source from §3. The first generation is the arm, the dash, the cape and the crouch jumps of the cartridge era; the second puts one input on one body; the third hands the kit out as hooks, dashes and power-ups; the fourth turns verbs into resources, cards and bodies that fall over; the fifth is binds, discards and the level that grows while you play.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dash-->
+<figure class="fig" data-demo="dash" id="fig-dash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The dash over a 7 BL gap only the dash clears, with the §7 numbers on sliders</h4></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="A stick samurai runs, jumps a seven body length gap and dashes in the air to clear it, with a grey plain jump falling short; a blue bar shows Celeste's dash length for scale and a second gap tests the refill rule"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Dash speed <input type="range" data-k="sp" min="1.5" max="3" step="0.01" value="2.67"><output data-o="sp">2.67x</output></label>
+    <label class="rng">Duration <input type="range" data-k="dur" min="6" max="30" step="1" value="18"><output data-o="dur">18 steps</output></label>
+    <label class="rng">Exit speed <input type="range" data-k="ex" min="1" max="1.6" step="0.05" value="1.3"><output data-o="ex">1.30x</output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="refill" role="group" aria-label="Refill rule"><button type="button" class="on" data-v="ground">Refill on the ground</button><button type="button" data-v="never">Never refill</button></div>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The dash is the §7 <code>VERBS.dash</code> row run through the state machine: one startup step, then <code>active</code> steps at <code>speed</code> with gravity off, then the exit clamp and the 500 u/s² overspeed decay. The defaults are the Sandbox dash, 2.67x run = 1120 u/s for 18 steps = 150 ms, 168 u = 3.65 BL, exit 546 u/s, the roll-jump hyper's ceiling <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. Celeste's dash is the blue bar: <code>DashSpeed 240</code> for <code>DashTime 0.15</code> s, 36 px = 3.3 BL at 2.67x <code>MaxRun 90</code>, exit <code>EndDashSpeed 160</code> <span class="cite"><b class="tag tv">V</b> S7</span>. A full jump at maxRun clears about 248 u = 5.4 BL; one horizontal air dash adds 168 u of zero-gravity travel and a 546 u/s exit, so the same jump clears about 545 u = 11.8 BL, and a 7 BL gap that kills the plain jump (grey) is a stroll <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The second gap tests the refill. On the ground the charge comes back on landing, as Celeste's <code>RefillDash()</code> does; set it to never and the second gap wins. Push the speed to 3x and the duration to 30 steps and read the distance: that is the map rewrite A1 warns about.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dashdirs-->
+<figure class="fig" data-demo="dashdirs" id="fig-dashdirs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Two, four or eight dash directions over a gap and a 6 BL wall</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="dirs" role="group" aria-label="Dash directions"><button type="button" class="on" data-v="2">2 directions (the Sandbox)</button><button type="button" data-v="4">4 (Thorson's regret)</button><button type="button" data-v="8">8 (Celeste)</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="A stick samurai dashes forward over a gap and then dashes again beside a tall wall; a wheel in the corner shows which of eight directions the chosen set allows"></canvas></div>
+  <div class="ctl"><label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The wheel is the aim vector the dash may read. Celeste reads <code>Input.GetAimVector</code> and dashes in any of eight directions; Mega Man X, Hollow Knight until Dashmaster, and Neon White's Godspeed are forward-only <span class="cite"><b class="tag tv">V</b> S7<i>;</i> S16<i>;</i> S49<i>;</i> S64</span>. Thorson told an ACMI audience in October 2025 that she wished the dash had four directions and that a Celeste 2 would do that, as one recap reports it <span class="cite"><b class="tag tv">V</b> S33<i>;</i> S34<i>;</i> <b class="tag tu">U</b></span>. The first dash is forward in every set and clears the 7 BL gap. The second is pressed at the apex beside a 6 BL wall. With two directions it is forward into the wall and the wall kit has to climb; with four it is straight up, 168 u plus a 0.75 exit, which lifts one jump to about 6.5 BL; with eight it is the diagonal. In SpeedRunner the vertical axis is spoken for: the jump owns up, the roll owns down and the wall kit owns the sideways climb, so an up-dash costs m2's 13 BL chimney two wall jumps and m3's needle-capped climbs their timing <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The Sandbox dash is two-way with a four-way toggle and no diagonals.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG aircharge-->
+<figure class="fig" data-demo="aircharge" id="fig-aircharge">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One air charge spent two ways, an air dash or a double jump, over the same two gaps</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="gap" role="group" aria-label="Gap width"><button type="button" class="on" data-v="322">Gaps of 7 BL</button><button type="button" data-v="414">9 BL</button><button type="button" data-v="552">12 BL</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="Two lanes: in the top lane a samurai spends its air charge on a horizontal air dash over two gaps, in the bottom lane on a double jump over the same gaps; the charge refills on the landing between them"></canvas></div>
+  <div class="ctl"><label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Dustforce's air charge "lets you jump or dash while airborne. Landing or killing an enemy restores it"; Mega Man X2 and X3 allow one air dash per jump; Hollow Knight gives one air dash per airtime; Celeste's <code>Dashes</code> integer is the same rule with one verb <span class="cite"><b class="tag tv">V</b> S43<i>;</i> S16<i>;</i> S21<i>;</i> S7</span>. Both lanes press at the apex of the same jump. The air dash is A1's dash in the air, 1120 u/s for 18 steps with momentum kept after, about 11.8 BL of flat gap from one jump; the double jump is A4's 0.85 x jumpVel = 705 u/s, a second arc of 2.2 BL that lands about 8.4 BL out <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. At 7 BL both clear, at 9 only the dash, at 12 neither. Between the gaps the landing refills the charge through one <code>onLand()</code>, the single code path the report asks for. The recommended set spends this charge on the dash-slash (F1) and refunds it on a kill or a pogo; the Sandbox's "Air dash only" toggle is the same charge spent here. Do not refill on walls: Hollow Knight does, and that is what turns its chimneys into skips <span class="cite"><b class="tag tv">V</b> S50<i>;</i> <b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG doublejump-->
+<figure class="fig" data-demo="doublejump" id="fig-doublejump">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The double jump and its refill rule over a gap and an 8.5 BL wall</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="refill" role="group" aria-label="Refill rule"><button type="button" class="on" data-v="ground">Refill on the ground only</button><button type="button" data-v="wall">Refill on the ground or a wall</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="A stick samurai double-jumps a gap, then jumps at a tall wall, double-jumps, wall-jumps and tries a third air jump; whether the wall refilled the charge decides if it reaches the top"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Second jump <input type="range" data-k="vy" min="0.5" max="1" step="0.05" value="0.85"><output data-o="vy">0.85 x jumpVel</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hollow Knight's Monarch Wings hold <code>JUMP_SPEED x 1.1</code> for <code>DOUBLE_JUMP_STEPS 9</code> and refill on landing or on a wall; Ori's double jump is not restored by a jump on the first frame after landing, the "firsty"; Super Mario 64's double jump launches at 52 + 0.25 x forwardVel against 42 <span class="cite"><b class="tag tv">V</b> S21<i>;</i> S53<i>;</i> S9</span>. The Sandbox double jump leaves at 0.85 x jumpVel = 705 u/s, apex 99 u = 2.2 BL, with the apex band and the 0.45 cut like any jump, refilled on the ground only <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The run spends the charge on the 5 BL gap, lands, refills, and arrives at an 8.5 BL wall. A jump (3.0 BL), a double jump at its apex (2.2 BL) and a climb jump off the wall (2.7 BL) reach 7.9 BL, so the top needs a second double jump after the wall jump. With the ground rule the charge is gone and the climber falls back; with the wall rule the blue mark is the refill the wall hands out and the top is reached, which is the skip A3 warns about. Ori's one-frame refill hole is a determinism trap, so the refill here is one predicate evaluated once per step. The verb is a comparison toggle: at a 3.0 BL base it turns every 5 BL gap into a stroll and voids more of the four maps than the dash does.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dashjump-->
+<figure class="fig" data-demo="dashjump" id="fig-dashjump">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The dash-jump lineage as arcs in body lengths: super, hyper, wavedash, ultra, Mega Man X and the roll-jump hyper</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="arc" role="group" aria-label="Arc"><button type="button" data-v="0">SpeedRunner jump</button><button type="button" class="on" data-v="1">Roll-jump hyper, slide-jump</button><button type="button" data-v="2">Celeste super</button><button type="button" data-v="3">Celeste hyper, wavedash</button><button type="button" data-v="4">Celeste ultra</button><button type="button" data-v="5">Mega Man X dash-jump</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="Six jump arcs drawn in body lengths on one chart; a stick samurai rides the selected arc and labels give each arc's launch speeds and flat distance"></canvas></div>
+  <div class="ctl"><label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every arc is run step by step at 1/120 s in its own game's units and drawn in body lengths. Celeste's super is a jump during a grounded dash, <code>Speed.X = 260</code> at <code>JumpSpeed 105</code>, 2.9x run; ducking makes it the hyper, <code>Speed.X *= 1.25</code> and <code>Speed.Y *= 0.5</code>, 3.6x run at half height; the ultra multiplies landing speed by 1.2 after a diagonal-down dash; the wavedash is a hyper taken from the air to bypass the ground refill <span class="cite"><b class="tag tv">V</b> S7<i>;</i> S40</span>. Celeste pins its launch speed for 0.2 s under a 900 px/s² gravity, 1 BL = 11 px. Mega Man X carries 3.5 px per frame through a 5.0 px per frame launch, about 4.5 BL of travel <span class="cite"><b class="tag tv">V</b> S131<i>;</i> S16</span>. SpeedRunner's roll-jump hyper from Mechanics #1 leaves at 546 x 622 u/s, and this study settles that the slide-jump (B2) and the dash-slash exit (F1) use the same pair, 1.3x maxRun with 1.6x as the hard cap <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. Across the canon the gain is 20 to 60% over top speed and never 200%, and the 500 u/s² decay makes it a 0.25 to 0.5 s window to spend. The low arcs go further only because they go faster.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG glide-->
+<figure class="fig" data-demo="glide" id="fig-glide">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Glide and float: fall speed curves against what the clock pays</h4></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="Three stick samurai step off the same six body length ledge: one falls at the game's speed, one glides at a quarter of terminal velocity, one at the slider's value; a chart below plots their fall speed against time"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Third glide <input type="range" data-k="fm" min="0.1" max="0.6" step="0.05" value="0.5"><output data-o="fm">0.50 x maxFall</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hold Jump after the apex and the Sandbox glide caps the fall at 0.25 x maxFall = 288 u/s with full air control <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The three runners leave a 6 BL ledge at the same step. The curve is the vertical speed each step: the plain fall reaches terminal 1150 u/s under the 1.65 fall multiplier, the glides sit on their cap. The readout is the bill, the extra milliseconds on the floor, and the ground covered meanwhile at 420 u/s. Super Mario World's cape climbs for 80 frames and flies 6% above sprint, Celeste's feather is <code>StarFlyTime 2</code> s, Rayman's hover is a default glide, Doodle Jump's propeller, jetpack and rocket are a 1 : 2 : 4.5 ladder of timed flights <span class="cite"><b class="tag tv">V</b> S15<i>;</i> S7<i>;</i> S55<i>;</i> S117</span>. A 1.3 s flight at maxRun is 550 u = 12 BL, most of a section on maps 4,580 to 8,700 u wide. Hollow Knight, Ori, Dustforce and Neon White each give exactly one extra air action per airtime; none of the time attacks in the set makes slow falling the default, because the fall is where the clock is decided <span class="cite"><b class="tag ti">I</b></span>.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crouch-->
+<figure class="fig" data-demo="crouch" id="fig-crouch">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Crouch and crawl: the hitbox swap to 57% under a 32 u corridor, and a refusal to stand</h4></div>
+  <div class="stage"><canvas width="640" height="320" aria-label="A stick samurai crouches to a shorter dashed hitbox, crawls under a low ceiling, keeps crawling when Down is released because the standing box is blocked, and stands at the exit; a buffered jump fires on the first free step"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Crawl speed <input type="range" data-k="crawl" min="60" max="200" step="10" value="120"><output data-o="crawl">120 u/s</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Celeste swaps <code>normalHitbox (8, 11)</code> for <code>duckHitbox (8, 6)</code> and <code>CanUnDuck</code> runs <code>CollideCheck&lt;Solid&gt;()</code>, so jump-throughs never pin the player; Super Mario 64 sets <code>hitboxHeight</code> to 100 of 160 for any short-hitbox action <span class="cite"><b class="tag tv">V</b> S7<i>;</i> S9</span>. SpeedRunner's crouch is 20x26 u, 57%, between Celeste's 55% and SM64's 62.5%, feet fixed, head down 20 u, crawl cap 120 u/s = 0.29 x maxRun <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The red band is where Down is held. Inside the corridor Down is released and the standing box (red dashes) is tested against solids only; it is not free, so the hero keeps crawling and tries the 8 u sideways correction first. A jump pressed while pinned is buffered 130 ms and fires on the first free step, which the readout times. The corridor is 32 u tall and 200 u long; move the slider and read what the crawl costs. No time attack in the set uses a slow crawl on its main line; the crouch pays for itself through the slide (B2) and the low ceilings, and the Verbs gym's corridor is sized so a slide clears it and a crawl does not.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG slide-->
+<figure class="fig" data-demo="slide" id="fig-slide">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Crouch-slide and slide-jump against the roll-jump hyper and a plain jump under a low ceiling</h4></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="Three lanes over the same gap under a 130 unit ceiling: a samurai slides and slide-jumps through, a samurai drops into a roll and roll-jump hypers through, and a samurai with a plain jump bonks the ceiling and falls"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Slide friction <input type="range" data-k="fr" min="300" max="1500" step="50" value="600"><output data-o="fr">600 u/s²</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Down at 280 u/s or more starts a slide in the 20x26 u box with 600 u/s² of friction, a fifth of <code>groundFric 3000</code>, so a maxRun slide travels 147 u = 3.2 BL in 0.7 s; the minimum is 120 ms, not Pizza Tower's 417, and a slide into a wall is a 100 ms stand-up stop <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag tv">V</b> S59<i>;</i> <b class="tag ti">I</b></span>. Jump during the slide and the hero leaves at 546 x 622 u/s, the roll-jump hyper's pair from Mechanics #1, so the course has one "low body plus jump" rule, not two <span class="cite"><b class="tag ti">I</b></span>. The middle lane earns the same pair the old way, a 240 u drop into the roll and a jump inside the 100 ms hyper window. The bottom lane is a plain jump: 138 u of rise plus the 46 u body meets a ceiling 130 u up, bonks and falls, where the 77 u arc of the low jump fits under it. Pizza Tower slides at the speed held before the slide; Super Mario 64 gives the long jump to an A press in the first 30 frames of a crouch slide; Celeste's duck decelerates at 500 px/s² and its speed tech comes from dashing while ducked <span class="cite"><b class="tag tv">V</b> S59<i>;</i> S11<i>;</i> S7</span>. The slide-jump is faster across a gap, not longer: at 546 x 622 it covers about 241 u of flat gap against 248 for the full jump.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG longjump-->
+<figure class="fig" data-demo="longjump" id="fig-longjump">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Super Mario 64's launch table as arcs: jump, double, triple, backflip, side flip and long jump, in body lengths</h4></div>
+  <div class="ctl" style="margin-top:0"><div class="seg" data-seg="arc" role="group" aria-label="Arc"><button type="button" data-v="0">Jump</button><button type="button" data-v="1">Double jump</button><button type="button" data-v="2">Triple jump</button><button type="button" data-v="3">Backflip</button><button type="button" data-v="4">Side flip</button><button type="button" class="on" data-v="5">Long jump</button></div></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="Six Super Mario 64 jump arcs in body lengths on one chart with SpeedRunner's jump and slide-jump dashed for comparison; a stick samurai rides the selected arc"></canvas></div>
+  <div class="ctl">
+    <label class="rng">forwardVel <input type="range" data-k="fv" min="0" max="32" step="1" value="32"><output data-o="fv">32 u/f (run cap)</output></label>
+    <label><input type="checkbox" data-k="cmp" checked> Compare SpeedRunner's arcs</label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>From the decompilation's <code>set_mario_action_airborne</code>: <code>ACT_JUMP</code> 42 + 0.25 x forwardVel, <code>ACT_DOUBLE_JUMP</code> 52 + 0.25 x, <code>ACT_TRIPLE_JUMP</code> 69, <code>ACT_BACKFLIP</code> vy 62 with forwardVel -16, <code>ACT_SIDE_FLIP</code> 62 with forwardVel 8, <code>ACT_LONG_JUMP</code> vy 30 with <code>forwardVel *= 1.5</code> capped at 48; gravity 4 u per frame² at 30 Hz, run cap 32, 1 BL = Mario's 160 u hitbox <span class="cite"><b class="tag tv">V</b> S9<i>;</i> S13<i>;</i> S11</span>. The arcs are stepped at 30 Hz with those constants. Heights by v²/2g: jump 1.4 BL standing and 2.0 at full run, backflip and side flip 3.0, triple 3.7, long jump 0.7 while moving at 1.5x run. Drag forwardVel down and the long jump shrinks with it, which is why chaining long jumps means holding Z and keeping speed. The dashed blue arcs are SpeedRunner's jump (3.0 BL) and slide-jump (546 x 622 u/s); SM64's x1.5 at 0.7 BL and Celeste's x1.25 at half height bracket its 1.3x at 0.75 jumpVel <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. Three jumps on one button read only because each has its own animation; any new jump needs a pose before it needs a constant.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dive-->
+<figure class="fig" data-demo="dive" id="fig-dive">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The dive: a 600 u/s lunge into a prone landing with a 250 ms bill, or into the roll</h4></div>
+  <div class="stage"><canvas width="640" height="320" aria-label="Three lanes: a samurai dives from a jump and lands prone, a samurai makes a plain jump, and a samurai dives off a high ledge and rolls out keeping speed; a marker shows when each reaches the same x"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Dive speed <input type="range" data-k="vx" min="420" max="700" step="10" value="600"><output data-o="vx">600 u/s</output></label>
+    <label class="rng">Prone <input type="range" data-k="prone" min="6" max="60" step="2" value="30"><output data-o="prone">250 ms</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The Sandbox dive is a second Jump press in the air, the Fall Guys bind: 120 ms of startup, vx set to 600 u/s (1.43x maxRun, Super Mario 64's ratio), vy clamped to 0 at the start, the 20x26 u body prone, and a 250 ms prone landing unless the fall was 230 u or more, in which case it lands straight into the roll and keeps speed <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag tv">V</b> S9<i>;</i> <b class="tag ti">I</b></span>. SM64's <code>ACT_DIVE</code> adds 15 to forwardVel capped at 48 and lands in a dive slide with A for a rollout; Fall Guys dives "only in the direction they're facing" and gets up from the prone body, and its designer wanted "about 80 percent skill and a 20 percent sprinkling of chaos" from the ragdoll <span class="cite"><b class="tag tv">V</b> S9<i>;</i> S137<i>;</i> S133</span>. Dive into roll keeps speed, dive onto a short landing eats the prone time; that trade is the routing content. The dive is a comparison toggle: the recommended set has no dive because the second Jump press belongs to the buffer and the stomp owns Down, and the ragdoll does not transfer to a deterministic body that settles the same way every time.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pound-->
+<figure class="fig" data-demo="pound" id="fig-pound">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Ground pound and stomp: Down in the air lands sooner or hits what is below</h4></div>
+  <div class="stage"><canvas width="640" height="360" aria-label="Three lanes over a crate: a plain jump, a stomp that fast-falls and keeps running, and a ground pound that stops dead, falls at terminal speed, breaks the crate and pays a landing lag"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Stomp vy at least <input type="range" data-k="vmin" min="500" max="1150" step="10" value="700"><output data-o="vmin">700 u/s</output></label>
+    <label><input type="checkbox" data-k="slow"> Slow motion 0.25x</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Super Mario 64's <code>act_ground_pound</code> lifts Mario 20, 18, ..., 2 u over ten frames, then falls at a fixed -50 u per frame with <code>forwardVel 0</code>; Hollow Knight's <code>BOUNCE_VELOCITY 12</code> is 72% of its jump; Shovel Knight bounces its own jump height; Sonic Mania's drop dash charges 20 frames in the air and lands at 8 to 12 px per frame <span class="cite"><b class="tag tv">V</b> S10<i>;</i> S21<i>;</i> S163<i>;</i> S57</span>. The recommended verb is the stomp as a fast fall: Down in the air sets vy to at least 700 u/s, keeps vx and the 1.65 fall multiplier, and lands a 3 BL jump about 150 ms sooner, which the readout measures from the real step <span class="cite"><b class="tag tk">K</b><i>;</i> <b class="tag ti">I</b></span>. The stomp counts toward the 230 u roll trigger, so stomp into roll into roll-jump hyper is a deliberate chain and the first routing use of Down in the air. The pound is a comparison toggle that replaces the stomp when on: no hang, vx zeroed, a fall at maxFall 1150 u/s, 150 ms of landing recovery, and it breaks the crate, which no other verb does. Down in the air is one input and three verbs want it; the pogo (F2) takes Down + Katana, the stomp takes Down alone, and the pound is exclusive with the stomp.</figcaption>
+</figure>
+<!--/FIG-->

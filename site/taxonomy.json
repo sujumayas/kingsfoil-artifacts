@@ -260,6 +260,11 @@
      "id": "platformer-mechanics",
      "label": "Platformer mechanics",
      "desc": "Movement, elements, enemies, maps, curve and race loop of a platformer"
+    },
+    {
+     "id": "verbs",
+     "label": "Player verbs",
+     "desc": "Dash, crawl, grapple, dive and the other things a player does on purpose"
     }
    ]
   },
@@ -756,6 +761,66 @@
      "id": "camera-lookahead",
      "label": "Camera look-ahead and snap",
      "desc": "Fixed look-ahead, vertical platform snap and dead zones"
+    },
+    {
+     "id": "dash",
+     "label": "Dash",
+     "desc": "Fixed-speed burst with a time, a refill rule and a cooldown"
+    },
+    {
+     "id": "double-jump",
+     "label": "Double jump",
+     "desc": "A second jump in the air, refilled on landing"
+    },
+    {
+     "id": "crouch-slide",
+     "label": "Crouch and slide",
+     "desc": "Low hitbox, crawl, slide and slide-jump"
+    },
+    {
+     "id": "ground-pound",
+     "label": "Ground pound and dive",
+     "desc": "Downward and forward air verbs with recovery"
+    },
+    {
+     "id": "ledge-grab",
+     "label": "Ledge grab and mantle",
+     "desc": "Catch a ledge top and climb up"
+    },
+    {
+     "id": "wall-run-climb",
+     "label": "Wall run and climb",
+     "desc": "Run up a wall or climb it on a stamina budget"
+    },
+    {
+     "id": "grapple-swing",
+     "label": "Grapple and swing",
+     "desc": "Hook a point, swing on a pendulum, release with speed"
+    },
+    {
+     "id": "glide-thrust",
+     "label": "Glide and thrust",
+     "desc": "Slow falls, jetpacks and one-button flight"
+    },
+    {
+     "id": "charged-jump",
+     "label": "Charged jump",
+     "desc": "Hold to charge, release for a bigger jump"
+    },
+    {
+     "id": "parry-pogo",
+     "label": "Parry and pogo",
+     "desc": "Timed deflect windows and downward bounces off enemies"
+    },
+    {
+     "id": "verb-state-machine",
+     "label": "Verb state machine",
+     "desc": "Startup, active and recovery per verb with a cancel table"
+    },
+    {
+     "id": "verb-kits",
+     "label": "Verb kits",
+     "desc": "Power-ups and cards that hand the player a verb set for a level"
     }
    ]
   },

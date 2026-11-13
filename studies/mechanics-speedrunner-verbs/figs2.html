@@ -1,0 +1,362 @@
+<!-- Figures (Agent F): B6 and families C, D, E, F, G, H. FIG blocks mapped to sections in build.py -->
+<!--FIG spinjump-->
+<figure class="fig" data-demo="spinjump" id="fig-spinjump">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Spin jump against the normal jump, SMW's table and the safer body</h4><span class="illu">SMW ratios on SpeedRunner's gravity, illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Two lanes. In the top lane a samurai makes a normal jump and lands on a spiked enemy, a red cross marks the death. In the bottom lane the same samurai spins through a lower jump and bounces off the spiked enemy. Dotted lines mark the two peak heights"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="b" role="group" aria-label="Speed bucket"><button type="button" class="btn on" data-v="stand">Standing (-80 / -74)</button><button type="button" class="btn" data-v="p">P-speed (-95 / -87)</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Super Mario World's jump routine indexes one table by horizontal speed in (normal, spin) pairs. Standing -80 against -74, P-speed -95 against -87 in 1/16 px per frame, so a spin launches 6 to 8 units slower and peaks about 14 to 16% lower, and a P-speed spin still launches faster than a standing normal jump [V, S30, S194; I]. The spin "offers less height", "can instantly defeat most stompable enemies" and bounces on Spinies and Lava Bubbles [V, S70]. In SpeedRunner the slash is already the safe-contact verb and the pogo (F2) is the spin's bounce rebuilt on the katana with spikes as targets, so the spin jump itself is not adopted; two jump buttons would double the chord table for a 14% height difference the player has to feel to use [S4 D4; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG ledge-->
+<figure class="fig" data-demo="ledge" id="fig-ledge">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Spelunky's hang against Celeste's climb hop, and the automatic mantle</h4><span class="illu">Block height is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs at a tall block whose top sits a little above the apex of his jump. A red band on the block face marks the reach above the head. With the mantle on his feet snap to the top and he runs on; with the hang he stops on the lip for half a second; with both off he slides and needs a climb jump"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Ledge model"><button type="button" class="btn" data-v="off">Off (corner 8 u)</button><button type="button" class="btn" data-v="hang">Hang (Spelunky)</button><button type="button" class="btn on" data-v="mantle">Mantle (automatic)</button></div>
+    <label class="rng">Mantle reach <input type="range" min="8" max="23" step="1" value="16" data-k="reach"><output data-o="reach">16 u</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Two models. Celeste's <code>ClimbHopY -120</code> and <code>ClimbHopX 100</code> launch a climber over a wall top at 1.14x its jump speed, forced for 0.2 s [V, S7]. Spelunky's grab is a stop that saves a life [U, S111]. SpeedRunner's mantle is automatic. When the 2 u wall probe reports a wall whose top sits between the head and 16 u above it, a third of a body, and the hero holds toward it or is rising under 200 u/s, the feet snap to the top with vy -300 and vx 200 toward the ledge for 100 ms and a hand-plant pose [K; I]. It is corner correction extended from 8 u to 16 and it kills the lip death at 420 u/s that #1's A2 named. The readout measures the time from 620 u to standing on the block for each model. Drag the reach down to 8 u and the mantle stops firing on this block.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG wallrun-->
+<figure class="fig" data-demo="wallrun" id="fig-wallrun">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A fixed-distance wall run, 92 u over 250 ms, then the slide</h4><span class="illu">Ledge placement is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs into a tall wall. Above the threshold speed he runs up the wall for 92 units, then slides and wall-jumps away onto a ledge behind him. Below the threshold he slides at once and the wall jump passes under the ledge"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Speed threshold <input type="range" min="150" max="420" step="10" value="300" data-k="thr"><output data-o="thr">300 u/s</output></label>
+    <label class="rng">Approach speed <input type="range" min="200" max="420" step="10" value="420" data-k="app"><output data-o="app">420 u/s</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="on" checked> Wall run</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Dustforce runs along a wall or a ceiling "for a fixed distance, usually a few character lengths", and a corner boost makes the run longer and faster [V, S43]. Mirror's Edge's wall boost rewards the shortest run [V, S177]. The Sandbox version is hold toward the wall at 300 u/s or more to run up a fixed 92 u, 2 BL, over 250 ms, then slide at 115 u/s as today [K; I]. The ledge here sits at 200 u, above the 125 u a wall jump reaches from the floor and under the 217 u it reaches after the run. The verb is off in the recommended set because it rewrites the same-wall penalty and m2's 600 u chimney, which is a course change, and a wall run that gives height for free devalues the wall jump's 790 u/s [K; S4 A4; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stamina-->
+<figure class="fig" data-demo="stamina" id="fig-stamina">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Celeste's 110-point budget as a live bar while climbing, hanging and climb-jumping</h4><span class="illu">Wall height is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai grabs a tall wall and climbs. A vertical bar beside him drains; the last fifth of it flashes red. Depending on the scenario he climbs until the bar is empty, hangs still for eleven seconds, or makes four climb jumps and then lets go"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="s" role="group" aria-label="Scenario"><button type="button" class="btn on" data-v="climb">Climb to empty</button><button type="button" class="btn" data-v="hang">Hang still</button><button type="button" class="btn" data-v="jump">Four climb jumps</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption><code>ClimbMaxStamina 110</code>, <code>ClimbUpCost 100 / 2.2</code> = 45.45 per second, <code>ClimbStillCost 100 / 10</code>, <code>ClimbJumpCost 110 / 4</code> = 27.5, <code>ClimbTiredThreshold 20</code>, refilled on the ground and on a dash refill, with the last 20 points flashing red [V, S7]. Full to empty is 2.42 s of climbing, 11 s of hanging, or four climb jumps [V, S7; I]. The Sandbox copies the ratios against maxRun. Climb at 210 u/s, a budget worth 2.4 s, a climb jump costing a quarter, a 20% tired band, refill on the ground only [K; I]. It is the Celeste kit's verb and off in the recommended set. SpeedRunner's walls are chimneys solved by wall jumps at 440/790 in under a second each, and a slow verb exists to make a wall a puzzle, not a race [K; S4 A4; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crouchwall-->
+<figure class="fig" data-demo="crouchwall" id="fig-crouchwall">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The crouch against the wall kit and the one-way tiles, four rules</h4><span class="illu">Course is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A small course with a 32 unit corridor, a one-way tile and a wall. A samurai crouches to a 20 by 26 hitbox, crawls under the corridor, fails to stand while pinned, buffers a jump that fires on the way out, crouches on the tile without dropping, and slides into the wall where he stops for 100 ms instead of sticking. A blue probe box shows when the wall kit is live"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="stand">Try to stand</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The crouch shrinks from the head down with the feet fixed, so landings are unchanged and only <code>canStand</code> tests the 46 u box, against solids and never one-way tiles, as Celeste's <code>CanUnDuck</code> tests <code>Solid</code> only [K; V, S7; I]. Down on a one-way tile is a crouch, not a drop-through, because m4 is a maze of one-way roof tiles and a drop-through would void its medals [K; I]. No wall kit while crouched. The probe derives from the live hitbox, so a crouched body touching a wall gets a 100 ms stand-up stop, not the 25 u/s stick [K; I]. Standing up under a lip keeps sliding and tries the 8 u sideways correction first, with a pinned jump buffered 130 ms [S4 A2; K; I]. The figure runs the report's <code>setCrouch</code> and <code>canStand</code> on its own small integrator because the shared step uses a fixed 46 u box.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG swing-->
+<figure class="fig" data-demo="swing" id="fig-swing">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The pendulum in three lines, a ring hook on the gym, the 760 u/s release cap</h4><span class="illu">Gap and ring placement are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai jumps at a wide gap, fires a rope at a ring on a 45 degree line, swings under it along a dotted circle and lets go on the far side. A grey trace shows the swing. The readout prints the rope length, the period and the release speed"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Ring distance on the ray <input type="range" min="160" max="300" step="4" value="276" data-k="rh"><output data-o="rh">276 u</output></label>
+    <label><input type="checkbox" data-k="cap" checked> Release cap 760 u/s</label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Fristrom's constraint, used in Spider-Man 2 and Energy Hook. Euler step, then project the test position back onto the rope circle when it falls outside, then recompute velocity from the corrected move [V, S19]. The figure runs the report's <code>stepHook</code> before the collision pass with gravity symmetric while hooked. At L = 276 u and g = 2500 a 45° entry at maxRun leaves at 762 u/s and a straight drop at 1175, above maxFall, which is why the release caps at 760 u/s, 1.8x maxRun; the period 2π√(L/g) comes out at 2.09 s in the figure, not the 0.66 s the report prints, a slip the figure notes record [K; I]. The ring hook is Up + Katana in the air, fired at 45° at 1700 u/s with a 300 u reach, rope length fixed at the attach distance, pump at 900 u/s² along the tangent, release on button up [V, S18, S125; I]. Untick the cap and watch the landing overshoot.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hookpoints-->
+<figure class="fig" data-demo="hookpoints" id="fig-hookpoints">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hook points against any surface, pull hooks, and the reel and elastic references</h4><span class="illu">Course is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai jumps at a gap under a long ceiling slab with one ring. In rings mode the rope attaches only to the ring. In any-surface mode it attaches to the ceiling wherever the 45 degree ray meets it. In pull mode he zips to the ring and hangs. A bar strip at the bottom compares hook reaches from Terraria's table"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Hook model"><button type="button" class="btn on" data-v="rings">Rings only</button><button type="button" class="btn" data-v="any">Any surface</button><button type="button" class="btn" data-v="pull">Pull hook (zip)</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="reel"> Reel reference</label>
+    <label><input type="checkbox" data-k="el"> Elastic reference</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ghostrunner's grapple fires only at designer-placed orbs and zips rather than swings [V, S108]. Terraria publishes the one complete table. The first Grappling Hook reaches 18.75 tiles, 6.25 BL at 3 tiles per body, launches at 59 mph and pulls at 56 against a 15 mph walk [V, S18]. SpeedRunner's ring is radius 20 u and snaps within 30 u of the fixed 45° ray; the zip variant pulls at 1550 u/s, hangs gravity-free and leaves on Jump, the deterministic fallback if the swing tests badly [V, S18; I]. A rope that latches to any ceiling makes every chimney and roof tile in m3 and m4 a shortcut, so "any surface" is a comparison only [K; I]. Reel and elastic ropes stay references. A reel needs Up and Down while hooked, and Down is the crouch; Umihara Kawase's spring line is the most expressive rope on the list and the hardest to read in 46 u of hero [V, S105, S110; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG jetpack-->
+<figure class="fig" data-demo="jetpack" id="fig-jetpack">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The one-button corridor, 3500 u/s² of thrust against 2500 down</h4><span class="illu">Corridor shape is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai with a jetpack flies through a scrolling cave with spikes on the ceiling and the floor. He rises while the button is held and falls when it is released. A strip at the bottom compares the time to apex of Flappy Bird clones with SpeedRunner's jump"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Thrust <input type="range" min="2500" max="5000" step="100" value="3500" data-k="thr"><output data-o="thr">3500 u/s²</output></label>
+    <button type="button" class="btn warm" data-b="hold">Hold to thrust</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="flap"> Flap variant (a tap per flap)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Jetpack Joyride is one touch, thrust while held, constant forward speed, and Muscat chose one button because it "would appeal to even the most inexperienced players"; a vehicle from a gear box keeps the one touch and lasts until a hit [V, S112, S115]. Flappy Bird clones agree on gravity 750 to 1000 px/s², a flap of 280 to 400 px/s and a time to apex of 0.37 to 0.42 s, close to SpeedRunner's 0.33 s [V, S132; K; I]. The Sandbox jetpack is a corridor. Jump becomes thrust at 3500 u/s², 1.4 g, while held against 2500 down, terminal 600 u/s both ways, auto-scroll at maxRun, no fuel because the corridor is the limit [K; I]. The verb swap pattern is the one to keep. Same button, new physics, lost on contact, read by the body itself with no HUD [V, S112; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG charged-->
+<figure class="fig" data-demo="charged" id="fig-charged">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Jump King's held meter, 0.6 s linear to 0.6 to 1.5 x jumpVel</h4></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai squats while a meter above his head fills, then jumps straight up. Dotted lines mark 1.1, 3.0 and 6.7 body lengths for a tap, the plain jump and a full 600 ms hold"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="hold">Hold to charge, release to jump</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Jump King's <code>CHARGE_TIME 0.6</code> s, intensity <code>min(1, timer / 0.6)</code>, <code>velocity.Y = JUMP * intensity</code> with <code>JUMP -8.742858</code> px per frame and the horizontal <code>SPEED 3.5</code> locked at release; the charge is quantised to 2 to 36 steps and the maximum height is 148.6 px, 5.7 body heights [V, S44, S46, S47]. The Sandbox version is hold Jump while standing still, |vx| under 20 u/s, for 0 to 600 ms and release for 0.6 to 1.5 x jumpVel, 1.1 to 6.7 BL, direction locked at release, no air control [V, S44; K; I]. It gives a map author a precise height gate and it fights the variable jump on the same key, so it lives only while standing still. It is the one discrete descendant of Getting Over It's hammer a keyboard can replay (E1), and off in the recommended set because a 600 ms stand-still on a clock is 250 u of running given away [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG hammer-->
+<figure class="fig" data-demo="hammer" id="fig-hammer">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Getting Over It's one analog verb, a pot with a hammer following the pointer</h4><span class="illu">Reach, response and the slope are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A man in a pot sits on a black slope. A hammer follows the pointer within a dotted reach circle. When the hammer head meets the ground it turns red and the pot is pushed instead, so the body climbs or vaults"></canvas></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Input is "a mouse or trackpad to move the character's upper body and sledgehammer"; controllers are "considerably harder" [V, S118]. A Godot clone clamps the cursor target to a 110-unit reach around the body and moves the head toward it with a 0.59 responsiveness factor per step [V, S122]. Foddy's own pot mass, joint and motor force are unpublished [U]. The community's technique chapters, swing, windmill, pogo, bounce, are patterns inside one mapping [U, S123]. The figure is a two-body toy, not Foddy's simulation. A pointer path at 120 Hz is replayable but never comparable across players, and the game is keyboard-only today, so the hammer is a figure and not a toggle [K; I]. What transfers is depth inside one input, which F4's iai hold and H2's chords apply to the katana button, and D5's charged jump is the one discrete descendant that fits [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG drawslope-->
+<figure class="fig" data-demo="drawslope" id="fig-drawslope">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Draw the slope under a skier, speed from the slope, lift to jump</h4><span class="illu">Slope physics is a clone's, illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A skier rides a hand-drawn line that scrolls to the left. Downhill segments add speed, uphill ones take it away, and where the line ends he flies until it resumes. Dragging on the paper draws the hill ahead"></canvas></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Solipskier draws the slope while riding; downhill adds speed, inclines launch tricks, upcoming gates show on the right with their required altitude, and the game starts on the first click with no tutorial [V, S127]. Tiny Wings holds to drop so the hill launches the bird, designed "for a 1.5-year-old child" [V, S128]. Line Rider draws the track first and presses Play [V, S130]. The clones snap the foot to the segment under its x and grow speed with the downhill component of gravity [U]. On a 30° downslope a sliding hero gains g sin 30° = 1250 u/s², three times maxRun in a second, which is why slopes need a cap [K; I]. Slopes do not exist in SpeedRunner, solids are AABB only, and the player authors the route, so times are not comparable. The verb that survives is the slope slide, crouch on a down-ramp and release at the lip, once the collision pass learns slopes [K; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tilt-->
+<figure class="fig" data-demo="tilt" id="fig-tilt">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tilt steering on a rising course with fixed-height item swaps</h4><span class="illu">Platform layout is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai bounces up a tower of platforms, jumping automatically on each landing and wrapping at the screen edges. Red items sit at fixed heights, a spring, a propeller, a jetpack and a rocket, each a flight of a known height. A body-length ladder runs up the right edge"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Tilt <input type="range" min="-100" max="100" step="5" value="0" data-k="tilt"><output data-o="tilt">0</output></label>
+    <button type="button" class="btn ghost" data-b="dev">Use device tilt</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Doodle Jump is tilt to steer, tap to shoot, screen wrap at the edges, and items that are flights of a known height with invulnerability. Propeller hats score 1,200 to 1,500 points, jetpacks 2,800 to 3,000, rockets 6,000 to 7,000, a spring about 2x and a trampoline about 4x the bounce, single-source [V, S116, S117; U]. In SpeedRunner the items transfer as elements and pickups, not as verbs. A spring at 2x jumpVel reaches 12 BL; the timed flights are a propeller for 3 s at about 300 u/s with full control, a jetpack for 2 s at 1000 u/s with control halved, a rocket for 1 s at 2000 u/s with none, each a verb swap with a fixed duration and a sound a map author can require [K; I]. Tilt adds about 100 ms of filter latency, a late input for a wall flip, so it is no on desktop and a future phone mapping of run [S4 A6; I]. Items on a ghost race must sit at fixed positions or the ghost and the live run diverge [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fallguys-->
+<figure class="fig" data-demo="fallguys" id="fig-fallguys">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fall Guys' dive and grab against a clock, and the ragdoll a time attack cannot afford</h4><span class="illu">Dive and prone times are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="Four lanes race to a red finish line. The top lane runs clean. The other three press the same inputs, jump and dive at the same step, and land prone for different times because a ragdoll settles the landing. Each lane shows its clock"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Ragdoll variance <input type="range" min="0" max="50" step="5" value="30" data-k="var"><output data-o="var">300 ms</output></label>
+    <label><input type="checkbox" data-k="same"> Seeded ragdoll (same outcome)</label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Walsh: "we don't want players who speedrun games to win every single time"; "Everything you simulate with the character multiplies by 60"; Tanton: "Falling over is basically their superpower" [V, S133, S134]. The grab extends the bean's arms and holding it on a carried item for about 2 to 3 s makes the carrier drop it; the lead designer called the grab-break force "a bit unpredictable currently" [V, S136; U]. Pizza Tower's grab is a published 39-frame lunge with a 19-frame bonk [V, S60]. The imprecision in Fall Guys is in the ragdoll's landing, not the input. Inputs are read exactly and the body settles by physics, so the same input gives different outcomes, which a ghost cannot carry unless the ragdoll is seeded [V, S133; I]. In SpeedRunner the dive is B4's comparison toggle and the grab is C1's automatic mantle; grabbing players belongs to a live race that is not built [K; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG antiverbs-->
+<figure class="fig" data-demo="antiverbs" id="fig-antiverbs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Cat Mario's trick vocabulary on a comedy map, and what the second attempt costs</h4><span class="illu">The map is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs a map with five traps, a solid that falls, a hidden block over a gap, a cloud that drops, a hostile power-up and a goal that walks away. Each unlearned trap kills him once and is marked learned; the learned run jumps every trap. A trap counter and a clock sit at the top"></canvas></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="learn"> Learned once (start with every trap known)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Syobon Action is jump on Z or Up and four stages; its TAS is 1:51.63 at 30 fps and gains only on a one-frame wall clip and a one-frame quick turn [V, S23]. The trick vocabulary, a fake solid that falls, a hidden block over a gap, a falling cloud, a hostile power-up, a moving goal, each sits where SMB1 taught the player to stand or jump [U; S4 F3]. A deterministic, replayable map with a 0.38 s restart makes betrayal cost nothing after one death and teach nothing after the second, so the main maps keep none of it [K; S4 F1; I]. A comedy map outside the season board, using each trick once with a visible trap counter, keeps the joke, and a build mode (G4) forbids by default any trap wearing a safe element's sprite [I]. The real anti-verbs here are the glitch verbs, and SpeedRunner's separate-axis collision with 6 iterations exists to prevent the wall clip [K; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dashslash-->
+<figure class="fig" data-demo="dashslash" id="fig-dashslash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The dash-slash kill line, 2 / 12 / 6 steps at 840 u/s through a row of enemies</h4><span class="illu">Enemy placement is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs toward four enemies, holds the katana until armed and releases. A red band marks the swept kill line, afterimages trail the lunge and a white smear draws its full length. Below, a strip shows the physics steps of one dash-slash with startup, active and recovery, and a jump marker in recovery"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Active steps <input type="range" min="8" max="24" step="1" value="12" data-k="act"><output data-o="act">12 steps</output></label>
+    <button type="button" class="btn warm" data-b="hold">Hold Katana, release to fire</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="jc" checked> Jump cancels the recovery</label>
+    <label><input type="checkbox" data-k="hb"> Show hitboxes</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ghostrunner's Blink kills every enemy along a line after a short charge [V, S160]; Mega Man Zero slashes forward while dashing [V, S164]; Katana ZERO's iaijutsu is unsheathe, strike and sheathe "in less than a second" [V, S152]. SpeedRunner's dash-slash is the release of the iai hold (F4). Two startup steps, 12 active at arm to 18 at full charge, 6 recovery with air control locked, 840 u/s during active, 2.0x maxRun and 7 u per step, 84 to 126 u of travel, 1.8 to 2.7 BL, exit clamped at 546 u/s so the hyper's decay and every gap stay valid [K; S4 A5; I]. The swept hitbox is body plus travel plus blade, tested as the 50x40 box each step; projectile-only i-frames; a jump cancels the recovery and never the active; a wall touch ends it into a slide; one per airtime, refunded by a kill or a pogo [I]. The report's §7 pseudocode never says whether gravity is off during the active steps; the figure zeroes vy as the dash does.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG pogoslash-->
+<figure class="fig" data-demo="pogoslash" id="fig-pogoslash">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The pogo slash, Down and Katana in the air, a 40x50 u box and a fixed 830 u/s bounce</h4><span class="illu">Pit layout is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai crosses a spiked pit by stabbing down onto three spike-capped enemies in turn, bouncing a full jump height off each. A dotted red line marks the 3 body-length apex. His kimono starts grey, the dash-slash spent, and turns red at the first bounce"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Blade box height <input type="range" min="30" max="60" step="5" value="50" data-k="bh"><output data-o="bh">50 u</output></label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="hb"> Show hitboxes</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hollow Knight's nail pogo sets velocity to <code>BOUNCE_VELOCITY 12</code> for <code>BOUNCE_TIME 0.25</code> s, 72% of its jump, regardless of fall speed, off enemies, spikes and some objects [V, S21, S25, S52]. Shovel Knight bounces its own jump height with "frustration-free" invulnerability [V, S163]. In SpeedRunner the pogo is Down held plus Katana pressed in the air; holding keeps the blade down for 24 steps, then the 12-step re-press cadence; the box is 40 u wide by 50 u tall below the feet, so the blade reaches a spike top 34 u before the feet would; the bounce is vy -830, a 3.0 BL apex equal to a full jump, with the apex band and the 0.45 cut; vx untouched, no i-frames [K; S4 D3; I]. Floor spikes become steps and ceiling spikes stay deadly; a pogo refunds the dash-slash and resets <code>wallJumpSameY</code> from 330 to 790 [K; I]. m3 has 9 spike strips, 4 on ceilings, so it needs the verb mask or a re-timed author run.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG deflect-->
+<figure class="fig" data-demo="deflect" id="fig-deflect">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The slash is the parry, an emergent 14-step window at 600 u/s, no stance, no lockout</h4><span class="illu">Turret placement is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A turret fires shots at a standing samurai. A dotted box in front of him is the slash hitbox; it turns red for the four active steps. A shot that enters it reverses and destroys the turret. Below, a step axis shows which press timings deflect against the rejected 120 millisecond stance and its 300 millisecond lockout"></canvas></div></div>
+  <div class="ctl">
+    <label class="rng">Shot speed <input type="range" min="300" max="1200" step="50" value="600" data-k="v"><output data-o="v">600 u/s</output></label>
+    <button type="button" class="btn warm" data-b="x">Slash now</button>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="par"> Parry stance instead (rejected)</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Katana ZERO deflects "with a single katana swing" and the bullet ricochets back at the shooter [V, S152]. Sekiro's deflect is 12 frames by default, shrinking to 4 or 0 on spam [V, S162]. Ninja Gaiden II's grounded slash "forces you to stand still" for 20 frames, the stop sign every runner slashes from the air to avoid [V, S165]. The Sandbox spec's 120 ms parry with a 300 ms miss recovery is rejected. The slash box is 50 u deep and active 4 steps; a 600 u/s shot moves 5 u per step and needs 10 steps to cross it, so the deflect window is 14 steps, 117 ms, with no new input and no new state; at 900 u/s it is 11 steps, at 450 it is 17 [K; S4 D4; I]. The figure counts the window by brute force over every press step, for a point shot and for a 14 u shot. The miss cost stays the slash's 6 recovery steps; a 300 ms lockout at 420 u/s is 126 u without control, worse than Ninja Gaiden's rooted 20 frames [V, S165; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG iai-->
+<figure class="fig" data-demo="iai" id="fig-iai">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Iai, hold to arm at 200 ms, full at 300 ms, release into a longer dash-slash</h4></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs, holds the katana and a meter fills above his head with marks at 24 and 36 steps; on release he dash-slashes through an enemy, further the longer he held. A timeline below shows the four meanings of one button by held time, and two bars compare the 50 millisecond recovery with a 300 millisecond lockout"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="hold">Hold Katana, release to fire</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>One button loaded by press, hold, release and held duration is Berbank Green's whole thesis, with the warning that a context change without feedback confuses [V, S175]. A tap fires the settled slash at step 0. If Katana is still held 24 steps, 200 ms, after the press the hero sheathes and is armed; full charge at 36 steps, 300 ms; release fires F1 with 12 active steps at arm and 18 at full, 84 to 126 u, speed fixed at 840 u/s so the read is "longer", never "faster"; a release before arming does nothing more than the tap already did [K; I]. While charging, run, jump and the wall kit all work; the charge survives a wall jump and dies on a hit. The arm threshold must be visible and audible, a 2-step white flash and the sheathe synth, or players release early [K; I]. Up + Katana near a ring is the hook, and the ring glow is what disambiguates [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG slowtime-->
+<figure class="fig" data-demo="slowtime" id="fig-slowtime">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Slow time as a resource, two clocks, hitstop 0 and the hero-only flash</h4><span class="illu">Course is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai jumps a gap and the world turns blue and slow while he is in the air, draining a one-second meter. Two clocks at the top count real steps and world steps and drift apart. He slashes an enemy on landing with a two-step flash and no world pause"></canvas></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="ranked" checked> Ranked (the board rejects assisted runs)</label>
+    <label><input type="checkbox" data-k="wc"> Clock counts world steps instead</label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="off"> Slow time off</label>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Superhot's time advances only with movement or firing; it ships one challenge timed in game time and one in real time, and the real-time runners "ignore the game's primary mechanic" [V, S169, S170]. Katana ZERO's slow motion is limited by a refilling meter and its gold-medal guides set screenshake and hitpause to 0% [V, S151, S158]. The Sandbox toggle follows the Ghostrunner rule, air only at 0.3x world speed, a 1.0 s meter that refills 1 s per 3 s on the ground, the time scale applied inside the 1/120 s step so the replay stays bit-identical, the clock counting real steps and the run flagged assisted, which the board rejects [K; S4 H3; I]. Three clocks are possible. Real steps make slow-mo a cost, world steps make it free and the fastest line holds it forever, two boards split five friends in half. Hitstop is 0 world steps and a 2-step hero-only flash; the smear, the afterimage and the kimono tint are the reads for every verb [V, S7, S158; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG kits-->
+<figure class="fig" data-demo="kits" id="fig-kits">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Power-ups as kits per level, the verbs mask and a pickup that hands a glide</h4><span class="illu">Pickup scene is illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A matrix of Super Mario Maker 2 styles against base verbs with the selected style's power-up kits listed beside it. Below, SpeedRunner's six maps with their verbs masks, and a small course where a samurai takes a cape, glides for 1.3 seconds and loses it at a remover gate"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="s" role="group" aria-label="Style"><button type="button" class="btn" data-v="SMB1">SMB1</button><button type="button" class="btn" data-v="SMB3">SMB3</button><button type="button" class="btn on" data-v="SMW">SMW</button><button type="button" class="btn" data-v="NSMBU">NSMBU</button><button type="button" class="btn" data-v="3DW">3D World</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Super Mario Maker 2's styles are verb sets. Only NSMBU and 3D World have the wall jump and the ground pound, only SMW, NSMBU and 3D World have a spin jump, and each style carries its own kits, from SMB3's two to 3D World's seven [V, S69]. The cape's flight needs a sprint run-up, an 80-frame takeoff meter and 6% above sprint speed [V, S15]. Jetpack Joyride's vehicle lasts until a hit and LittleBigPlanet removes a power-up with a gate [V, S112, S94]. In SpeedRunner the map header already holds <code>top</code>, <code>floorView</code>, checkpoints and the finish; add <code>verbs</code> and optional pickups <code>{x, y, verb, until}</code> that set and clear a mask [K; I]. The replay stays deterministic because the mask is data, m1 to m4 keep their boards with the kit they shipped with, and SAMURAI TRIAL opens as the first verb map. A handed glide is capped to the cape's class with no climb; 1.3 s at maxRun is 550 u, 12 BL [V, S15; K; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG cards-->
+<figure class="fig" data-demo="cards" id="fig-cards">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Neon White's discards priced in ammo, and the medal ladder as a verb ladder</h4><span class="illu">The route and the relative times are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="On the left, bars show the ammo price of six Neon White cards, the three strongest movement cards in red at four rounds. On the right a level route climbs to a flag; dots run along the main path, or along shortcuts that open with one or every intended discard, or along the unplanned red route, depending on the chosen medal"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Medal"><button type="button" class="btn" data-v="bronze">Bronze</button><button type="button" class="btn" data-v="silver">Silver</button><button type="button" class="btn on" data-v="gold">Gold</button><button type="button" class="btn" data-v="ace">Ace</button><button type="button" class="btn" data-v="red">Red</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Elevate (pistol, 9) is a vertical boost, Purify (MG, 35) a sticky grenade, Godspeed (rifle, 4) a forward launch, Stomp (SMG, 30) a ground slam, Dominion (RPG, 4) a grapple, Fireball (shotgun, 4) an aimable air dash; "Cards are stage-specific, and you can't bring your own deck" [V, S64]. Esposito's rules. "The shortcut path must only use cards from the main path", "The shortcut path cannot be hidden", a Bomb card that existed only for a shortcut was cut, and one level went through over 50 iterations [V, S65, S66]. Ace medals need "at least one shortcut that saved a significant amount of time even if you didn't execute it perfectly"; Red beats the developer; gold unlocks the shortcut hint [V, S67]. In SpeedRunner a card is a pickup with one charge of an existing verb, spent by its own input and drawn by the timer; the medal ladder of #1 becomes a verb ladder, bronze and silver on the main path, gold with one intended discard, the author's time with every intended discard, and the route the author did not plan is the Red [V, S67; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG placeblock-->
+<figure class="fig" data-demo="placeblock" id="fig-placeblock">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Place one block, then race, UCH's loop as the async ghost-trap chain</h4><span class="illu">Course and timer are illustrative</span></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A short course with a start, a checkpoint and a flag, red zones around each where nothing may be placed. During the place phase a piece follows the pointer snapped to a 20 unit grid. After placing, the placer runs the course once, then the next runner runs it. Below the course the placed record and the board key hash are printed"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="p" role="group" aria-label="Piece"><button type="button" class="btn on" data-v="0">16 u spike strip</button><button type="button" class="btn" data-v="1">40x40 solid</button><button type="button" class="btn" data-v="2">Mover, 3 s</button></div>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Ultimate Chicken Horse's Rules menu holds a Placement Timer of 5 to 60 s, added in July 2016 "to avoid the Mexican stand-off", Pieces per Round, Trap points and Modifiers [V, S142, S101]. Tezuka: "so long as we ensure that making feels like playing, anything goes" [V, S83]. SpeedRunner's recommended shape is the async chain. After a finished run the player may place one piece from a deck of three tags, a 16 u spike strip, a 40x40 solid or a mover with a 3 s period, under a 15 s timer, snapped to 20 u, never within 200 u of the start, a checkpoint or the finish and never over a solid; the piece is appended as <code>[x, y, w, h, tag, {author, t}]</code>, the board key is <code>map:sha256(base + placed)[0:12]</code>, the next runner sees "Ana's saw" on death, the chain caps at 12 like UCH's rounds and resets weekly [K; I]. Placement happens between runs, so the input log is unchanged; the placer must finish the new state once before it goes live, SMM's Clear Check and UCH's "author also runs" [V, S69, S142; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG budget-->
+<figure class="fig" data-demo="budget" id="fig-budget">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Verbs per button per game, and the mapping board for three buttons</h4></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A dot chart of games by action buttons against verb count, with Crawford's bound of ten verbs as a red dashed line and SpeedRunner today and recommended as red dots. Below it a board maps Jump, Katana, Down and no input across tap, body state, hold, release and direction to the verbs they fire"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="v" role="group" aria-label="Mapping"><button type="button" class="btn" data-v="today">Today</button><button type="button" class="btn on" data-v="prop">Recommended</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>N++ is "three buttons controlling left and right movement, and the jump" [V, S172]. Celeste is Jump, Dash and Grab plus the optional Crouch Dash bind it added in 1.4.0.0 on 29 Mar 2021 because runners were already binding it with Joy2Key [V, S7, S14, S41]. Crawford: "the cleanest, simplest, easiest-to-learn games have fewer than ten verbs" [V, S173]. Anthropy and Clark advise deepening existing verbs over adding new ones [V, S174]. SpeedRunner's recommended set is 15 verbs on Move, Jump and Katana with Down and Up as modifiers; nine of them are context verbs, so the count sits inside Crawford's bound at Celeste's button count [K; I]. The board is H2's chord table. Rules: a verb that changes the hitbox is a hold, never a toggle; a verb that spends a resource has a visible counter; every chord has a non-chord fallback so a 4-way d-pad or a two-thumb touch pad plays Any%; on a phone the slash becomes automatic in range, Dead Cells' rule [V, S176; I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG fsm-->
+<figure class="fig" data-demo="fsm" id="fig-fsm">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The verb state machine, startup, active, recovery and the cancel table, stepped live</h4></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="A samurai runs a scripted loop at the top. Below, seven state boxes with the current one filled red, a phase bar for the current verb with a marker on the step, the cancel table with the last lookup in red, and an input strip of the last 64 physics steps coloured by state"></canvas></div></div>
+  <div class="ctl">
+    <button type="button" class="btn warm" data-b="step">Step one 8.33 ms step</button>
+    <button type="button" class="btn ghost" data-b="play">Play</button>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+    <button type="button" class="btn ghost" data-b="snd" aria-pressed="false">Sound off</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Celeste's <code>Player</code> owns a <code>StateMachine(23)</code>, and the order of checks in <code>NormalUpdate</code> is the cancel table, grab first, then <code>if (CanDash) return StartDash()</code>, then duck, then jump, so on the same frame dash beats jump; <code>RefillDash()</code> and <code>RefillStamina()</code> are the only writers of the resources [V, S7]. Game Programming Patterns: booleans per verb let impossible pairs happen, the fix is an enum or state objects [V, S32]. The figure runs the report's §7 <code>stepVerbs</code>, <code>phase</code> and <code>canCancel</code> literally, with the <code>VERBS</code> table as data. Every verb is a row with startup, active, recovery, cadence and a <code>cancelInto</code> map whose values are the phases that allow the cancel; the dash-slash cancels into a jump in recovery and never in active, the slash in any phase, the slide into a jump or a stand at any time; one <code>onLand()</code> resets every resource and respawn calls the same function [I]. Two gaps in the pseudocode are listed in the figure notes, the katana buffer is never consumed and the one-per-airtime rule is not enforced.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG inputlog-->
+<figure class="fig" data-demo="inputlog" id="fig-inputlog">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The two-byte input log with verb bits, bytes per minute, a TAS text view and categories</h4></div>
+  <div style="max-width:680px;"><div class="stage" data-nofit><canvas width="640" height="360" aria-label="An eight-row bit strip scrolls with the last 48 physics steps of a scripted run, katana bits in red. Below it the run-length pairs print as CelesteTAS-style lines or as raw bytes, then measured bytes per minute for the two-byte and the one-byte format, the replay header with its hashes, and the categories derived from the log"></canvas></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="v" role="group" aria-label="View"><button type="button" class="btn on" data-v="tas">TAS text</button><button type="button" class="btn" data-v="bytes">Raw pairs</button></div>
+    <label><input type="checkbox" data-k="slow"> 0.25x speed</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Mechanics #1 settled a one-byte RLE log; CelesteTAS writes one line per run of identical input, <code>123,R,J</code>, with letters R L U D J X G, and BizHawk's .bk2 writes one text line per frame [S4 H2; V, S20, S22]. The log becomes byte 0 run length, 1 to 255 steps, and byte 1 bits <code>L R U D Jh Jp Kh Dp</code>; the katana press is the edge of its held bit and the hook is Up + Katana, so no further bit is needed [I]. The header stores <code>hash(VERBS + PHYS)</code> and the map hash, so a Sandbox-tuned table fails before any simulation; the validator can count katana and dash inputs and set a tag, so one board shows Any% and No Katana as filters, as Celeste's board declares a DTS variable instead of splitting [V, S27, S38; I]. Resources are derived state, never logged. The figure encodes the scripted run live with the report's <code>logByte</code> and <code>encodeInputs</code> and measures the bytes; the deflated sizes use the browser's CompressionStream when it exists.</figcaption>
+</figure>
+<!--/FIG-->

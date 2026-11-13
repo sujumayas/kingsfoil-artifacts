@@ -1,0 +1,70 @@
+{
+ "id": "mechanics-speedrunner-verbs",
+ "type": "study",
+ "path": "/mechanics-speedrunner-verbs.html",
+ "title": "SpeedRunner verbs: dash, crawl, grapple, dive, draw and the other mechanics the great runners added, and which ones fit a samurai time attack",
+ "short": "SpeedRunner verbs",
+ "nav": "Verbs",
+ "summary": "A complement to Mechanics #1: the verbs the great runners added (dash, crawl, slide, dive, ground pound, ledge grab, wall run, climb, grapple, glide, thrust, charged jump, katana verbs), each with its numbers, its cancels and its cost, and a sandbox where every one is a toggle on a verbs gym.",
+ "series": {
+  "id": "mechanics",
+  "number": 2
+ },
+ "date": "2026-11-13",
+ "updated": "2026-11-13",
+ "thumb": "/thumbs/mechanics-speedrunner-verbs.png",
+ "tags": {
+  "genre": [
+   "platformer",
+   "time-attack"
+  ],
+  "perspective": [
+   "side-view"
+  ],
+  "art-style": [
+   "vector-ink"
+  ],
+  "engine": [
+   "web-canvas",
+   "engine-agnostic"
+  ],
+  "platform": [
+   "web",
+   "mobile",
+   "desktop"
+  ],
+  "project": [
+   "speedrunner"
+  ],
+  "domain": [
+   "design"
+  ],
+  "concept": [
+   "verbs"
+  ],
+  "technique": [
+   "dash",
+   "double-jump",
+   "crouch-slide",
+   "ground-pound",
+   "ledge-grab",
+   "wall-run-climb",
+   "grapple-swing",
+   "glide-thrust",
+   "parry-pogo",
+   "verb-state-machine"
+  ]
+ },
+ "stats": {
+  "words": 34702,
+  "techniques": 39,
+  "figures": 42,
+  "games": 64,
+  "sources": 197
+ },
+ "pair": "mechanics-speedrunner-verbs-sandbox",
+ "_sandbox": {
+  "title": "SpeedRunner Verbs Sandbox (playable)",
+  "path": "/mechanics-speedrunner-verbs-sandbox.html"
+ }
+}

@@ -537,6 +537,22 @@
    "short": "SpeedRunner",
    "pair": "mechanics-speedrunner-sandbox.html",
    "prev": null,
+   "next": {
+    "href": "mechanics-speedrunner-verbs.html",
+    "name": "#2 Verbs"
+   }
+  },
+  "mechanics-speedrunner-verbs.html": {
+   "kind": "study",
+   "series": "mechanics",
+   "label": "Mechanics series",
+   "name": "#2 Verbs",
+   "short": "Verbs",
+   "pair": "mechanics-speedrunner-verbs-sandbox.html",
+   "prev": {
+    "href": "mechanics-speedrunner.html",
+    "name": "#1 SpeedRunner"
+   },
    "next": null
   },
   "mechanics-speedrunner-sandbox.html": {
@@ -547,6 +563,22 @@
    "short": "SpeedRunner",
    "pair": "mechanics-speedrunner.html",
    "prev": null,
+   "next": {
+    "href": "mechanics-speedrunner-verbs-sandbox.html",
+    "name": "#2 Verbs"
+   }
+  },
+  "mechanics-speedrunner-verbs-sandbox.html": {
+   "kind": "sandbox",
+   "series": "mechanics",
+   "label": "Mechanics series",
+   "name": "#2 Verbs",
+   "short": "Verbs",
+   "pair": "mechanics-speedrunner-verbs.html",
+   "prev": {
+    "href": "mechanics-speedrunner-sandbox.html",
+    "name": "#1 SpeedRunner"
+   },
    "next": null
   }
  }
