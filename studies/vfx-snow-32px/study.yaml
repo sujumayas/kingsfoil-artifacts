@@ -1,0 +1,16 @@
+# Study config — read by studykit and by the recipe (build.py) via studykit.ctx(__file__).
+id: vfx-snow-32px   # must match the item id in site/catalog.json (run `python -m studykit register vfx-snow-32px`)
+format: vfx-pixel   # formats.yaml; layout and rules in docs/formats/vfx-pixel.md
+kind: recipe
+page: vfx-snow-32px-topdown-pixel.html
+report: report.md
+sandbox:
+  page: vfx-snow-32px-sandbox.html
+  source: sandbox.html
+thumb:                          # homepage card: a 320x180 window of the 640x360 sandbox canvas, at native pixels
+  from: sandbox
+  canvas: '#c'
+  steps: [{wait: 600}, {click: 'button[data-demo="showcase"]'}, {wait: 2500}]
+  crop: [180, 115, 500, 295]
+qa:
+  max_page_kb: 900

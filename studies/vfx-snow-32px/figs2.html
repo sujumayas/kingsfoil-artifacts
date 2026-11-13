@@ -1,0 +1,160 @@
+<!-- Figures 2 (Agent F): the coverage look (B1 to B5), objects (C1, C2) and falling snow (E1 to E4, 6d). FIG blocks, mapped to sections in build.py -->
+<!--FIG bayer32-->
+<figure class="fig" data-demo="bayer32" id="fig-bayer32">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The same Bayer dusting on 8 px tiles and on 32 px tiles</h4><span class="illu">Tile art illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Three by two grass tiles of 8 px, magnified four times, with a 7 by 12 px character. A regular dot pattern of snow lies over them. The dots are as large as the grass detail"></canvas></div><p class="pl"><b>8 px tiles, VFX #1.</b> Shown at 4 times the size of the right panel. One dither dot is as big as a grass blade, so it reads as texture.</p></div>
+    <div><div class="stage"><canvas width="96" height="64" aria-label="Three by two grass tiles of 32 px with a 24 by 32 px character. The same dot pattern of snow lies over them, four times finer than the tile art, like a screen door"></canvas></div><p class="pl"><b>32 px tiles.</b> The same matrix at the same level. The dots are 1/32 of a tile and sit on the art like a screen door.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Coverage level <input type="range" data-k="lv" min="1" max="16" step="1" value="4"><output data-o="lv"></output></label>
+    <label><input type="checkbox" data-k="b8"> Bayer 8x8</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both panels show 3 by 2 tiles and the gold corners mark one tile. A 4x4 Bayer matrix repeats 2 times across an 8 px tile and 8 times across a 32 px tile. At level 1/16 it leaves 64 isolated pixels on a 32 px tile and at 4/16 it leaves 256 [I, notes 11, 12]. The readout counts them in the pattern. cure says pixels outside a cluster "expose the underlying grid", and Derek Yu says to draw nothing one pixel thick [V, S97, S98]. Bayer 8x8 moves the dots and keeps the count at the low levels. The flat Bayer pass is the cheapest ground render in the study. Dither still works in a band 2 to 3 px wide at the edge of a solid patch [I, note 11].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG artmap-->
+<figure class="fig" data-demo="artmap" id="fig-artmap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The art threshold map beside Bayer at the same depth</h4><span class="illu">Depth field illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="96" height="72" aria-label="Grass tiles where snow starts as small rounded blobs between the grass tufts and grows into merged patches with a light rim and a shadow line"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>Art map.</b> Hollows fill first and tuft tips drown last. Every patch is built from 2x2 px blocks.</p></div>
+    <div><div class="stage"><canvas width="96" height="72" aria-label="The same grass tiles and the same depth drawn through a Bayer matrix plus noise. The snow arrives as scattered single pixels"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Bayer 4x4 plus noise.</b> The VFX #1 matrix on the same depth field, stretched over the same 4 to 55 units.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Depth <input type="range" data-k="d" min="0" max="80" step="1" value="26"><output data-o="d"></output></label>
+    <label><input type="checkbox" data-k="fr" checked> Frost tint from depth 4</label>
+    <div class="seg" data-seg="view" role="group" aria-label="View"><button type="button" class="on" data-v="snow">Snow</button><button type="button" data-v="map">Threshold map</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Drag the depth slider. On the left about 6 seed blobs per tile appear in the hollows, grow, merge and close around the tufts last. The Sandbox stores this order in one 128x128 px tileable map with ranks from about 4 to 55 units, in 2x2 px blocks [V, S3]. The test is the same compare as Bayer, <code>depth &gt; threshold</code>, so the engine still stores one byte per cell. With the frost tint on, bare ground turns pale blue from depth 4, so the thinnest cover is a colour and not a speckle [V, S97; I, note 11]. In our edge test the longest straight run on the snow boundary was 13 px with a cluster tile and 41 to 43 px with Bayer 4x4 [V, S5]. The depth here is one smooth field sampled per 2 px, as the 1:2 field of the Sandbox does. The right side is the VFX #1 matrix stretched over the same 4 to 55 units, so both sides fill at the same rate. No shipped game was found that thresholds a depth field against a painted map.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG maskblend-->
+<figure class="fig" data-demo="maskblend" id="fig-maskblend">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Summer and winter tiles blended per pixel through the threshold</h4><span class="illu">This study's proposal, no shipped precedent found</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="A small atlas in three rows of four tiles. The top row is summer art with grass, a dirt path and flagstones. The middle row is the same four tiles drawn by hand in winter. The bottom row is the threshold map in grey"></canvas><div class="hud" data-hud="a"></div><div class="hud" data-hud="b" style="top:35%"></div><div class="hud" data-hud="c" style="top:68%"></div></div><p class="pl"><b>The atlas.</b> Each winter tile sits at a fixed offset from its summer twin. The third row is the threshold map.</p></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="A map of four by three tiles with grass, a dirt path and a flagstone yard. Winter art shows through in growing patches as the depth rises"></canvas></div><p class="pl"><b>The blend.</b> <code>depth &gt; threshold ? winter : summer</code>, once per pixel.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Depth <input type="range" data-k="d" min="0" max="90" step="1" value="20"><output data-o="d"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The map is drawn twice. The summer row has grass, a dirt path and flagstones. The winter row is the same four tiles drawn by hand, with drift lines, dry grass, a trodden path with boot prints and stones under snow. For each pixel the shader reads the depth field, the threshold, the summer tile and the winter tile, and depth against threshold picks one of the two. That is 4 fetches per pixel and 921,600 per frame at 640x360 [I, note 12]. Coverage stays dynamic and every pixel on screen is drawn by an artist. finalbossblues ships winter tiles "in the exact same arrangement as the originals", which is the atlas layout this needs [V, S110]. It is untested in Godot, and atlas padding or tile animation may break the fixed offset [I, note 12].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG overlay-->
+<figure class="fig" data-demo="overlay" id="fig-overlay">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tileset swap, overlay autotile and a half-way ground on one map</h4><span class="illu">Tile art and edge shapes illustrative</span></div>
+  <div class="stage click" style="max-width:642px"><canvas width="160" height="96" aria-label="A map of five by three tiles with grass, a dirt path, a pine and a rock. The buttons show it in summer, fully swapped to winter art, with a snow overlay on some tiles, or with half-snowed grass tiles around full snow"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Method"><button type="button" data-v="summer">Summer</button><button type="button" class="on" data-v="swap">Swap</button><button type="button" data-v="over">Overlay</button><button type="button" data-v="half">SnowGrass</button></div>
+    <button type="button" class="btn ghost" data-b="reset">Reset tiles</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>These are the methods that shipped. "Swap" replaces every tile with its winter twin in one event, as Stardew does with season-prefixed tilesheets, and the pine and the rock change to their snowy items as Tibia's do [V, S2, S9]. "Overlay" lays a transparent snow layer with hand-drawn edges over any ground, as Mana Seed's snow autotile does [V, self-reported, S107]. Click a tile to add or remove it. "SnowGrass" adds a half-way ground between grass and snow, as Time Fantasy does [V, self-reported, S109]. Click a tile to step it through grass, SnowGrass and snow. All three are free at run time and all three change in whole tiles, so the snow line moves 32 px at a time [I]. Every commercial winter set we reached is drawn at 16 px [V, self-reported, S111; I, note 17].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG edgeshade-->
+<figure class="fig" data-demo="edgeshade" id="fig-edgeshade">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Edge shading on one snow patch, one line at a time</h4><span class="illu">Px widths are this study's inference</span></div>
+  <div class="stage" style="max-width:482px"><canvas width="80" height="60" aria-label="A zoomed patch of snow on grass. The toggles add a light rim on its north and west edges, a shadow line on its south and east edges, a second shadow row on the south side and short drift lines on the body"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="rim" checked> Highlight rim, north and west</label>
+    <label><input type="checkbox" data-k="sh" checked> Shadow line, south and east</label>
+    <label><input type="checkbox" data-k="deep" checked> 2 px south line on deep snow</label>
+    <label><input type="checkbox" data-k="drift" checked> Drift lines</label>
+    <label class="rng">Depth <input type="range" data-k="d" min="20" max="120" step="1" value="72"><output data-o="d"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Untick all four boxes and the patch is a flat shape in the body colour <code>#cbd3dc</code>. The light comes from the north-west. The rim adds 1 px of <code>#f2f1ec</code> on north and west edges. The shadow line adds 1 px of <code>#9eabb8</code> on south and east edges. Once the snow is 14 units over its threshold the south line grows to 2 px of <code>#7d7a96</code> with a row of darkened ground under it, because a 3/4 view shows the thickness of the snow on its south side [I, note 11; V, S3]. Drift lines are 1 or 2 short marks per tile from depth 34, each a 1 px highlight over a 1 px shadow, and one longer arc from depth 62 [V, S3]. The ramp has no pure white, since Apollo's brightest colour is <code>#ebede9</code> [V, S104]. No artist source gives snow-edge widths at any tile size [V, S102, S96].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG caps-->
+<figure class="fig" data-demo="caps" id="fig-caps">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Shaped snow caps beside threshold noise on the same roof and pine</h4><span class="illu">Cap px values judged by eye</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="144" height="104" aria-label="A log house and a pine. Snow fills the roof from the ridge down in scallops and ends in a lip that hangs over the eave. Each tier of the pine carries its own rounded cap"></canvas></div><p class="pl"><b>Shaped rule.</b> Each object carries a drawn threshold map, so the snow has a shape at every depth.</p></div>
+    <div><div class="stage"><canvas width="144" height="104" aria-label="The same house and pine with snow drawn through plain threshold noise. The roof and the tree are covered in scattered pixels with no shape"></canvas></div><p class="pl"><b>Threshold noise.</b> The same compare against Bayer plus noise. One test per pixel, no shape.</p></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Snow depth <input type="range" data-k="d" min="0" max="110" step="1" value="62"><output data-o="d"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Drag the slider from 0. On the left the roof fills from the ridge down in scallops, then a lip appears that covers the eave line and hangs 2 rows over the wall, with a thickness band 3 px tall. Each pine tier gets its own cap, which starts at the visible top of the tier and grows down to about 60% of it, and the dark fringe stays free [V, S3]. On the right the same pixels are tested against Bayer plus noise. Both sides run one compare per cap pixel, so the shape itself costs nothing at run time. It lives in a static map that is drawn once. The edge shading on the left reads up to 6 neighbours per snow pixel, and the readout times both sides in this browser. The report's thickness scale is 2 px for a dusting, 3 to 4 px for normal snow and 5 to 6 px for heavy snow, because a 1 px cap vanishes next to a 1 px outline [V, S98; I, note 11]. The first rows of each cap here are thinner than that for a few depth units. No tutorial with px numbers for roof snow or pine tiers was found, so every value here was judged by eye [V, S102, S103].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG artmask-->
+<figure class="fig" data-demo="artmask" id="fig-artmask">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A coarse exposure map under an eave, with and without the static art mask</h4><span class="illu">Scene and depth illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="104" height="72" aria-label="The baked exposure map of a house corner as coloured cells. Light cells are open to the sky and dark cells are sheltered. At 1 to 4 the cells are 4 px blocks that straddle the eave line"></canvas><div class="hud" data-hud="a"></div></div><p class="pl"><b>The baked map.</b> Light is open sky, dark is shelter. One value per field cell.</p></div>
+    <div><div class="stage"><canvas width="104" height="72" aria-label="The same house corner drawn from that map. Without the mask the snow smears over the eave line and the wall in a ragged band. With the mask the eave edge and the roof outline are crisp"></canvas><div class="hud" data-hud="b"></div></div><p class="pl"><b>Drawn from it.</b> Snow on the roof, a dry strip under the eave, open snow beyond.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="r" role="group" aria-label="Map resolution"><button type="button" data-v="1">1:1</button><button type="button" data-v="2">1:2</button><button type="button" class="on" data-v="4">1:4</button></div>
+    <label><input type="checkbox" data-k="mask"> Static art mask</label>
+    <label class="rng">Depth <input type="range" data-k="d" min="40" max="120" step="1" value="100"><output data-o="d"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The exposure map is baked at field resolution and sampled bilinearly. At 1:4 a cell is 4 px wide and straddles the eave, so roof snow smears onto the wall and the outline, and the roof edge loses its lip. The report puts the soft band at 2 px for 1:2 and 4 px for 1:4, the width of one cell [I, note 12; V, S3]. The readout counts how far the snow reaches below the eave line in this scene. Tick "Static art mask". The tileset now carries a mask at art resolution with the roof outline in it. The shader multiplies it into the sampled depth, and each pixel mixes only cells of its own surface class, so roof snow never bleeds onto the wall or the ground. The mask never changes, so it costs no upload and one alpha read from a texture the shader already samples [I, note 12]. The coarse map is what makes the bakes cheap. A static mask cannot follow a cart or a tent [I].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flakesize-->
+<figure class="fig" data-demo="flakesize" id="fig-flakesize">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flake size follows the tile at 0.1875, and heavy snow covers about 1% of the pixels</h4><span class="illu">Strip scene illustrative</span></div>
+  <div class="pair">
+    <div><svg class="chart" viewBox="0 0 400 250" role="img" aria-label="Chart of flake size against tile size. RPG Maker VX Ace at 6 px on 32 px tiles, MV and MZ at 9 px on 48 px tiles and Stardew at 12 px on 64 px tiles lie on one line of slope 0.1875. The Sandbox's 1, 2 and 3 px flakes sit below the line at 32 px"></svg><p class="pl"><b>Size against tile.</b> Three engines sit on one line. The Sandbox default sits under it.</p></div>
+    <div><div class="stage"><canvas width="160" height="90" aria-label="A strip of the 32 px scene with a pine, a character and falling snow in the chosen flake sizes"></canvas><div class="hud" data-hud></div></div><p class="pl"><b>Live strip</b> at the Sandbox's flake density. The percentage is counted from this canvas.</p></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="sz" role="group" aria-label="Flake size"><button type="button" data-v="1">1 px only</button><button type="button" class="on" data-v="mixed">Mixed</button><button type="button" data-v="large">Large</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>RPG Maker VX Ace draws a 6x6 px flake on 32 px tiles, MV and MZ draw 9x9 px on 48 px tiles and Stardew's winter debris is 12 px on a 64 px tile. All three are 0.1875 of a tile [V, S27, S18, S26, S30]. The count did not follow the tile. Both RPG Makers stop at 90 flakes. Peak coverage is 1.27% of screen pixels in VX Ace, 0.89% in MV and 1.03% in the VFX #1 sandbox, which is where the 1% rule comes from [I, note 14]. The Sandbox runs 560 far flakes of 1 px, 300 mid flakes of 2 px and 150 near flakes of 3 px on 640x360, and measured 0.9 to 0.97% [V, S3]. "1 px only" is the VFX #1 look at this scale. A 1 px flake is 1/32 of a tile and the Sandbox measured 0.39% [V, S3]. "Large" adds the 6 px near flakes that the shipped engines use. The rule rests on three data points, so it is a tuning target and not a law [I, note 14].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tiledcell-->
+<figure class="fig" data-demo="tiledcell" id="fig-tiledcell">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Stardew's falling snow is one animated cell repeated over the view</h4><span class="illu">Cell art and scene illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A snowy 32 px scene with a pine and a character. Falling snow is drawn by repeating one small animated square of flakes across the whole view. A tint can show the squares"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="n" role="group" aria-label="Cell size"><button type="button" class="on" data-v="16">16 px cell</button><button type="button" data-v="32">32 px cell</button></div>
+    <label><input type="checkbox" data-k="tint"> Tint every second cell</label>
+    <label><input type="checkbox" data-k="auto" checked> Pan the view</label>
+    <label class="rng">Camera x <input type="range" data-k="cam" min="0" max="96" step="1" value="0"><output data-o="cam"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew Valley has no snow particles. Its source rect is 16x16 art px with 16 frames at 75 ms, drawn every 64 screen px in white at 80%, which is about 273 quads at 1280x720 [V, S29]. Tick "Tint every second cell" to see the grid. Every cell shows the same flakes on the same frame. The cell is placed in world coordinates, so the flakes move with the ground when the view pans. Stardew does this by subtracting the camera delta [V, S29]. For 32 px tiles the report sizes the cell at 32x32 px, a 512x32 strip of 16 frames drawn by a repeat shader in one draw and one fetch per pixel [I, note 14]. The cost is the same at any density and there is no state. There is also no height, no shadow dot and no landing.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG zflakes-->
+<figure class="fig" data-demo="zflakes" id="fig-zflakes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flakes with height, drawn at y minus z with a shadow dot where they land</h4><span class="illu">Near flake count illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A snowy 32 px scene seen from above with a character and a pine. Large near flakes fall toward small dark dots on the ground and land on them. Smaller far flakes drift behind"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="z" checked> Height z and landing</label>
+    <label><input type="checkbox" data-k="sh" checked> Shadow dots</label>
+    <label><input type="checkbox" data-k="line"> Drop lines</label>
+    <label class="rng">Near flakes <input type="range" data-k="n" min="4" max="40" step="1" value="18"><output data-o="n"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>A near flake is <code>(x, y, z)</code>. The point <code>(x, y)</code> is the ground spot it will land on and <code>z</code> is how high it still is. It is drawn at <code>(x, y - z)</code>, and a 2 px shadow dot waits at <code>(x, y)</code> once the flake is under 70 px up [V, S2, S3]. Tick "Drop lines" to see each flake joined to its dot. Far flakes are 1 px in a shadow blue, mid flakes are 2x2 px in the body colour and near flakes are a 3 px plus in white, so depth comes from the ramp step and not from alpha [I, note 11; V, S3]. The scene is tinted to late afternoon so the three steps show against the snow. Untick "Shadow dots" and the flakes float over the picture with nothing to pin them. Untick "Height z and landing" and they cross the ground and leave at the bottom edge, which is a screen overlay. Shattered Pixel Dungeon starts a flake <code>speed * lifespan</code> above its target, so <code>z = speed * time_left</code> and no z has to be stored [V, S81; I, note 14]. None of the ten 2D code bases we read gives a flake a z value or a ground shadow [V, note 14].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG flakemotion-->
+<figure class="fig" data-demo="flakemotion" id="fig-flakemotion">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flake motion in tiles per second, in whole pixels and locked to the world</h4><span class="illu">Scene and sway illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A character walks across a snowy 32 px scene with pines while the view follows. Snow falls at the chosen speed. Flakes can be locked to the world or to the screen, and can move in whole pixels or between pixels"></canvas><div class="hud" data-hud></div></div>
+  <svg class="chart" style="max-width:642px;margin-top:8px" viewBox="0 0 400 64" role="img" aria-label="A speed scale from 0.5 to 5.6 tiles per second with marks for Stardew debris at 0.47 to 0.64, Pokémon Emerald at 1.9 to 2.3, the Sandbox at 2, RPG Maker MV at 3.7 and VX Ace at 5.6, and a pointer at the chosen speed"></svg>
+  <div class="ctl">
+    <label class="rng">Near fall speed <input type="range" data-k="v" min="0.5" max="5.6" step="0.1" value="2"><output data-o="v"></output></label>
+    <div class="seg" data-seg="px" role="group" aria-label="Pixel steps"><button type="button" class="on" data-v="whole">Whole pixels</button><button type="button" data-v="sub">Sub-pixel</button></div>
+    <div class="seg" data-seg="lock" role="group" aria-label="Flake lock"><button type="button" class="on" data-v="world">World-locked</button><button type="button" data-v="screen">Screen-locked</button></div>
+    <label><input type="checkbox" data-k="pan" checked> Walk and pan</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The slider sets the fall speed of the near layer in tiles per second, and the two far layers follow in the Sandbox's ratio of 26 and 42 to 64 px/s. Click a mark on the scale to jump to it. Stardew's debris falls 0.47 to 0.64 tiles per second, Emerald 1.9 to 2.3, MV 3.7 and VX Ace 5.6 [I, note 14]. The Sandbox uses 2. MV reads as sleet next to Emerald. Switch to "Sub-pixel" and each flake is spread over up to four pixels as it moves between them, so it flickers and blurs. The shipped games step whole pixels. VX Ace moves a flake by (-1, +3) [V, S27]. Switch to "Screen-locked" while the view pans and the flakes slide with the walker over the ground. None of the games we read locks flakes to the screen [V, S21, S38, S29, S78, S15]. Speed costs nothing extra.</figcaption>
+</figure>
+<!--/FIG-->

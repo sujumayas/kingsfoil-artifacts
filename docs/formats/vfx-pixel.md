@@ -8,8 +8,11 @@ Used by every study in the `vfx` series.
 - Study page `{id}-topdown-pixel.html`, built by `build.py` from `report.md`, `figs*.html` and `demos*.js`.
 - Sandbox `{id}-sandbox.html`, required: a single hand-written file (`sandbox.html`), no external assets
   (the one exception is the shared top bar: keep `<script src="nav.js" defer></script>` before `</body>`),
-  a 320×180 native canvas `#c` scaled with `image-rendering: pixelated`. It plays the recommended
-  architecture from §7 and is described in §8. The homepage thumbnail is grabbed from this canvas
+  a native canvas `#c` scaled with `image-rendering: pixelated`. The default canvas is 320×180. A study
+  whose subject is art at a larger scale may use 640×360 (32 px tiles, characters about 24×32 px), as
+  `vfx-snow-32px` does; it states the size in `notes/SANDBOX-SPEC.md` and in §8, and its showcase frame
+  must still read on the homepage card at half size. It plays the recommended architecture from §7 and
+  is described in §8. The homepage thumbnail is grabbed from this canvas
   (`thumb: from: sandbox` in `study.yaml`).
 
 ## Report

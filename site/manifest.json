@@ -358,5 +358,23 @@
   "title": "Top-down pixel magic Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-12"
+ },
+ {
+  "path": "/thumbs/vfx-snow-32px.png",
+  "title": "Thumbnail vfx-snow-32px.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-12"
+ },
+ {
+  "path": "/vfx-snow-32px-topdown-pixel.html",
+  "title": "Top-down pixel snow at 32 px: scaling the snow engine to 32x32 tiles and 24x32 characters",
+  "description": "The snow engine of VFX #1 rebuilt for 32 px tiles and 24x32 characters on a 640x360 canvas: a depth field that stays at 320x180, a painted threshold map in place of Bayer dusting, boot prints on the walk cycle's contact frames, flakes sized by the tile, and measured costs for every choice.",
+  "date": "2026-11-12"
+ },
+ {
+  "path": "/vfx-snow-32px-sandbox.html",
+  "title": "Snow 32 Sandbox (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-12"
  }
 ]

@@ -153,6 +153,22 @@
     "href": "vfx-grass-topdown-pixel.html",
     "name": "#9 Grass"
    },
+   "next": {
+    "href": "vfx-snow-32px-topdown-pixel.html",
+    "name": "#11 Snow 32"
+   }
+  },
+  "vfx-snow-32px-topdown-pixel.html": {
+   "kind": "study",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#11 Snow 32",
+   "short": "Snow 32",
+   "pair": "vfx-snow-32px-sandbox.html",
+   "prev": {
+    "href": "vfx-magic-topdown-pixel.html",
+    "name": "#10 Magic"
+   },
    "next": null
   },
   "vfx-snow-sandbox.html": {
@@ -306,6 +322,22 @@
    "prev": {
     "href": "vfx-grass-sandbox.html",
     "name": "#9 Grass"
+   },
+   "next": {
+    "href": "vfx-snow-32px-sandbox.html",
+    "name": "#11 Snow 32"
+   }
+  },
+  "vfx-snow-32px-sandbox.html": {
+   "kind": "sandbox",
+   "series": "vfx",
+   "label": "VFX series",
+   "name": "#11 Snow 32",
+   "short": "Snow 32",
+   "pair": "vfx-snow-32px-topdown-pixel.html",
+   "prev": {
+    "href": "vfx-magic-sandbox.html",
+    "name": "#10 Magic"
    },
    "next": null
   },

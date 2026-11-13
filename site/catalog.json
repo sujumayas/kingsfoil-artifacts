@@ -26,7 +26,8 @@
     "vfx-water",
     "vfx-fog",
     "vfx-grass",
-    "vfx-magic"
+    "vfx-magic",
+    "vfx-snow-32px"
    ],
    "upcoming": [
     {
@@ -2065,6 +2066,129 @@
      "palette-lut",
      "dither-threshold",
      "light-map"
+    ]
+   },
+   "maturity": "prototype"
+  },
+  {
+   "id": "vfx-snow-32px",
+   "type": "study",
+   "path": "/vfx-snow-32px-topdown-pixel.html",
+   "title": "Top-down pixel snow at 32 px: scaling the snow engine to 32x32 tiles and 24x32 characters",
+   "short": "Snow at 32 px",
+   "nav": "Snow 32",
+   "summary": "The snow engine of VFX #1 rebuilt for 32 px tiles and 24x32 characters on a 640x360 canvas: a depth field that stays at 320x180, a painted threshold map in place of Bayer dusting, boot prints on the walk cycle's contact frames, flakes sized by the tile, and measured costs for every choice.",
+   "series": {
+    "id": "vfx",
+    "number": 11
+   },
+   "date": "2026-11-12",
+   "updated": "2026-11-12",
+   "thumb": "/thumbs/vfx-snow-32px.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "snow"
+    ],
+    "technique": [
+     "heightmap",
+     "dither-threshold",
+     "footprint-stamp",
+     "trail-map",
+     "exposure-map",
+     "autotile-dual-grid",
+     "z-particles",
+     "palette-lut",
+     "random-tick"
+    ]
+   },
+   "stats": {
+    "words": 24378,
+    "techniques": 30,
+    "figures": 34,
+    "games": 32,
+    "sources": 144
+   },
+   "pair": "vfx-snow-32px-sandbox"
+  },
+  {
+   "id": "vfx-snow-32px-sandbox",
+   "type": "sandbox",
+   "path": "/vfx-snow-32px-sandbox.html",
+   "title": "Snow 32 Sandbox (playable)",
+   "series": {
+    "id": "vfx",
+    "number": 11
+   },
+   "short": "Snow at 32 px sandbox",
+   "summary": "Playable companion to the study.",
+   "pair": "vfx-snow-32px",
+   "date": "2026-11-12",
+   "updated": "2026-11-12",
+   "thumb": "/thumbs/vfx-snow-32px.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat",
+     "web-canvas"
+    ],
+    "platform": [
+     "web",
+     "low-end"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "vfx"
+    ],
+    "concept": [
+     "snow"
+    ],
+    "technique": [
+     "heightmap",
+     "dither-threshold",
+     "footprint-stamp",
+     "trail-map",
+     "exposure-map",
+     "autotile-dual-grid",
+     "z-particles",
+     "palette-lut",
+     "random-tick"
     ]
    },
    "maturity": "prototype"

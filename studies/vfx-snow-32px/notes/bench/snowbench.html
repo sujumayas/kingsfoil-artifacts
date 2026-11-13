@@ -1,0 +1,666 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Snow 32 bench</title></head>
+<body>
+<pre id="out">Snow at 32 px benchmark. Call runCPU({only:'regex'}) or await runGPU({only:'regex'}) from the console or Playwright.</pre>
+<script>
+"use strict";
+// ---------------- harness (same shape as studies/vfx-magic/notes/bench/magicbench.html) ----------------
+// Each sample runs fn until minSampleMs has passed and stores the mean ms per call. The median and p95 are over the samples.
+function stats(per) { per = per.slice().sort((a, b) => a - b); const n = per.length, q = p => per[Math.min(n - 1, Math.floor(n * p))];
+  return { median_ms: +q(0.5).toFixed(5), p95_ms: +q(0.95).toFixed(5), p10_ms: +q(0.1).toFixed(5), p90_ms: +q(0.9).toFixed(5), min_ms: +per[0].toFixed(5), samples: n }; }
+function bench(name, fn, opts = {}) {
+  const warmMs = opts.warmMs ?? 200, samples = opts.samples ?? 31, minSampleMs = opts.minSampleMs ?? 10;
+  let t0 = performance.now(); while (performance.now() - t0 < warmMs) fn();
+  const per = []; let calls = 0;
+  for (let s = 0; s < samples; s++) { let n = 0; const a = performance.now(); let b; do { fn(); n++; b = performance.now(); } while (b - a < minSampleMs); per.push((b - a) / n); calls += n; }
+  return Object.assign({ name }, stats(per), { calls });
+}
+let SINK = 0;
+function sync(cx) { SINK += cx.getImageData(0, 0, 1, 1).data[1]; }
+function timerResolution() { let best = 1e9; let last = performance.now(); for (let i = 0; i < 200000; i++) { const t = performance.now(); if (t > last) { if (t - last < best) best = t - last; last = t; } } return best; }
+
+// ---------------- RNG / hash / noise (copied from studies/vfx-snow/sandbox.html) ----------------
+// The state lives in a typed array. With a script-level `let rs` the tick cost measured 3.5x higher in some JIT states (scratch-bench/probe4-output.txt).
+const RS = new Int32Array([1234567]);
+const rnd = () => { let s = RS[0]; s ^= s << 13; s ^= s >>> 17; s ^= s << 5; RS[0] = s; return (s >>> 0) / 4294967296; };
+// fresh(f) re-evaluates the source of a factory, so every instance is its own function literal, as in a page that builds its engine once.
+// Without it only the first instance ran at full speed and later instances of the same loop measured up to 2x slower (scratch-bench/probe3-output.txt).
+// The counter in the comment makes each source text unique, or V8's eval cache would hand back the first instance's shared code.
+let FRESH_N = 0;
+const fresh = f => (0, eval)('/*' + (++FRESH_N) + '*/(' + f.toString() + ')');
+const ri = n => (rnd() * n) | 0;
+const hash2 = (x, y) => { let h = Math.imul(x * 374761393 + y * 668265263, 1274126177); h ^= h >>> 13; h = Math.imul(h, 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const vnoise = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const bay = (x, y) => BAYER[(y & 3) * 4 + (x & 3)];
+
+// ---------------- palette (copied from the sandbox: 58 base colours x 4 variants) ----------------
+const BASE = []; const C = h => { BASE.push(h); return BASE.length - 1; };
+const GR_D = C('#2f4a3c'), GR_A = C('#3b5a45'), GR_B = C('#4a6b4b'), GR_T = C('#5f7f52'),
+  DIRT_A = C('#6a5140'), DIRT_B = C('#5b4536'), ICE_A = C('#8fb6d6'), ICE_B = C('#a9cbe4'), ICE_C = C('#d7ecfa'),
+  SN_HI = C('#f6f9ff'), SN_BASE = C('#e2eaf6'), SN_MID = C('#c4d1ea'), SN_SH = C('#9eaedb'), SN_DEEP = C('#7c86c2'), SN_PACK = C('#c9cfe2'), SN_PSH = C('#a6aecf'), SPARK = C('#ffffff'),
+  ROOF_A = C('#8a3b3b'), ROOF_B = C('#6e2c31'), ROOF_D = C('#4a1f27'), WALL_A = C('#8b6a4a'), WALL_B = C('#7a5b3f'), WALL_D = C('#4d3826'), DOOR = C('#3d2a1d'), WIN = C('#7f9fbf'),
+  CHIM = C('#77727a'), CHIM_D = C('#55505a'), CAN_A = C('#2f6b4f'), CAN_B = C('#24553f'), CAN_D = C('#1a3d30'), TRUNK = C('#5a3b28'),
+  ROCK_A = C('#8a8f9a'), ROCK_B = C('#6f7480'), ROCK_C = C('#4e525d'), FEN_A = C('#9a7650'), FEN_D = C('#6a4d33'), LAMP_P = C('#2c2a33'), LAMP_L = C('#ffd27a'),
+  HAT = C('#c8443c'), HATB = C('#efe6dc'), SKIN = C('#f0c09a'), EYE = C('#2a1b22'), SCARF = C('#f2c14e'), COAT = C('#3c6fb4'), COAT2 = C('#2f5592'), LEG = C('#2a2c3a'), BOOT = C('#5a3a28'),
+  V_HAT = C('#6b4a2f'), V_HATB = C('#4a321f'), V_COAT = C('#4f7a3a'), V_SCARF = C('#b8423f'),
+  FOX = C('#d9733a'), FOX_W = C('#f3e7da'), FOX_D = C('#3a2a24'), FLAKE = C('#ffffff'), FLAKE_F = C('#c9d6ee'), SMOKE = C('#b9bcc7'), BREATH = C('#e8eef8');
+const N = BASE.length;
+const RGB = new Float32Array(N * 4 * 3);
+for (let i = 0; i < N; i++) { const h = BASE[i]; const r = parseInt(h.slice(1, 3), 16), g = parseInt(h.slice(3, 5), 16), b = parseInt(h.slice(5, 7), 16);
+  const v = [[r, g, b], [r * .72, g * .77, b * .9 + 12], [r * .66, g * .68, b * .74], [r * .45, g * .48, b * .62 + 10]];
+  for (let k = 0; k < 4; k++) { const o = (i + k * N) * 3; RGB[o] = v[k][0]; RGB[o + 1] = v[k][1]; RGB[o + 2] = v[k][2]; } }
+const pal = new Uint32Array(256), palLamp = new Uint32Array(256);
+const pack = (r, g, b) => (255 << 24) | (Math.max(0, Math.min(255, b)) << 16) | (Math.max(0, Math.min(255, g)) << 8) | Math.max(0, Math.min(255, r));
+const daylight = t => { const h = t / 60; return Math.max(0, Math.min(1, Math.sin((h - 6) / 12 * Math.PI) * 1.6)); };
+function buildPalette(clock, weather, intensity) { const dl = daylight(clock), nf = 1 - Math.min(1, dl * 1.4), sunny = weather === 'sunny';
+  let r = 1, g = 1, b = 1; const warm = Math.max(0, 1 - Math.abs(dl - .18) / .18) * (sunny || weather === 'overcast' ? 1 : .5);
+  r = .34 + .66 * dl + .16 * warm; g = .4 + .6 * dl + .02 * warm; b = .66 + .34 * dl - .08 * warm;
+  if (!sunny) { const k = Math.min(1, intensity * .6 + (weather === 'overcast' ? .5 : .2)); r *= 1 - .14 * k; g *= 1 - .11 * k; b *= 1 - .05 * k; }
+  for (let i = 0; i < N * 4; i++) { const o = i * 3; let R = RGB[o] * r, G = RGB[o + 1] * g, Bc = RGB[o + 2] * b; const base = i % N;
+    if (base === WIN || base === LAMP_L) { const e = base === LAMP_L ? Math.max(nf, .25) : nf; const wr = 255, wg = base === LAMP_L ? 214 : 196, wbb = base === LAMP_L ? 130 : 96;
+      R = R * (1 - e) + wr * e; G = G * (1 - e) + wg * e; Bc = Bc * (1 - e) + wbb * e; }
+    pal[i] = pack(R, G, Bc); const L = nf * .8; palLamp[i] = pack(R + (RGB[o] * .98 + 14 - R) * L, G + (RGB[o + 1] * .82 + 4 - G) * L, Bc + (RGB[o + 2] * .58 - Bc) * L); }
+  return nf; }
+buildPalette(17.5 * 60, 'heavy', 1);
+
+// ---------------- base scene at 320x180 (copied from the sandbox), then resampled to any size ----------------
+const GROUND = 0, PATH = 1, ICE = 2, ROOF = 3, CANOPY = 4, ROCKTOP = 5, FENCETOP = 6, SOLID = 9;
+const holds = s => s < SOLID, cls = s => s <= ICE ? 1 : s;
+const MAXD = 200, SOFT = 110;
+const BASEE = [1, 1, .7, 1, .9, 1, 1];
+const base = (() => { const W = 320, H = 180, NP = W * H;
+  const S = new Uint8Array(NP), B = new Uint8Array(NP), Hgt = new Uint8Array(NP), O = new Int16Array(NP).fill(-1), WOB = new Uint8Array(NP), Cm = new Uint8Array(NP), thr = new Float32Array(NP), Lm = new Float32Array(NP), SHL = new Float32Array(NP).fill(1);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x;
+    const n = vnoise(x / 14, y / 14) * .6 + vnoise(x / 5, y / 5) * .4;
+    let b = n < .38 ? GR_D : n < .62 ? GR_A : GR_B, t = bay(x, y) * .55 + hash2(x + 7, y + 3) * 2.5 + .5;
+    if (hash2(x, y) < .05) { b = GR_T; t += 5; }
+    B[i] = b; S[i] = GROUND; thr[i] = t; }
+  const inPath = (x, y) => { const wv = Math.round(Math.sin(y * .15) * 1.5), wh = Math.round(Math.sin(x * .09) * 2);
+    return (y >= 88 && y <= 134 && x >= 66 + wv && x <= 77 + wv) || (x >= 66 && y >= 126 + wh && y <= 135 + wh); };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inPath(x, y)) { const i = y * W + x; S[i] = PATH; B[i] = hash2(x * 3, y) < .3 ? DIRT_B : DIRT_A; thr[i] = bay(x, y) * .55 + hash2(x, y + 9) * 2 + .5; }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const dx = (x - 258) / 34, dy = (y - 156) / 14, r = dx * dx + dy * dy; if (r < 1) { const i = y * W + x; S[i] = ICE;
+    B[i] = r > .75 ? ICE_B : ICE_A; if (hash2(x >> 1, y) < .04 || Math.abs(Math.sin(x * .21 + y * .5)) < .03) B[i] = ICE_C; thr[i] = bay(x, y) * .4 + .3; } }
+  const put = (x, y, s, b, h, o, col) => { if (x < 0 || y < 0 || x >= W || y >= H) return; const i = y * W + x; S[i] = s; B[i] = b; Hgt[i] = h; O[i] = o; if (col) { Cm[i] = 1; WOB[i] = Math.max(WOB[i], h); } if (holds(s)) thr[i] = bay(x, y) * .5 + hash2(x, y) * 1.5 + .4; };
+  for (let y = 30; y <= 62; y++) for (let x = 37; x <= 107; x++) { let b = ((y - 30) % 4 === 3) ? ROOF_B : ROOF_A; if (((x + ((y >> 2) & 1) * 3) % 6) === 0 && b === ROOF_A) b = ROOF_B; if (y <= 31) b = ROOF_D;
+    const edge = y === 62 || y === 30 || x === 37 || x === 107; put(x, y, edge ? SOLID : ROOF, edge ? ROOF_D : b, 30, 88, y >= 60); }
+  for (let y = 63; y <= 88; y++) for (let x = 40; x <= 104; x++) { let b = ((y - 63) % 3 === 2) ? WALL_B : WALL_A; if (x === 40 || x === 104 || y === 88 || (x - 40) % 16 === 0) b = WALL_D;
+    if (x >= 66 && x <= 76 && y >= 72) { b = (x === 66 || x === 76 || y === 72) ? WALL_D : DOOR; if (x === 74 && y === 80) b = SCARF; }
+    for (const wx of [48, 86]) if (x >= wx && x <= wx + 10 && y >= 67 && y <= 76) b = (x === wx || x === wx + 10 || y === 67 || y === 76 || x === wx + 5) ? WALL_D : WIN;
+    put(x, y, SOLID, b, 30, 88, true); }
+  for (let y = 22; y <= 36; y++) for (let x = 88; x <= 95; x++) put(x, y, y === 22 ? ROCKTOP : SOLID, y === 22 ? CHIM_D : ((x + y) % 5 === 0 ? CHIM_D : CHIM), 30, 88, false);
+  for (let y = 89; y <= 94; y++) for (let x = 38; x <= 106; x++) { const i = y * W + x; SHL[i] *= Math.min(1, .15 + (y - 89) / 6); }
+  const TREES = [[150, 46], [176, 64], [22, 124], [132, 160], [210, 34], [302, 66], [284, 24], [118, 26], [30, 40], [312, 112]];
+  for (const [tx, ty] of TREES) {
+    for (let y = ty - 12; y <= ty + 8; y++) for (let x = tx - 14; x <= tx + 14; x++) { if (x < 0 || y < 0 || x >= W || y >= H) continue; const dx = (x - tx) / 13, dy = (y - ty + 1) / 6.5, r = Math.sqrt(dx * dx + dy * dy); if (r < 1) SHL[y * W + x] *= .12 + .88 * r * r; }
+    for (let y = ty - 5; y <= ty; y++) for (let x = tx - 1; x <= tx + 1; x++) put(x, y, SOLID, x === tx + 1 ? WALL_D : TRUNK, 26, ty, y >= ty - 1);
+    for (const [cy, r, h] of [[ty - 5, 11, 10], [ty - 12, 8, 8], [ty - 18, 5, 7]]) for (let k = 0; k <= h; k++) { const hw = Math.round(r * (1 - k / h)); for (let x = tx - hw; x <= tx + hw; x++) {
+      const b = k === 0 ? CAN_D : (x < tx ? CAN_A : (x === tx && hash2(x, cy - k) < .5 ? CAN_A : CAN_B)); put(x, cy - k, k === 0 ? SOLID : CANOPY, b, 26, ty, false);
+      if (x >= 0 && x < W && cy - k >= 0 && cy - k < H) thr[(cy - k) * W + x] = 3 + vnoise(x / 2.2, (cy - k) / 1.6) * 9 + bay(x, cy - k) * .35 + (x > tx + hw - 2 ? 3 : 0); } }
+    for (let y = ty - 2; y <= ty + 1; y++) for (let x = tx - 6; x <= tx + 6; x++) if (x >= 0 && x < W && y < H) WOB[y * W + x] = Math.max(WOB[y * W + x], 20); }
+  for (let x = 120; x <= 201; x++) for (let y = 102; y <= 110; y++) { const post = (x - 120) % 10 < 2; let s = SOLID, b = FEN_D;
+    if (post) { b = x % 2 ? FEN_D : FEN_A; if (y === 102) s = FENCETOP; } else if (y === 104 || y === 107) b = FEN_A; else continue; put(x, y, s, b, 8, 110, y >= 108); }
+  for (const [cx, cy] of [[212, 96], [95, 160], [268, 110], [20, 80], [180, 150]]) for (let y = cy - 5; y <= cy + 4; y++) for (let x = cx - 8; x <= cx + 8; x++) { const dx = (x - cx) / 7.5, dy = (y - cy) / 4.5; if (dx * dx + dy * dy < 1) {
+    put(x, y, y <= cy ? ROCKTOP : SOLID, y <= cy ? (x > cx + 2 ? ROCK_B : ROCK_A) : ROCK_C, 6, cy + 4, true); } }
+  const LX = 236, LY = 100; for (let y = 86; y <= LY; y++) put(LX, y, SOLID, LAMP_P, 0, LY, y >= LY - 1);
+  for (let y = 83; y <= 85; y++) for (let x = LX - 1; x <= LX + 1; x++) put(x, y, SOLID, LAMP_L, 0, LY, false); put(LX, 82, ROCKTOP, LAMP_P, 0, LY, false);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const dx = (x - LX) / 34, dy = (y - LY + 3) / 20, r = Math.sqrt(dx * dx + dy * dy); Lm[y * W + x] = Math.pow(Math.max(0, 1 - r), 1.4); }
+  for (let y = 82; y <= 86; y++) for (let x = LX - 2; x <= LX + 2; x++) Lm[y * W + x] = 1;
+  return { S, B, Hgt, O, WOB, Cm, thr, Lm, SHL };
+})();
+
+// exposure bake, the sandbox way: one upwind ray per ground cell. `ray` is in cells. The +2 of the lee length scales with the world.
+function bakeExposureRay(w, wind, ray) { const { W, H, S, E, SHL, WOB, k } = w; const dir = Math.sign(wind), mag = Math.abs(wind);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, s = S[i]; if (!holds(s)) { E[i] = 0; continue; }
+    let e = BASEE[s] * SHL[i];
+    if (cls(s) === 1 && mag > .15) { for (let d = 1; d <= ray; d++) { const sx = x - dir * d; if (sx < 0 || sx >= W) break; const h = WOB[y * W + sx];
+      if (h > 0) { const L = h * 1.1 * mag + 2 * k; if (d < L) { const f = d / L; e *= .15 + .85 * f * f; } else if (d < L * 1.8) e *= 1.12; break; } } }
+    E[i] = Math.min(1.3, e); } }
+// the same result from one sweep per row: carry the height of the last obstacle and the distance to it. Cost does not grow with the ray length.
+function bakeExposureSweep(w, wind, ray) { const { W, H, S, E, SHL, WOB, k } = w; const dir = Math.sign(wind), mag = Math.abs(wind), lee = mag > .15 && dir !== 0;
+  for (let y = 0; y < H; y++) { let h = 0, dist = 1 << 30; const row = y * W;
+    for (let n = 0; n < W; n++) { const x = dir >= 0 ? n : W - 1 - n, i = row + x, s = S[i]; dist++;
+      if (!holds(s)) E[i] = 0; else { let e = BASEE[s] * SHL[i];
+        if (lee && cls(s) === 1 && dist <= ray) { const L = h * 1.1 * mag + 2 * k; if (dist < L) { const f = dist / L; e *= .15 + .85 * f * f; } else if (dist < L * 1.8) e *= 1.12; }
+        E[i] = Math.min(1.3, e); }
+      const ob = WOB[i]; if (ob > 0) { h = ob; dist = 0; } } } }
+// sun shadow bake, the sandbox way: every object cell is projected along its own height
+function bakeShadow(w) { const { W, H, S, SH, Hgt, O } = w; SH.fill(0);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (!Hgt[i] || O[i] < 0) continue; const t = Math.min(O[i] - y, Hgt[i]); if (t < 0) continue;
+    for (let k = 0; k <= t; k += 1) { const sx = Math.round(x + k * .7), sy = Math.round(O[i] + 1 + k * .28); if (sx >= W || sy >= H) break; const j = sy * W + sx; if (holds(S[j]) && cls(S[j]) === 1 && O[j] < 0) SH[j] = 1; } } }
+
+// ---------------- sim (same rules as the sandbox; pick counts times m = cells / 57,600) ----------------
+function mkSim(w) { const { W, H, NP, S, D, P, Wt, E, LIMN, SH } = w, m = NP / 57600;
+  const capOf = s => s === CANOPY ? 14 : MAXD;
+  function deposit(i, a) { const s = S[i]; if (!holds(s)) return; if (Wt[i] > 90 && rnd() < .6) { Wt[i] -= 3; return; } const lim = s === CANOPY ? 14 : Math.min(MAXD, (SOFT * E[i] * LIMN[i] + 6) | 0); if (D[i] >= lim) return; D[i] = Math.min(lim, D[i] + a); if (P[i]) P[i] = P[i] > 14 ? P[i] - 14 : 0; }
+  function pDeposit(n) { for (let k = 0; k < n; k++) { const i = ri(NP); if (rnd() < E[i]) deposit(i, 1); } }
+  function pRelax(n) { for (let k = 0; k < n; k++) { const i = W + 1 + ri(NP - 2 * W - 2); const s = S[i]; if (!holds(s)) continue; const r = ri(4), j = r === 0 ? i + 1 : r === 1 ? i - 1 : r === 2 ? i + W : i - W;
+    if (s === CANOPY || !holds(S[j]) || cls(S[j]) !== cls(s)) continue; if (D[i] > D[j] + 3) { D[i]--; D[j]++; } } }
+  function pCreep(n, dir) { for (let k = 0; k < n; k++) { const i = W + 1 + ri(NP - 2 * W - 2); if (D[i] < 4 || E[i] < .75 * BASEE[S[i]] || P[i] > 100) continue; const j = i + dir;
+    if (holds(S[j]) && cls(S[j]) === cls(S[i]) && D[j] <= D[i] + 2 && D[j] < capOf(S[j])) { D[i]--; D[j]++; } } }
+  function pMelt(n, sunF) { for (let k = 0; k < n; k++) { const i = ri(NP); if (!D[i]) continue;
+    let rate = (SH[i] && sunF > .4 ? .25 : 1) * (P[i] > 100 ? .5 : 1); const s = S[i]; if (s === ROOF || s === ROCKTOP) rate *= 1.4; if (s === CANOPY) rate *= 2.2; if (s === ICE) rate *= 1.3;
+    let c = 0; if (D[i - 1] < 3) c++; if (D[i + 1] < 3) c++; if (D[i - W] < 3) c++; if (D[i + W] < 3) c++; rate *= .35 + c * .5;
+    if (rnd() < rate) { D[i]--; if (cls(s) === 1) Wt[i] = Math.min(255, Wt[i] + 5); if (!D[i]) P[i] = 0; } } }
+  function pEvap(n) { for (let k = 0; k < n; k++) { const i = ri(NP); if (Wt[i] && !D[i]) Wt[i] = Wt[i] > 2 ? Wt[i] - 2 : 0; } }
+  function tick(st) { pDeposit((900 * st.intensity * m) | 0); pRelax((4000 * m) | 0);
+    const wm = Math.abs(st.wind); if (wm > .35 && st.intensity > .05) pCreep((1400 * wm * m) | 0, Math.sign(st.wind));
+    if (st.temp > 0) pMelt((1500 * Math.min(st.temp, 6) / 4 * (.35 + .65 * st.sunF) * m) | 0, st.sunF);
+    pEvap(((st.temp > 0 ? 1600 * (.3 + st.sunF) : 300) * m) | 0); }
+  function picks(st) { const wm = Math.abs(st.wind); return { deposit: (900 * st.intensity * m) | 0, relax: (4000 * m) | 0, creep: (wm > .35 && st.intensity > .05) ? (1400 * wm * m) | 0 : 0, melt: st.temp > 0 ? (1500 * Math.min(st.temp, 6) / 4 * (.35 + .65 * st.sunF) * m) | 0 : 0, evap: ((st.temp > 0 ? 1600 * (.3 + st.sunF) : 300) * m) | 0 }; }
+  // the sandbox stamp: keep a share of the depth under a w x h rectangle, push the rest to nsp rim points
+  function stamp(x, y, sw, sh, keep, packV, nsp) { x |= 0; y |= 0; let spill = 0;
+    for (let yy = 0; yy < sh; yy++) for (let xx = 0; xx < sw; xx++) { const px = x + xx, py = y + yy; if (px < 1 || py < 1 || px >= W - 1 || py >= H - 1) continue; const i = py * W + px; if (cls(S[i]) !== 1) continue;
+      const nd = (D[i] * keep) | 0; spill += D[i] - nd; D[i] = nd; if (nd > 0 || D[i] === 0) P[i] = Math.max(P[i], packV); }
+    if (spill <= 0) return; const per = Math.max(1, (spill / nsp) | 0);
+    for (let k = 0; k < nsp && spill > 0; k++) { const a = rnd() * 6.283, r = Math.max(sw, sh) * .5 + 1.2; const px = Math.round(x + sw / 2 - .5 + Math.cos(a) * r), py = Math.round(y + sh / 2 - .5 + Math.sin(a) * r * .7);
+      if (px < 0 || py < 0 || px >= W || py >= H) continue; const i = py * W + px; if (cls(S[i]) === 1 && P[i] < 200) { D[i] = Math.min(MAXD, D[i] + per); spill -= per; } } }
+  // boot print for a 1:1 field: 3x5 cells with two toe corners cut (13 cells), turned to the walking direction, rim spill to 8 points
+  const BOOT_DX = [new Int8Array([0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 1]), new Int8Array([0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3])], BOOT_DY = [new Int8Array([1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 0]), new Int8Array([0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2])];
+  function stampBoot(x, y, horiz, keep, packV) { x |= 0; y |= 0; let spill = 0; const dxs = BOOT_DX[horiz], dys = BOOT_DY[horiz];
+    for (let n = 0; n < 13; n++) { const px = x + dxs[n], py = y + dys[n]; if (px < 1 || py < 1 || px >= W - 1 || py >= H - 1) continue; const i = py * W + px; if (cls(S[i]) !== 1) continue;
+      const nd = (D[i] * keep) | 0; spill += D[i] - nd; D[i] = nd; P[i] = Math.max(P[i], packV); }
+    if (spill <= 0) return; const per = Math.max(1, (spill / 8) | 0), cx = x + (horiz ? 2 : 1), cy = y + (horiz ? 1 : 2), rx = horiz ? 4.2 : 3, ry = horiz ? 3 : 4.2;
+    for (let k = 0; k < 8 && spill > 0; k++) { const a = rnd() * 6.283; const px = Math.round(cx + Math.cos(a) * rx), py = Math.round(cy + Math.sin(a) * ry);
+      if (px < 0 || py < 0 || px >= W || py >= H) continue; const i = py * W + px; if (cls(S[i]) === 1 && P[i] < 200) { D[i] = Math.min(MAXD, D[i] + per); spill -= per; } } }
+  return { m, deposit, pDeposit, pRelax, pCreep, pMelt, pEvap, tick, picks, stamp, stampBoot };
+}
+
+// ---------------- worlds: the sandbox scene resampled to W x (W * 9 / 16) cells ----------------
+const WORLDS = {};
+function world(W) { if (WORLDS[W]) return WORLDS[W];
+  const k = W / 320, H = Math.round(180 * k), NP = W * H;
+  const w = { W, H, NP, k, S: new Uint8Array(NP), B: new Uint8Array(NP), D: new Uint8Array(NP), P: new Uint8Array(NP), Wt: new Uint8Array(NP), E: new Float32Array(NP), SHL: new Float32Array(NP), SH: new Uint8Array(NP),
+    Hgt: new Uint8Array(NP), O: new Int16Array(NP), WOB: new Uint8Array(NP), Cm: new Uint8Array(NP), thr: new Float32Array(NP), Lm: new Float32Array(NP), LIMN: new Float32Array(NP) };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const sx = Math.min(319, (x / k) | 0), sy = Math.min(179, (y / k) | 0), j = sy * 320 + sx, i = y * W + x;
+    w.S[i] = base.S[j]; w.B[i] = base.B[j]; w.Hgt[i] = Math.min(255, Math.round(base.Hgt[j] * k)); w.O[i] = base.O[j] < 0 ? -1 : Math.round((base.O[j] + 1) * k) - 1; w.WOB[i] = Math.min(255, Math.round(base.WOB[j] * k));
+    w.Cm[i] = base.Cm[j]; w.SHL[i] = base.SHL[j]; w.thr[i] = base.thr[j] + (bay(x, y) - bay(sx, sy)) * .5; w.Lm[i] = base.Lm[j]; w.LIMN[i] = .8 + .4 * vnoise(x / k / 9 + 30, y / k / 7 + 11); }
+  w.rebake = () => { bakeExposureRay(w, -.5, Math.round(28 * k)); bakeShadow(w); }; w.rebake();
+  const { S, D, P, Wt, E } = w;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, s = S[i]; if (!holds(s)) continue; const u = x / k, v = y / k;
+    let d = E[i] * (8 + 70 * Math.pow(vnoise(u / 23 + 3, v / 17 + 9), 1.5)) + hash2(x, y) * 4; if (vnoise(u / 31 + 50, v / 27 + 80) < .33) d *= .12;
+    D[i] = Math.min(s === CANOPY ? 14 : MAXD, d | 0); if (D[i] < 3 && cls(s) === 1) Wt[i] = (120 * vnoise(u / 15 + 7, v / 15 + 70)) | 0; }
+  const saveRs = RS[0]; RS[0] = 99991 + W; const sim = fresh(mkSim)(w);
+  for (let n = 0; n < 12; n++) { let x = rnd() * W, y = rnd() * H, a = rnd() * 6.283; for (let st = 0; st < 150; st++) { a += (rnd() - .5) * .6; x += Math.cos(a) * 4 * k; y += Math.sin(a) * 4 * k; if (x < 2 || y < 2 || x >= W - 4 * k || y >= H - 4 * k) { a += 3.14; continue; } const q = Math.max(1, Math.round(2 * k)); sim.stamp(x, y, q, q, .3, 255, 6); } }
+  for (let n = 0; n < 150; n++) sim.tick({ intensity: 1, wind: .6, temp: -3.5, sunF: 0 });
+  RS[0] = saveRs;
+  w.D0 = D.slice(); w.P0 = P.slice(); w.Wt0 = Wt.slice(); w.restore = () => { D.set(w.D0); P.set(w.P0); Wt.set(w.Wt0); };
+  let cov = 0, hold = 0, mean = 0; for (let i = 0; i < NP; i++) if (holds(S[i])) { hold++; mean += D[i]; if (D[i] > 1 + BAYER[i & 15] * .7) cov++; }
+  w.stats = { cells: NP, holding_cells: hold, covered_share: +(cov / hold).toFixed(3), mean_depth: +(mean / hold).toFixed(1) };
+  // ground positions for stamps
+  w.GP = new Int32Array(4096); for (let n = 0; n < 4096;) { const x = 4 + ri(W - 12), y = 4 + ri(H - 12); if (cls(S[y * W + x]) === 1) w.GP[n++] = y * W + x; }
+  return WORLDS[W] = w; }
+
+// ---------------- art contexts: buffers at the output (art) resolution ----------------
+const ARTS = {};
+function art(AW) { if (ARTS[AW]) return ARTS[AW]; const w = world(AW), W = w.W, H = w.H, NP = W * H;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d', { willReadFrequently: true }); const img = ctx.createImageData(W, H);
+  const A = { W, H, NP, w, cv, ctx, img, out32: new Uint32Array(img.data.buffer), IDX: new Uint8Array(NP), SPR: new Uint8Array(NP), DU: new Uint8Array(NP), CV: new Uint8Array(NP), LmB: new Uint8Array(NP) };
+  for (let i = 0; i < NP; i++) A.LmB[i] = Math.round(w.Lm[i] * 255);
+  return ARTS[AW] = A; }
+
+// thresholds: 4x4 Bayer in depth units, and four 32x32 "art threshold tiles" (clustered blobs, values 1..30), one picked per tile by a hash
+const BAYT = new Uint8Array(16); for (let i = 0; i < 16; i++) BAYT[i] = 1 + Math.round(BAYER[i] * .7);
+const TT = new Uint8Array(4 * 1024), TV = new Uint8Array(32 * 32);
+for (let v = 0; v < 4; v++) for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const pn = (px, py) => { const xi = Math.floor(px), yi = Math.floor(py), fx = px - xi, fy = py - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), h = (a, b) => hash2((a & 7) + v * 17, (b & 7) + v * 31);
+    const a = h(xi, yi), b = h(xi + 1, yi), c = h(xi, yi + 1), d = h(xi + 1, yi + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
+  TT[(v << 10) | (y << 5) | x] = 1 + Math.min(29, Math.floor(pn((x >> 1) / 2, (y >> 1) / 2) * 24 + (hash2(x >> 1, (y >> 1) + v * 5) < .08 ? 6 : 0))); }
+for (let i = 0; i < 1024; i++) TV[i] = (hash2(i & 31, i >> 5) * 4) | 0;
+
+// bilinear tables for a field of FW cells drawn at W pixels (W = FW << sh). Weights are in units of 1 / (2 << sh).
+function bilTables(W, H, FW, FH, sh) { const K = 1 << sh, den = 2 * K, X0 = new Int32Array(W), X1 = new Int32Array(W), WX = new Int32Array(W), Y0 = new Int32Array(H), Y1 = new Int32Array(H), WY = new Int32Array(H);
+  for (let x = 0; x < W; x++) { const n = 2 * x + 1 - K, x0 = Math.floor(n / den); WX[x] = n - x0 * den; X0[x] = Math.max(0, x0); X1[x] = Math.min(FW - 1, x0 + 1); }
+  for (let y = 0; y < H; y++) { const n = 2 * y + 1 - K, y0 = Math.floor(n / den); WY[y] = n - y0 * den; Y0[y] = Math.max(0, y0) * FW; Y1[y] = Math.min(FH - 1, y0 + 1) * FW; }
+  return { X0, X1, WX, Y0, Y1, WY, den, shift: 2 * (sh + 1) }; }
+
+// ground pass generator. One specialised loop per variant, so no option is tested per pixel.
+// A = art context, F = { D, W, H } field. o = { samp: 'near' | 'bil', thr: 'bayer' | 'art', shade: 'flat' | 'emboss', rgba: bool }
+function mkGround(A, F, o) { const sh = Math.round(Math.log2(A.W / F.W)), W = A.W, H = A.H, FW = F.W, FH = F.H; const T = o.samp === 'bil' ? bilTables(W, H, FW, FH, sh) : {};
+  let rowPre = '', px = '';
+  if (o.samp === 'near') { if (sh === 0) { rowPre += 'const fyy=y,frow=row;'; px += 'const fx=x,c=i,d=D[i];'; } else { rowPre += `const fyy=y>>${sh},frow=fyy*FW;`; px += `const fx=x>>${sh},c=frow+fx,d=D[c];`; } }
+  else { rowPre += `const y0=Y0[y],y1=Y1[y],wy=WY[y],iwy=${T.den}-wy,fyy=y>>${sh},frow=fyy*FW;`;
+    px += `const x0=X0[x],x1=X1[x],wx=WX[x],iwx=${T.den}-wx,fx=x>>${sh},c=frow+fx,d=((D[y0+x0]*iwx+D[y0+x1]*wx)*iwy+(D[y1+x0]*iwx+D[y1+x1]*wx)*wy)>>${T.shift};`; }
+  if (o.thr === 'bayer') { rowPre += 'const by=(y&3)<<2;'; px += 'const t=BAY[by|(x&3)];'; }
+  else { rowPre += 'const tr=(y>>5)<<5,ty=(y&31)<<5;'; px += 'const t=TT[(TV[tr|(x>>5)]<<10)|ty|(x&31)];'; }
+  const snow = o.shade === 'flat' ? `idx=${SN_BASE};`
+    : `if(fx>0&&fx<FW1&&fyy>0&&fyy<FH1){const sl=(D[c+1]-D[c-1])+(D[c+FW]-D[c-FW]);idx=d<t+4?${SN_BASE}:sl>6?${SN_HI}:sl>=-6?${SN_BASE}:${SN_SH};}else idx=${SN_BASE};`;
+  const outw = o.rgba ? 'out32[i]=pal[idx];' : 'IDX[i]=idx;';
+  const src = `/*${++FRESH_N}*/const FW1=FW-1,FH1=FH-1;return function(){for(let y=0;y<H;y++){const row=y*W;${rowPre}for(let x=0;x<W;x++){const i=row+x;let idx;if(S[i]>=9)idx=B[i];else{${px}if(d>t){${snow}}else idx=B[i];}${outw}}}}`;
+  return new Function('S', 'B', 'D', 'IDX', 'out32', 'pal', 'W', 'H', 'FW', 'FH', 'BAY', 'TT', 'TV', 'X0', 'X1', 'WX', 'Y0', 'Y1', 'WY', src)(A.w.S, A.w.B, F.D, A.IDX, A.out32, pal, W, H, FW, FH, BAYT, TT, TV, T.X0, T.X1, T.WX, T.Y0, T.Y1, T.WY); }
+// upsample the field to an art-resolution depth buffer (bilinear), for two-pass renderers
+function mkUpsample(A, F) { const sh = Math.round(Math.log2(A.W / F.W)), W = A.W, H = A.H, T = bilTables(W, H, F.W, F.H, sh), { X0, X1, WX, Y0, Y1, WY, den, shift } = T, D = F.D, DU = A.DU;
+  return function () { for (let y = 0; y < H; y++) { const row = y * W, y0 = Y0[y], y1 = Y1[y], wy = WY[y], iwy = den - wy; for (let x = 0; x < W; x++) { const x0 = X0[x], x1 = X1[x], wx = WX[x], iwx = den - wx;
+    DU[row + x] = ((D[y0 + x0] * iwx + D[y0 + x1] * wx) * iwy + (D[y1 + x0] * iwx + D[y1 + x1] * wx) * wy) >> shift; } } }; }
+// the same for a 1:2 field with the fixed 9/3/3/1 weights: one vertical blend per field cell, then two output pixels from a sliding window
+function mkUpsample2(A, F) { const W = A.W, H = A.H, FW = F.W, FH = F.H, D = F.D, DU = A.DU;
+  return function () { for (let y = 0; y < H; y++) { const fy = y >> 1, rowA = fy * FW, rowB = ((y & 1) ? Math.min(FH - 1, fy + 1) : Math.max(0, fy - 1)) * FW; let o = y * W, vc = 3 * D[rowA] + D[rowB], vp = vc;
+    for (let fx = 0; fx < FW; fx++) { const vn = fx < FW - 1 ? 3 * D[rowA + fx + 1] + D[rowB + fx + 1] : vc; DU[o++] = (3 * vc + vp + 8) >> 4; DU[o++] = (3 * vc + vn + 8) >> 4; vp = vc; vc = vn; } } }; }
+// the VFX #1 ground loop, copied from the sandbox render(): per-pixel float threshold, 4-neighbour emboss with class checks, 5 snow shades + 2 packed, wet, shadow, sparkle
+function mkPort(A) { const { W, H, IDX } = A, { S, B, D, P, Wt, thr, SH } = A.w;
+  return function (shadowOn, sparkOn, slot) {
+    for (let y = 0; y < H; y++) { const row = y * W; for (let x = 0; x < W; x++) { const i = row + x, s = S[i]; let idx;
+      if (s >= SOLID) idx = B[i];
+      else { const d = D[i];
+        if (d > thr[i]) { const k = cls(s), l = x > 0 && cls(S[i - 1]) === k ? D[i - 1] : d, r = x < W - 1 && cls(S[i + 1]) === k ? D[i + 1] : d, u = y > 0 && cls(S[i - W]) === k ? D[i - W] : d, dn = y < H - 1 && cls(S[i + W]) === k ? D[i + W] : d;
+          const sl = (r - l) + (dn - u);
+          if (P[i] > 110) idx = sl < -5 ? SN_PSH : SN_PACK; else if (d < thr[i] + 4) idx = SN_BASE; else idx = sl > 6 ? SN_HI : sl >= -6 ? SN_BASE : sl >= -13 ? SN_MID : sl >= -22 ? SN_SH : SN_DEEP;
+          if (s === CANOPY && B[i] === CAN_B) idx = SN_MID;
+          else if (s === ROCKTOP && S[i + W] === ROCKTOP && (S[i - W] <= ICE || S[i - 1] <= ICE || S[i + 1] <= ICE)) idx = SN_MID;
+          if (sparkOn && sl >= 0 && ((Math.imul(i ^ slot, 2246822519) >>> 23) === 0)) idx = SPARK;
+          if (shadowOn && SH[i]) idx += N; }
+        else { idx = B[i]; let v = 0; if (shadowOn && SH[i]) v = 1; if (Wt[i] > 50) v += 2; idx += v * N; } }
+      IDX[i] = idx; } } }; }
+// the 32 px renderer for a coarse field. Pass 1: bilinear depth against the art threshold tile, stored as a coverage byte.
+// Pass 2: edge shadow line (south and east), highlight rim (north and west), 3 bands by depth, packed, wet, sun shadow, sparkle.
+function mkFull(A, F, fast) { const sh = Math.round(Math.log2(A.W / F.W)), W = A.W, H = A.H, FW = F.W, FH = F.H, T = bilTables(W, H, FW, F.H, sh), { X0, X1, WX, Y0, Y1, WY, den, shift } = T;
+  const { S, B } = A.w, IDX = A.IDX, CV = A.CV, D = F.D, P = F.P, Wt = F.Wt, SHf = F.SH, W1 = W - 1, H1 = H - 1;
+  return function (shadowOn, sparkOn, slot) {
+    if (fast) for (let y = 0; y < H; y++) { const fy = y >> 1, rowA = fy * FW, rowB = ((y & 1) ? Math.min(FH - 1, fy + 1) : Math.max(0, fy - 1)) * FW, tr = (y >> 5) << 5, ty = (y & 31) << 5; let i = y * W, vc = 3 * D[rowA] + D[rowB], vp = vc;
+      for (let fx = 0; fx < FW; fx++) { const vn = fx < FW - 1 ? 3 * D[rowA + fx + 1] + D[rowB + fx + 1] : vc, x = fx << 1, tb = (TV[tr | (x >> 5)] << 10) | ty, d0 = (3 * vc + vp + 8) >> 4, d1 = (3 * vc + vn + 8) >> 4;
+        CV[i] = S[i] < 9 && d0 > TT[tb | (x & 31)] ? d0 : 0; i++; CV[i] = S[i] < 9 && d1 > TT[tb | ((x + 1) & 31)] ? d1 : 0; i++; vp = vc; vc = vn; } }
+    else for (let y = 0; y < H; y++) { const row = y * W, y0 = Y0[y], y1 = Y1[y], wy = WY[y], iwy = den - wy, tr = (y >> 5) << 5, ty = (y & 31) << 5;
+      for (let x = 0; x < W; x++) { const i = row + x; if (S[i] >= 9) { CV[i] = 0; continue; } const x0 = X0[x], x1 = X1[x], wx = WX[x], iwx = den - wx;
+        const d = ((D[y0 + x0] * iwx + D[y0 + x1] * wx) * iwy + (D[y1 + x0] * iwx + D[y1 + x1] * wx) * wy) >> shift; CV[i] = d > TT[(TV[tr | (x >> 5)] << 10) | ty | (x & 31)] ? d : 0; } }
+    for (let y = 0; y < H; y++) { const row = y * W, frow = (y >> sh) * FW;
+      for (let x = 0; x < W; x++) { const i = row + x, s = S[i]; let idx;
+        if (s >= 9) idx = B[i];
+        else { const c = frow + (x >> sh), d = CV[i];
+          if (d) { if (P[c] > 110) idx = (y < H1 && !CV[i + W]) ? SN_PSH : SN_PACK;
+            else if (y < H1 && x < W1 && (!CV[i + W] || !CV[i + 1])) idx = SN_SH;
+            else if (y > 0 && x > 0 && (!CV[i - W] || !CV[i - 1])) idx = SN_HI;
+            else idx = d < 30 ? SN_MID : d < 80 ? SN_BASE : SN_HI;
+            if (sparkOn && ((Math.imul(i ^ slot, 2246822519) >>> 23) === 0)) idx = SPARK;
+            if (shadowOn && SHf[c]) idx += N; }
+          else { idx = B[i]; let v = 0; if (shadowOn && SHf[c]) v = 1; if (Wt[c] > 50) v += 2; idx += v * N; } }
+        IDX[i] = idx; } } }; }
+// palette pass. V1 is the sandbox loop (float lamp mask, one divide per pixel). Opt uses a byte lamp mask and one 512-entry table.
+function mkPalV1(A) { const { IDX, out32, NP, W } = A, Lm = A.w.Lm;
+  return function (lampOn, nf) { for (let i = 0; i < NP; i++) { const idx = IDX[i]; out32[i] = (lampOn && Lm[i] * nf * 22 > BAYER[((i / W | 0) & 3) * 4 + (i & 3)]) ? palLamp[idx] : pal[idx]; } }; }
+function mkPalPlain(A) { const { IDX, out32, NP } = A; return function () { for (let i = 0; i < NP; i++) out32[i] = pal[IDX[i]]; }; }
+function mkPalOpt(A) { const { IDX, out32, NP, W, H, LmB } = A, PAL2 = new Uint32Array(512), BQ = new Float32Array(16); for (let i = 0; i < 16; i++) BQ[i] = BAYER[i] * 255 / 22;
+  return function (lampOn, nf) { if (!lampOn) { for (let i = 0; i < NP; i++) out32[i] = pal[IDX[i]]; return; }
+    PAL2.set(pal); PAL2.set(palLamp, 256);
+    for (let y = 0; y < H; y++) { const row = y * W, by = (y & 3) << 2; for (let x = 0; x < W; x++) { const i = row + x; out32[i] = PAL2[(LmB[i] * nf > BQ[by | (x & 3)] ? 256 : 0) | IDX[i]]; } } }; }
+
+// ---------------- characters ----------------
+const PL_FRONT = ["..hhh..", ".hhhhh.", ".HHHHH.", ".seses.", ".sssss.", "yyyyyyy", "cyccccc", "ccccccc", ".CcccC."];
+const PL_BACK = ["..hhh..", ".hhhhh.", ".HHHHH.", ".hhhhh.", ".sssss.", "yyyyyyy", "ccccccy", "ccccccc", ".CcccC."];
+const PL_SIDE = ["..hhh..", ".hhhhh.", ".HHHHH.", "..ssse.", "..ssss.", ".yyyyy.", "ycccc..", ".cccc..", ".CccC.."];
+const LEGS_F = [[".ll.ll.", ".ll.ll.", ".bb.bb."], [".ll.ll.", "..l.ll.", "..b.bb."], [".ll.ll.", ".ll.l..", ".bb.b.."]];
+const LEGS_S = [["..ll...", "..ll...", "..bbb.."], [".l..l..", ".l...l.", "bb...bb"], ["..ll...", ".ll....", ".bb...."]];
+const PMAP = { h: HAT, H: HATB, s: SKIN, e: EYE, y: SCARF, c: COAT, C: COAT2, l: LEG, b: BOOT };
+// 7x12 frames as bytes: dir 0 down, 1 up, 2 left, 3 right; 4 walk frames (0,1,0,2 of the sandbox)
+const SP7 = { w: 7, h: 12, maxSink: 4, sinkUnit: 22, shRows: 1, shHalf: 2, rimRows: 1, rimHalf: 3, frames: [] };
+for (let d = 0; d < 4; d++) { const fr = []; for (let f = 0; f < 4; f++) { const lf = [0, 1, 0, 2][f], rows = (d === 0 ? PL_FRONT : d === 1 ? PL_BACK : PL_SIDE).concat((d < 2 ? LEGS_F : LEGS_S)[lf]), a = new Uint8Array(84);
+  for (let r = 0; r < 12; r++) for (let c = 0; c < 7; c++) { const ch = rows[r][d === 2 ? 6 - c : c]; a[r * 7 + c] = ch === '.' ? 0 : PMAP[ch]; } fr.push(a); } SP7.frames.push(fr); }
+// 24x32 frames built in code: hat, head, scarf, coat with arms, two legs that swing, boots, 1 px dark outline
+const SP24 = { w: 24, h: 32, maxSink: 8, sinkUnit: 16, shRows: 2, shHalf: 8, rimRows: 2, rimHalf: 9, frames: [] };
+for (let d = 0; d < 4; d++) { const fr = []; for (let f = 0; f < 4; f++) { const a = new Uint8Array(768), set = (x, y, v) => { if (x >= 0 && x < 24 && y >= 0 && y < 32) a[y * 24 + x] = v; };
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 24; x++) { const dx = x - 11.5, dy = y - 8; let v = 0;
+    if (dx * dx + dy * dy < 42) v = y < 6 ? HAT : y < 8 ? HATB : (d === 1 ? HAT : SKIN);
+    else if (y >= 14 && y < 16 && Math.abs(dx) < 7) v = SCARF;
+    else if (y >= 16 && y < 25 && Math.abs(dx) < (d >= 2 ? 6 : 8)) v = Math.abs(dx) > (d >= 2 ? 4.5 : 6) ? COAT2 : COAT;
+    else if (y >= 25) { const lift = f === 1 ? [2, 0] : f === 3 ? [0, 2] : [0, 0]; for (let l = 0; l < 2; l++) { const lx = d >= 2 ? (l ? 12 + (f & 1 ? 3 : 0) : 9 - (f & 1 ? 3 : 0)) : (l ? 13 : 7); if (x >= lx && x < lx + 4 && y < 32 - lift[l]) v = y >= 30 - lift[l] ? BOOT : LEG; } }
+    if (v) set(d === 2 ? 23 - x : x, y, v); }
+  if (d !== 1) { set(d === 2 ? 14 : 9, 8, EYE); if (d === 0) set(14, 8, EYE); }
+  const o = a.slice(); for (let y = 0; y < 32; y++) for (let x = 0; x < 24; x++) if (!o[y * 24 + x] && ((x > 0 && o[y * 24 + x - 1]) || (x < 23 && o[y * 24 + x + 1]) || (y > 0 && o[y * 24 + x - 24]) || (y < 31 && o[y * 24 + x + 24]))) a[y * 24 + x] = EYE;
+  fr.push(a); } SP24.frames.push(fr); }
+const opaqueShare = SP => { let n = 0; const a = SP.frames[0][0]; for (let i = 0; i < a.length; i++) if (a[i]) n++; return +(n / a.length).toFixed(3); };
+function mkActors(n, A) { const a = [], sp = (38 / 60) * (A.W / 320); for (let k = 0; k < n; k++) { const ang = rnd() * 6.283; a.push({ x: 20 + rnd() * (A.W - 40), y: 40 + rnd() * (A.H - 50), vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, anim: rnd() * 4, dir: 0, ph: k }); } return a; }
+function moveActors(a, A) { const W = A.W, H = A.H; for (let n = 0; n < a.length; n++) { const e = a[n]; e.x += e.vx; e.y += e.vy; if (e.x < 16) e.vx = Math.abs(e.vx); else if (e.x > W - 16) e.vx = -Math.abs(e.vx); if (e.y < 36) e.vy = Math.abs(e.vy); else if (e.y > H - 4) e.vy = -Math.abs(e.vy);
+  e.anim += .13; e.dir = Math.abs(e.vx) > Math.abs(e.vy) ? (e.vx > 0 ? 3 : 2) : (e.vy > 0 ? 0 : 1); } }
+// y-sort, sink from the field depth under the feet, contact shadow, body clipped at the bottom and hidden behind objects, snow rim
+function mkDrawActors(A, F, sh, SP) { const { W, H, IDX, SPR } = A, O = A.w.O, D = F.D, Sf = F.S, FW = F.W, FH = F.H, sw = SP.w, shh = SP.h, hw = sw >> 1;
+  return function (ents) { ents.sort((a, b) => a.y - b.y);
+  for (let n = 0; n < ents.length; n++) { const e = ents[n], x = Math.round(e.x), y = Math.round(e.y), fx = x >> sh, fy = y >> sh; let d = 0;
+    if (fx > 0 && fx < FW - 1 && fy >= 0 && fy < FH) { const c = fy * FW + fx; d = ((cls(Sf[c - 1]) === 1 ? D[c - 1] : 0) + (cls(Sf[c]) === 1 ? D[c] : 0) + (cls(Sf[c + 1]) === 1 ? D[c + 1] : 0)) / 3; }
+    const sink = Math.min(SP.maxSink, (d / SP.sinkUnit) | 0), rows = shh - sink, top = y - shh + 1 + sink, fr = SP.frames[e.dir][(e.anim | 0) & 3], x0 = x - hw;
+    for (let r = 1; r <= SP.shRows; r++) { const py = y + r; if (py >= H) break; for (let xx = -SP.shHalf; xx <= SP.shHalf; xx++) { const px = x + xx; if (px < 0 || px >= W) continue; const i = py * W + px; if (O[i] <= y && IDX[i] < N) IDX[i] += N; } }
+    for (let r = 0; r < rows; r++) { const py = top + r; if (py < 0 || py >= H) continue; let s = r * sw, i = py * W + x0; for (let c = 0; c < sw; c++, s++, i++) { const v = fr[s]; if (!v) continue; const px = x0 + c; if (px < 0 || px >= W) continue; if (O[i] > y) continue; IDX[i] = v; SPR[i] = 1; } }
+    if (sink > 0) for (let r = 0; r < SP.rimRows; r++) { const py = y - r; if (py < 0 || py >= H) continue; for (let xx = -SP.rimHalf; xx <= SP.rimHalf; xx++) { const px = x + xx; if (px < 0 || px >= W) continue; const i = py * W + px; if (O[i] <= y) { IDX[i] = (xx === -SP.rimHalf || xx === SP.rimHalf) ? SN_MID : SN_HI; SPR[i] = 1; } } } } }; }
+// the sandbox character draw as written: string templates, one map lookup per pixel, arrays built per character per frame
+function mkDrawActorsStr(A, F) { const { W, H, IDX, SPR } = A, O = A.w.O, D = F.D, Sf = F.S;
+  const depthAt = (x, y) => { x |= 0; y |= 0; if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return 0; const i = y * W + x, g = j => cls(Sf[j]) === 1 ? D[j] : 0; return (g(i) + g(i - 1) + g(i + 1)) / 3; };
+  const drawTpl = (rows, map, x0, y0, flip, feetY) => { const h = rows.length, w = rows[0].length; for (let r = 0; r < h; r++) { const row = rows[r], y = y0 + r; if (y < 0 || y >= H) continue;
+    for (let c = 0; c < w; c++) { const ch = row[flip ? w - 1 - c : c]; if (ch === '.') continue; const x = x0 + c; if (x < 0 || x >= W) continue; const i = y * W + x; if (O[i] > feetY) continue; IDX[i] = map[ch]; SPR[i] = 1; } } };
+  return function (ents) { ents.sort((a, b) => a.y - b.y);
+  for (const c of ents) { const x = Math.round(c.x), y = Math.round(c.y); const fr = [0, 1, 0, 2][(c.anim | 0) % 4];
+    let body, legs, flip = false; if (c.dir === 0) { body = PL_FRONT; legs = LEGS_F[fr]; } else if (c.dir === 1) { body = PL_BACK; legs = LEGS_F[fr]; } else { body = PL_SIDE; legs = LEGS_S[fr]; flip = c.dir === 2; }
+    const rows = body.concat(legs), sink = Math.min(4, (depthAt(c.x, c.y) / 22) | 0), vis = rows.slice(0, rows.length - sink); const top = y - rows.length + 1 + sink;
+    for (let xx = -2; xx <= 2; xx++) { const px = x + xx, py = y + 1; if (px >= 0 && px < W && py < H) { const i = py * W + px; if (O[i] <= y && IDX[i] < N) IDX[i] += N; } }
+    drawTpl(vis, PMAP, x - 3, top, flip, y);
+    if (sink > 0) { for (let xx = -3; xx <= 3; xx++) { const px = x + xx, py = y; if (px < 0 || px >= W || py >= H) continue; const i = py * W + px; if (O[i] <= y) { IDX[i] = (xx === -3 || xx === 3) ? SN_MID : SN_HI; SPR[i] = 1; } } } } }; }
+
+// ---------------- flakes ----------------
+// sz: 1 = 1 px, 2 = 2x1, 4 = 2x2 (the sandbox near flake), 5 = 3 px plus. shadow: 0, 1 or 2 px dot on the ground under the flake.
+const LAY_V1 = [{ n: 260, vz: 14, wf: .6, col: FLAKE_F, sz: 1 }, { n: 150, vz: 24, wf: 1, col: FLAKE, sz: 1 }, { n: 46, vz: 42, wf: 1.5, col: FLAKE, sz: 4, shadow: 1 }];
+const LAY_BIG = [{ n: 260, vz: 14, wf: .6, col: FLAKE_F, sz: 2 }, { n: 150, vz: 24, wf: 1, col: FLAKE, sz: 4 }, { n: 46, vz: 42, wf: 1.5, col: FLAKE, sz: 5, shadow: 2 }];
+const times4 = L => L.map(l => Object.assign({}, l, { n: l.n * 4 }));
+const LAY_NEAR32 = [{ n: 60, vz: 42, wf: 1.5, col: FLAKE, sz: 5, shadow: 2 }], LAY_HASH32 = [{ n: 320, vz: 14, wf: .6, col: FLAKE_F, sz: 2 }, { n: 200, vz: 24, wf: 1, col: FLAKE, sz: 4 }];
+function mkFlakes(A, F, sh, layers, simF) { const W = A.W, H = A.H, ks = W / 320, IDX = A.IDX, SPR = A.SPR, E = F.E, FW = F.W;
+  const FL = layers.map(L => ({ x: new Float32Array(L.n), y: new Float32Array(L.n), z: new Float32Array(L.n), ph: new Float32Array(L.n), on: new Uint8Array(L.n) }));
+  const spawn = (f, k, top) => { f.x[k] = rnd() * (W + 60 * ks) - 30 * ks; f.y[k] = rnd() * (H + 70 * ks); f.z[k] = (top ? 60 + rnd() * 10 : rnd() * 70) * ks; f.ph[k] = rnd() * 6.28; };
+  FL.forEach(f => { for (let k = 0; k < f.x.length; k++) { spawn(f, k, false); f.on[k] = 1; } });
+  let frameN = 0, count = 0; for (const L of layers) count += L.n;
+  function update(dt, wind, intensity) { frameN++; for (let l = 0; l < layers.length; l++) { const L = layers[l], f = FL[l], active = Math.round(L.n * Math.min(1, intensity * 1.1));
+    for (let k = 0; k < L.n; k++) { if (!f.on[k]) { if (k < active && rnd() < dt * 2) { spawn(f, k, true); f.on[k] = 1; } continue; }
+      f.z[k] -= L.vz * ks * dt * (.85 + .3 * Math.sin(f.ph[k])); f.x[k] += (wind * 22 * L.wf + Math.sin(f.ph[k] + frameN * .05) * 4) * ks * dt; f.y[k] += Math.cos(f.ph[k] * 1.3 + frameN * .03) * 1.5 * ks * dt;
+      if (f.z[k] <= 0) { const x = f.x[k] | 0, y = f.y[k] | 0; if (x >= 0 && y >= 0 && x < W && y < H) { const i = (y >> sh) * FW + (x >> sh); if (rnd() < E[i]) simF.deposit(i, 2); }
+        if (k < active) spawn(f, k, true); else f.on[k] = 0; }
+      if (f.x[k] < -40 * ks) f.x[k] += W + 70 * ks; else if (f.x[k] > W + 40 * ks) f.x[k] -= W + 70 * ks; } } }
+  function draw() { for (let l = 0; l < layers.length; l++) { const L = layers[l], f = FL[l], sz = L.sz, sd = L.shadow | 0, c = L.col;
+    for (let k = 0; k < L.n; k++) { if (!f.on[k]) continue; const gx = f.x[k] | 0, gy = f.y[k] | 0, x = gx, y = (f.y[k] - f.z[k]) | 0;
+      if (sd && gx >= 0 && gy >= 0 && gx < W - 1 && gy < H) { const i = gy * W + gx; if (!SPR[i] && IDX[i] < N) IDX[i] += N; if (sd === 2) { const j = i + 1; if (!SPR[j] && IDX[j] < N) IDX[j] += N; } }
+      if (x < 1 || y < 1 || x >= W - 2 || y >= H - 2) continue; const i = y * W + x;
+      if (sz === 1) { IDX[i] = c; SPR[i] = 1; }
+      else if (sz === 2) { IDX[i] = c; IDX[i + 1] = c; SPR[i] = SPR[i + 1] = 1; }
+      else if (sz === 4) { IDX[i] = c; IDX[i + 1] = c; IDX[i + W] = c; IDX[i + W + 1] = FLAKE_F; SPR[i] = SPR[i + 1] = SPR[i + W] = SPR[i + W + 1] = 1; }
+      else { IDX[i] = c; IDX[i - 1] = c; IDX[i + 1] = c; IDX[i - W] = c; IDX[i + W] = c; SPR[i] = SPR[i - 1] = SPR[i + 1] = SPR[i - W] = SPR[i + W] = 1; } } } }
+  return { update, draw, count, FL, layers }; }
+// stateless far layers: position comes from a per-flake seed and the time, nothing is stored or updated
+function mkHashFlakes(A, layers) { const W = A.W, H = A.H, ks = W / 320, IDX = A.IDX, SPR = A.SPR, PW = W + 16, PH = H + 16;
+  const SD = layers.map((L, l) => { const hx = new Float32Array(L.n), hy = new Float32Array(L.n), ph = new Float32Array(L.n); for (let k = 0; k < L.n; k++) { hx[k] = hash2(k, 11 + l) * PW; hy[k] = hash2(k, 23 + l) * PH; ph[k] = hash2(k, 37 + l) * 6.28; } return { hx, hy, ph }; });
+  let count = 0; for (const L of layers) count += L.n;
+  function pos(l, k, t, wind, out) { const L = layers[l], s = SD[l]; let x = (s.hx[k] + t * wind * 22 * L.wf * ks + Math.sin(s.ph[k] + t * 3) * 4 * ks) % PW; if (x < 0) x += PW; out[0] = (x | 0) - 8; out[1] = (((s.hy[k] + t * L.vz * ks) % PH) | 0) - 8; }
+  function draw(t, wind) { for (let l = 0; l < layers.length; l++) { const L = layers[l], s = SD[l], hx = s.hx, hy = s.hy, ph = s.ph, sz = L.sz, c = L.col, dx = t * wind * 22 * L.wf * ks, dy = t * L.vz * ks;
+    for (let k = 0; k < L.n; k++) { let xf = (hx[k] + dx + Math.sin(ph[k] + t * 3) * 4 * ks) % PW; if (xf < 0) xf += PW; const x = (xf | 0) - 8, y = (((hy[k] + dy) % PH) | 0) - 8;
+      if (x < 1 || y < 1 || x >= W - 2 || y >= H - 2) continue; const i = y * W + x;
+      if (sz === 1) { IDX[i] = c; SPR[i] = 1; } else if (sz === 2) { IDX[i] = c; IDX[i + 1] = c; SPR[i] = SPR[i + 1] = 1; }
+      else { IDX[i] = c; IDX[i + 1] = c; IDX[i + W] = c; IDX[i + W + 1] = FLAKE_F; SPR[i] = SPR[i + 1] = SPR[i + W] = SPR[i + W + 1] = 1; } } } }
+  return { draw, pos, count, layers }; }
+
+// ---------------- whole frames ----------------
+const SNOW = { intensity: 1, wind: .6, temp: -3.5, sunF: 0 }, THAW = { intensity: 0, wind: .2, temp: 6, sunF: .9 }, ALL5 = null;
+const LAYER_NAMES = ['sim tick', 'actors move + prints', 'flakes update', 'palette build', 'ground render', 'actors draw', 'flakes draw', 'palette pass', 'putImageData'];
+// p0 = the VFX #1 engine at 320x180. p1 = naive 1:1 port at 640x360. p2 = field 1:2 (320x180), bilinear + art threshold, CPU render at 640x360.
+function mkFrame(preset, crowd) { const AW = preset === 'p0' ? 320 : 640, A = art(AW), F = world(preset === 'p2' ? 320 : AW), sh = preset === 'p2' ? 1 : 0, sim = fresh(mkSim)(F), ents = mkActors(3 + crowd, A);
+  const ground = preset === 'p2' ? fresh(mkFull)(A, F, true) : fresh(mkPort)(A), palF = preset === 'p2' ? fresh(mkPalOpt)(A) : fresh(mkPalV1)(A), drawA = preset === 'p0' ? fresh(mkDrawActorsStr)(A, F) : fresh(mkDrawActors)(A, F, sh, SP24);
+  const fl = preset === 'p0' ? fresh(mkFlakes)(A, F, 0, LAY_V1, sim) : preset === 'p1' ? fresh(mkFlakes)(A, F, 0, times4(LAY_V1), sim) : fresh(mkFlakes)(A, F, 1, LAY_NEAR32, sim), hf = preset === 'p2' ? fresh(mkHashFlakes)(A, LAY_HASH32) : null;
+  let k = 0; F.restore();
+  return function (L) {
+    sim.tick(SNOW); if ((++k & 255) === 0) F.restore(); L && L(0);
+    moveActors(ents, A);
+    for (let n = 0; n < ents.length; n++) { const e = ents[n]; if (((k + e.ph * 7) % 24) !== 0) continue; const side = (k / 24 | 0) & 1 ? 1 : -1, horiz = e.dir >= 2 ? 1 : 0;
+      if (preset === 'p0') sim.stamp(e.x + (horiz ? 0 : side * 1.5) - 1, e.y + (horiz ? side * .8 : 0) - 1, 2, 2, .3, 255, 6);
+      else if (preset === 'p1') sim.stampBoot(e.x + (horiz ? -2 : side * 4 - 1), e.y + (horiz ? side * 3 - 1 : -2), horiz, .3, 255);
+      else sim.stamp(((e.x + (horiz ? -2 : side * 4 - 1)) >> 1), ((e.y + (horiz ? side * 3 - 1 : -2)) >> 1), horiz ? 3 : 2, horiz ? 2 : 3, .3, 255, 6); }
+    L && L(1);
+    fl.update(1 / 60, SNOW.wind, SNOW.intensity); L && L(2);
+    const nf = buildPalette(17.5 * 60, 'heavy', SNOW.intensity), lampOn = nf > .25; L && L(3);
+    ground(false, false, (k >> 3) * 2654435761); L && L(4);
+    A.SPR.fill(0); drawA(ents); L && L(5);
+    fl.draw(); if (hf) hf.draw(k / 60, SNOW.wind); L && L(6);
+    palF(lampOn, nf); L && L(7);
+    A.ctx.putImageData(A.img, 0, 0); sync(A.ctx); L && L(8);
+  }; }
+function layerBreakdown(frame, frames) { const acc = new Float64Array(LAYER_NAMES.length); let t = 0; const L = i => { const n = performance.now(); acc[i] += n - t; t = n; };
+  for (let f = 0; f < 60; f++) frame(null);
+  for (let f = 0; f < frames; f++) { t = performance.now(); frame(L); }
+  const o = {}; LAYER_NAMES.forEach((nm, i) => o[nm] = +(acc[i] / frames).toFixed(4)); return o; }
+
+// ---------------- CPU run ----------------
+function runCPU(opts = {}) {
+  const only = opts.only ? new RegExp(opts.only) : null, out = { info: { userAgent: navigator.userAgent, cores: navigator.hardwareConcurrency, timer_resolution_ms: timerResolution(), crossOriginIsolated: self.crossOriginIsolated, palette_entries: N * 4, sprite24_opaque_share: opaqueShare(SP24), sprite7_opaque_share: opaqueShare(SP7), worlds: {} }, results: [] };
+  const T = (name, mk, extra) => { if (only && !only.test(name)) return; let r; try { const fn = mk(); r = bench(name, fn, opts.bench); if (typeof extra === 'function') extra = extra(); Object.assign(r, extra || {}); } catch (e) { r = { name, error: String(e && e.stack || e) }; console.error(name, r.error); } out.results.push(r); console.log(name, r.median_ms, r.p95_ms); };
+  const cellsOf = Wd => Wd * Math.round(Wd * 9 / 16);
+
+  // 1. sim ticks
+  for (const Wd of [160, 320, 640, 960]) { const cells = cellsOf(Wd), m = cells / 57600;
+    const one = (id, picks, run) => T(`sim/${cells}/${id}`, () => { const w = world(Wd), s = fresh(mkSim)(w); let n = 0; w.restore(); return () => { run(s); if ((++n & 63) === 0) w.restore(); }; }, { cells, picks });
+    one('deposit', (900 * m) | 0, s => s.pDeposit((900 * m) | 0));
+    one('relax', (4000 * m) | 0, s => s.pRelax((4000 * m) | 0));
+    one('creep', (1400 * m) | 0, s => s.pCreep((1400 * m) | 0, 1));
+    one('melt', (1500 * m) | 0, s => s.pMelt((1500 * m) | 0, 1));
+    one('evap', (1600 * m) | 0, s => s.pEvap((1600 * m) | 0));
+    one('tick-all5', (9400 * m) | 0, s => { s.pDeposit((900 * m) | 0); s.pRelax((4000 * m) | 0); s.pCreep((1400 * m) | 0, 1); s.pMelt((1500 * m) | 0, 1); s.pEvap((1600 * m) | 0); });
+    one('tick-snow', Math.round((900 + 4000 + 840 + 300) * m), s => s.tick(SNOW));
+    one('tick-thaw', Math.round((4000 + 2103 + 1920) * m), s => s.tick(THAW));
+  }
+
+  // 2. ground render into the palette-index buffer
+  for (const AW of [320, 640, 960]) { const tag = `${AW}x${Math.round(AW * 9 / 16)}`;
+    const G = (id, mk) => T(`ground/${tag}/${id}`, () => { const A = art(AW); A.w.restore(); return mk(A); }, { pixels: cellsOf(AW) });
+    G('port-snowing', A => { const f = fresh(mkPort)(A); let k = 0; return () => f(false, false, (++k >> 3) * 2654435761); });
+    G('port-sunny', A => { const f = fresh(mkPort)(A); let k = 0; return () => f(true, true, (++k >> 3) * 2654435761); });
+    for (const [fr, samp] of [[1, 'near'], [2, 'near'], [2, 'bil'], [4, 'near'], [4, 'bil']]) for (const thr of ['bayer', 'art']) for (const shade of ['flat', 'emboss'])
+      G(`f${fr}-${samp}-${thr}-${shade}`, A => { const F = world(AW / fr); F.restore(); return mkGround(A, F, { samp, thr, shade }); });
+    G('f1-near-bayer-flat-rgba', A => mkGround(A, A.w, { samp: 'near', thr: 'bayer', shade: 'flat', rgba: true }));
+    G('upsample-f2', A => fresh(mkUpsample)(A, world(AW / 2)));
+    G('upsample-f4', A => fresh(mkUpsample)(A, world(AW / 4)));
+    G('upsample-f2-fixed9331', A => fresh(mkUpsample2)(A, world(AW / 2)));
+    G('twopass-f2-fixed9331-art-emboss', A => { const up = fresh(mkUpsample2)(A, world(AW / 2)), g = mkGround(A, { D: A.DU, W: A.W, H: A.H }, { samp: 'near', thr: 'art', shade: 'emboss' }); return () => { up(); g(); }; });
+    G('full-f2-fixed9331-snowing', A => { const f = fresh(mkFull)(A, world(AW / 2), true); let k = 0; return () => f(false, false, (++k >> 3) * 2654435761); });
+    G('full-f2-fixed9331-sunny', A => { const f = fresh(mkFull)(A, world(AW / 2), true); let k = 0; return () => f(true, true, (++k >> 3) * 2654435761); });
+    G('twopass-f2-bil-art-emboss', A => { const up = fresh(mkUpsample)(A, world(AW / 2)), g = mkGround(A, { D: A.DU, W: A.W, H: A.H }, { samp: 'near', thr: 'art', shade: 'emboss' }); return () => { up(); g(); }; });
+    G('full-f2-snowing', A => { const f = fresh(mkFull)(A, world(AW / 2)); let k = 0; return () => f(false, false, (++k >> 3) * 2654435761); });
+    G('full-f2-sunny', A => { const f = fresh(mkFull)(A, world(AW / 2)); let k = 0; return () => f(true, true, (++k >> 3) * 2654435761); });
+    G('full-f4-snowing', A => { const f = fresh(mkFull)(A, world(AW / 4)); let k = 0; return () => f(false, false, (++k >> 3) * 2654435761); });
+    // (g) palette pass
+    const Pp = (id, mk) => T(`pal/${tag}/${id}`, () => { const A = art(AW); A.w.restore(); fresh(mkPort)(A)(false, false, 0); buildPalette(17.5 * 60, 'heavy', 1); return mk(A); }, { pixels: cellsOf(AW) });
+    Pp('plain-lut', A => fresh(mkPalPlain)(A));
+    Pp('vfx1-day', A => { const f = fresh(mkPalV1)(A); return () => f(false, 0); });
+    Pp('vfx1-night-lamp', A => { const f = fresh(mkPalV1)(A); return () => f(true, .71); });
+    Pp('opt-night-lamp', A => { const f = fresh(mkPalOpt)(A); return () => f(true, .71); });
+  }
+  T('pal/build-232-entries', () => { let k = 0; return () => { SINK += buildPalette(17.5 * 60 + (++k & 15), 'heavy', 1); }; });
+
+  // putImageData by size
+  for (const [w, h] of [[160, 90], [320, 180], [640, 360], [960, 540], [1280, 720]]) {
+    const mkc = wrf => { const c = document.createElement('canvas'); c.width = w; c.height = h; const cx = c.getContext('2d', wrf ? { willReadFrequently: true } : undefined), im = cx.createImageData(w, h), u = new Uint32Array(im.data.buffer); for (let i = 0; i < u.length; i++) u[i] = 0xff000000 | Math.imul(i, 2654435761) >>> 8; return { cx, im, u }; };
+    T(`put/${w}x${h}/software-canvas+sync`, () => { const c = mkc(true); let k = 0; return () => { c.u[(k++ * 31) % c.u.length] ^= 0xff; c.cx.putImageData(c.im, 0, 0); sync(c.cx); }; }, { bytes: w * h * 4 });
+    T(`put/${w}x${h}/software-canvas`, () => { const c = mkc(true); let k = 0; return () => { c.u[(k++ * 31) % c.u.length] ^= 0xff; c.cx.putImageData(c.im, 0, 0); }; }, { bytes: w * h * 4 });
+    T(`put/${w}x${h}/default-canvas-js-side`, () => { const c = mkc(false); let k = 0; return () => { c.u[(k++ * 31) % c.u.length] ^= 0xff; c.cx.putImageData(c.im, 0, 0); }; }, { bytes: w * h * 4 });
+  }
+
+  // 4. bakes. VFX #11 tile = W / 20 cells. The W = 320, ray 28 row is also the VFX #1 engine (8 px tiles, 28 px ray).
+  for (const [Wd, rays] of [[160, [28, 14]], [320, [56, 28]], [640, [112, 56]], [960, [168, 84]]]) { const cells = cellsOf(Wd);
+    for (const r of rays) { const ex = { cells, ray_cells: r, ray_tiles_of_32px: +(r / (Wd / 20)).toFixed(2) };
+      T(`bake/exposure-ray/${cells}/ray${r}`, () => { const w = world(Wd); return () => bakeExposureRay(w, -1, r); }, ex);
+      T(`bake/exposure-sweep/${cells}/ray${r}`, () => { const w = world(Wd); bakeExposureRay(w, -1, r); const ref = w.E.slice(); bakeExposureSweep(w, -1, r); let same = true; for (let i = 0; i < ref.length; i++) if (ref[i] !== w.E[i]) { same = false; break; } ex.sweep_equals_ray = same; return () => bakeExposureSweep(w, -1, r); }, () => ex); }
+    T(`bake/shadow/${cells}`, () => { const w = world(Wd); return () => bakeShadow(w); }, { cells });
+  }
+  for (const k in WORLDS) WORLDS[k].rebake();
+
+  // 5. characters
+  for (const [id, AW, SP, sh] of [['7x12@320x180', 320, SP7, 0], ['24x32@640x360-field1to1', 640, SP24, 0], ['24x32@640x360-field1to2', 640, SP24, 1]]) for (const n of [1, 20, 50])
+    T(`chars/${id}/N${n}`, () => { const A = art(AW), F = world(AW >> sh), ents = mkActors(n, A); A.w.restore(); F.restore(); fresh(mkPort)(A)(false, false, 0); const dr = fresh(mkDrawActors)(A, F, sh, SP); return () => { moveActors(ents, A); dr(ents); }; }, { n });
+  for (const n of [1, 20, 50]) T(`chars/7x12-strings-as-written@320x180/N${n}`, () => { const A = art(320), ents = mkActors(n, A); A.w.restore(); fresh(mkPort)(A)(false, false, 0); const dr = fresh(mkDrawActorsStr)(A, A.w); return () => { moveActors(ents, A); dr(ents); }; }, { n });
+  for (const n of [1, 20, 50]) T(`chars/move-only/N${n}`, () => { const A = art(640), ents = mkActors(n, A); return () => moveActors(ents, A); }, { n });
+  // prints: 100 stamps per call. The field is restored every 2,000 stamps (D and P only); stamp/restore-* rows give that cost per call.
+  const ST = (id, Wd, run) => T(`stamp/${id}`, () => { const w = world(Wd), s = fresh(mkSim)(w), GP = w.GP, W = w.W; let p = 0, n = 0; w.restore(); return () => { for (let j = 0; j < 100; j++) { const g = GP[p = (p + 1) & 4095]; run(s, g % W, (g / W) | 0, p & 1); } if ((++n % 20) === 0) { w.D.set(w.D0); w.P.set(w.P0); } }; }, { stamps_per_call: 100, cells: cellsOf(Wd) });
+  ST('vfx1-2x2@57600(8px-tiles)', 320, (s, x, y) => s.stamp(x, y, 2, 2, .3, 255, 6));
+  ST('dots-2x2@field1to1-230400', 640, (s, x, y) => s.stamp(x, y, 2, 2, .3, 255, 6));
+  ST('boot-3x5@field1to1-230400', 640, (s, x, y, h) => s.stampBoot(x, y, h, .3, 255));
+  ST('boot-2x3cells@field1to2-57600', 320, (s, x, y, h) => s.stamp(x, y, h ? 3 : 2, h ? 2 : 3, .3, 255, 6));
+  ST('boot-1cell@field1to4-14400', 160, (s, x, y) => s.stamp(x, y, 1, 1, .45, 255, 6));
+  ST('trench-10x4@field1to1-230400', 640, (s, x, y) => s.stamp(x, y, 10, 4, .3, 255, 10));
+  ST('trench-5x2@field1to2-57600', 320, (s, x, y) => s.stamp(x, y, 5, 2, .3, 255, 10));
+  for (const Wd of [160, 320, 640]) T(`stamp/restore-only@${cellsOf(Wd)}`, () => { const w = world(Wd); let n = 0; return () => { if ((++n % 20) === 0) { w.D.set(w.D0); w.P.set(w.P0); } }; }, { cells: cellsOf(Wd) });
+
+  // 6. flakes
+  const FLK = (id, AW, sh, layers, hashed) => { const mk = () => { const A = art(AW), F = world(AW >> sh), sim = fresh(mkSim)(F); A.w.restore(); F.restore(); fresh(mkPort)(A)(false, false, 0); return { A, F, fl: layers ? fresh(mkFlakes)(A, F, sh, layers, sim) : null, hf: hashed ? fresh(mkHashFlakes)(A, hashed) : null }; };
+    const cnt = (layers ? layers.reduce((a, l) => a + l.n, 0) : 0) + (hashed ? hashed.reduce((a, l) => a + l.n, 0) : 0);
+    if (layers) T(`flakes/${id}/update`, () => { const c = mk(); let n = 0; return () => { c.fl.update(1 / 60, .6, 1); if ((++n & 255) === 0) c.F.restore(); }; }, { flakes: cnt });
+    T(`flakes/${id}/update+draw`, () => { const c = mk(); let n = 0; return () => { c.A.SPR.fill(0); if (c.fl) { c.fl.update(1 / 60, .6, 1); c.fl.draw(); } if (c.hf) c.hf.draw(n / 60, .6); if ((++n & 255) === 0) c.F.restore(); }; }, { flakes: cnt });
+    T(`flakes/${id}/spr-clear-only`, () => { const c = mk(); return () => { c.A.SPR.fill(0); }; }, { flakes: cnt }); };
+  FLK('vfx1-456-1px+2x2@320x180', 320, 0, LAY_V1);
+  FLK('456-1px+2x2@640x360', 640, 0, LAY_V1);
+  FLK('1824-1px+2x2@640x360', 640, 0, times4(LAY_V1));
+  FLK('456-2px+2x2+3px-shadow2@640x360', 640, 0, LAY_BIG);
+  FLK('1824-2px+2x2+3px-shadow2@640x360', 640, 0, times4(LAY_BIG));
+  FLK('456-2px+2x2+3px-shadow2@640x360-field1to2', 640, 1, LAY_BIG);
+  FLK('spec-580:near60-stateful+520-hashed@640x360-field1to2', 640, 1, LAY_NEAR32, LAY_HASH32);
+  FLK('hashed-only-520@640x360', 640, 1, null, LAY_HASH32);
+
+  // 7. whole frames
+  for (const preset of ['p0', 'p1', 'p2']) for (const crowd of [0, 20]) { const names = { p0: 'p0-vfx1-engine@320x180', p1: 'p1-naive-1to1-port@640x360', p2: 'p2-field1to2-bilinear-art-threshold-cpu@640x360' };
+    let fr = null; T(`frame/${names[preset]}/crowd${crowd}`, () => { fr = fresh(mkFrame)(preset, crowd); return () => fr(null); }, () => ({ actors: 3 + crowd, layers_ms: layerBreakdown(fr, 600) })); }
+  for (const k in WORLDS) out.info.worlds[k] = WORLDS[k].stats;
+  out.info.sink = SINK;
+  return out;
+}
+
+// preset 3 frame: sim and prints on the CPU at 320x180, three R8 uploads, ground in the shader at 640x360, actors and flakes as one instanced draw
+// flk: 'quads' = all 580 flakes as instanced quads, 'shader' = the 520 far flakes in the ground shader and the 60 near ones as quads, 'none' = no flakes
+function mkFrameP3(env, crowd, upl, flk, info) { const { gl, PF, PB, setup, bind, mkTex, atlas, fullVAO, batchVAO, instBuf, instData } = env;
+  const A = art(640), F = world(320), sim = fresh(mkSim)(F), ents = mkActors(3 + crowd, A), fl = fresh(mkFlakes)(A, F, 1, LAY_NEAR32, sim), hf = fresh(mkHashFlakes)(A, LAY_HASH32), P = flk === 'shader' ? PF.fullflakes : PF.full, tmp = [0, 0], FD = F.D, FP = F.P, FWt = F.Wt;
+  const tD = mkTex(320, 180, 'R8', FD, gl.LINEAR), tP = mkTex(320, 180, 'R8', FP, gl.LINEAR), tW = mkTex(320, 180, 'R8', FWt, gl.LINEAR);
+  setup(P, 640, 360, 640, 320, gl.LINEAR, 'art'); bind(1, tD); bind(4, tP); bind(5, tW); bind(8, atlas); gl.useProgram(PB.p); gl.uniform2f(PB.U.res, 640, 360);
+  let k = 0; F.restore(); const d = instData, slotU = P.U.slot, tmU = P.U.tm, nearOn = flk !== 'none', farQuads = flk === 'quads';
+  const quad = (n, x, y, w, h, u, v) => { const j = n * 8; d[j] = x; d[j + 1] = y; d[j + 2] = w; d[j + 3] = h; d[j + 4] = u; d[j + 5] = v; d[j + 6] = w; d[j + 7] = h; };
+  return function () {
+    sim.tick(SNOW); if ((++k & 255) === 0) F.restore();
+    moveActors(ents, A);
+    for (let n = 0; n < ents.length; n++) { const e = ents[n]; if (((k + e.ph * 7) % 24) !== 0) continue; const side = (k / 24 | 0) & 1 ? 1 : -1, horiz = e.dir >= 2 ? 1 : 0; sim.stamp(((e.x + (horiz ? -2 : side * 4 - 1)) >> 1), ((e.y + (horiz ? side * 3 - 1 : -2)) >> 1), horiz ? 3 : 2, horiz ? 2 : 3, .3, 255, 6); }
+    if (nearOn) fl.update(1 / 60, SNOW.wind, SNOW.intensity);
+    if (upl === 'full3') { gl.activeTexture(gl.TEXTURE1); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 320, 180, gl.RED, gl.UNSIGNED_BYTE, FD); gl.activeTexture(gl.TEXTURE4); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 320, 180, gl.RED, gl.UNSIGNED_BYTE, FP); gl.activeTexture(gl.TEXTURE5); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 320, 180, gl.RED, gl.UNSIGNED_BYTE, FWt); }
+    gl.useProgram(P.p); gl.bindVertexArray(fullVAO); gl.uniform1f(slotU, k & 63); gl.uniform1f(tmU, k / 60); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    // instances: y-sorted actors (shadow + clipped body), near flakes (shadow + plus), hashed far flakes
+    let n = 0; ents.sort((a, b) => a.y - b.y);
+    for (let i = 0; i < ents.length; i++) { const e = ents[i], x = Math.round(e.x), y = Math.round(e.y), c = (y >> 1) * 320 + (x >> 1), dep = (FD[c - 1] + FD[c] + FD[c + 1]) / 3, sink = Math.min(8, (dep / 16) | 0), fr = e.dir * 4 + ((e.anim | 0) & 3);
+      quad(n++, x - 8, y + 1, 16, 2, 16, 36); quad(n++, x - 12, y - 31 + sink, 24, 32 - sink, fr * 24, 0); }
+    const f = fl.FL[0], fx = f.x, fy = f.y, fz = f.z, fon = f.on; if (nearOn) for (let i = 0; i < fx.length; i++) { if (!fon[i]) continue; const gx = fx[i] | 0, gy = fy[i] | 0; quad(n++, gx, gy, 2, 1, 16, 36); quad(n++, gx - 1, ((fy[i] - fz[i]) | 0) - 1, 3, 3, 9, 33); }
+    if (farQuads) for (let l = 0; l < 2; l++) { const cnt = LAY_HASH32[l].n; for (let i = 0; i < cnt; i++) { hf.pos(l, i, k / 60, SNOW.wind, tmp); if (l === 0) quad(n++, tmp[0], tmp[1], 2, 1, 1, 33); else quad(n++, tmp[0], tmp[1], 2, 2, 5, 33); } }
+    info.instances = n;
+    gl.useProgram(PB.p); gl.bindVertexArray(batchVAO); gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, d, 0, n * 8); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n);
+  }; }
+
+// ---------------- GPU run (WebGL2) ----------------
+async function runGPU(opts = {}) {
+  const only = opts.only ? new RegExp(opts.only) : null, out = { info: {}, results: [] };
+  const cv = document.createElement('canvas'); cv.width = 8; cv.height = 8;
+  const gl = cv.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) { out.info.error = 'no webgl2'; return out; }
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  out.info.vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+  out.info.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  out.info.version = gl.getParameter(gl.VERSION); out.info.userAgent = navigator.userAgent;
+  const tq = gl.getExtension('EXT_disjoint_timer_query_webgl2'); out.info.timer_query = !!tq;
+  out.info.blend = 'on for every draw (SRC_ALPHA, ONE_MINUS_SRC_ALPHA, alpha 0.98), so a tile-based GPU cannot drop the repeated full-screen draws';
+  const VS_FULL = `#version 300 es
+layout(location=0) in vec2 p;out vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+  const FSH = `#version 300 es
+precision highp float;
+in vec2 uv;out vec4 o;
+uniform sampler2D art,fD,thrT,palT,fP,fW,fS,bayT;
+uniform vec2 fres,lampPos,lampR;uniform float thrSize,nf,slot,tm;
+`;
+  const FS = {
+    flat: `void main(){vec4 b=texture(art,uv);float d=texture(fD,uv).r*255.;float th=texture(thrT,gl_FragCoord.xy/thrSize).r*255.;
+vec3 c=(b.a>.5&&d>th)?vec3(.886,.918,.965):b.rgb;o=vec4(c,.98);}`,
+    emboss: `void main(){vec4 b=texture(art,uv);float d=texture(fD,uv).r*255.;float th=texture(thrT,gl_FragCoord.xy/thrSize).r*255.;vec3 c=b.rgb;
+if(b.a>.5&&d>th){vec2 e=1./fres;float sl=(texture(fD,uv+vec2(e.x,0.)).r-texture(fD,uv-vec2(e.x,0.)).r+texture(fD,uv+vec2(0.,e.y)).r-texture(fD,uv-vec2(0.,e.y)).r)*255.;
+int idx=d<th+4.?1:sl>6.?0:sl>=-6.?1:2;c=texelFetch(palT,ivec2(idx,0),0).rgb;}
+o=vec4(c,.98);}`,
+    full: `void main(){vec4 b=texture(art,uv);float d=texture(fD,uv).r*255.;float th=texture(thrT,gl_FragCoord.xy/thrSize).r*255.;
+float shd=texture(fS,uv).r;int row=shd>.5?1:0;vec3 c;
+if(b.a>.5&&d>th){vec2 e=1./fres;float sl=(texture(fD,uv+vec2(e.x,0.)).r-texture(fD,uv-vec2(e.x,0.)).r+texture(fD,uv+vec2(0.,e.y)).r-texture(fD,uv-vec2(0.,e.y)).r)*255.;
+float pk=texture(fP,uv).r*255.;int idx=pk>110.?(sl<-5.?4:3):(d<th+4.?1:sl>6.?0:sl>=-6.?1:2);
+vec2 q=floor(gl_FragCoord.xy);if(fract(sin(dot(q+slot,vec2(12.9898,78.233)))*43758.5453)<.002)idx=5;
+c=texelFetch(palT,ivec2(idx,row),0).rgb;}
+else{float wt=texture(fW,uv).r*255.;c=b.rgb*(wt>50.?.68:1.)*(row==1?vec3(.72,.77,.92):vec3(1.));}
+vec2 lq=(gl_FragCoord.xy-lampPos)/lampR;float lm=pow(max(0.,1.-length(lq)),1.4);
+if(lm*nf*22.>texture(bayT,gl_FragCoord.xy/4.).r*255.)c=c*vec3(1.1,.92,.62)+vec3(.06,.02,0.);
+o=vec4(c,.98);}` };
+  // the full shader plus two stateless flake layers: one hashed flake per grid cell, the grid scrolls with wind and fall speed
+  FS.fullflakes = `float flake(vec2 p,float cell,vec2 vel,float sz,float seed){vec2 q=p+vel*tm;vec2 g=floor(q/cell);
+vec2 h=fract(sin(vec2(dot(g,vec2(127.1,311.7))+seed,dot(g,vec2(269.5,183.3))+seed))*43758.5453);vec2 c=floor((g+.1+.8*h)*cell);vec2 dd=floor(q)-c;return (dd.x>=0.&&dd.x<sz&&dd.y>=0.&&dd.y<sz)?1.:0.;}
+` + FS.full.replace('o=vec4(c,.98);}', 'if(flake(gl_FragCoord.xy,34.,vec2(-26.,48.),2.,7.)>0.)c=vec3(1.);else if(flake(gl_FragCoord.xy,27.,vec2(-16.,28.),1.,3.)>0.)c=vec3(.79,.84,.93);\no=vec4(c,.98);}');
+  const VS_BATCH = `#version 300 es
+layout(location=0) in vec2 corner;layout(location=1) in vec4 ia;layout(location=2) in vec4 ib;uniform vec2 res;out vec2 tuv;
+void main(){vec2 p=ia.xy+corner*ia.zw;tuv=(ib.xy+corner*ib.zw)/vec2(512.,64.);gl_Position=vec4(p/res*2.-1.,0.,1.);}`;
+  const FS_BATCH = `#version 300 es
+precision highp float;in vec2 tuv;out vec4 o;uniform sampler2D atlas;void main(){vec4 c=texture(atlas,tuv);if(c.a<.05)discard;o=vec4(c.rgb,c.a*.98);}`;
+  const UNITS = { art: 0, fD: 1, thrT: 2, palT: 3, fP: 4, fW: 5, fS: 6, bayT: 7, atlas: 8 };
+  function compile(vs, fs) { const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) + src); return s; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const U = new Proxy({}, { get: (o, k) => o[k] ?? (o[k] = gl.getUniformLocation(p, k)) }); gl.useProgram(p);
+    for (const k in UNITS) { const l = gl.getUniformLocation(p, k); if (l) gl.uniform1i(l, UNITS[k]); } return { p, U }; }
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  function mkTex(w, h, fmt, data, filt, wrap) { const tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE15); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texStorage2D(gl.TEXTURE_2D, 1, fmt === 'R8' ? gl.R8 : gl.RGBA8, w, h);
+    if (data) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, w, h, fmt === 'R8' ? gl.RED : gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filt); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filt); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap ?? gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap ?? gl.CLAMP_TO_EDGE); return tx; }
+  const bind = (unit, tx) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tx); };
+  const FBS = {}; function fbo(w, h) { const k = w + 'x' + h; if (FBS[k]) return FBS[k]; const tex = mkTex(w, h, 'RGBA8', null, gl.NEAREST), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); return FBS[k] = { fb, tex, w, h }; }
+  const PF = {}; for (const k in FS) PF[k] = compile(VS_FULL, FSH + FS[k]); const PB = compile(VS_BATCH, FS_BATCH);
+  const fullVAO = gl.createVertexArray(); gl.bindVertexArray(fullVAO); gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const MAXI = 4096, batchVAO = gl.createVertexArray(); gl.bindVertexArray(batchVAO); gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const instData = new Float32Array(MAXI * 8), instBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); gl.bufferData(gl.ARRAY_BUFFER, instData, gl.DYNAMIC_DRAW);
+  for (let j = 0; j < 2; j++) { gl.enableVertexAttribArray(1 + j); gl.vertexAttribPointer(1 + j, 4, gl.FLOAT, false, 32, j * 16); gl.vertexAttribDivisor(1 + j, 1); }
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  const px = new Uint8Array(4);
+  function syncGL() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+  function timeK(drawOnce, K) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); syncGL(); return performance.now() - a; }
+  async function timerQuery(drawOnce, K) { const q = gl.createQuery(); gl.beginQuery(tq.TIME_ELAPSED_EXT, q); for (let k = 0; k < K; k++) drawOnce(k); gl.endQuery(tq.TIME_ELAPSED_EXT);
+    for (let i = 0; i < 4000; i++) { await new Promise(r => setTimeout(r, 0)); if (gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) break; }
+    const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT); const ns = gl.getQueryParameter(q, gl.QUERY_RESULT); gl.deleteQuery(q); return disjoint ? NaN : ns / 1e6; }
+  // wall ms per frame = slope between a batch of 1 frame and a batch of K frames, each batch ending in a 1x1 readPixels. The fixed cost of the sync cancels.
+  // js_ms = main-thread time per frame when no sync is asked for (the GPU process and the GPU do the rest in parallel).
+  async function gpuBench(name, mk, extra) { if (only && !only.test(name)) return; let r;
+    try { const drawOnce = mk(); for (let i = 0; i < 4; i++) timeK(drawOnce, 3);
+      const probe = Math.max(0.001, (timeK(drawOnce, 12) - timeK(drawOnce, 1)) / 11); const K = Math.max(4, Math.min(3000, Math.round(60 / probe)));
+      const s1 = [], sK = []; for (let s = 0; s < 21; s++) { s1.push(timeK(drawOnce, 1)); sK.push(timeK(drawOnce, K)); }
+      const m1 = stats(s1).median_ms, slopes = sK.map(v => (v - m1) / (K - 1));
+      r = Object.assign({ name }, stats(slopes), { K, sync_ms: +m1.toFixed(3) });
+      const js = []; for (let s = 0; s < 11; s++) { const a = performance.now(); for (let k = 0; k < K; k++) drawOnce(k); js.push((performance.now() - a) / K); syncGL(); } r.js_ms = stats(js).median_ms; r.js_p95_ms = stats(js).p95_ms;
+      if (tq) { const tqs = []; const KT = Math.max(Math.min(K, 400), 20); for (let s = 0; s < 5; s++) tqs.push((await timerQuery(drawOnce, KT)) / KT); const ok = tqs.filter(x => !isNaN(x)); if (ok.length) r.timer_query_ms = +stats(ok).median_ms.toFixed(5); }
+      if (typeof extra === 'function') extra = extra(); Object.assign(r, extra || {});
+    } catch (e) { r = { name, error: String(e && e.stack || e) }; console.error(name, r.error); }
+    out.results.push(r); console.log(name, r.median_ms, r.js_ms, r.timer_query_ms ?? ''); await new Promise(r => setTimeout(r, 0)); }
+
+  // static textures
+  const artTex = {}; function artT(AW) { if (artTex[AW]) return artTex[AW]; const w = world(AW), d = new Uint8Array(w.NP * 4); for (let i = 0; i < w.NP; i++) { const c = pal[w.B[i]]; d[i * 4] = c & 255; d[i * 4 + 1] = (c >> 8) & 255; d[i * 4 + 2] = (c >> 16) & 255; d[i * 4 + 3] = holds(w.S[i]) ? 255 : 0; } return artTex[AW] = mkTex(w.W, w.H, 'RGBA8', d, gl.NEAREST); }
+  const thrBayer = mkTex(4, 4, 'R8', BAYT, gl.NEAREST, gl.REPEAT), thrArt = mkTex(32, 32, 'R8', TT.subarray(0, 1024), gl.NEAREST, gl.REPEAT), bayRaw = mkTex(4, 4, 'R8', new Uint8Array(BAYER), gl.NEAREST, gl.REPEAT);
+  const palD = new Uint8Array(8 * 2 * 4); [SN_HI, SN_BASE, SN_SH, SN_PACK, SN_PSH, SPARK, SN_MID, SN_DEEP].forEach((ci, i) => { for (let row = 0; row < 2; row++) { const c = pal[ci + row * N], o = (row * 8 + i) * 4; palD[o] = c & 255; palD[o + 1] = (c >> 8) & 255; palD[o + 2] = (c >> 16) & 255; palD[o + 3] = 255; } });
+  const palTex = mkTex(8, 2, 'RGBA8', palD, gl.NEAREST);
+  const fldTex = {}; function fieldT(Wd, which, filt) { const k = Wd + which + filt; if (fldTex[k]) return fldTex[k]; const w = world(Wd); return fldTex[k] = mkTex(w.W, w.H, 'R8', w[which], filt); }
+  function setup(P, RW, RH, AW, FWd, filt, thrKind) { const F = world(FWd), T = fbo(RW, RH); gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, RW, RH); gl.useProgram(P.p);
+    bind(0, artT(AW)); bind(1, fieldT(FWd, 'D0', filt)); bind(2, thrKind === 'art' ? thrArt : thrBayer); bind(3, palTex); bind(4, fieldT(FWd, 'P0', filt)); bind(5, fieldT(FWd, 'Wt0', filt)); bind(6, fieldT(FWd, 'SH', gl.NEAREST)); bind(7, bayRaw);
+    gl.uniform2f(P.U.fres, F.W, F.H); gl.uniform1f(P.U.thrSize, thrKind === 'art' ? 32 : 4); gl.uniform1f(P.U.nf, .71); gl.uniform2f(P.U.lampPos, RW * .74, RH * .46); gl.uniform2f(P.U.lampR, RW * .106, RH * .11); gl.bindVertexArray(fullVAO); }
+
+  // 3a. the ground pass as one full-screen fragment shader
+  for (const [RW, RH, AW] of [[640, 360, 640], [960, 540, 960], [1920, 1080, 640]]) { const tag = `${RW}x${RH}`;
+    const Gs = (id, prog, fr, filt, thrKind, taps) => gpuBench(`glground/${tag}/${id}`, () => { const P = PF[prog]; setup(P, RW, RH, AW, AW / fr, filt === 'linear' ? gl.LINEAR : gl.NEAREST, thrKind); return k => { gl.uniform1f(P.U.slot, k & 63); gl.uniform1f(P.U.tm, k / 60); gl.drawArrays(gl.TRIANGLES, 0, 3); }; }, { pixels: RW * RH, texture_reads_per_pixel_max: taps, field: `${AW / fr}x${Math.round(AW / fr * 9 / 16)}` });
+    await Gs('flat-f1-nearest-bayer', 'flat', 1, 'nearest', 'bayer', 3);
+    await Gs('flat-f2-nearest-bayer', 'flat', 2, 'nearest', 'bayer', 3);
+    await Gs('flat-f2-linear-art', 'flat', 2, 'linear', 'art', 3);
+    await Gs('emboss-f1-nearest-art', 'emboss', 1, 'nearest', 'art', 8);
+    await Gs('emboss-f2-linear-art', 'emboss', 2, 'linear', 'art', 8);
+    await Gs('emboss-f4-linear-art', 'emboss', 4, 'linear', 'art', 8);
+    await Gs('full-f1-nearest-art', 'full', 1, 'nearest', 'art', 11);
+    await Gs('full-f2-linear-art', 'full', 2, 'linear', 'art', 11);
+    await Gs('full-f4-linear-art', 'full', 4, 'linear', 'art', 11);
+    await Gs('fullflakes-f2-linear-art', 'fullflakes', 2, 'linear', 'art', 11);
+  }
+
+  // 3b. texSubImage2D upload cost. Each timed frame = the upload(s) + a 1x1 px draw that samples the texture, so the upload must land. upload/none is that draw alone.
+  { const P = PF.flat; const prep = tx => { const T = fbo(64, 64); gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, 1, 1); gl.useProgram(P.p); bind(0, artT(640)); bind(2, thrBayer); bind(1, tx); gl.uniform1f(P.U.thrSize, 4); gl.bindVertexArray(fullVAO); };
+    const dummy = mkTex(64, 64, 'R8', new Uint8Array(4096), gl.NEAREST);
+    await gpuBench('upload/none (1 px draw only)', () => { prep(dummy); return () => gl.drawArrays(gl.TRIANGLES, 0, 3); }, { bytes: 0 });
+    for (const [w, h] of [[160, 90], [320, 180], [640, 360]]) for (const fmt of ['R8', 'RGBA8']) { const bpp = fmt === 'R8' ? 1 : 4, GF = fmt === 'R8' ? gl.RED : gl.RGBA;
+      const mkd = () => { const d = new Uint8Array(w * h * bpp); for (let i = 0; i < d.length; i++) d[i] = Math.imul(i, 2654435761) >>> 24; return d; };
+      await gpuBench(`upload/${w}x${h}/${fmt}/full`, () => { const d = mkd(), tx = mkTex(w, h, fmt, d, gl.NEAREST); prep(tx); return k => { d[(k * 97) % d.length] ^= 1; gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, w, h, GF, gl.UNSIGNED_BYTE, d); gl.drawArrays(gl.TRIANGLES, 0, 3); }; }, { bytes: w * h * bpp });
+      for (const n of [1, 8]) await gpuBench(`upload/${w}x${h}/${fmt}/chunk64x64-x${n}`, () => { const d = mkd(), tx = mkTex(w, h, fmt, d, gl.NEAREST), cols = Math.floor(w / 64), rows = Math.floor(h / 64); prep(tx);
+        return k => { d[(k * 97) % d.length] ^= 1; gl.pixelStorei(gl.UNPACK_ROW_LENGTH, w); for (let j = 0; j < n; j++) { const cx = ((k + j) % cols) * 64, cy = (((k + j) / cols | 0) % rows) * 64; gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, cx); gl.pixelStorei(gl.UNPACK_SKIP_ROWS, cy); gl.texSubImage2D(gl.TEXTURE_2D, 0, cx, cy, 64, 64, GF, gl.UNSIGNED_BYTE, d); }
+          gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0); gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0); gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); }; }, { bytes: 64 * 64 * bpp * n });
+    }
+  }
+
+  // 7. whole frame, preset 3: sim and prints on the CPU at 320x180, three R8 uploads, ground in the shader at 640x360, actors and flakes as one instanced draw
+  { const atlasD = new Uint8Array(512 * 64 * 4), putA = (x, y, c, a) => { const o = (y * 512 + x) * 4; atlasD[o] = c & 255; atlasD[o + 1] = (c >> 8) & 255; atlasD[o + 2] = (c >> 16) & 255; atlasD[o + 3] = a; };
+    for (let d = 0; d < 4; d++) for (let f = 0; f < 4; f++) { const fr = SP24.frames[d][f], ax = (d * 4 + f) * 24; for (let y = 0; y < 32; y++) for (let x = 0; x < 24; x++) { const v = fr[y * 24 + x]; if (v) putA(ax + x, y, pal[v], 255); } }
+    putA(1, 33, pal[FLAKE_F], 255); putA(2, 33, pal[FLAKE_F], 255);                                    // 2x1 far flake at (1,33)
+    for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) putA(5 + x, 33 + y, pal[FLAKE], 255);          // 2x2 at (5,33)
+    for (const [x, y] of [[10, 33], [9, 34], [10, 34], [11, 34], [10, 35]]) putA(x, y, pal[FLAKE], 255);  // plus at (9,33)
+    for (let y = 0; y < 2; y++) for (let x = 0; x < 16; x++) putA(16 + x, 36 + y, 0xff301a14, 110);        // shadow strip at (16,36)
+    const atlas = mkTex(512, 64, 'RGBA8', atlasD, gl.NEAREST);
+    const env = { gl, PF, PB, setup, bind, mkTex, atlas, fullVAO, batchVAO, instBuf, instData };
+    for (const [crowd, upl, flk] of [[0, 'full3', 'quads'], [20, 'full3', 'quads'], [20, 'none', 'quads'], [0, 'full3', 'shader'], [20, 'full3', 'shader'], [20, 'full3', 'none']]) { const info = {};
+      await gpuBench(`frame/p3-field1to2-cpu-sim+webgl2-render@640x360/crowd${crowd}-flakes-${flk}${upl === 'none' ? '-no-upload' : ''}`, () => fresh(mkFrameP3)(env, crowd, upl, flk, info), () => ({ actors: 3 + crowd, instances: info.instances, upload_bytes_per_frame: upl === 'full3' ? 172800 : 0, draw_calls: 2 })); }
+  }
+  return out;
+}
+</script>
+</body></html>
