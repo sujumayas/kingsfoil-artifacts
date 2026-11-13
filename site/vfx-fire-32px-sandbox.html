@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire 32 Sandbox: the fire engine at 32 px tiles and 24x32 characters</title>
+<style>
+:root{--bg:#100c10;--panel:#1a1418;--line:#33262c;--lamp:#feae34;--lamp2:#f77622;--cool:#8ea8ff;--txt:#efe6e2;--mute:#a8989c;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--lamp)}
+header{max-width:1320px;margin:0 auto;padding:22px 18px 8px}
+h1{font-family:var(--mono);font-weight:700;font-size:clamp(24px,4vw,38px);margin:0 0 4px;color:var(--lamp);letter-spacing:-.5px}
+.by{color:var(--mute);font-size:13px}
+main{max-width:1320px;margin:0 auto;padding:0 18px 40px}
+.stage{position:relative;margin:0 auto;max-width:100%;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair;touch-action:none}
+.hud{position:static;font:11.5px/1.5 var(--mono);background:#0c080b;padding:6px 9px;border-top:1px solid var(--line);color:#f6eeea;overflow-wrap:anywhere}
+.hud b{color:var(--lamp);font-weight:600}.hud .warn{color:#ff9a7a}
+.bar{display:inline-block;width:80px;height:7px;background:#3a2a30;vertical-align:middle;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:#86d49a}.bar i.hot2{background:#ff8a6a}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0}
+.group h3{margin:0 0 8px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btns+.btns{margin-top:6px}
+button{font:500 13px system-ui,sans-serif;background:#261d22;color:var(--txt);border:1px solid #42323a;border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--lamp2)}button.on{background:var(--lamp);color:#1a0f06;border-color:var(--lamp)}
+button kbd{font:11px var(--mono);opacity:.65;margin-right:4px}
+label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin-top:8px}
+label span{min-width:2.5em;text-align:right;font:12px var(--mono)}
+input[type=range]{flex:1;min-width:0;accent-color:#f77622}
+.windrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.wind{display:grid;grid-template-columns:repeat(3,34px);gap:4px}
+.wind button{padding:4px 0;font-family:var(--mono)}
+.windside{flex:1;min-width:140px}
+.explain{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h4{margin:0 0 6px;font-family:var(--mono);font-size:16px;color:var(--lamp)}
+.card p{margin:0;color:#dacfd0;font-size:14px}
+code{font:13px var(--mono);color:var(--cool);overflow-wrap:anywhere}
+.keys{color:var(--mute);font-size:13px;margin:8px 0 0}
+@media (max-width:640px){.hud{font-size:10.5px;padding:6px 8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Fire 32 Sandbox</h1>
+  <div class="by">Kingsfoil Studios · Playable companion to the <a href="vfx-fire-32px-topdown-pixel.html">fire at 32 px study</a> · VFX series #12 · November 2026 · <a href="vfx-fire-sandbox.html">the same engine at 8 px cells</a> · <a href="index.html">All artifacts</a></div>
+</header>
+<main>
+  <div class="stage"><canvas id="c" width="640" height="360" aria-label="Fire sandbox: a village edge with 32 px tiles and 24 by 32 px characters"></canvas>
+    <div class="hud" id="hud">loading</div></div>
+  <p class="keys">Walk with the arrows or WASD, or tap the ground with the Walk tool. Pick a tool and click the scene. Keys: <b>1-8</b> tools, <b>V</b> next view, <b>R</b> rain, <b>Space</b> pause, <b>N</b> step one tick. The canvas is 640 by 360 px, 20 by 11.25 tiles of 32 px. The fire engine is the one from VFX #6. Only the scale changed.</p>
+  <div class="controls">
+    <div class="group"><h3>Tools</h3>
+      <div class="btns" id="tools"><button data-t="walk" class="on"><kbd>1</kbd>Walk</button><button data-t="ignite"><kbd>2</kbd>Ignite</button><button data-t="water"><kbd>3</kbd>Water bucket</button><button data-t="fireball"><kbd>4</kbd>Fireball</button><button data-t="field"><kbd>5</kbd>Fire field 3x3</button><button data-t="wall"><kbd>6</kbd>Fire wall 1x5</button><button data-t="oil"><kbd>7</kbd>Oil</button><button data-t="regrow"><kbd>8</kbd>Regrow</button></div>
+      <div class="btns" id="fbsz"><button data-fb="3" class="on">Fireball 3x3</button><button data-fb="37">Great fireball (37 tiles)</button></div>
+    </div>
+    <div class="group"><h3>Weather and time</h3>
+      <div class="windrow"><div class="wind" id="wind"><button data-d="5">↖</button><button data-d="6">↑</button><button data-d="7">↗</button><button data-d="4">←</button><button data-d="-1">0</button><button data-d="0">→</button><button data-d="3">↙</button><button data-d="2">↓</button><button data-d="1">↘</button></div>
+        <div class="windside"><label style="margin-top:0">Wind <input id="wv" type="range" min="0" max="10" value="3"><span id="wvl">3</span></label><div class="btns" style="margin-top:8px"><button id="rain">Rain</button></div></div></div>
+      <div class="btns" id="tod" style="margin-top:8px"><button data-tm="day" class="on">Day</button><button data-tm="dusk">Dusk</button><button data-tm="night">Night</button></div>
+      <label>Speed <input id="speed" type="range" min="1" max="8" value="1"><span id="speedv">1x</span></label>
+      <div class="btns" style="margin-top:8px"><button id="pause">Pause</button><button id="step">Step tick</button></div>
+    </div>
+    <div class="group"><h3>Scale: spread and front</h3>
+      <div class="btns" id="grid"><button data-g="32" class="on">Spread grid 32 px</button><button data-g="16">16 px</button><button data-g="8">8 px</button></div>
+      <div class="btns" id="front"><button data-fs="0" class="on">Art map, smooth</button><button data-fs="1">Art map, per tile</button><button data-fs="2">Bayer 4</button><button data-fs="3">Whole tile</button></div>
+    </div>
+    <div class="group"><h3>Scale: flames and embers</h3>
+      <div class="btns" id="flame"><button data-fl="0" class="on">Drawn loops</button><button data-fl="1">DOOM 1:1</button><button data-fl="2">DOOM 1:2</button></div>
+      <div class="btns" id="emb"><button data-em="1">Embers 1 px</button><button data-em="0" class="on">2x2 embers, 1 px sparks</button></div>
+    </div>
+    <div class="group"><h3>Scale: smoke and light</h3>
+      <div class="btns" id="smk"><button data-sc="4">Smoke cells 4 px</button><button data-sc="8" class="on">8 px</button><button data-sc="16">16 px</button></div>
+      <div class="btns" id="sdraw"><button data-sd="0" class="on">2x2 clusters</button><button data-sd="1">Bayer 4</button></div>
+      <div class="btns" id="light"><button data-lm="32">Light map 32 px</button><button data-lm="8" class="on">8 px</button><button data-lm="4">4 px</button></div>
+    </div>
+    <div class="group"><h3>Characters</h3>
+      <label style="margin-top:0">Crowd <input id="crowd" type="range" min="0" max="20" value="4"><span id="crowdv">4</span></label>
+      <div class="btns" style="margin-top:8px"><button id="torch" class="on">Player torch</button><button id="tsteps">Tile steps</button></div>
+    </div>
+    <div class="group"><h3>Simulation</h3>
+      <div class="btns"><button id="cap">Budget cap</button><button id="haze" class="on">Heat haze</button><button id="reset">Reset</button><button id="seed">New seed</button></div>
+    </div>
+    <div class="group"><h3>X-ray view</h3>
+      <div class="btns" id="views"><button data-v="normal" class="on"><kbd>V</kbd>Normal</button><button data-v="fuel">Fuel</button><button data-v="moist">Moisture</button><button data-v="state">Server state</button><button data-v="progress">Burn progress</button><button data-v="map">Burn-order map</button><button data-v="smoke">Smoke field</button><button data-v="light">Light map</button><button data-v="active">Active cells</button><button data-v="grid">Field grid</button><button data-v="cost">Cost view</button></div>
+      <div class="btns" style="margin-top:10px"><button data-demo="showcase">Showcase</button><button data-demo="vfx6">VFX #6 settings</button><button data-demo="art32">32 px defaults</button></div>
+    </div>
+  </div>
+  <div class="explain" id="cards">
+    <div class="card"><h4>1 · The server grid</h4><p>One cell per 32 px tile, 20 by 12 = 240 cells. Each cell stores material, fuel, moisture, state (fresh, catching, burning, embers, ash), the side the fire came from (3 bits) and the tick it caught. The server ticks at 4 Hz for water, rain and events. A burning cell rolls for spread once per second, counted from the tick it caught, so tiles stagger by themselves. Catching is only a look. The first roll comes one second after the tile caught. A roll uses VFX #6's chance per neighbour: green grass 0.15, dry grass 0.40, tree 0.22, wood 0.30, fence 0.30, hay 0.50, oil 1.0, times 1 minus moisture, times the Alexandridis wind term, diagonals times 0.7, decided by <code>hash(x, y, tick, seed)</code>. A cell burns for a fixed number of rolls: green grass 5, dry grass 2, hay 4, oil 6, fence 12, tree 24 and wood wall 30, which are seconds for a 32 px tile. The 16 px and 8 px grids roll 2 and 4 times a second, so their cells burn a half and a quarter as long and the front keeps its speed in px per second. On a uniform field with no wind it moves 0.47, 0.52 and 0.51 tiles per second through green grass at 32, 16 and 8 px, and 0.91, 0.90 and 0.91 through dry grass. The wind slider is V in m/s, 0 to 10. At 5 m/s the chance per roll is 1.25 times higher downwind and 0.34 times upwind, so a green grass front runs at 0.53 tiles per second with the wind and mostly dies against it. Embers last 4 to 10 s, and ash regrows after 60 to 120 s in two steps.</p></div>
+    <div class="card"><h4>2 · What goes over the wire</h4><p>The HUD compares two encodings each tick. Sending the full burning set costs 2 bytes per burning cell. Sending only ignitions and extinguishes costs 3 bytes per event, because clients derive burnout from the fuel table and the ignition tick. Both add a 4 byte tick header, and the HUD shows the sum over one second. The sizes are illustrative, not measured on a real server.</p></div>
+    <div class="card"><h4>3 · The burn front at art resolution</h4><p>Each cell keeps its ignition time. Every 2 by 2 px block samples those times bilinearly between cell centres, through a fixed warp of up to 8 px, so the front crosses tile borders without a seam. A cell that has not caught counts as now plus 6 s, which slows the front at its edge, so a tile that never catches keeps a ragged rim of grass. A painted burn-order map jitters the arrival by up to 0.9 s, so char arrives in clusters. The map is 128 px and tileable, grown from 96 seed blobs and stored in 2 by 2 px blocks. The edge is 2 px, a glow pixel on the outer side of each border block and a dark red pixel inside it. Behind it comes a dark scorch zone 0.35 s wide, then char. When a cell runs out of fuel its clock stops, so pixels the front never reached stay grass. Ash spreads the same way from a second field of ash times. <b>Per tile</b> uses a ramp from the entry side plus the same map and shows the tile seam. <b>Bayer 4</b> is the VFX #6 look. <b>Whole tile</b> flips at once and is cheapest. Burning cells redraw at 30 Hz and embers at 15 Hz into a cached base. Every other pixel is a copy.</p></div>
+    <div class="card"><h4>4 · Flames</h4><p>All loops are built in code. Candle 4x8 px with 4 frames, post torch 10x16 with 6 frames at 100 ms, hand torch 6x8 with 4 frames, burning grass 8x10 and 12x16, brazier 16x20 with 6 frames at 110 ms, campfire 24x28 with 8 frames at 110 ms, tree 22x28 with 8 frames at 120 ms and house 28x32 with 8 frames at 130 ms. They use 4, 5 or 6 tones that bend from purple through red to cream. The bottom 3 rows hold still in every frame, and a 2x2 or 2x3 px tongue breaks off and rises 3 px per frame. Each flame takes its phase from <code>x × 3047 + y × 88</code>. Post torches share one clock and fire fields run their own from the start of each stage. A burning tile shows up to 3 flames where its front has passed. For the last quarter of its burn it keeps 1 small flame that loops 1.4 times slower. <b>DOOM 1:1</b> and <b>1:2</b> run Sanglard's in-place loop from the same emitters, with a seed level taken from the flame height. A 3 by 3 box average comes before the cut into 5 tones with a small cream core.</p></div>
+    <div class="card"><h4>5 · Embers, sparks and smoke</h4><p>One fixed pool of 512 particles. Embers are 2x2 px and rise for 0.5 to 1.5 s, coloured by age. Sparks are 1x1 or 1x2 px and live 3 to 8 frames in the two hottest tones. <b>Embers 1 px</b> is the VFX #6 look. Smoke, steam and oil soot are byte fields with 4, 8 or 16 px cells, advected at 30 Hz. They rise 26 px per second, drift 4 px per second per step of wind and keep 50% per second (steam 16%). A burning tile pours smoke into the 16x16 px at its top, twice as much while it dies. The field draws through a 2x2 px cluster map of soft blobs, or <b>Bayer 4</b>. Objects add drawn puffs, at most 64 alive. Campfire puffs grow from 4 to 6 px to 16 to 20 px every 0.5 s, chimney puffs from 8 to 10 px to 32 to 47 px every 0.6 s, tree puffs from 10 to 12 px to 32 to 40 px and house puffs from 12 to 16 px to 48 to 64 px in dark grey. Water makes bursts of white puffs.</p></div>
+    <div class="card"><h4>6 · Trees and houses</h4><p>A tree is the fuel of its trunk tile. While it catches, one flame burns at the base. Then 3 flames climb the crown over the first third of the burn. It ends as a bare charred tree, and 20 s later only a stump is left. A house holds fuel in each of its 9 tiles but draws as one object from the share that has burnt. Smoke leaks from under the eaves while it catches. From 25% flames break through the roof. At 60% the roof falls in to charred rafters with a burst of embers and smoke. At 100% charred wall stumps remain, and the stone chimney stands. The stone house never burns. Every object keeps three drawn looks for each pixel, normal, charred by rule from the same art, and the ruin.</p></div>
+    <div class="card"><h4>7 · Combat fire</h4><p>A missile flies for 150 × √d ms, d in tiles, as one still 16x16 px sprite picked from 8 directions. The fireball lays a 1-tile fire effect on each tile of a 3 by 3 area, or on the 37 tiles of the great fireball. The effect has 14 frames, 40 ms then 13 × 60 ms, on a 56 px canvas that spills past its tile. The centre goes first and each ring follows 75 ms later, with a variant picked by position. A tile refuses a repeat younger than 350 ms. Per-tile scorch marks fade over 4.5 s. Fire field and fire wall run Tibia's three stages of 200, 148 and 98 s, scaled here to 20, 14.8 and 9.8 s, with 5 frames of 120 ms then 100 ms. Their flame boxes are 46x46, 44x50 and 34x36 px, anchored in the tile's bottom-right corner, and the last stage is harmless. Entering a field costs 20 hit points. A burning actor loses 10 a second while its stacks last, and water clears them. Shake is 2 px for a 3 by 3 blast and 5 px for the great fireball.</p></div>
+    <div class="card"><h4>8 · Characters at 24x32</h4><p>The sprites are the snow-32px ones, with 4 walk frames, steps on frames 0 and 2 and 400 ms per tile. The hand torch is a 2x8 px stick with a 6x8 px flame, held 2 to 3 px out from the hand and moved 1 px per walk frame. It draws behind the body only when facing north, and its top 2 rows lean 1 px against the walk. Rim light looks for the nearest fire within 3 tiles and rounds its direction to 8 steps. A pixel turns warm where the next pixel toward the fire is empty, and a second pixel takes a warm mid tone within 1.5 tiles. A character north of the fire gets none. A second shadow stretches away from the fire. Burning tints the palette row (R × 1, G × 0.7, B × 0.6) and adds 8x10 flames at the shoulder and hip, a 6x8 flame at the head every other second, 7 embers a second and a 4 px grey puff every 0.5 s. A hit flashes white for 3 frames, plays a 9 × 100 ms ring of flame and shows an 11 px orange number that rises 48 px in 1 s. Hits within 400 ms merge. Soot prints of 3x5 px, 2 per tile, follow for 3 tiles after ash and fade over 10 s.</p></div>
+    <div class="card"><h4>9 · Light, palette and haze</h4><p>The world draws into a palette index buffer. Its 97 colours have 4 versions each (ambient, warm 1, warm 2 and the burning tint), and day, dusk and night retint those 388 entries once per frame. Lava and the pond glints cycle palette entries every 300 and 450 ms, so they cost no pixel work. Fires, torches and the lava add pools into a light map of 32, 8 or 4 px cells, with falloff (1 − d²/r²)² and flicker from VFX #5's 10 Hz light-style strings. The map draws in two warm bands, at 0.3 and 0.62, through a 2x2 px cluster dither 0.026 wide. Blocks whose band cannot change are written as flat runs. Smoke counts 1.8 times brighter, so it glows above fires. Heat haze shifts rows by 1 px above burning objects, fields and the campfire.</p></div>
+    <div class="card"><h4>What it costs</h4><p>Every layer is timed with <code>performance.now()</code> each frame and smoothed, and the bar shows the total against 16.7 ms. The HUD counts burning cells, spread rolls and neighbour checks per tick, burn-front pixels drawn, DOOM cells swept, smoke field cells and bytes, pool use, light map cells and the bytes Godot's Compatibility renderer would upload, which is whole textures every time. <b>Cost view</b> colours each pixel by how often it was written this frame. <code>window.fire32.bench(n)</code> runs n frames back to back and returns the mean ms per layer.</p></div>
+    <div class="card"><h4>What changed from VFX #6</h4><p>The canvas has 4 times the pixels and a tile has 16 times. A 1 px ember, a 4 tone 8 px flame, a Bayer burn and a Bayer smoke were sized for 8 px cells. Press <b>VFX #6 settings</b> to see them at this scale, then <b>32 px defaults</b>. The spread grid did not have to grow. The server keeps one cell per tile and rolls once a second, and the burn front, flames, smoke and light carry the detail at art resolution on the client.</p></div>
+  </div>
+  <p class="keys" style="margin-top:16px">Full research: <a href="vfx-fire-32px-topdown-pixel.html">Top-down pixel fire at 32 px</a> · the first fire study: <a href="vfx-fire-topdown-pixel.html">Top-down pixel fire and smoke</a> and its <a href="vfx-fire-sandbox.html">sandbox at 8 px cells</a> · <a href="index.html">All Kingsfoil artifacts</a></p>
+</main>
+<script>
+"use strict";
+(()=>{
+const $=id=>document.getElementById(id),W=640,H=360,NP=W*H,TW=20,TH=12,NT=TW*TH,now=()=>performance.now();
+const cv=$('c'),ctx=cv.getContext('2d'),img=ctx.createImageData(W,H),out32=new Uint32Array(img.data.buffer);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+// ---------- RNG and hashes. The cosmetic RNG state lives in an Int32Array ----------
+const RS=new Int32Array([0x2545f491]);
+const rnd=()=>{let r=RS[0];r^=r<<13;r^=r>>>17;r^=r<<5;RS[0]=r;return (r>>>0)/4294967296;};
+const hash=(x,y,t,s)=>{let h=Math.imul(x|0,0x27d4eb2d)^Math.imul(y|0,0x165667b1)^Math.imul(t|0,0x9e3779b1)^Math.imul(s|0,0x85ebca77);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;h=Math.imul(h,0x297a2d39);h^=h>>>15;return h>>>0;};
+const hash2=(x,y)=>{let h=Math.imul(Math.imul(x|0,374761393)+Math.imul(y|0,668265263)|0,1274126177);h^=h>>>13;h=Math.imul(h,1274126177);return ((h^(h>>>16))>>>0)/4294967296;};
+const vnoise=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);const a=hash2(xi,yi),b=hash2(xi+1,yi),c=hash2(xi,yi+1),d=hash2(xi+1,yi+1);return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+const vnoiseT=(x,y,p)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),m=v=>((v%p)+p)%p;const a=hash2(m(xi),m(yi)),b=hash2(m(xi+1),m(yi)),c=hash2(m(xi),m(yi+1)),d=hash2(m(xi+1),m(yi+1));return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy;};
+const BAYER=new Uint8Array([0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5]);
+
+// ---------- palette: base colours in ramps. Fire bends from purple through red to yellow ----------
+const BASE=['#000000'];const C=h=>{BASE.push(h);return BASE.length-1;};
+const OUTL=C('#1a1420'),
+G0=C('#1c3a32'),G1=C('#28583b'),G2=C('#3b7840'),G3=C('#5c9845'),G4=C('#92bf59'),
+D0=C('#5a4a2d'),D1=C('#836c39'),D2=C('#b09049'),D3=C('#d8bd6b'),FLW=C('#ece0b4'),FLR=C('#d4647c'),
+C0=C('#150e14'),C1=C('#26191d'),C2=C('#3b2a26'),C3=C('#583e30'),
+A0=C('#45414c'),A1=C('#68646f'),A2=C('#8f8a95'),A3=C('#b8b3bb'),
+S0=C('#2a2b3a'),S1=C('#45485b'),S2=C('#666a7e'),S3=C('#8e93a5'),S4=C('#bec2ce'),
+W0=C('#35201a'),W1=C('#583725'),W2=C('#7e522f'),W3=C('#a6733f'),W4=C('#cb995b'),
+R0=C('#44202a'),R1=C('#6c2d30'),R2=C('#964237'),R3=C('#be613e'),
+L0=C('#283045'),L1=C('#3a455f'),L2=C('#54647f'),L3=C('#7b8ba5'),
+B0=C('#1a2c54'),B1=C('#274b81'),B2=C('#3a72aa'),B3=C('#75afd5'),B4=C('#c5e7f1'),
+P0=C('#0f2f2c'),P1=C('#1a493c'),P2=C('#29694a'),P3=C('#498a54'),
+K0=C('#86493a'),K1=C('#c37d5b'),K2=C('#eab28b'),
+U0=C('#1e2a57'),U1=C('#2e4b8d'),U2=C('#4b75c5'),
+V0=C('#2b4925'),V1=C('#446f35'),V2=C('#6a9949'),
+Q0=C('#49295d'),Q1=C('#6d448f'),Q2=C('#996fbd'),
+Y0=C('#89591d'),Y1=C('#c8912f'),Y2=C('#efc555'),
+RD0=C('#5d1923'),RD1=C('#952b2d'),RD2=C('#c7473b'),
+WL0=C('#8a8595'),WL1=C('#c8c4cc'),WL2=C('#f0ece7'),
+SM0=C('#2f2d36'),SM1=C('#4f4c58'),SM2=C('#777382'),SM3=C('#a29eaa'),ST0=C('#c3cfdb'),ST1=C('#edf3f7'),
+I0=C('#1e1c25'),I1=C('#393743'),I2=C('#5b5967'),
+WIN=C('#6a7fa0'),WIN_D=C('#495a7b'),
+F0=C('#3f1a3f'),F1=C('#8d1f2c'),F2=C('#cf421f'),F3=C('#f1822a'),F4=C('#fcca4c'),F5=C('#fff3c4'),WHITE=C('#ffffff'),RIM=C('#ffbe6a');
+const LV=[],WS=[];for(let k=0;k<6;k++)LV.push(C('#000000'));for(let k=0;k<3;k++)WS.push(C('#000000'));
+const N=BASE.length,NV=4,RGB=new Float32Array(N*3),LUM=new Float32Array(N);
+for(let i=0;i<N;i++){const h=BASE[i];RGB[i*3]=parseInt(h.slice(1,3),16);RGB[i*3+1]=parseInt(h.slice(3,5),16);RGB[i*3+2]=parseInt(h.slice(5,7),16);LUM[i]=(.3*RGB[i*3]+.59*RGB[i*3+1]+.11*RGB[i*3+2])/255;}
+const SMOKEC=new Uint8Array(N);for(const i of [SM0,SM1,SM2,SM3,ST0,ST1])SMOKEC[i]=1;
+const EMIS=new Uint8Array(N);for(const i of [F0,F1,F2,F3,F4,F5,WHITE,RIM,...LV])EMIS[i]=1;
+const RAMPS=[[G0,G1,G2,G3,G4],[D0,D1,D2,D3],[C0,C1,C2,C3],[A0,A1,A2,A3],[S0,S1,S2,S3,S4],[W0,W1,W2,W3,W4],[R0,R1,R2,R3],[L0,L1,L2,L3],[B0,B1,B2,B3,B4],[P0,P1,P2,P3],[K0,K1,K2],[U0,U1,U2],[V0,V1,V2],[Q0,Q1,Q2],[Y0,Y1,Y2],[RD0,RD1,RD2],[WL0,WL1,WL2],[SM0,SM1,SM2,SM3],[ST0,ST1],[I0,I1,I2],[WIN_D,WIN]];
+const DARK=new Uint16Array(N);for(let i=0;i<N;i++)DARK[i]=EMIS[i]?i:OUTL;for(const r of RAMPS)for(let k=1;k<r.length;k++)DARK[r[k]]=r[k-1];DARK[FLW]=D2;DARK[FLR]=RD1;
+for(const i of WS)DARK[i]=B1;
+const LAVAR=[[141,31,44],[207,66,31],[241,130,42],[252,202,76],[241,130,42],[207,66,31]],WSR=[[39,75,129],[58,114,170],[117,175,213]];
+const pal=new Uint32Array(N*NV),pack=(r,g,b)=>(255<<24)|(clamp(b|0,0,255)<<16)|(clamp(g|0,0,255)<<8)|clamp(r|0,0,255);
+const TIMES={day:{a:[1,1,1],nk:0},dusk:{a:[.8,.6,.7],nk:.62},night:{a:[.3,.34,.56],nk:1}};
+let timeMode='day',flashV=0;
+function buildPalette(){const T=TIMES[timeMode],nk=T.nk;let ar=T.a[0],ag=T.a[1],ab=T.a[2];if(rain){ar*=.8;ag*=.82;ab*=.9;}ar+=flashV;ag+=flashV;ab+=flashV;
+  // palette cycling: lava steps every 300 ms, water glints every 450 ms. No pixel is touched
+  const lv=(animT/.3)|0,ws=(animT/.45)|0;
+  for(let k=0;k<6;k++){const c=LAVAR[(k+lv)%6],o=LV[k]*3;RGB[o]=c[0];RGB[o+1]=c[1];RGB[o+2]=c[2];}
+  for(let k=0;k<3;k++){const c=WSR[(k+ws)%3],o=WS[k]*3;RGB[o]=c[0];RGB[o+1]=c[1];RGB[o+2]=c[2];}
+  const a1=.1+.36*nk,a2=.22+.5*nk;
+  for(let i=0;i<N;i++){const o=i*3,r=RGB[o],g=RGB[o+1],b=RGB[o+2];
+    if(EMIS[i]){const c=pack(r,g,b);pal[i]=pal[i+N]=pal[i+2*N]=pal[i+3*N]=c;continue;}
+    let R=r*ar,G=g*ag,B=b*ab;if(SMOKEC[i]){const k=.5;R=r*(ar+(1-ar)*k);G=g*(ag+(1-ag)*k);B=b*(ab+(1-ab)*k);}
+    if((i===WIN||i===WIN_D)&&nk>0){const e=nk*(i===WIN?1:.8);R=R*(1-e)+252*e;G=G*(1-e)+(i===WIN?192:150)*e;B=B*(1-e)+(i===WIN?98:72)*e;}
+    pal[i]=pack(R,G,B);const wr=r*1.1+34,wg=g*.92+14,wb=b*.62+2;
+    pal[i+N]=pack(R+(wr-R)*a1,G+(wg-G)*a1,B+(wb-B)*a1);pal[i+2*N]=pack(R+(wr-R)*a2,G+(wg-G)*a2,B+(wb-B)*a2);
+    // version 3: burning status tint, the Terraria ratio R x1.0, G x0.7, B x0.6 on the lit colour
+    pal[i+3*N]=pack(Math.max(R,r*.7)+22,Math.max(G,g*.5)*.7+6,Math.max(B,b*.4)*.6);}}
+
+// ---------- the burn-order map: 128 px, tileable, stored as 64x64 blocks of 2x2 px. Patches start at seeds and grow, so char arrives in clusters ----------
+const MB=new Uint8Array(4096);
+(()=>{const n=96,sx=[],sy=[],st=[],gr=[];for(let k=0;k<n;k++){sx.push(hash2(k,11)*64);sy.push(hash2(k,23)*64);st.push(hash2(k,37));gr.push(.7+hash2(k,41)*.6);}
+  const raw=new Float32Array(4096);
+  for(let by=0;by<64;by++)for(let bx=0;bx<64;bx++){let best=1e9;for(let k=0;k<n;k++){let dx=Math.abs(bx+.5-sx[k]),dy=Math.abs(by+.5-sy[k]);if(dx>32)dx=64-dx;if(dy>32)dy=64-dy;const v=st[k]*6+Math.sqrt(dx*dx+dy*dy)*gr[k];if(v<best)best=v;}
+    raw[by*64+bx]=best+vnoiseT(bx/8,by/8,8)*3;}
+  // equalized: a progress of 0.3 burns 30% of the blocks
+  const ord=[...raw.keys()].sort((a,b)=>raw[a]-raw[b]);for(let r=0;r<4096;r++)MB[ord[r]]=(r*256/4096)|0;})();
+const MSB=new Uint8Array(4096);(()=>{const raw=new Float32Array(4096);for(let by=0;by<64;by++)for(let bx=0;bx<64;bx++)raw[by*64+bx]=vnoiseT(bx/5,by/5,64/5)*.65+vnoiseT(bx/2.5+7,by/2.5,64/2.5)*.25+MB[((by+19)&63)*64+((bx+41)&63)]/255*.1;
+  const ord=[...raw.keys()].sort((a,b)=>raw[a]-raw[b]);for(let r=0;r<4096;r++)MSB[ord[r]]=(r*256/4096)|0;})();
+const MV=new Uint8Array(NP),MS=new Uint8Array(NP);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){MV[y*W+x]=MB[((y>>1)&63)*64+((x>>1)&63)];MS[y*W+x]=MSB[((y>>1)&63)*64+((x>>1)&63)];}
+
+// ---------- materials and fire sim constants ----------
+const GRASS=0,DRY=1,TREE=2,WOOD=3,STONE=4,WATER=5,LAVA=6,OILM=7,ASH=8,FENCE=9,HAY=10,NMAT=11;
+const NONE=0,IGN=1,BURN=2,EMB=3,ASHS=4;
+// VFX #6's table, read per roll: chance that one roll lights a neighbour, rolls a cell burns, seconds of embers, base moisture 0..255
+const PROLL=[.15,.40,.22,.30,0,0,0,1,0,.30,.50];
+const ROLLS=[5,2,24,30,0,0,0,6,0,12,4];
+const EMBS=[5,4,10,10,0,0,0,4,0,8,6];
+const BASEM=[40,8,60,24,0,0,0,0,0,30,10];
+const STAGE_S=[0,9.8,14.8,20];const TUNE={secs:false}; // fire field stages, Canary's 98, 148 and 200 s scaled by 1/10
+
+// ---------- world maps at art resolution ----------
+const GP=new Uint16Array(NP),GCH=new Uint16Array(NP),GAS=new Uint16Array(NP),PM=new Uint8Array(NP),SMAT=new Uint8Array(NP),TK=new Uint8Array(NP),HP=new Uint8Array(NP),OILP=new Uint8Array(NP);
+const OBJ=new Int16Array(NP),OP=new Uint16Array(NP),OC=new Uint16Array(NP),OA=new Uint16Array(NP),OFL=new Uint8Array(NP),OBASE=new Int16Array(NP),OVR=new Uint8Array(NP);
+// a second object layer: what an overlapping object in front hides, shown again when the front one burns away
+const OBJ2=new Int16Array(NP),OP2=new Uint16Array(NP),OC2=new Uint16Array(NP),OA2=new Uint16Array(NP),OFL2=new Uint8Array(NP),OBASE2=new Int16Array(NP),OVR2=new Uint8Array(NP),OBUF2=new Uint16Array(NP);
+let seed=1;
+const NVAR=6,GTL=[],GTK=[];
+const TUFTS=[["l...l",".l.l.",".lml.",".xmx."],["l.l",".l.",".x."],[".l...l.","l.l.l.l",".lmlml.","..xmx.."],["l..",".ll",".mx"],["..l..","l.l.l",".lml.",".xmx."]];
+function buildTiles(){GTL.length=0;GTK.length=0;for(let v=0;v<NVAR;v++){const t=new Uint16Array(1024),k=new Uint8Array(1024),sv=v+seed*7;
+  for(let gy=0;gy<3;gy++)for(let gx=0;gx<3;gx++){if(hash2(sv*31+gx*7+1,gy*13+v*5+2)<.34)continue;
+    const T=TUFTS[(hash2(gx+sv*3,gy+9+v)*TUFTS.length)|0],tw=T[0].length,th=T.length;
+    const x0=2+gx*10+((hash2(gx*5+sv,gy*3+1)*(11-tw))|0),y0=2+gy*10+((hash2(gx+11,gy*7+sv)*(11-th))|0);
+    for(let r=0;r<th;r++)for(let c=0;c<tw;c++){const ch=T[r][c];if(ch==='.')continue;const px=x0+c,py=y0+r;if(px>31||py>31)continue;t[py*32+px]=ch==='l'?G4:ch==='m'?G3:G0;k[py*32+px]=1;}}
+  for(let n=0;n<3;n++){const x=3+((hash2(sv+n*9,77)*24)|0),y=3+((hash2(sv*3+n,91)*24)|0);if(!t[y*32+x]&&!t[y*32+x+1]){t[y*32+x]=G1;t[y*32+x+1]=G1;if(n===0)t[(y+1)*32+x+1]=G1;}}
+  if(v===2||v===5){const x=6+((hash2(sv,5)*18)|0),y=6+((hash2(sv,6)*18)|0),fc=v===2?FLW:FLR;if(!k[y*32+x]){t[y*32+x]=fc;t[y*32+x+1]=fc;t[(y+1)*32+x]=fc;t[(y+1)*32+x+1]=Y1;k[y*32+x]=k[y*32+x+1]=k[(y+1)*32+x]=k[(y+1)*32+x+1]=1;}}
+  if(v===3){const x=5+((hash2(sv,8)*18)|0),y=5+((hash2(sv,9)*18)|0);if(!k[y*32+x]){t[y*32+x]=S3;t[y*32+x+1]=S4;t[y*32+x+2]=S3;t[(y+1)*32+x]=S1;t[(y+1)*32+x+1]=S2;t[(y+1)*32+x+2]=S1;}}
+  GTL.push(t);GTK.push(k);}}
+const DRYM=new Uint16Array(N);for(let i=0;i<N;i++)DRYM[i]=i;DRYM[G4]=D3;DRYM[G3]=D2;DRYM[G2]=D2;DRYM[G1]=D1;DRYM[G0]=D0;DRYM[FLR]=FLW;
+const inRoad=(x,y)=>(x>=416&&x<448)||(y>=128&&y<160&&x>=448&&x<528);
+const PCX=560,PCY=256,PRX=46,PRY=27,pondR=(x,y)=>{const dx=(x-PCX)/PRX,dy=(y-PCY)/PRY;return dx*dx+dy*dy+(vnoise(x/14,y/11)-.5)*.22;};
+const LCX=512,LCY=336,LRX=27,LRY=11,lavaR=(x,y)=>{const dx=(x-LCX)/LRX,dy=(y-LCY)/LRY;return dx*dx+dy*dy+(vnoise(x/9,y/7)-.5)*.25;};
+const CAMP={x:272,y:238};
+const dryAt=(x,y)=>{const bx=x>>1,by=y>>1;return vnoise(bx/34+seed*3.7,by/24+seed*1.3)*.7+vnoise(bx/11+seed,by/9)*.3>.67;};
+// voronoi helper for cobbles, crust and rocks: nearest two seeds on a jittered grid of size cs
+function vor(x,y,cs,s){const gx=Math.floor(x/cs),gy=Math.floor(y/cs);let d1=1e9,d2=1e9,bx=0,by=0,bk=0;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const cx=gx+dx,cy=gy+dy,sx=(cx+.2+hash2(cx+s,cy+500)*.6)*cs,sy=(cy+.2+hash2(cx+500,cy+s)*.6)*cs,d=Math.hypot(x+.5-sx,(y+.5-sy)*1.15);
+    if(d<d1){d2=d1;d1=d;bx=sx;by=sy;bk=hash2(cx+9+s,cy+9);}else if(d<d2)d2=d;}
+  return [d1,d2,x+.5-bx,y+.5-by,bk];}
+function buildGround(){buildTiles();
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,n=vnoise(x/52+seed*5,y/44)*.6+vnoise(x/19,y/16+seed*2)*.4,dry=dryAt(x,y);
+    const v=(hash2((x>>5)+3+seed*7,(y>>5)+7)*NVAR)|0,ti=(y&31)*32+(x&31),tv=GTL[v][ti];
+    let b=dry?(n<.4?D1:n>.66?D3:D2):(n<.37?G1:n>.64?G3:G2);if(tv)b=dry?DRYM[tv]:tv;
+    GP[i]=b;TK[i]=GTK[v][ti];PM[i]=dry?DRY:GRASS;HP[i]=hash(x,y,3,seed)&255;OILP[i]=0;}
+  // road: cobbles on a jittered 10 px grid, 1 px mortar where two stones are about equally near, light top-left and shaded bottom-right
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!inRoad(x,y))continue;const i=y*W+x,[d1,d2,ox,oy,bk]=vor(x,y,10,0);let c;
+    if(d2-d1<1.3)c=S0;else{c=bk<.5?S2:S3;if(ox+oy<-3.5)c=bk<.5?S3:S4;else if(ox+oy>3.2)c=S1;}
+    GP[i]=c;PM[i]=STONE;TK[i]=0;}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(PM[i]===STONE)continue;if(inRoad(x+1,y)||inRoad(x-1,y)||inRoad(x,y-1)||inRoad(x,y+1)){GP[i]=PM[i]===DRY?D0:G0;TK[i]=0;}}
+  // pond: dark rim, shelf, deep water, glints that cycle in the palette, mud shore, two lily pads
+  for(let y=PCY-40;y<PCY+40;y++)for(let x=PCX-64;x<PCX+64;x++){const r=pondR(x,y),i=y*W+x;
+    if(r<1){let c=r>.86?B0:r>.66?B2:B1;if(r<.62&&(y%4)===0&&hash2(x>>3,y)<.4)c=WS[((x>>3)+y)%3];GP[i]=c;PM[i]=WATER;TK[i]=0;}
+    else if(r<1.25){GP[i]=r<1.1?(hash2(x>>1,y>>1)<.55?W1:D0):(hash2(x>>1,y>>1)<.5?D1:GP[i]);PM[i]=STONE;TK[i]=0;}}
+  for(const[lx,ly]of [[541,250],[579,263]])for(let dy=-4;dy<=4;dy++)for(let dx=-5;dx<=5;dx++){const d=Math.hypot(dx/1.25,dy),i=(ly+dy)*W+lx+dx;if(d>4)continue;
+    GP[i]=d>3.2?OUTL:(dx>0&&Math.abs(dy)<=dx*.5)?B1:(dx+dy<-2?G3:G2);}
+  // lava pool: crust plates with glowing cracks; the cracks are palette-cycled indices, so the flow moves at no per-pixel cost
+  for(let y=LCY-20;y<LCY+20;y++)for(let x=LCX-44;x<LCX+44;x++){const r=lavaR(x,y),i=y*W+x;if(y>=H)continue;
+    if(r<1){const[d1,d2,ox,oy,bk]=vor(x,y,9,40);let c;const ph=(((x>>1)+(y>>1))>>1)%6;
+      if(d2-d1<2.4||bk<.28||r>.84)c=LV[ph];else c=(ox+oy<-2)?C3:(bk<.6?C2:C1);GP[i]=c;PM[i]=LAVA;TK[i]=0;}
+    else if(r<1.75){const[d1,d2,ox,oy,bk]=vor(x,y,6,70);GP[i]=d2-d1<1.2?OUTL:(ox+oy<-1.5?S3:bk<.5?S2:S1);PM[i]=STONE;TK[i]=0;}}
+  // campfire: ash bed, two crossed logs, a ring of nine stones. It is ground art: the flame sits on top
+  const cx=CAMP.x,cy=CAMP.y;
+  for(let dy=-5;dy<=5;dy++)for(let dx=-11;dx<=11;dx++){const d=(dx/10)**2+(dy/4.5)**2;if(d<1){const i=(cy+dy)*W+cx+dx;GP[i]=hash2((cx+dx)>>1,(cy+dy)>>1)<.5?C1:A0;}}
+  const log=(x0,y0,x1,y1)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));for(let k=0;k<=n;k++){const x=Math.round(x0+(x1-x0)*k/n),y=Math.round(y0+(y1-y0)*k/n);
+    for(let t=-2;t<=2;t++){const i=(y+t)*W+x;GP[i]=t===-2||t===2?OUTL:t===-1?W3:t===0?W2:W1;}
+    if(k===0||k===n)for(let t=-1;t<=1;t++)GP[(y+t)*W+x]=t?W1:W4;}};
+  log(cx-9,cy+3,cx+9,cy-1);log(cx-8,cy-1,cx+8,cy+3);
+  for(let k=0;k<9;k++){const a=k/9*6.283+.3,sx=Math.round(cx+Math.cos(a)*14),sy=Math.round(cy+1+Math.sin(a)*7);
+    for(let dy=-2;dy<=2;dy++)for(let dx=-3;dx<=3;dx++){const d=(dx/3)**2+(dy/2.2)**2;if(d>1.15)continue;GP[(sy+dy)*W+sx+dx]=d>.7?OUTL:dy<0?S3:dy===0?S2:S1;}}
+  // oil puddle shape per tile, used when a tile is oiled: a blob with a purple sheen
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const lx=(x&31)-15.5,ly=(y&31)-15.5,d=Math.hypot(lx,ly*1.3)+(vnoise(x/5,y/5)-.5)*6;OILP[y*W+x]=d<11?((hash2(x>>1,y>>1)<.12)?2:1):0;}}
+// burnt ground by rule from the same art: tufts turn to black stubble, the rest to two browns in 2x2 clusters; ash is a grey ramp with char bits
+function buildBurnt(){for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(PM[i]>DRY){GCH[i]=GAS[i]=GP[i];continue;}
+  const h=hash2((x>>1)+seed*13,(y>>1)+71),n=vnoise(x/9,y/8),n2=vnoise(x/13+40,y/11);
+  let c=TK[i]?C0:(n>.68?C3:(h<.45?C1:C2));if(!TK[i]&&h>.965)c=A1;if(PM[i]===DRY&&!TK[i]&&n<.3)c=C3;GCH[i]=c;
+  const bx=x>>1,by=y>>1,an=vnoise(bx/6+seed*3,by/5)*.7+vnoise(bx/2.5+9,by/2.5)*.3,hb=hash2(bx+seed*7,by+113);let a=an<.36?A0:an<.62?A1:A2;if(hb<.009)a=C1;else if(hb<.016)a=C2;else if(hb>.993)a=A3;GAS[i]=a;}}
+
+// ---------- objects: drawn into stamps, outlined, then written into the world maps. Each pixel has a normal, a charred and a ruin colour ----------
+// flags: 1 roof or canopy (collapses), 2 seam that glows while burning, 4 glass, 8 stone (never chars), 16 gone in the final ruin, 32 stump (stays longest)
+const objects=[];
+function mkObj(kind,fx0,fy0,fw,fh,mat,burns){const o={id:objects.length,kind,fx0,fy0,fx1:fx0+fw,fy1:fy0+fh,base:fy0+fh-1,mat,burns,top:9999,pxl:null,spots:[],cells:[],st:NONE,frac:0,efrac:0,nb:0,ni:0,ne:0,na:0,collapsed:false,ashT:-1,hot:false,ext:null};objects.push(o);return o;}
+function mkStamp(w,h){return {w,h,c:new Uint16Array(w*h),a:new Uint16Array(w*h),f:new Uint8Array(w*h)};}
+function sset(st,x,y,c,a,f){x|=0;y|=0;if(x<0||y<0||x>=st.w||y>=st.h)return;const i=y*st.w+x;st.c[i]=c;st.a[i]=a||0;st.f[i]=f||0;}
+function soutline(st){const {w,h,c}=st,add=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(c[i])continue;if((x>0&&c[i-1]&&c[i-1]!==OUTL)||(x<w-1&&c[i+1]&&c[i+1]!==OUTL)||(y>0&&c[i-w]&&c[i-w]!==OUTL)||(y<h-1&&c[i+w]&&c[i+w]!==OUTL))add.push(i);}for(const i of add){c[i]=OUTL;st.a[i]=0;st.f[i]=0;}}
+// the ruin gets its own 1 px outline; a pixel that stays in the final ruin is never outlined against rafters that vanish
+function routline(st){const {w,h,c,a,f}=st,add=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!c[i]||a[i])continue;const q=j=>a[j]&&a[j]!==OUTL&&(!(f[j]&16)||(f[i]&16));if((x>0&&q(i-1))||(x<w-1&&q(i+1))||(y>0&&q(i-w))||(y<h-1&&q(i+w)))add.push(i);}for(const i of add)a[i]=OUTL;}
+const tmpPx=[];
+function sblit(st,wx,wy,o){for(let y=0;y<st.h;y++)for(let x=0;x<st.w;x++){const k=y*st.w+x;if(!st.c[k])continue;const X=wx+x,Y=wy+y;if(X<0||Y<0||X>=W||Y>=H)continue;const i=Y*W+X;if(OBJ[i]>=0&&OBJ[i]!==o.id){OBJ2[i]=OBJ[i];OP2[i]=OP[i];OA2[i]=OA[i];OFL2[i]=OFL[i];OBASE2[i]=OBASE[i];}
+  OBJ[i]=o.id;OP[i]=st.c[k];OA[i]=st.a[k];OFL[i]=st.f[k];OBASE[i]=o.base;tmpPx.push(i);if(Y<o.top)o.top=Y;}
+  o.pxl=Int32Array.from(tmpPx);tmpPx.length=0;}
+const SEAM=new Set([W0,R0,D0,P0,G0,W1]);
+function charObj(c,x,y,f){if(f&8)return DARK[c]===OUTL?c:DARK[c];if(c===OUTL)return C0;if(f&4)return C0;const L=LUM[c],h=hash2((x>>1)+5,(y>>1)+9);return L<.16?C0:L<.3?C1:L<.5?(h<.55?C1:C2):(h<.6?C2:C3);}
+function finishObjects(){for(const o of objects){const hgt=Math.max(1,o.base-o.top+1);for(const i of o.pxl){const x=i%W,y=(i/W)|0;if(OBJ2[i]===o.id&&OBJ[i]!==o.id){OVR2[i]=clamp((o.base-y)/hgt*255,0,255)|0;if(o.burns&&SEAM.has(OP2[i])&&!(OFL2[i]&8))OFL2[i]|=2;OC2[i]=o.burns?charObj(OP2[i],x,y,OFL2[i]):OP2[i];if(!o.burns)OA2[i]=OP2[i];continue;}if(OBJ[i]!==o.id)continue;
+  OVR[i]=clamp((o.base-y)/hgt*255,0,255)|0;if(o.burns&&SEAM.has(OP[i])&&!(OFL[i]&8))OFL[i]|=2;OC[i]=o.burns?charObj(OP[i],x,y,OFL[i]):OP[i];if(!o.burns)OA[i]=OP[i];}}}
+
+// pines: four toothed tiers, light on the left, dark fringe under each tier; the ruin is a black spike with stub branches, then a stump
+function buildPine(tx,ty,hw,h,sd){const o=mkObj('tree',tx*32,ty*32,32,32,TREE,true),bx=tx*32+16,by=ty*32+29;o.base=by;
+  const hc=h-8,cx=hw+4,st=mkStamp(2*hw+9,h+6),nT=4,yb=[],ya=[],hws=[];
+  for(let k=0;k<nT;k++){yb[k]=Math.round(hc-k*hc*.215)+2;hws[k]=hw*(1-k*.2);ya[k]=k===nT-1?2:Math.round(yb[k]-hc*.44);}
+  const tooth=(x,k)=>[0,1,2,3,2,1][(((x+k*3+sd)%6)+6)%6];
+  const inTier=(k,x,y)=>{if(y<ya[k])return false;const u=Math.abs(x-cx+.5),f=(y-ya[k])/(yb[k]-ya[k]);if(f>1.25)return false;const w=hws[k]*Math.pow(Math.min(1,f),.8)+.6;if(u>w)return false;return y<=yb[k]-tooth(x,k)+Math.round(u/hws[k]*2.2);};
+  for(let y=hc;y<=hc+10;y++)for(let x=cx-3;x<=cx+2;x++)sset(st,x,y,x<cx-1?W3:x<cx+1?W2:W1,x<cx?C1:C0,y>=hc+3?32:0);
+  sset(st,cx-4,hc+10,W2,C1,32);sset(st,cx+3,hc+10,W1,C0,32);
+  const own=new Int8Array(st.w*st.h).fill(-1);
+  for(let k=0;k<nT;k++){
+    if(k>0)for(let y=0;y<st.h;y++)for(let x=0;x<st.w;x++)if(own[y*st.w+x]>=0&&inTier(k,x,y-3)&&!inTier(k,x,y))st.c[y*st.w+x]=P0;
+    for(let y=ya[k];y<=yb[k]+4;y++)for(let x=0;x<st.w;x++){if(!inTier(k,x,y))continue;const u=(x-cx+.5)/hws[k],fringe=!inTier(k,x,y+2),fr1=!inTier(k,x,y+1);
+      let c=u<-.3?(hash2((x>>1)+sd,(y>>1)+k*7)<.42?P3:P2):u<.28?(hash2((x>>1)+sd,(y>>1)+k*5)<.16?P1:P2):P1;if(fringe)c=u<0?P1:P0;if(fr1&&u>-.5)c=P0;
+      sset(st,x,y,c,0,1);own[y*st.w+x]=k;}}
+  // ruin: a black spike up the middle and a stub branch on each tier
+  for(let y=Math.round(hc*.22);y<hc;y++){const w=Math.max(0,Math.round((y-hc*.22)/(hc*.78)*2));for(let x=cx-1-w;x<=cx+w;x++){const i=y*st.w+x;if(st.c[i])st.a[i]=x<cx?C1:C0;}}
+  for(let k=0;k<nT-1;k++){const yy=yb[k]-3,len=Math.round(hws[k]*.6);for(let q=1;q<=len;q++){for(const s of [-1,1]){const x=cx+(s<0?-1:0)+s*q,y=yy-(q>>1),i=y*st.w+x;if(x>=0&&x<st.w&&st.c[i])st.a[i]=C0;}}}
+  soutline(st);routline(st);sblit(st,bx-cx,by-(hc+10),o);
+  o.spots=[[bx,by-4,4,0],[bx-6,by-hc*.25,7,.04],[bx+5,by-hc*.45,7,.12],[bx-2,by-hc*.7,7,.22]].map(a=>({x:Math.round(a[0]),y:Math.round(a[1]),sz:a[2],k0:a[3]}));return o;}
+// oak: a broad crown of seven lobes lit from the top left, leaf clusters in 2x2 blocks; the ruin keeps the trunk and three bare limbs
+function buildOak(tx,ty){const o=mkObj('tree',tx*32,ty*32,32,32,TREE,true),bx=tx*32+16,by=ty*32+29;o.base=by;
+  const st=mkStamp(70,80),ox=bx-35,oy=by-77,L=[[-15,-2,13],[14,-1,13],[0,-13,15],[-7,8,12],[8,8,12],[0,0,16],[-18,-12,9],[17,-12,9]],ccx=35,ccy=36;
+  for(let y=0;y<80;y++)for(let x=0;x<70;x++){let best=-1,bk=-1;for(let k=0;k<L.length;k++){const dx=x-(ccx+L[k][0]),dy=y-(ccy+L[k][1]),v=L[k][2]+(vnoise(x/4,y/4)-.5)*3-Math.hypot(dx,dy);if(v>best){best=v;bk=k;}}
+    if(best<0)continue;const lx=(x-(ccx+L[bk][0]))/L[bk][2],ly=(y-(ccy+L[bk][1]))/L[bk][2],dot=-lx*.6-ly*.8,h=hash2((x>>1)+3,(y>>1)+5);
+    let c=dot>.45?G4:dot>.02?G3:dot>-.45?G2:G1;if(h<.16)c=c===G4?G3:c===G3?G2:c===G2?G1:G0;if(best<1.6&&ly>.3)c=G0;
+    sset(st,x,y,c,0,1);}
+  for(let y=55;y<=77;y++)for(let x=31;x<=38;x++){const fl=y>73?(x<32||x>37?1:0):0;if(x<33&&!fl&&y<74)continue;sset(st,x,y,x<34?W3:x<36?W2:W1,x<35?C1:C0,y>66?32:0);}
+  for(let y=74;y<=77;y++){sset(st,30,y,W2,C1,32);sset(st,39,y,W1,C0,32);}
+  for(let y=56;y<=73;y++)for(let x=33;x<=36;x++){const i=y*70+x;st.c[i]=x<34?W3:x<35?W2:W1;st.a[i]=x<35?C1:C0;st.f[i]=y>66?32:0;}
+  const limb=(x0,y0,x1,y1)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));for(let k=0;k<=n;k++){const x=Math.round(x0+(x1-x0)*k/n),y=Math.round(y0+(y1-y0)*k/n);for(const dx of [0,1]){const i=y*70+x+dx;if(st.c[i])st.a[i]=dx?C0:C1;}}};
+  limb(34,56,18,30);limb(35,56,52,28);limb(34,56,34,20);limb(26,44,20,40);limb(44,42,50,38);
+  soutline(st);routline(st);sblit(st,ox,oy,o);
+  o.spots=[{x:bx,y:by-4,sz:4,k0:0},{x:bx-14,y:by-36,sz:7,k0:.05},{x:bx+13,y:by-38,sz:7,k0:.14},{x:bx,y:by-52,sz:7,k0:.24}];return o;}
+// houses: 3x3 tile footprint, 40 px wall front, a gable roof that rises 26 px above the footprint
+function buildHouse(tx,ty,roof,wall,chim,burns){const fx0=tx*32,fy0=ty*32,o=mkObj('house',fx0,fy0,96,96,burns?WOOD:STONE,burns);
+  const ox=fx0-6,oy=fy0-46,st=mkStamp(110,144),P=(x,y,c,a,f)=>sset(st,x-ox,y-oy,c,a,f);
+  const stone=burns?0:8;
+  // roof: north slope 12 rows, ridge 3 rows, south slope 67 rows
+  for(let y=fy0-26;y<=fy0+55;y++)for(let x=fx0-4;x<=fx0+99;x++){const ry=y-(fy0-26);let c,f=1|16|stone,a=0;
+    const rafter=((x-fx0+18)%16)<2||(ry>=12&&ry<=14)||ry>=78;
+    if(roof==='shingle'){if(ry<12)c=ry<1?R1:(((x+ry*3)%12)<2?R0:R1);else if(ry<15)c=ry===12?R3:ry===13?R2:R0;
+      else{const q=ry-15,co=q%7,ci=(q/7)|0;c=co===6?R0:R2;if(co<6&&((x+(ci&1)*5)%10)===0)c=R1;if(co===0&&hash2(x>>2,ci)<.5)c=R3;if(x>fx0+88&&c===R2)c=R1;if(x<fx0+3&&c===R2)c=R3;if(q>=65)c=R0;}}
+    else if(roof==='thatch'){const s=hash2(x>>1,(ry/9)|0);if(ry<12)c=s<.5?D1:D0;else if(ry<15)c=ry===12?D3:ry===13?D2:D0;
+      else{const q=ry-15;c=s<.33?D3:s<.8?D2:D1;if(q%10===9)c=D0;if(x>fx0+88&&c!==D0)c=D1;if(q>=64)c=(hash2(x,3)<.5)?D1:D0;}}
+    else{if(ry<12)c=ry<1?L1:(((x+ry*2)%10)<1?L0:L1);else if(ry<15)c=ry===12?L3:ry===13?L2:L0;
+      else{const q=ry-15,co=q%6,ci=(q/6)|0;c=co===5?L0:L2;if(co<5&&((x+(ci&1)*4)%8)===0)c=L1;if(co===0&&hash2(x>>2,ci)<.4)c=L3;if(x>fx0+88&&c===L2)c=L1;if(q>=65)c=L0;}}
+    if(rafter)a=ry>=12&&ry<=14?C0:(x-fx0+18)%16===0?C1:C0;
+    P(x,y,c,a,f);}
+  if(roof==='thatch')for(let x=fx0-4;x<=fx0+99;x++){const n=1+((hash2(x,7)*3)|0);for(let k=1;k<=n;k++)P(x,fy0+55+k,k===n?D0:D1,0,1|16);}
+  // walls
+  for(let y=fy0+56;y<=fy0+95;y++)for(let x=fx0+3;x<=fx0+92;x++){const wy=y-(fy0+56);let c,f=stone,a=0;
+    if(wall==='plank'){const b=wy%6;c=b===0?W3:b===5?W0:W2;if(b>=2&&b<=3&&hash2(x>>2,y>>1)<.08)c=W1;if(x<fx0+7||x>fx0+88)c=x===fx0+3||x===fx0+89?W3:W1;}
+    else if(wall==='log'){const ly=wy%8;c=ly===0?W3:ly<5?W2:ly<7?W1:W0;if(x<fx0+9||x>fx0+86){const e=x<fx0+9?x-fx0-3:fx0+92-x;c=e<1?W1:ly<2?W4:ly<5?W3:W1;}}
+    else{const by=(wy/6)|0,bx=((x-fx0+(by&1)*5)/10)|0,lx=(x-fx0+(by&1)*5)%10,ly=wy%6;c=(ly===5||lx===9)?S0:(hash2(bx,by+ty*9)<.5?S2:S3);if(ly===0&&lx<3&&c!==S0)c=S4;}
+    if(wy<3&&wall!=='stone')c=DARK[c];
+    if(wy>=37)c=(((x+(wy&1)*4)%9)===0)?S0:wy===37?S3:S2,f=f|8;
+    // ruin: charred wall stumps, ragged in 4 px groups, tall at the corners
+    const corner=x<fx0+8||x>fx0+87,rh=corner?30:5+((hash2((x>>2)+tx*7,ty)*12)|0);
+    if(40-wy<=rh)a=(f&8)?DARK[c]:(40-wy===rh?A2:(c===W0||c===S0?C0:C1));
+    P(x,y,c,a,f);}
+  // door and windows
+  for(let y=fy0+64;y<=fy0+94;y++)for(let x=fx0+38;x<=fx0+57;x++){const dx=x-fx0-38,dy=y-fy0-64;let c=(dx<2||dx>17||dy<2)?W1:(dx%5===1?W0:W2);if((dy===7||dy===22)&&dx>=2&&dx<=6)c=I1;if(dx===15&&dy===16)c=Y1;
+    P(x,y,c,dy>20&&(dx<2||dx>17)?C0:0,stone);}
+  for(const wx of [fx0+12,fx0+68])for(let y=fy0+65;y<=fy0+81;y++)for(let x=wx-1;x<=wx+16;x++){const dx=x-wx,dy=y-fy0-65;let c,f=stone,a=-1;
+    if(dy===16){c=burns?W3:S3;}else if(dx<0||dx>15)continue;else if(dx===0||dx===15||dy===0||dy===14)c=burns?W1:S1;else if(dx===7||dx===8||dy===7)c=burns?W1:S1;else{c=(dx+dy>14)?WIN_D:WIN;f|=4;}
+    if(dy===15)c=burns?W3:S3;
+    const cur=st.c[(y-oy)*st.w+(x-ox)],ca=st.a[(y-oy)*st.w+(x-ox)];P(x,y,c,ca,f);}
+  if(chim)for(let y=fy0-40;y<=fy0+8;y++)for(let x=fx0+66;x<=fx0+78;x++){const top=y<fy0-37;if(top&&(x<fx0+65))continue;const cy=(y-fy0+40)%5,c=top?(y===fy0-40?S4:S3):(cy===4||((x-fx0+((((y-fy0+40)/5)|0)&1)*3)%6)===5)?S0:(x<fx0+69?S3:x>fx0+75?S1:S2);
+    P(x,y,c,c,8);}
+  if(chim)for(let x=fx0+65;x<=fx0+79;x++){P(x,fy0-41,S4,S4,8);P(x,fy0-40,S3,S3,8);}
+  soutline(st);routline(st);sblit(st,ox,oy,o);
+  o.spots=[[fx0+18,fy0+6,8,.25],[fx0+48,fy0-6,8,.3],[fx0+80,fy0+8,8,.35],[fx0+30,fy0+34,8,.45],[fx0+66,fy0+36,8,.5],[fx0+20,fy0+80,4,.1],[fx0+76,fy0+80,4,.15]].map(a=>({x:a[0],y:a[1],sz:a[2],k0:a[3]}));
+  if(chim)o.chim={x:fx0+72,y:fy0-42};
+  return o;}
+function buildFence(tx,ty){const o=mkObj('fence',tx*32,ty*32,32,32,FENCE,true),x0=tx*32,y0=ty*32,st=mkStamp(34,26),ox=x0-1,oy=y0+4;o.base=y0+28;
+  for(const ry of [7,15])for(let x=1;x<=32;x++){sset(st,x,ry,W3,0,1|16);sset(st,x,ry+1,W2,0,1|16);sset(st,x,ry+2,W1,0,1|16);}
+  for(let y=1;y<=23;y++)for(let x=13;x<=18;x++){if(y===1&&(x===13||x===18))continue;sset(st,x,y,x<15?W3:x<17?W2:W1,y>=12?(x<16?C1:C0):0,y>=12?32:0);}
+  soutline(st);routline(st);sblit(st,ox,oy,o);o.spots=[{x:x0+16,y:y0+26,sz:4,k0:0}];return o;}
+function buildHay(tx,ty){const o=mkObj('hay',tx*32,ty*32,32,32,HAY,true),x0=tx*32+2,y0=ty*32+7,st=mkStamp(30,22);o.base=ty*32+28;
+  for(let y=1;y<=19;y++)for(let x=1;x<=22;x++){const s=hash2(x>>1,(y/5)|0);let c=y<3?D3:y>16?D1:(s<.4?D3:s<.85?D2:D1);if(x===7||x===16)c=W1;sset(st,x,y,c,0,0);}
+  for(let y=1;y<=19;y++)for(let x=20;x<=28;x++){const dx=(x-23.5)/5,dy=(y-10)/9,r=Math.hypot(dx,dy);if(r>1)continue;const ring=((r*9)|0)%3===0;sset(st,x,y,ring?D1:r<.4?D3:D2,0,0);}
+  soutline(st);sblit(st,x0-1,y0-1,o);o.spots=[{x:x0+10,y:y0+18,sz:4,k0:0},{x:x0+18,y:y0+16,sz:7,k0:.1}];return o;}
+const PROPS={torches:[[404,118],[404,278]],brazier:[466,214],lantern:[505,104]};
+function buildProps(){for(const[px,py]of PROPS.torches){const o=mkObj('prop',px-16,py-16,32,32,STONE,false),st=mkStamp(10,36);o.base=py;
+    for(let y=8;y<=34;y++)for(let x=3;x<=5;x++)sset(st,x,y,x===3?W3:x===4?W2:W1);for(let x=1;x<=7;x++)sset(st,x,8,I1);sset(st,2,7,I2);sset(st,6,7,I1);
+    for(let y=3;y<=6;y++)for(let x=2;x<=6;x++)sset(st,x,y,y===3?W1:(x+y)%2?W0:C1);for(let x=2;x<=6;x++)sset(st,x,35,S2);
+    soutline(st);sblit(st,px-4,py-35,o);}
+  {const[bx,by]=PROPS.brazier,o=mkObj('prop',bx-16,by-16,32,32,STONE,false),st=mkStamp(22,20);o.base=by;
+    for(const lx of [4,11,17])for(let y=10;y<=19;y++)sset(st,lx,y,I1);
+    for(let y=3;y<=10;y++)for(let x=1;x<=20;x++){const dx=(x-10.5)/9.6,dy=(y-3)/7.5;if(dx*dx+dy*dy>1&&y>3)continue;if(Math.abs(dx)>1)continue;sset(st,x,y,y<=4?(Math.abs(dx)<.8?(hash2(x,y)<.5?F1:C1):I2):y<8?I1:I0);}
+    soutline(st);sblit(st,bx-11,by-19,o);}
+  {const[lx,ly]=PROPS.lantern,o=mkObj('prop',lx-8,ly,16,24,STONE,false),st=mkStamp(10,14);o.base=128;
+    for(let y=1;y<=12;y++)for(let x=1;x<=8;x++){const e=x===1||x===8||y===1||y===12||y===3;sset(st,x,y,e?I1:(x>4?WIN_D:WIN),0,e?0:4);}
+    for(let x=3;x<=6;x++)sset(st,x,0,I0);soutline(st);sblit(st,lx-5,ly-2,o);}}
+// sim material per pixel: ground, then object footprints
+function buildSmat(){SMAT.set(PM);for(const o of objects){const m=o.mat;for(let y=o.fy0;y<o.fy1&&y<H;y++)for(let x=o.fx0;x<o.fx1;x++){const i=y*W+x;if(o.kind==='fence'&&(y<o.fy0+8))continue;if(m===STONE&&o.kind==='prop'&&PM[i]>DRY)continue;SMAT[i]=m;}}
+  for(let y=CAMP.y-9;y<CAMP.y+11;y++)for(let x=CAMP.x-17;x<CAMP.x+17;x++)if(((x-CAMP.x)/17)**2+((y-CAMP.y-1)/9)**2<1)SMAT[y*W+x]=STONE;}
+let HOUSE_B=null;
+function buildWorld(){objects.length=0;OBJ.fill(-1);OBJ2.fill(-1);OBUF2.fill(0);OP.fill(0);OA.fill(0);OC.fill(0);OFL.fill(0);OBASE.fill(0);
+  buildGround();buildBurnt();
+  const list=[()=>buildPine(0,2,22,74,1),()=>buildPine(2,1,24,80,2),()=>buildOak(5,1),()=>buildPine(1,4,22,70,3),()=>buildPine(3,3,23,76,4),()=>buildPine(5,4,21,68,5),()=>buildPine(0,6,22,72,6),
+    ()=>buildHouse(7,1,'shingle','plank',false,true),()=>{HOUSE_B=buildHouse(3,6,'thatch','log',true,true);},()=>buildHouse(15,1,'slate','stone',false,false),
+    ()=>buildHay(10,6),()=>buildHay(11,9),()=>{for(let tx=1;tx<=6;tx++)buildFence(tx,10);},buildProps];
+  const bases=[31,31,31,31,31,31,31,127,287,127,223,319,351,400];
+  const ord=list.map((f,k)=>k).sort((a,b)=>bases[a]-bases[b]);for(const k of ord)list[k]();
+  finishObjects();buildSmat();buildTileMap();buildSpots();}
+
+// ---------- flame loops, built in code: tongues with a held base, a distance field for the tones, detached 2x2 tongues ----------
+// tone codes 1..5 are F1..F5, 6 is the purple edge F0
+const FTONE=[0,F1,F2,F3,F4,F5,F0];
+// id: name, w, h, frames, ms per frame, tones, variants
+const FCAT=[['candle',4,8,4,100,3,1],['torch',10,16,6,100,5,1],['htorch',6,8,4,100,4,1],['gs',8,10,4,100,4,2],['gl',12,16,6,100,5,2],['brz',16,20,6,110,5,1],['camp',24,28,8,110,6,1],['tree',22,28,8,120,6,2],['house',28,32,8,130,6,2],['fA',46,46,5,120,6,4],['fB',44,50,5,100,6,4],['fC',34,36,5,100,5,4],['st',8,10,4,100,4,1],['sth',6,8,4,100,4,1]];
+const SZ={};FCAT.forEach((f,k)=>SZ[f[0]]=k);
+const BANDS={2:[.6],3:[.4,.78],4:[.3,.58,.84],5:[.24,.46,.68,.88]};
+function genFlame(w,h,n,nt,vs){const codes=nt===3?[3,4,5]:nt===4?[2,3,4,5]:nt===5?[1,2,3,4,5]:[6,1,2,3,4,5],frames=[];
+  const ntg=w<9?1:w<18?2:3,tg=[];
+  for(let k=0;k<ntg;k++){const c=ntg===1?0:ntg===2?(k?.2:-.16)*w:[0,-.27,.27][k]*w,Hh=ntg===1?1:ntg===2?(k?.72:1):[1,.68,.6][k],Wd=ntg===1?.95:ntg===2?(k?.6:.78):[.62,.5,.48][k];
+    tg.push({c:c+(hash2(k,vs+3)-.5)*w*.08,H:Hh*(.92+hash2(k,vs)*.12),Wd,ph:hash2(k,vs+7),ps:hash2(k,vs+11)});}
+  const swayA=w*(w<9?.12:.16),hA=h<12?.1:.16;
+  for(let f=0;f<n;f++){const ph=f/n,m=new Uint8Array(w*h);
+    for(const t of tg){const hk=t.H*h*(1-hA+hA*Math.sin(2*Math.PI*(ph+t.ph)));
+      for(let y=0;y<h;y++){const yy=h-1-y,v=yy/hk;if(v>1)continue;const sx=Math.sin(2*Math.PI*(ph+t.ps)+v*2.2)*swayA*Math.pow(v,1.5),hw=t.Wd*w/2*Math.pow(1-v,.65)*Math.min(1,.62+2.2*v)+.35;
+        for(let x=0;x<w;x++)if(Math.abs(x+.5-(w/2+t.c+sx))<hw)m[y*w+x]=1;}}
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const dx=(x+.5-w/2)/(w*.46),dy=(y+.5-(h-h*.1))/(h*.13+.5);if(dx*dx+dy*dy<1)m[y*w+x]=1;}
+    // distance to the edge; the row under the base counts as inside, so the base is the hottest part
+    const d=new Uint8Array(w*h);for(let i=0;i<w*h;i++)d[i]=m[i]?99:0;
+    for(let it=0;it<2;it++){for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!d[i])continue;const l=x>0?d[i-1]:0,u=y>0?d[i-w]:0;d[i]=Math.min(d[i],l+1,u+1);}
+      for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){const i=y*w+x;if(!d[i])continue;const r=x<w-1?d[i+1]:0,b=y<h-1?d[i+w]:99;d[i]=Math.min(d[i],r+1,b+1);}}
+    const a=new Uint8Array(w*h),inner=codes.slice(1),bands=BANDS[inner.length]||[];
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!m[i])continue;const yy=h-1-y;
+      if(d[i]<=1){a[i]=codes[0];continue;}
+      const heat=Math.min(1,(d[i]-1)/(w*.2+.4))*(1-.62*yy/h)+(yy<h*.3?.14:0);let b=0;while(b<bands.length&&heat>=bands[b])b++;a[i]=inner[b];}
+    // detached tongue: a 2x2 or 2x3 block above the main tip, rising 2 to 3 px per frame
+    if(h>=14){const life=Math.max(2,Math.min(4,n>>1)),u=f%life,tw=h>=24?3:2,tip=Math.round(h-1-tg[0].H*h*.86),wy=tip-3-u*3,wx=Math.round(w/2+tg[0].c+Math.sin(ph*6.28)*1.5)-1;
+      for(let yy=0;yy<tw;yy++)for(let xx=0;xx<2;xx++){const X=wx+xx,Y=wy+yy;if(X>=0&&X<w&&Y>=0&&Y<h&&!m[Y*w+X])a[Y*w+X]=u===0?codes[1]:codes[0];}}
+    // cleanup: no lone pixels, no tone pixel unlike all four neighbours
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!a[i])continue;const nb=[x>0?a[i-1]:0,x<w-1?a[i+1]:0,y>0?a[i-w]:0,y<h-1?a[i+w]:0],cnt=nb.filter(v=>v).length;
+      if(cnt===0){a[i]=0;continue;}if(cnt>=3&&!nb.includes(a[i])){const fq={};let best=a[i],bn=0;for(const v of nb)if(v){fq[v]=(fq[v]||0)+1;if(fq[v]>bn){bn=fq[v];best=v;}}a[i]=best;}}
+    frames.push(a);}
+  // held base: the bottom 3 rows are the same in every frame
+  for(let f=1;f<n;f++)for(let y=h-3;y<h;y++)for(let x=0;x<w;x++)frames[f][y*w+x]=frames[0][y*w+x];
+  return frames;}
+const CANDLE=[[".3..",".33.","3443","3453","3453",".44.",".33.","...."],["..3.",".33.","3443","3453","3453",".44.",".33.","...."],["....",".3..","343.","3453","3453",".44.",".33.","...."],[".3..","..3.",".34.","3453","3453",".44.",".33.","...."]];
+const FSPR=FCAT.map(([nm,w,h,n,ms,nt,nv])=>{const vs=[];for(let v=0;v<nv;v++)vs.push(nm==='candle'?CANDLE.map(r=>{const a=new Uint8Array(32);for(let y=0;y<8;y++)for(let x=0;x<4;x++){const ch=r[y][x];a[y*4+x]=ch==='.'?0:+ch;}a[5*4+1]=5;return a;}):genFlame(w,h,n,nt,v*17+w));return vs;});
+
+// ---------- the 1-tile fire effect a fireball lays on each tile: 14 frames, 40 ms then 13 x 60 ms, 56 px canvas so it spills past its tile ----------
+const FXW=56,FXF=14,FXMS=[40,60,60,60,60,60,60,60,60,60,60,60,60,60];
+function genArea(vs){const fr=[];for(let k=0;k<FXF;k++){const a=new Uint16Array(FXW*FXW);
+  for(let y=0;y<FXW;y++)for(let x=0;x<FXW;x++){const dx=x-27.5,dy=(y-36)*1.15,r=Math.hypot(dx,dy),bx=x>>1,by=y>>1,n=vnoise(bx/2.6+vs*9+k*.9,by/2.6-k*.55),up=Math.max(0,-dy);let c=0;
+    if(k===0){if(r<9+n*3)c=r<5?WHITE:F5;}
+    else if(k<4){const R=10+k*5+n*5;if(r<R){const q=r/R;c=q<.3?F5:q<.55?F4:q<.8?F3:q<.93?F2:F1;}}
+    else if(k<9){const R=24+n*7-(k-4)*1.5,lift=(k-4)*2,q=Math.hypot(dx,dy+lift+up*.25)/R;if(q<1&&n>.18+(k-4)*.05){c=q<.25&&k<6?F4:q<.5?F3:q<.75?F2:q<.92?F1:F0;if(y>44&&q>.6)c=F0;}}
+    else{const R=26+n*6,q=Math.hypot(dx,dy+(k-6)*4)/R;if(q<1&&n>.42+(k-9)*.07){c=n>.68?SM3:SM2;if(k<11&&n>.62&&q<.5)c=F1;}}
+    a[y*FXW+x]=c;}
+  for(let y=1;y<FXW-1;y++)for(let x=1;x<FXW-1;x++){const i=y*FXW+x;if(!a[i])continue;if(!a[i-1]&&!a[i+1]&&!a[i-FXW]&&!a[i+FXW])a[i]=0;}
+  fr.push(a);}return fr;}
+const AREA=[genArea(0),genArea(1),genArea(2)];
+// HITBYFIRE: 9 x 100 ms, about 42x40 px, flame licks around the body
+const HBF=[];(()=>{for(let k=0;k<9;k++){const a=new Uint16Array(42*40);for(let y=0;y<40;y++)for(let x=0;x<42;x++){const dx=(x-20.5)/18,dy=(y-24)/15,r=Math.hypot(dx,dy),n=vnoise(x/3+k*1.7,y/3-k*1.3),ring=Math.abs(r-(.45+k*.06));let c=0;
+  if(ring<.16+n*.12&&n>.35+k*.04&&y<36){c=k<3?F4:k<6?F3:F2;if(n>.7)c=k<5?F5:F3;if(ring>.14)c=F1;}a[y*42+x]=c;}
+  for(let y=1;y<39;y++)for(let x=1;x<41;x++){const i=y*42+x;if(a[i]&&!a[i-1]&&!a[i+1]&&!a[i-42]&&!a[i+42])a[i]=0;}HBF.push(a);}})();
+// missile: one still 16x16 sprite per 8 directions, a round head and a tapering tail
+const MIS=[];for(let d=0;d<8;d++){const a=new Uint16Array(256),an=d*Math.PI/4,ux=Math.cos(an),uy=Math.sin(an);
+  for(let y=0;y<16;y++)for(let x=0;x<16;x++){const px=x-7.5,py=y-7.5,al=px*ux+py*uy,pe=-px*uy+py*ux,hx=px-ux*3,hy=py-uy*3,rh=Math.hypot(hx,hy);let c=0;
+    if(rh<3.6)c=rh<1.6?F5:rh<2.7?F4:F3;else if(al<3&&al>-7.5){const t=(3-al)/10.5,w=3.4*(1-t);if(Math.abs(pe)<w)c=t<.35?F3:t<.7?F2:F1;}
+    a[y*16+x]=c;}
+  for(let y=0;y<16;y++)for(let x=0;x<16;x++){const i=y*16+x;if(a[i])continue;if((x>0&&a[i-1]&&a[i-1]!==F0)||(x<15&&a[i+1]&&a[i+1]!==F0)||(y>0&&a[i-16]&&a[i-16]!==F0)||(y<15&&a[i+16]&&a[i+16]!==F0))a[i]=F0;}
+  MIS.push(a);}
+// smoke puff masks: diameters 4..64 px in 2 px steps, lumpy discs; code 1 light, 2 body, 3 shade
+const PUFFM=[];// a puff is four overlapping round lobes (a cauliflower), lit on the upper left lobes, shaded along the bottom
+for(let s=4;s<=64;s+=2){const a=new Uint8Array(s*s),r=s/2,L=s<10?[[0,0,1]]:[[0,.12,.62],[-.42,.2,.44],[.42,.16,.46],[.04,-.34,.5]];
+  for(let y=0;y<s;y++)for(let x=0;x<s;x++){const dx=(x+.5-r)/r,dy=(y+.5-r)/r;let inL=-1,best=-9;for(let k=0;k<L.length;k++){const v=L[k][2]-Math.hypot(dx-L[k][0],dy-L[k][1]);if(v>best){best=v;inL=k;}}
+    if(best<0)continue;const lx=(dx-L[inL][0])/L[inL][2],ly=(dy-L[inL][1])/L[inL][2];
+    a[y*s+x]=(lx+ly<-.55&&best>.06)?1:(ly>.45&&(dy>.25||s<10))?3:2;}
+  PUFFM.push({s,a});}
+
+// ---------- characters at 24x32 (the snow-32px templates), built from row templates and outlined in code ----------
+const UP_F=["..........wwww..........",".........wwwwWW.........",".......hhhwwWWhhh.......","......hLLhhhhhhhhH......",".....hLLhhhhhhhhhHH.....","....hhLhhhhhhhhhhhHH....","....wwwwwwwwwwwwwwWW....","....wwwwwwwwwwwwwWWW....","....kssssssssssssssk....","....kssEEssssssEEssk....","....sssEEssssssEEsSs....","....sSssssssssssssSs....",".....ssssssSSsssssS.....","......yyyyyyyyyyyY......","....llyyyyyyyyyyyYCC....","...lccccyyyYYycccccCC...","...lccoccyyYYccccoCCC...","...lccocccyyYccccoCCC...","...cccocccccccccCoCCC...","...cccocccccccccCoCCC...","...gggoccccccccCCoGGG...","....gg.cccccccCCC.GG....",".......ccccccCCCC......."];
+const UP_B=["..........wwww..........",".........wwwwWW.........",".......hhhwwWWhhh.......","......hLLhhhhhhhhH......",".....hLLhhhhhhhhhHH.....","....hhLhhhhhhhhhhhHH....","....hhhhhhhhhhhhhhHH....","....wwwwwwwwwwwwwwWW....","....wwwwwwwwwwwwwWWW....","....kkkkkkkkkkkkkkKK....","....kkkkkkkkkkkkkKKK....",".....kkkkkkkkkkkKKK.....","......ssssssssssSS......","......yyyyyyyyyyyY......","....llyyyyyyyyyyyYCC....","...lccccyyYccccccccCC...","...lccoccyyYcccccoCCC...","...lccoccyyYcccccoCCC...","...cccocccyYccccCoCCC...","...cccocccccccccCoCCC...","...gggoccccccccCCoGGG...","....gg.cccccccCCC.GG....",".......ccccccCCCC......."];
+const UP_S=["........wwww............",".......wwwwWW...........","......hhwwWWhhhhh.......",".....hLLhhhhhhhhhH......","....hLLhhhhhhhhhhhHH....","....hhhhhhhhhhhhhhHH....","....wwwwwwwwwwwwwwWWW...","....wwwwwwwwwwwwwWWW....","....kkkkkssssssssss.....","....kkkksssssssEEss.....","....kkkkssssssSEEsss....",".....kkksssssssssss.....","......kkssssssssSS......","......yyyyyyyyyyyY......","...YYyyyyyyyyyyyYY......","..YY...lcccccccccC......","..Y....lccccccccCC......",".......lccccccccCC......",".......ccccccccCCC......",".......ccccccccCCC......",".......ccccccccCCC......","........ccccccCCC.......","........ccccccCCC......."];
+const ARM_S=["ollC.","ollC.","ollC.","ollC.","ollC.","oggG.",".oo.."];
+const LF_I=[".......pppp..pPPP.......",".......pppp..pPPP.......",".......pppp..pPPP.......","......bbbbb..bbbbB......","......bbbbb..bbbbB......","......bBBBB..bBBBB......"];
+const LF_L=[".......pppp..pPPP.......",".......pppp..pPPP.......","......bbbbb..bbbbB......","......bbbbb..bBBBB......",".....bbbbbb.............",".....bbBBBB............."];
+const LF_R=[".......pppp..pPPP.......",".......pppp..pPPP.......","......bbbbb..bbbbB......","......bBBBB..bbbbB......",".............bbbbbB.....",".............bbBBBB....."];
+const LS_I=["........pppPPP..........","........pppPPP..........","........pppPPP..........","........bbbbBBB.........","........bbbbbBBB........","........bBBBBBBB........"];
+const LS_N=[".......PPPppppp.........","......PPP...pppp........",".....PPP.....pppp.......","....BBB.......bbbb......","...BBBB.......bbbbb.....","...BBB........bBBBBB...."];
+const LS_NP=["........pppPPP..........","........ppppPP..........",".......PPpppp...........","......BBBbbbb...........","......BB.bbbbb..........",".........bBBBBB........."];
+const LS_F=[".......pppppPPP.........","......ppp...PPPP........",".....ppp.....PPPP.......","....bbb.......BBBB......","...bbbb.......BBBBB.....","...bBB........BBBBBB...."];
+const LS_FP=["........PPPppp..........","........PPpppp..........",".......ppPPPP...........","......bbbBBBB...........","......bB.BBBBB..........",".........BBBBBB........."];
+const UPS=[UP_F,UP_B,UP_S],LEGS=[[LF_R,LF_I,LF_L,LF_I,LF_I],[LF_L,LF_I,LF_R,LF_I,LF_I],[LS_F,LS_FP,LS_N,LS_NP,LS_I]];
+const mkMap=(hat,hatL,hatD,coat,coatL,coatD,scarf,scarfD,hair,hairD,brim,brimD)=>({h:hat,L:hatL,H:hatD,w:brim,W:brimD,k:hair,K:hairD,s:K2,S:K1,E:OUTL,y:scarf,Y:scarfD,c:coat,l:coatL,C:coatD,g:K2,G:K1,p:S1,P:S0,b:W1,B:W0,o:OUTL});
+const MAPS=[mkMap(RD1,RD2,RD0,U1,U2,U0,Y1,Y0,W1,W0,W2,W1),mkMap(D2,D3,D1,V1,V2,V0,RD1,RD0,S2,S1,D2,D1),
+  mkMap(P2,P3,P1,RD1,RD2,RD0,Y2,Y1,W1,W0,P1,P0),mkMap(Q1,Q2,Q0,W2,W3,W1,U1,U0,W0,C1,Q0,Q0),mkMap(Y1,Y2,Y0,Q1,Q2,Q0,RD1,RD0,W1,W0,Y0,Y0),mkMap(U1,U2,U0,S2,S3,S1,Y1,Y0,C2,C1,U0,U0),mkMap(S2,S3,S1,V1,V2,V0,R2,R1,W1,W0,S1,S0)];
+function outlineSprite(px,w,h){const add=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(px[i])continue;if((x>0&&px[i-1])||(x<w-1&&px[i+1])||(y>0&&px[i-w])||(y<h-1&&px[i+w]))add.push(i);}for(const i of add)px[i]=OUTL;}
+function mkFrames(map){const out=[];
+  for(let d=0;d<3;d++){const up=UPS[d],fr=[];
+    for(let f=0;f<5;f++){const px=new Uint16Array(768),hand=new Uint8Array(768),bob=(f===1||f===3)?1:0,y0=2-bob;
+      const row=(str,y,xo)=>{for(let x=0;x<24;x++){const ch=str[x],X=x+(xo|0);if(ch!=='.'&&y>=0&&y<32&&X>=0&&X<24){px[y*24+X]=map[ch];hand[y*24+X]=(ch==='g'||ch==='G')?1:0;}}};
+      const g=up.map(r=>r.split(''));g.push(new Array(24).fill('.'),new Array(24).fill('.'));let sway=0;
+      if(d<2&&(f===0||f===2)){const plantRight=(f===0)===(d===0),fa=plantRight?3:17,ba=plantRight?17:3;sway=plantRight?1:-1;
+        for(let r=21;r>=15;r--)for(let x=fa;x<fa+4;x++)g[r+2][x]=g[r][x];
+        for(let r=15;r<=20;r++)for(let x=ba;x<ba+4;x++)g[r][x]=g[r+1][x];for(let x=ba;x<ba+4;x++)g[21][x]='.';}
+      for(let r=0;r<25;r++)row(g[r].join(''),y0+r,sway);
+      if(d===2){const sw=f===0?3:f===2?-3:0;for(let r=0;r<ARM_S.length;r++){const s=ARM_S[r],xo=Math.round(sw*r/6);for(let x=0;x<5;x++)if(s[x]!=='.'){const i=(y0+15+r)*24+10+xo+x;px[i]=map[s[x]];hand[i]=(s[x]==='g'||s[x]==='G')?1:0;}}}
+      const L=LEGS[d][f];if(bob)row(L[0],24);for(let r=0;r<6;r++)row(L[r],25+r);
+      let lx=0,ly=0,ln=0,rx=0,ry=0,rn=0;for(let i=0;i<768;i++)if(hand[i]){const x=i%24,y=(i/24)|0;if(x<12){lx+=x;ly+=y;ln++;}else{rx+=x;ry+=y;rn++;}}
+      outlineSprite(px,24,32);fr.push({px,hl:ln?[lx/ln,ly/ln]:[5,22],hr:rn?[rx/rn,ry/rn]:[18,22]});}
+    out.push(fr);}
+  return out;}
+const FR=MAPS.map(mkFrames);
+// sheep, 20x14 with the outline, two walk frames, facing right
+const SHEEPT=["...WWW..WWW.......","..WWWWWWWWWWW.....",".WWWwWWWWWwWWW.hp.",".WwwwwwWwwwwWWhhh.","WWwwwwwwwwwwwwhehh","WwwwwwwwwwwwwwhhhH",".wwwvwwwwwvwwwwhH.",".vwwvvwwwwvvwwv...","..vvvvvvvvvvvvv..."];
+const SHEEPL=[["...l.l.....l.l....","...l.l.....l.l....","...k.k.....k.k...."],["..l...l...l...l...","..l...l...l...l...","..k...k...k...k..."]];
+const SHEEPF=SHEEPL.map(L=>{const px=new Uint16Array(20*14),m={W:WL2,w:WL1,v:WL0,h:S1,H:S0,e:WL2,p:K1,l:S0,k:C0};const rows=SHEEPT.concat(L);for(let r=0;r<rows.length;r++)for(let c=0;c<18;c++){const ch=rows[r][c];if(ch!=='.')px[(r+1)*20+c+1]=m[ch];}outlineSprite(px,20,14);return px;});
+// damage digits, 5x9 with a 1 px outline: 11 px tall
+const DIG=[[".###.","#...#","#...#","#...#","#...#","#...#","#...#","#...#",".###."],["..#..",".##..","#.#..","..#..","..#..","..#..","..#..","..#..","#####"],[".###.","#...#","....#","....#","...#.","..#..",".#...","#....","#####"],[".###.","#...#","....#","....#","..##.","....#","....#","#...#",".###."],["...#.","..##.",".#.#.","#..#.","#..#.","#####","...#.","...#.","...#."],["#####","#....","#....","####.","....#","....#","....#","#...#",".###."],[".###.","#...#","#....","#....","####.","#...#","#...#","#...#",".###."],["#####","....#","....#","...#.","...#.","..#..","..#..",".#...",".#..."],[".###.","#...#","#...#","#...#",".###.","#...#","#...#","#...#",".###."],[".###.","#...#","#...#","#...#",".####","....#","....#","#...#",".###."]];
+
+// ---------- the spread grid: one cell per 32, 16 or 8 px ----------
+let CS=32,GSH=5,GW=20,GH=12,NC=240,ROLLK=4;
+const CELL=new Int32Array(NP);
+let ITK,MAT,OMAT,FUEL,FUEL0,MOIST,STA,AGE,DIRF,OILc,DEAD,PEND,CDIR,STEAM,CHG,WETF,COOL,REGS,PH,CTILE,TIGN,TBRN,TEMB,TASH,TA,DECC;
+let chgList=[],active=[],LAVAC=[];
+const DX=[1,1,0,-1,-1,-1,0,1],DY=[0,1,1,1,0,-1,-1,-1],WF=new Int32Array(8);
+const IGN16=new Int32Array(NMAT),BURNT=new Int32Array(NMAT);
+let fullDirty=true;
+function markChg(c){if(!CHG[c]){CHG[c]=1;chgList.push(c);}}
+const recentAsh=[];
+function markAround(c){const cx=c%GW,cy=(c/GW)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=cx+dx,y=cy+dy;if(x>=0&&y>=0&&x<GW&&y<GH)markChg(y*GW+x);}}
+function setGrid(cs,keep){const old=keep&&STA?{STA,FUEL,FUEL0,MOIST,DIRF,OILc,DEAD,MAT,TIGN,TBRN,TEMB,TASH,REGS,GW,CS,AGE}:null;
+  CS=cs;GSH=cs===32?5:cs===16?4:3;GW=W/cs;GH=Math.ceil(H/cs);NC=GW*GH;ROLLK=cs/8;
+  const U8=()=>new Uint8Array(NC),F32=()=>new Float32Array(NC);
+  MAT=U8();OMAT=U8();FUEL=new Uint16Array(NC);FUEL0=new Uint16Array(NC);MOIST=U8();STA=U8();AGE=U8();DIRF=U8();OILc=U8();DEAD=U8();PEND=U8();CDIR=U8();STEAM=U8();CHG=U8();WETF=U8();COOL=U8();REGS=U8();PH=U8();CTILE=new Int16Array(NC);DECC=U8();
+  TIGN=F32();TBRN=F32();TEMB=F32();TASH=F32();TA=F32();ITK=new Int32Array(NC);recentAsh.length=0;AM=F32();
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)CELL[y*W+x]=(y>>GSH)*GW+(x>>GSH);
+  const cnt=new Int32Array(NMAT);
+  for(let cy=0;cy<GH;cy++)for(let cx=0;cx<GW;cx++){const c=cy*GW+cx;cnt.fill(0);for(let y=cy*cs;y<Math.min(H,cy*cs+cs);y++)for(let x=cx*cs;x<cx*cs+cs;x++)cnt[SMAT[y*W+x]]++;
+    let best=GRASS,bn=-1;for(let m=0;m<NMAT;m++){const v=cnt[m]*(m===TREE||m===WOOD||m===HAY||m===FENCE?2:1);if(v>bn){bn=v;best=m;}}OMAT[c]=best;
+    PH[c]=hash(cx,cy,0,seed)&3;CTILE[c]=Math.min(TH-1,(cy*cs+(cs>>1))>>5)*TW+((cx*cs+(cs>>1))>>5);}
+  // a finer grid rolls more often (32 px 1 Hz, 16 px 2 Hz, 8 px 4 Hz) and a cell burns the same number of rolls, so the whole process scales with the cell and the front keeps its px per second
+  for(let m=0;m<NMAT;m++){IGN16[m]=Math.min(65535,Math.round(PROLL[m]*65536));BURNT[m]=TUNE.secs?ROLLS[m]*32/cs:ROLLS[m];}
+  for(const o of objects){o.cells=[];for(let cy=o.fy0>>GSH;cy<=Math.min(GH-1,(o.fy1-1)>>GSH);cy++)for(let cx=o.fx0>>GSH;cx<=(o.fx1-1)>>GSH;cx++){const c=cy*GW+cx;if(OMAT[c]===o.mat&&o.burns)o.cells.push(c);}}
+  for(let c=0;c<NC;c++){const m=OMAT[c];MAT[c]=m;FUEL[c]=FUEL0[c]=BURNT[m];MOIST[c]=BASEM[m];}
+  LAVAC=[];for(let c=0;c<NC;c++)if(OMAT[c]===LAVA)LAVAC.push(c);
+  if(old){for(let c=0;c<NC;c++){const cx=c%GW,cy=(c/GW)|0,px=Math.min(W-1,cx*cs+(cs>>1)),py=Math.min(H-1,cy*cs+(cs>>1)),oc=(py>>(old.CS===32?5:old.CS===16?4:3))*old.GW+(px>>(old.CS===32?5:old.CS===16?4:3));
+      if(!FUEL0[c]&&old.STA[oc]!==ASHS)continue;const s=old.STA[oc];STA[c]=s;DIRF[c]=old.DIRF[oc];OILc[c]=old.OILc[oc];DEAD[c]=old.DEAD[oc];MOIST[c]=old.MOIST[oc];TIGN[c]=old.TIGN[oc];ITK[c]=Math.round(old.TIGN[oc]*4);TBRN[c]=old.TBRN[oc];TEMB[c]=old.TEMB[oc];TASH[c]=old.TASH[oc];REGS[c]=old.REGS[oc];
+      if(old.MAT[oc]===ASH||old.MAT[oc]===OILM)MAT[c]=old.MAT[oc];if(FUEL0[c]){const f=old.FUEL0[oc]?old.FUEL[oc]/old.FUEL0[oc]:1;FUEL[c]=Math.round(f*FUEL0[c]);if(s===BURN&&!FUEL[c])FUEL[c]=1;}}}
+  for(let i=0;i<NP;i++)if(DECAL[i])DECC[CELL[i]]=1;
+  rebuildActive();fullDirty=true;chgList=[];for(const o of objects)o.collapsed=o.frac>=.6;}
+function rebuildActive(){const na=[];for(let c=0;c<NC;c++){const s=STA[c];if(s>=IGN&&s<=EMB)na.push(c);}active=na;}
+
+// ---------- server tick, 4 Hz: water, rain, extinguish and events. Spread rolls once per second per 32 px tile, phased by the tick the tile caught ----------
+let tick=0,simT=0,nIgn=0,nExt=0,netFull=4,netEv=4,simMs=0,windDir=0,windV=3,rain=false,capOn=false,paused=false,cellsTick=0,rollsTick=0;
+let windX=1,windY=0;const queue=[];
+function updateWind(){const a=windDir*Math.PI/4;windX=Math.cos(a);windY=Math.sin(a);if(Math.abs(windX)<1e-9)windX=0;if(Math.abs(windY)<1e-9)windY=0;
+  for(let d=0;d<8;d++){const ct=Math.cos((d-windDir)*Math.PI/4);WF[d]=Math.round(1024*Math.exp(windV*(0.045+0.131*(ct-1)))*(d&1?.7:1));}}
+const ign16=c=>OILc[c]?IGN16[OILM]:IGN16[MAT[c]];
+const canBurn=c=>STA[c]===NONE&&FUEL[c]>0&&ign16(c)>0;
+const rollNow=c=>tick>ITK[c]&&((tick-ITK[c])%ROLLK)===0,rollLava=c=>((tick+PH[c])%ROLLK)===0;
+function ignite(c,dir){if(!canBurn(c))return false;STA[c]=IGN;AGE[c]=0;DIRF[c]=dir;TIGN[c]=tick*.25;ITK[c]=tick;markChg(c);nIgn++;return true;}
+function extinguish(c){STA[c]=NONE;MOIST[c]=255;STEAM[c]=4;markAround(c);nExt++;}
+const FLD=new Uint8Array(NT),FLT=new Float32Array(NT),FLB=new Float32Array(NT);let fieldList=[];
+function cellsInRect(x0,y0,x1,y1,fn){for(let cy=Math.max(0,y0>>GSH);cy<=Math.min(GH-1,(y1-1)>>GSH);cy++)for(let cx=Math.max(0,x0>>GSH);cx<=Math.min(GW-1,(x1-1)>>GSH);cx++)fn(cy*GW+cx);}
+function cellAtPx(x,y){x=clamp(x|0,0,W-1);y=clamp(y|0,0,H-1);const i=y*W+x,o=OBJ[i];if(o>=0&&objects[o].burns&&objects[o].cells.length&&OBUF[i]){const ob=objects[o];let best=ob.cells[0],bd=1e9;for(const c of ob.cells){const d=Math.abs((c%GW+.5)*CS-x)+Math.abs((((c/GW)|0)+.5)*CS-(ob.fy1-8));if(d<bd){bd=d;best=c;}}return best;}return CELL[i];}
+function regrowCell(c){const m=OMAT[c];if(STA[c]===IGN||STA[c]===BURN)return;MAT[c]=m;STA[c]=NONE;FUEL[c]=FUEL0[c]=BURNT[m];MOIST[c]=BASEM[m];OILc[c]=DEAD[c]=AGE[c]=REGS[c]=0;markChg(c);}
+function applyAction(a){
+  if(a.k==='ign'){const c=cellAtPx(a.x,a.y);if(MOIST[c]<220)ignite(c,8);}
+  else if(a.k==='water'){cellsInRect(a.x-40,a.y-40,a.x+40,a.y+40,c=>{const cx=(c%GW+.5)*CS,cy=(((c/GW)|0)+.5)*CS;if(Math.hypot(cx-a.x,(cy-a.y)*1.2)>40&&c!==CELL[clamp(a.y|0,0,H-1)*W+clamp(a.x|0,0,W-1)])return;
+      if(MAT[c]===LAVA){COOL[c]=60;STEAM[c]=6;return;}const s=STA[c];if(s===IGN||s===BURN)extinguish(c);else if(s===EMB){STA[c]=ASHS;MAT[c]=ASH;DEAD[c]=1;OILc[c]=0;STEAM[c]=3;TEMB[c]=TASH[c]=tick*.25;markAround(c);nExt++;}
+      if(MAT[c]!==WATER&&MAT[c]!==LAVA){if(!WETF[c]){WETF[c]=1;markChg(c);}MOIST[c]=255;}});
+    for(let ty=Math.max(0,(a.y-40)>>5);ty<=Math.min(TH-1,(a.y+40)>>5);ty++)for(let tx=Math.max(0,(a.x-40)>>5);tx<=Math.min(TW-1,(a.x+40)>>5);tx++){const t=ty*TW+tx;if(FLD[t]){FLD[t]=0;markTile(t);}}}
+  else if(a.k==='oil'){const tx=a.x>>5,ty=a.y>>5;cellsInRect(tx*32,ty*32,tx*32+32,ty*32+32,c=>{const m=MAT[c];if(m===WATER||m===LAVA||m===STONE)return;
+      const add=3*32/CS;if(STA[c]===IGN||STA[c]===BURN){FUEL[c]=Math.min(999,FUEL[c]+add);FUEL0[c]=Math.max(FUEL0[c],FUEL[c]);OILc[c]=1;}
+      else if(STA[c]===NONE){OILc[c]=1;FUEL[c]=Math.min(999,FUEL[c]+add);FUEL0[c]=Math.max(FUEL0[c],FUEL[c]);MOIST[c]=0;markChg(c);}
+      else if(STA[c]===ASHS){MAT[c]=OILM;STA[c]=NONE;DEAD[c]=0;FUEL[c]=FUEL0[c]=BURNT[OILM];MOIST[c]=0;OILc[c]=1;markChg(c);}});}
+  else if(a.k==='grow'){const tx=a.x>>5,ty=a.y>>5;cellsInRect(tx*32-32,ty*32-32,tx*32+64,ty*32+64,regrowCell);
+    for(let y=Math.max(0,ty*32-32);y<Math.min(H,ty*32+64);y++)for(let x=Math.max(0,tx*32-32);x<Math.min(W,tx*32+64);x++)DECAL[y*W+x]=0;
+    for(const o of objects)if(o.burns&&o.fx1>tx*32-32&&o.fx0<tx*32+64&&o.fy1>ty*32-32&&o.fy0<ty*32+64){for(const c of o.cells)regrowCell(c);o.collapsed=false;o.ashT=-1;}}
+  else if(a.k==='blast'){cellsInRect(a.x-16,a.y-16,a.x+16,a.y+16,c=>{if(MAT[c]===WATER){STEAM[c]=5;return;}ignite(c,8);});}
+  else if(a.k==='field'){const t=a.t;if(t<0||t>=NT)return;const tx=t%TW,ty=(t/TW)|0;if(isWaterTile(tx,ty))return;FLD[t]=3;FLT[t]=STAGE_S[3];FLB[t]=animT;markTile(t);if(!fieldList.includes(t))fieldList.push(t);}}
+function isWaterTile(tx,ty){const i=(ty*32+16)*W+tx*32+16;return i<NP&&(PM[i]===WATER||PM[i]===LAVA);}
+function markTile(t){const tx=t%TW,ty=(t/TW)|0;cellsInRect(tx*32,ty*32,tx*32+32,ty*32+32,markChg);}
+function spread(c,mult,cand){const cx=c%GW,cy=(c/GW)|0;rollsTick++;
+  for(let d=0;d<8;d++){const nx=cx+DX[d],ny=cy+DY[d];if(nx<0||ny<0||nx>=GW||ny>=GH)continue;const n=ny*GW+nx;cellsTick++;
+    if(MAT[n]===WATER){if(STEAM[c]<2)STEAM[c]=2;continue;}if(!canBurn(n))continue;
+    let thr=(ign16(n)*(255-MOIST[n]))>>8;thr=(thr*WF[d])>>10;if(mult!==1024)thr=(thr*mult)>>10;
+    if((hash(nx,ny,tick,seed+d*7919+c*31)&0xffff)<thr&&!PEND[n]){PEND[n]=1;CDIR[n]=(d+4)&7;cand.push(n);}}}
+function simTick(){const t0=now();tick++;nIgn=0;nExt=0;cellsTick=0;rollsTick=0;const T=tick*.25;
+  for(const a of queue)applyAction(a);queue.length=0;
+  for(let c=0;c<NC;c++){const m=MAT[c];if(STEAM[c])STEAM[c]--;if(COOL[c]&&!testing)COOL[c]--;if(m===WATER||m===LAVA)continue;const b=BASEM[OMAT[c]];
+    if(rain){if(MOIST[c]<250)MOIST[c]+=5;}else if(MOIST[c]>b)MOIST[c]--;else if(MOIST[c]<b&&(tick&3)===0)MOIST[c]++;
+    const wet=MOIST[c]>150?1:0;if(wet!==WETF[c]){WETF[c]=wet;markChg(c);}
+    // ash regrows in two whole-tile steps after 60 to 120 s
+    if(STA[c]===ASHS&&(OMAT[c]===GRASS||OMAT[c]===DRY)&&!OILc[c]){const age=T-TASH[c],lim=60+(hash(c,7,0,seed)%60);if(REGS[c]===0&&age>lim){REGS[c]=1;markChg(c);}else if(REGS[c]===1&&age>lim+15)regrowCell(c);}}
+  const cand=[];
+  for(const c of active)if((STA[c]===BURN||STA[c]===IGN)&&rollNow(c))spread(c,1024,cand);
+  for(const c of LAVAC)if(!COOL[c]&&rollLava(c))spread(c,96,cand);
+  for(const t of fieldList)if(FLD[t]>=2){const tx=t%TW,ty=(t/TW)|0;cellsInRect(tx*32,ty*32,tx*32+32,ty*32+32,c=>{if(canBurn(c)&&!PEND[c]){PEND[c]=1;CDIR[c]=8;cand.push(c);}});}
+  statusTick(cand);
+  for(const c of active){const s=STA[c];
+    if(s===IGN){if(rollNow(c)){STA[c]=BURN;TBRN[c]=TIGN[c];FUEL[c]--;AGE[c]++;markChg(c);if(!FUEL[c]){STA[c]=EMB;TEMB[c]=T;markAround(c);}}}
+    else if(s===BURN){
+      if(rain&&(hash(c,tick,7,seed)%1000)<(200+30*Math.min(AGE[c],15))/4){extinguish(c);continue;}
+      if(rollNow(c)){FUEL[c]--;AGE[c]++;if(!FUEL[c]){STA[c]=EMB;TEMB[c]=T;markAround(c);}}}
+    else if(s===EMB){const e=EMBS[OILc[c]?OILM:MAT[c]]||4;if((T-TEMB[c])*(rain?2:1)>=e){STA[c]=ASHS;MAT[c]=ASH;DEAD[c]=1;OILc[c]=0;TASH[c]=T;REGS[c]=0;markAround(c);recentAsh.push(c);}}}
+  // the budget goes to candidates in a per-tick hash order, the same on every client
+  cand.sort((a,b)=>hash(a,tick,11,seed)-hash(b,tick,11,seed)||a-b);let budget=capOn?4*(32/CS)*(32/CS):1e9;
+  for(const c of cand){PEND[c]=0;if(budget>0&&ignite(c,CDIR[c]))budget--;}
+  rebuildActive();let nb=0;for(const c of active)if(STA[c]!==EMB)nb++;
+  const nf=[];for(const t of fieldList){if(!FLD[t])continue;FLT[t]-=.25;if(FLT[t]<=0){FLD[t]--;FLT[t]=STAGE_S[FLD[t]]||0;FLB[t]=animT;markTile(t);}if(FLD[t])nf.push(t);}fieldList=nf;
+  netFull=4+2*nb;netEv=4+3*(nIgn+nExt);
+  simMs=simMs*.8+(now()-t0)*.2;}
+
+// ---------- actors ----------
+const PRM={speed:80,stepPx:8};
+const mkActor=(x,y,set,kind)=>({x,y,set,kind:kind||'char',dir:0,fr:0,ph:0,moving:false,route:null,ri:0,wait:0,tx:null,ty:null,speed:PRM.speed,torch:false,hp:150,max:150,stacks:0,flash:0,hitT:-9,inField:0,ashy:0,live:true,anim:0,rim:null,puffT:0,hold:false});
+const player=mkActor(368,326,0),vill=mkActor(272,140,1),sheep=mkActor(150,320,0,'sheep'),crowd=[];player.torch=true;player.dir=3;player.hp=player.max=200;
+sheep.speed=30;sheep.hp=sheep.max=60;
+for(let k=0;k<20;k++){const a=mkActor(0,0,2+k%5);a.speed=56+hash2(k,5)*22;a.wait=hash2(k,9)*3;a.torch=k%2===0;a.live=false;crowd.push(a);}
+const VWP=[[272,140],[272,176],[432,176],[432,328],[432,176],[272,176]];vill.wp=0;vill.wait=2;vill.speed=44;
+const TB=new Uint8Array(NT),tcx=t=>(t%TW)*32+16,tcy=t=>((t/TW)|0)*32+24,tileAt=(x,y)=>clamp(y>>5,0,TH-1)*TW+clamp(x>>5,0,TW-1);
+function buildTileMap(){TB.fill(0);for(let t=0;t<NT;t++){const tx=t%TW,ty=(t/TW)|0;if(ty>=11)TB[t]=1;}
+  for(const o of objects){if(o.kind==='prop'&&o.fx0<0)continue;for(let ty=o.fy0>>5;ty<=(o.fy1-1)>>5;ty++)for(let tx=o.fx0>>5;tx<=(o.fx1-1)>>5;tx++)if(ty>=0&&ty<TH&&tx>=0&&tx<TW)TB[ty*TW+tx]=1;}
+  for(let t=0;t<NT;t++){const x=tcx(t),y=tcy(t)-6;if(y<H&&(PM[y*W+x]===WATER||PM[y*W+x]===LAVA||pondR(x,y)<1.05||lavaR(x,y)<1.3))TB[t]=1;}
+  TB[tileAt(CAMP.x,CAMP.y)]=1;}
+function blocked(x,y){if(x<8||x>=W-8||y<20||y>=H-6)return true;return !!(TB[tileAt(x-6,y-3)]||TB[tileAt(x+5,y-3)]);}
+const BQ=new Int16Array(NT),BP=new Int16Array(NT);
+function bfs(from,to){if(TB[to]||from===to)return null;BP.fill(-1);let qh=0,qt=0;BQ[qt++]=from;BP[from]=from;
+  while(qh<qt){const t=BQ[qh++];if(t===to)break;const x=t%TW,y=(t/TW)|0;
+    for(let k=0;k<4;k++){const nx=x+(k===0?1:k===1?-1:0),ny=y+(k===2?1:k===3?-1:0);if(nx<0||ny<0||nx>=TW||ny>=TH)continue;const n=ny*TW+nx;if(TB[n]||BP[n]>=0)continue;BP[n]=t;BQ[qt++]=n;}}
+  if(BP[to]<0)return null;const path=[];for(let t=to;t!==from;t=BP[t])path.push([tcx(t),tcy(t)]);path.reverse();return path;}
+function freeTile(minC,maxC,minR,maxR){for(let k=0;k<40;k++){const tx=(minC||0)+((rnd()*((maxC===undefined?TW-1:maxC)-(minC||0)+1))|0),ty=(minR||0)+((rnd()*((maxR===undefined?TH-2:maxR)-(minR||0)+1))|0),t=ty*TW+tx;if(!TB[t])return t;}return tileAt(368,326);}
+// soot prints: 2 per tile, 3x5 px (5x3 sideways), for the 3 tiles after leaving ash or charred ground, fading over 10 s
+const prints=[];
+function footstep(c,f){if(c.ashy<=0||c.kind==='sheep')return;c.ashy--;const fx=Math.round(c.x),fy=Math.round(c.y),d=c.dir;let px,py,w,h;
+  if(d<2){w=3;h=5;px=((f===0)===(d===0))?fx+1:fx-4;py=fy-5;}else{w=5;h=3;px=d===2?fx-2:fx-3;py=f===0?fy-6:fy-2;}
+  prints.push({x:px,y:py,w,h,t:0});if(prints.length>240)prints.shift();}
+function idle(c){c.moving=false;c.fr=4;}
+function walk(c,vx,vy,dt,noclip){let mx=0,my=0;const nx=c.x+vx*dt,ny=c.y+vy*dt;
+  if(noclip||!blocked(nx,c.y)){mx=nx-c.x;c.x=nx;}if(noclip||!blocked(c.x,ny)){my=ny-c.y;c.y=ny;}
+  const m=Math.hypot(mx,my);if(m<.001){idle(c);return 0;}
+  if(Math.abs(vx)>Math.abs(vy)+.01)c.dir=vx>0?2:3;else c.dir=vy>0?0:1;
+  if(!c.moving){c.moving=true;c.ph=0;c.fr=0;footstep(c,0);}
+  else{c.ph+=m/PRM.stepPx;const f=(c.ph|0)&3;if(f!==c.fr){c.fr=f;if(f===0||f===2)footstep(c,f);}}
+  c.anim+=m;return m;}
+function follow(c,dt){if(!c.route||c.ri>=c.route.length)return true;const p=c.route[c.ri],dx=p[0]-c.x,dy=p[1]-c.y,l=Math.hypot(dx,dy);
+  if(l<1.2){c.x=p[0];c.y=p[1];c.ri++;return c.ri>=c.route.length;}walk(c,dx/l*c.speed,dy/l*c.speed,Math.min(dt,l/(c.speed*.5)),true);return false;}
+let tileSteps=false,crowdN=4;const keys={l:0,r:0,u:0,d:0};
+function ground(c){const x=clamp(c.x|0,0,W-1),y=clamp((c.y-2)|0,0,H-1),cc=CELL[y*W+x];if(STA[cc]===ASHS||STA[cc]===EMB)c.ashy=6;
+  c.flash=Math.max(0,c.flash-1);}
+function updateEntities(dt){
+  let ix=keys.r-keys.l,iy=keys.d-keys.u;
+  if(tileSteps){const p=player;if(!p.route||p.ri>=p.route.length){const t=tileAt(p.x|0,(p.y-2)|0);
+      if(Math.abs(p.x-tcx(t))>1.5||Math.abs(p.y-tcy(t))>1.5)p.route=[[tcx(t),tcy(t)]],p.ri=0;
+      else if(ix||iy){const tx=(t%TW)+ix,ty=((t/TW)|0)+iy;if(tx>=0&&ty>=0&&tx<TW&&ty<TH){const n=ty*TW+tx,ok=!TB[n]&&(!ix||!iy||(!TB[t+ix]&&!TB[t+iy*TW]));if(ok){p.route=[[tcx(n),tcy(n)]];p.ri=0;p.tx=null;}else{p.dir=ix?(ix>0?2:3):(iy>0?0:1);}}}
+      else if(p.tx!==null){const r=bfs(t,tileAt(p.tx|0,p.ty|0));p.tx=null;if(r){p.route=r;p.ri=0;}}}
+    if(p.route&&p.ri<p.route.length){if(follow(p,dt)&&!(ix||iy)&&p.tx===null)idle(p);}else idle(p);}
+  else{player.route=null;if(ix||iy)player.tx=null;else if(player.tx!==null){const dx=player.tx-player.x,dy=player.ty-player.y,L=Math.hypot(dx,dy);if(L<2)player.tx=null;else{ix=dx/L;iy=dy/L;}}
+    if(ix||iy){const L=Math.hypot(ix,iy);if(!walk(player,ix/L*PRM.speed,iy/L*PRM.speed,dt,false))player.tx=null;}else idle(player);}
+  ground(player);
+  if(vill.hold)idle(vill);
+  else if(vill.wait>0){vill.wait-=dt;idle(vill);}
+  else{if(!vill.route||vill.ri>=vill.route.length){vill.wp=(vill.wp+1)%VWP.length;const p=VWP[vill.wp];vill.route=tileSteps?(bfs(tileAt(vill.x|0,(vill.y-2)|0),tileAt(p[0],p[1]))||[]):[p];vill.ri=0;}
+    if(follow(vill,dt)){vill.route=null;vill.wait=vill.wp===0||vill.wp===3?3+rnd()*4:.15;if(vill.wait>1)idle(vill);}}
+  ground(vill);
+  for(let k=0;k<crowdN;k++){const c=crowd[k];if(!c.live){const t=freeTile();c.x=tcx(t);c.y=tcy(t);c.live=true;c.route=null;}
+    if(c.wait>0){c.wait-=dt;idle(c);}
+    else{if(!c.route){c.route=bfs(tileAt(c.x|0,(c.y-2)|0),freeTile());c.ri=0;if(!c.route)c.wait=.5;}
+      if(c.route&&follow(c,dt)){c.route=null;c.wait=.4+rnd()*2.5;idle(c);}}
+    ground(c);}
+  // sheep: wanders the meadow tile to tile; on fire it runs for the pond
+  const s=sheep;if(s.dead){s.dead-=dt;if(s.dead<=0){s.dead=0;s.hp=s.max;s.stacks=0;const t=freeTile(0,11,6,10);s.x=tcx(t);s.y=tcy(t);s.route=null;}}
+  else{s.speed=s.stacks?70:30;if(s.wait>0){s.wait-=dt;idle(s);}
+    else{if(!s.route){const to=s.stacks?tileAt(500,300):freeTile(0,11,5,10);s.route=bfs(tileAt(s.x|0,(s.y-2)|0),to);s.ri=0;if(!s.route)s.wait=1;}
+      if(s.route&&follow(s,dt)){s.route=null;s.wait=s.stacks?0:1+rnd()*3;idle(s);}}}
+  for(let k=prints.length-1;k>=0;k--){prints[k].t+=dt;if(prints[k].t>10)prints.splice(k,1);}}
+const actorsAll=()=>{const l=[player,vill];if(!sheep.dead)l.push(sheep);for(let k=0;k<crowdN;k++)if(crowd[k].live)l.push(crowd[k]);return l;};
+// burning status: stacks from burning ground, fire fields and lava; one tick a second, 10 damage, water clears it
+const floaters=[],hits=[];
+function hurt(a,d){a.hp-=d;a.flash=3;a.hitT=simT;const f=floaters.find(q=>q.a===a&&q.t<.4);if(f){f.v+=d;}else floaters.push({a,x:a.x,y:a.y-34,v:d,t:0});hits.push({a,t:0});
+  if(a.hp<=0){if(a===sheep){sheep.dead=3;sheep.stacks=0;for(let k=0;k<6;k++)addPuff(sheep.x+(rnd()-.5)*10,sheep.y-6,4,10,10,1.2,0);}else{a.hp=a.max;a.stacks=0;}}}
+let testing=false;
+function statusTick(cand){if(testing)return;for(const a of actorsAll()){if(a.dead)continue;const x=clamp(a.x|0,0,W-1),y=clamp((a.y-2)|0,0,H-1),c=CELL[y*W+x],t=tileAt(x,y);
+  if(MAT[c]===WATER||PM[y*W+x]===WATER){if(a.stacks){a.stacks=0;steamBurst(a.x,a.y-10,4);}continue;}
+  let add=0;if(STA[c]===BURN||STA[c]===IGN)add=4;if(FLD[t]>=2){add=6;if(!a.inField)hurt(a,20);a.inField=1;}else a.inField=0;if(PM[y*W+x]===LAVA)add=8;
+  if(add>a.stacks)a.stacks=add;
+  if((tick&3)===0){if(a.stacks>0){hurt(a,10);a.stacks--;if(canBurn(c)&&!PEND[c]&&(hash(c,tick,3,seed)&255)<80){PEND[c]=1;CDIR[c]=8;cand.push(c);}}else if(a.hp<a.max)a.hp=Math.min(a.max,a.hp+2);}}}
+
+// ---------- embers and sparks: one fixed pool of 512 ----------
+const PN=512,PXa=new Float32Array(PN),PYa=new Float32Array(PN),PVX=new Float32Array(PN),PVY=new Float32Array(PN),PL=new Float32Array(PN),PML=new Float32Array(PN),PT=new Uint8Array(PN),PSZ=new Uint8Array(PN);let pHead=0,pUse=0,emb1=false;
+function spawn(x,y,vx,vy,life,type,sz){for(let k=0;k<PN;k++){const j=(pHead+k)&(PN-1);if(PL[j]<=0){PXa[j]=x;PYa[j]=y;PVX[j]=vx;PVY[j]=vy;PL[j]=PML[j]=life;PT[j]=type;PSZ[j]=sz||1;pHead=(j+1)&(PN-1);return;}}}
+// type 0 ember (2x2, rises, 0.5 to 1.5 s), 1 spark (1x1 or 1x2, 3 to 8 frames), 2 water drop, 3 debris
+const ember=(x,y)=>spawn(x,y,(rnd()-.5)*24,-30-rnd()*36,.5+rnd(),0,2);
+const spark=(x,y)=>spawn(x,y,(rnd()-.5)*70,-50-rnd()*70,(3+rnd()*5)/60,1,1+((rnd()*2)|0));
+function updEmbers(dt){pUse=0;const wpx=windX*windV*5,wpy=windY*windV*3;
+  for(let j=0;j<PN;j++){if(PL[j]<=0)continue;pUse++;const ty=PT[j];
+    if(ty===0){PVY[j]-=26*dt;PVX[j]+=(wpx-PVX[j])*.9*dt;PVY[j]+=wpy*.4*dt;PVX[j]*=.99;PVY[j]*=.985;}else if(ty===1){PVY[j]+=120*dt;}else if(ty===2)PVY[j]+=420*dt;else PVY[j]+=300*dt;
+    PXa[j]+=PVX[j]*dt;PYa[j]+=PVY[j]*dt;PL[j]-=dt;}}
+
+// ---------- smoke and steam: byte fields with 4, 8 or 16 px cells, advected by wind plus rise ----------
+let SCS=8,SFW=80,SFH=45,SFN=3600,SMK,SOT,STM,SMK2,SOT2,STM2,smokeStepN=0;
+function setSmoke(cs){SCS=cs;SFW=W/cs;SFH=Math.ceil(H/cs);SFN=SFW*SFH;SMK=new Uint8Array(SFN);SOT=new Uint8Array(SFN);STM=new Uint8Array(SFN);SMK2=new Uint8Array(SFN);SOT2=new Uint8Array(SFN);STM2=new Uint8Array(SFN);}
+// adds density a to every field cell within r px, so a source covers the same art area at any cell size
+function addSmoke(x,y,a,kind,r){const A=kind===0?SMK:kind===1?SOT:STM;r=r||8;let hit=0;
+  for(let cy=Math.max(0,((y-r)/SCS)|0);cy<=Math.min(SFH-1,((y+r)/SCS)|0);cy++)for(let cx=Math.max(0,((x-r)/SCS)|0);cx<=Math.min(SFW-1,((x+r)/SCS)|0);cx++){const px=(cx+.5)*SCS,py=(cy+.5)*SCS;if(Math.abs(px-x)>r||Math.abs(py-y)>r)continue;const k=cy*SFW+cx;A[k]=Math.min(255,A[k]+a);hit=1;}
+  if(!hit){const cx=clamp((x/SCS)|0,0,SFW-1),cy=clamp((y/SCS)|0,0,SFH-1),k=cy*SFW+cx;A[k]=Math.min(255,A[k]+a);}}
+function smokeStep(dt){smokeStepN++;const tt=animT,fw=SFW,fh=SFH,inv=1/SCS,ks=Math.pow(.5,dt),ko=Math.pow(.7,dt),kt=Math.pow(.16,dt);
+  for(let y=0;y<fh;y++){const tu=(windX*windV*4+Math.sin(y*SCS*.03+tt*1.7)*6)*inv;for(let x=0;x<fw;x++){const tv=(-26+windY*windV*2+Math.sin(x*SCS*.025+tt*1.3)*5)*inv;
+    const sx=x-tu*dt,sy=y-tv*dt,x0=Math.floor(sx),y0=Math.floor(sy),fx=sx-x0,fy=sy-y0;let a=0,b=0,c=0;
+    for(let q=0;q<4;q++){const xx=x0+(q&1),yy=y0+(q>>1);if(xx<0||yy<0||xx>=fw||yy>=fh)continue;const w=((q&1)?fx:1-fx)*((q>>1)?fy:1-fy),k=yy*fw+xx;a+=SMK[k]*w;b+=SOT[k]*w;c+=STM[k]*w;}
+    // stochastic rounding keeps thin smoke from sticking at 1
+    const k=y*fw+x,dz=((Math.imul(k,2654435761)+smokeStepN*40503)>>>24)/256;SMK2[k]=Math.min(255,(a*ks+dz)|0);SOT2[k]=Math.min(255,(b*ko+dz)|0);STM2[k]=Math.min(255,(c*kt+dz)|0);}}
+  let t=SMK;SMK=SMK2;SMK2=t;t=SOT;SOT=SOT2;SOT2=t;t=STM;STM=STM2;STM2=t;}
+// hero puffs: only from objects, capped at 64 alive. kind 0 grey, 1 dark (house), 2 steam
+const puffs=[];
+function addPuff(x,y,s0,s1,rise,life,kind){if(puffs.length>=64)return;puffs.push({x,y,s0,s1,rise,life,kind,t:0,vx:(rnd()-.5)*4});}
+function steamBurst(x,y,n){for(let k=0;k<n;k++){if(puffs.length>=64)break;puffs.push({x:x+(rnd()-.5)*12,y:y+(rnd()-.5)*6,s0:6+rnd()*2,s1:20+rnd()*4,rise:30,life:.5+rnd()*.5,kind:2,t:0,vx:(rnd()-.5)*30});}}
+function updPuffs(dt){const wx=windX*windV*2.4;for(let k=puffs.length-1;k>=0;k--){const p=puffs[k];p.t+=dt;if(p.t>=p.life){puffs[k]=puffs[puffs.length-1];puffs.pop();continue;}p.y-=p.rise*dt;p.x+=(wx+p.vx)*dt;p.vx*=.97;}}
+
+// ---------- DOOM buffers: Sanglard's in-place loop at 1:1 or 1:2 ----------
+let DSH=0,DBW=W,DBH=H,DB=new Uint8Array(1),DZ=new Int16Array(1),DLV=new Uint8Array(1),dbb=[0,0,0,0],doomCells=0,doomStepN=0;
+function setDoom(sh){DSH=sh;DBW=W>>sh;DBH=H>>sh;DB=new Uint8Array(DBW*DBH);DZ=new Int16Array(DBW*DBH);DLV=new Uint8Array(DBW*DBH);dbb=[DBW,DBH,-1,-1];}
+// H50 is about 2.6 L rows for the in-place loop, so the seed level follows the flame height in buffer rows
+function doomSeed(){flames((fx,fy,sz,key,d)=>{const f=FCAT[sz],w=f[1],hpx=f[2],rows=hpx>>DSH,L=clamp(Math.round(rows/1.9)+2,3,36),y=clamp(fy>>DSH,1,DBH-1),ww=Math.max(1,w>>DSH);
+  for(let k=0;k<ww;k++){const x=(fx>>DSH)-(ww>>1)+k;if(x<1||x>=DBW-1)continue;const i=y*DBW+x,e=(k===0||k===ww-1)?1:0,v=L-e-(hash(x,doomStepN,y,7)&1);if(v>DB[i]){DB[i]=v;DZ[i]=d;DLV[i]=L;}
+    if(x<dbb[0])dbb[0]=x;if(x>dbb[2])dbb[2]=x;if(y>dbb[3])dbb[3]=y;if(y-L*3<dbb[1])dbb[1]=Math.max(1,y-L*3);}});}
+function doomStep(){doomStepN++;doomSeed();const x0=Math.max(1,dbb[0]-3),x1=Math.min(DBW-2,dbb[2]+3),y0=Math.max(1,dbb[1]-2),y1=Math.min(DBH-1,dbb[3]);doomCells=0;if(x1<x0)return;
+  const wsh=windX*windV/10,wpi=(Math.abs(wsh)*.6*256)|0,ws=wsh>0?1:-1;let nx0=DBW,nx1=-1,ny0=DBH,ny1=-1;
+  for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){const src=y*DBW+x,p=DB[src];doomCells++;if(p===0){DB[src-DBW]=0;continue;}
+    const r=hash(x,y,doomStepN,13);let off=1-(r&3);if(((r>>>2)&255)<wpi)off+=ws;if(x+off<1||x+off>=DBW-1)off=0;const dst=src-DBW+off,nv=p-((r>>>10)&1);DB[dst]=nv>0?nv:0;DZ[dst]=DZ[src];DLV[dst]=DLV[src];
+    if(nv>0){if(x<nx0)nx0=x;if(x>nx1)nx1=x;if(y-1<ny0)ny0=y-1;if(y>ny1)ny1=y;}}
+  dbb=[nx0,ny0,nx1,ny1];}
+
+// ---------- combat: missiles (150 x sqrt(d) ms), tiled fire areas, fields, damage numbers ----------
+const missiles=[],areas=[],decals=[],areaLast=new Float32Array(NT).fill(-9);let shake=0,fbSize=3;
+function castFireball(x,y){const sx=player.x,sy=player.y-18,d=Math.hypot(x-sx,y-sy)/32,dur=.15*Math.sqrt(Math.max(.25,d));const a=Math.atan2(y-sy,x-sx);missiles.push({x0:sx,y0:sy,x1:x,y1:y,t:0,dur,big:fbSize===37,dir:((Math.round(a/(Math.PI/4))%8)+8)%8});}
+function areaTiles(cx,cy,r){const l=[];for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const ring=Math.max(Math.abs(dx),Math.abs(dy));if(r===3&&dx*dx+dy*dy>10)continue;const tx=cx+dx,ty=cy+dy;if(tx<0||ty<0||tx>=TW||ty>=11)continue;l.push([ty*TW+tx,r===3?Math.round(Math.hypot(dx,dy)):ring]);}return l;}
+function impact(x,y,big){const tx=x>>5,ty=Math.min(10,y>>5),r=big?3:1;shake=Math.min(6,shake+(r===3?5:2));
+  // centre first, each ring 75 ms later; a repeat on a tile younger than 75 x max(14/3, 1) ms is refused
+  for(const[t,ring]of areaTiles(tx,ty,r)){if(animT-areaLast[t]<.35)continue;areaLast[t]=animT+ring*.075;areas.push({t,start:animT+ring*.075,v:((t%TW)%3+((t/TW)|0)%3)%3});
+    decals.push({t,v:(t*7)%3,start:animT+ring*.075});queue.push({k:'blast',x:(t%TW)*32+16,y:((t/TW)|0)*32+16});}
+  for(const a of actorsAll()){if(Math.hypot(a.x-x,a.y-y)<(r===3?100:44)){a.stacks=Math.max(a.stacks,4);hurt(a,r===3?40:25);}}}
+function castArea(tool,x,y){const tx=x>>5,ty=Math.min(10,y>>5),list=[];
+  if(tool==='field'){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)list.push([tx+dx,ty+dy]);}
+  else{const hz=Math.abs(x-player.x)<Math.abs(y-player.y);for(let k=-2;k<=2;k++)list.push(hz?[tx+k,ty]:[tx,ty+k]);}
+  for(const[a,b]of list)if(a>=0&&b>=0&&a<TW&&b<11){const t=b*TW+a;queue.push({k:'field',t});fieldFlash.push({t,f:1});}}
+const fieldFlash=[];
+function updCombat(dt){for(let k=missiles.length-1;k>=0;k--){const m=missiles[k];m.t+=dt/m.dur;if(m.t>=1){impact(m.x1,m.y1,m.big);missiles.splice(k,1);}}
+  for(let k=areas.length-1;k>=0;k--){const a=areas[k],age=animT-a.start;if(age>.82){areas.splice(k,1);continue;}if(age>0&&age<dt*1.5){const x=(a.t%TW)*32+16,y=((a.t/TW)|0)*32+20;for(let q=0;q<3;q++)spark(x,y);addSmoke(x,y-12,90,0,10);}}
+  for(let k=decals.length-1;k>=0;k--)if(animT-decals[k].start>4.5)decals.splice(k,1);
+  for(let k=floaters.length-1;k>=0;k--){const f=floaters[k];f.t+=dt;if(f.t>1){floaters.splice(k,1);}}
+  for(let k=hits.length-1;k>=0;k--){hits[k].t+=dt;if(hits[k].t>.9)hits.splice(k,1);}
+  if(shake>0)shake=Math.max(0,shake-dt*30);}
+
+// ---------- per-frame fire values ----------
+let animT=0,tickFrac=0;
+const rollSec=()=>ROLLK*.25;
+function burnFrac(c){const m=OILc[c]?OILM:MAT[c];return clamp((simT-TBRN[c])/Math.max(.25,FUEL0[c]*rollSec()),0,1);}
+function embFrac(c){return clamp((simT-TEMB[c])/(EMBS[OILc[c]?OILM:MAT[c]]||4),0,1);}
+// spots for flames on burning ground: 5 per 32 px tile at hashed offsets on burnable pixels
+const TSPOT=[];function buildSpots(){TSPOT.length=0;for(let t=0;t<NT;t++){const tx=t%TW,ty=(t/TW)|0,l=[];for(let k=0;k<5;k++){const x=tx*32+3+(hash(t,k,1,seed)%26),y=ty*32+8+(hash(t,k,2,seed)%22);if(y>=H)continue;const i=y*W+x;if(PM[i]>DRY||OBJ[i]>=0||SMAT[i]>DRY&&SMAT[i]!==FENCE)continue;l.push(x,y,PM[i]===DRY?(k<2?4:3):(k<1?4:3));}TSPOT.push(l);}}
+const TBN=new Int16Array(NT),TDY=new Uint8Array(NT);let BTL=[];
+function objUpdate(o){let nb=0,ni=0,ne=0,na=0,sp=0,se=0;for(const c of o.cells){const s=STA[c];if(s===IGN)ni++;else if(s===BURN){nb++;sp+=burnFrac(c);}else if(s===EMB){ne++;se+=embFrac(c);}else if(s===ASHS)na++;}
+  const n=o.cells.length||1;o.nb=nb;o.ni=ni;o.ne=ne;o.na=na;const prevSt=o.st;o.frac=(sp+ne+na+ni*.02)/n;o.efrac=(se+na)/n;
+  o.st=(ni+nb)>0?BURN:ne>0?EMB:na===n&&n>0?ASHS:na>0?BURN:NONE;
+  if(o.st===ASHS&&o.ashT<0)o.ashT=simT;if(o.st!==ASHS)o.ashT=-1;
+  o.hot=ni+nb+ne>0;
+  // roof collapse at 60%: a one-off burst of embers and smoke, client-side
+  if(o.kind==='house'&&o.frac>=.6&&!o.collapsed){o.collapsed=true;for(let k=0;k<40;k++)ember(o.fx0+rnd()*96,o.fy0+rnd()*30);for(let k=0;k<5;k++)addPuff(o.fx0+12+rnd()*72,o.fy0+10,14,40,24,2.2,1);}
+  if(o.frac<.6)o.collapsed=false;
+  return prevSt!==o.st;}
+
+// ---------- burn front render: only cells that burn or changed are drawn, into a cached base ----------
+const GBUF=new Uint16Array(NP),OBUF=new Uint16Array(NP),BASEI=new Uint16Array(NP),IDX=new Uint16Array(NP),OBN=new Int16Array(NP),SPD=new Int16Array(NP),FLM=new Uint8Array(NP),OD=new Uint8Array(NP),DECAL=new Uint8Array(NP);
+let frontStyle=0,frontPx=0;const AR=150,LB=new Int16Array(20*20),LBV=new Float32Array(20*20);
+const RAMPT={};function rampT(){const nb=CS>>1;if(RAMPT[nb])return RAMPT[nb];const R=new Uint8Array(9*nb*nb);
+  for(let d=0;d<9;d++)for(let by=0;by<nb;by++)for(let bx=0;bx<nb;bx++){const u=(bx+.5)/nb,v=(by+.5)/nb;let r;
+    if(d===8)r=Math.min(1,Math.hypot(u-.5,v-.5)/.62);else{const dx=DX[d],dy=DY[d];r=.5-((u-.5)*dx+(v-.5)*dy)/(Math.abs(dx)+Math.abs(dy));}R[d*nb*nb+by*nb+bx]=clamp(r*255,0,255)|0;}
+  return RAMPT[nb]=R;}
+// arrival time per cell for the smooth front: the real ignition time, or a placeholder of now + 6 s (6 rolls at 32 px) for cells that have not caught.
+// A cell that ran out of fuel freezes its own clock at the moment its embers began, so the front stops where it was and unreached pixels stay grass
+let HORIZ=6,AM=new Float32Array(1);
+// a static domain warp of up to 8 px per 2x2 block, so arrival isolines between cell centres wave instead of running straight
+const WXB=new Float32Array(320*180),WYB=new Float32Array(320*180);for(let by=0;by<180;by++)for(let bx=0;bx<320;bx++){WXB[by*320+bx]=(vnoise(bx/9+31,by/9)-.5)*16;WYB[by*320+bx]=(vnoise(bx/9,by/9+57)-.5)*16;}
+function fillTA(){const T=simT,hz=HORIZ*ROLLK/4;for(let c=0;c<NC;c++){const s=STA[c];TA[c]=s===NONE?(FUEL0[c]&&ign16(c)?T+hz:-1):TIGN[c];
+  AM[c]=s>=EMB?TEMB[c]+.55*(EMBS[MAT[c]===ASH?OMAT[c]:MAT[c]]||4):T+2;}}
+// b for one 2x2 block, in seconds past its arrival minus the cluster-map jitter. Positive is burnt
+function blockB(c,gbx,gby){const s=STA[c];if(s===NONE)return -99;
+  const mv=MB[(gby&63)*64+(gbx&63)];
+  if(frontStyle===0){const nowE=s>=EMB?TEMB[c]:simT,hz=HORIZ*ROLLK/4,wb=clamp(gby,0,179)*320+clamp(gbx,0,319),fx=(gbx*2+1.5+WXB[wb])/CS-.5,fy=(gby*2+1.5+WYB[wb])/CS-.5,x0=Math.floor(fx),y0=Math.floor(fy),tx=fx-x0,ty=fy-y0;let acc=0;const self=TIGN[c];
+    for(let q=0;q<4;q++){const xx=clamp(x0+(q&1),0,GW-1),yy=clamp(y0+(q>>1),0,GH-1),cc=yy*GW+xx;let v=TA[cc];if(v<0)v=self;else if(STA[cc]===NONE||v>nowE+hz)v=Math.min(v,nowE+hz);acc+=v*((q&1)?tx:1-tx)*((q>>1)?ty:1-ty);}
+    return (nowE-acc)-mv/255*.9*ROLLK/4;}
+  if(s>=EMB)return 99;
+  const nb=CS>>1,cx=c%GW,cy=(c/GW)|0,R=rampT(),t=(AR*R[DIRF[c]*nb*nb+(gby-cy*nb)*nb+(gbx-cx*nb)]+(256-AR)*mv)>>8,sw=ROLLK*.25,el=simT-TIGN[c];
+  return clamp(el/sw,0,1.2)*255-t>=0?el-t/255*sw:-1;}
+// ash arrives the same way: a smooth field of per-cell ash moments, jittered by the cluster map, so char and ash never meet on a tile edge
+function ashB(c,gbx,gby){const wb=clamp(gby,0,179)*320+clamp(gbx,0,319),fx=(gbx*2+1.5+WXB[wb])/CS-.5,fy=(gby*2+1.5+WYB[wb])/CS-.5,x0=Math.floor(fx),y0=Math.floor(fy),tx=fx-x0,ty=fy-y0;let acc=0;
+  for(let q=0;q<4;q++){const xx=clamp(x0+(q&1),0,GW-1),yy=clamp(y0+(q>>1),0,GH-1),cc=yy*GW+xx;const v=FUEL0[cc]||STA[cc]>=EMB?AM[cc]:AM[c];acc+=v*((q&1)?tx:1-tx)*((q>>1)?ty:1-ty);}
+  return (simT-acc)-MB[((gby+23)&63)*64+((gbx+9)&63)]/255*2.2;}
+function renderCell(c){const cx=c%GW,cy=(c/GW)|0,x0=cx*CS,y0=cy*CS,x1=Math.min(W,x0+CS),y1=Math.min(H,y0+CS),s=STA[c],fst=FLD[CTILE[c]],wet=WETF[c]&&s===NONE,oil=OILc[c]&&s===NONE,dec=DECC[c];
+  if(s===NONE&&!wet&&!oil&&!fst&&!dec){for(let y=y0;y<y1;y++){const r=y*W;GBUF.set(GP.subarray(r+x0,r+x1),r+x0);for(let i=r+x0;i<r+x1;i++){const o=OBUF[i],o2=OBUF2[i];BASEI[i]=o||o2||GP[i];OBN[i]=o?OBASE[i]:o2?OBASE2[i]:0;}}return;}
+  const fr=(animT*8)|0,nb=CS>>1,bw=nb+2,art=frontStyle===0&&s!==NONE||frontStyle===1&&(s===IGN||s===BURN),dead=s>=EMB;
+  if(art){for(let by=-1;by<=nb;by++)for(let bx=-1;bx<=nb;bx++){let ncx=cx,ncy=cy;if(bx<0)ncx--;else if(bx>=nb)ncx++;if(by<0)ncy--;else if(by>=nb)ncy++;
+      let gbx=cx*nb+bx,gby=cy*nb+by;const inside=bx>=0&&by>=0&&bx<nb&&by<nb;if(ncx<0||ncy<0||ncx>=GW||ncy>=GH){ncx=cx;ncy=cy;gbx=clamp(gbx,cx*nb,cx*nb+nb-1);gby=clamp(gby,cy*nb,cy*nb+nb-1);}
+      const cc=ncy*GW+ncx;let v;if(!inside&&!(FUEL0[cc]&&ign16(cc))&&STA[cc]<IGN)v=blockB(c,clamp(gbx,cx*nb,cx*nb+nb-1),clamp(gby,cy*nb,cy*nb+nb-1));else v=blockB(cc,gbx,gby);
+      if(dead&&!inside&&STA[cc]>=EMB)v=Math.max(v,0);LBV[(by+1)*bw+bx+1]=v;if(dead&&inside)LB[(by+1)*bw+bx+1]=ashB(c,gbx,gby)>=0?1:0;}}
+  const ep=s===EMB?embFrac(c):0,sc=.35*ROLLK/4;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=y*W+x;let g=GP[i];const burnable=PM[i]<=DRY;frontPx++;
+    if(burnable){
+      if(art){const lbx=((x-x0)>>1)+1,lby=((y-y0)>>1)+1,b=LBV[lby*bw+lbx];
+        if(b<0)g=wet?DARK[g]:g;
+        else if(dead){g=LB[lby*bw+lbx]?GAS[i]:GCH[i];if(s===ASHS&&REGS[c]&&(hash2(x>>1,y>>1)<.16)&&(TK[i]||((x>>1)+(y>>1))%3===0))g=(x+y)&1?G2:G3;}
+        else{const hx=(x&1)?1:-1,vy=(y&1)?1:-1,nO=LBV[lby*bw+lbx+hx]<0||LBV[(lby+vy)*bw+lbx]<0,nI=LBV[lby*bw+lbx-hx]<0||LBV[(lby-vy)*bw+lbx]<0;
+          // the burn edge: 1 px glow on the outer pixel of a border block, 1 px dark red on its inner pixel, then a dark scorch zone, then char
+          if(nO)g=((HP[i]+fr)&3)?F4:F3;else if(nI)g=F1;else{const hb=HP[(y&~1)*W+(x&~1)];if(b<sc)g=(hb<40&&((hb+fr)&4))?F1:C0;else{g=GCH[i];if(hb<14&&b<sc*3&&((hb+fr)&2))g=F1;}}}}
+      else if(s===IGN||s===BURN){
+        if(frontStyle===2){const b=clamp((simT-TIGN[c])/(ROLLK*.25),0,1)*255-(BAYER[(y&3)*4+(x&3)]*16+8);if(b>=0){g=GCH[i];if(HP[i]<28)g=(HP[i]+fr)&1?F3:F4;}}
+        else g=GCH[i];}
+      else if(s===EMB){
+        if(frontStyle===2){g=BAYER[(y&3)*4+(x&3)]*16<ep*255?GAS[i]:GCH[i];if(g===GCH[i]&&HP[i]<36&&((HP[i]+fr)&3))g=ep<.5?F2:F1;}
+        else if(frontStyle===3)g=GCH[i];
+        else{g=GCH[i];if(ep>.7&&MV[i]<(ep-.7)/.3*255)g=GAS[i];}}
+      else if(s===ASHS){g=GAS[i];if(REGS[c]&&(hash2(x>>1,y>>1)<.16)&&(TK[i]||((x>>1)+(y>>1))%3===0))g=(x+y)&1?G2:G3;}
+      if(oil&&OILP[i])g=OILP[i]===2?Q0:C0;
+      if(fst&&MV[i]<fst*55+30&&s!==ASHS)g=fst>=2?(MV[i]<fst*30?C1:C2):DARK[g];}
+    if(dec&&DECAL[i])g=DECAL[i]===2?(burnable?GCH[i]:DARK[DARK[g]]):DARK[g];
+    GBUF[i]=g;const o=OBUF[i],o2=OBUF2[i];BASEI[i]=o||o2||g;OBN[i]=o?OBASE[i]:o2?OBASE2[i]:0;OD[i]+=2;}
+  // embers: 2 to 4 glowing clusters of 2x2 px or more per 32 px of charred ground, pulsing
+  if(s===EMB&&frontStyle<2){const area=(CS/32)**2,n=area>=1?2+(hash(c,0,5,seed)&1)+(hash(c,1,5,seed)&1):((hash(c,0,5,seed)%1000)<3000*area?1:0),pul=.5+.5*Math.sin(animT*3+c);for(let k=0;k<n;k++){const ex=x0+2+(hash(c,k,6,seed)%(Math.max(2,CS-6))),ey=y0+2+(hash(c,k,8,seed)%(Math.max(2,CS-6)));if(ep>.85-k*.1)continue;
+    const i0=ey*W+ex;if(GBUF[i0]!==GCH[i0]||GCH[i0]===GP[i0])continue;
+    for(let q=0;q<6;q++){const px=ex+(q%3),py=ey+((q/3)|0);if(q===2&&(k&1))continue;if(px>=x1||py>=y1)continue;const i=py*W+px;if(PM[i]>DRY||OBUF[i]||OBUF2[i])continue;const g=pul>.55&&q===1?F3:q===4||pul>.3?F2:F1;GBUF[i]=g;BASEI[i]=g;}}}}
+function objColor(o,i,op,oc,oa,f,ovr){const s=o.st,p=o.frac;if(!o.burns||s===NONE)return op;
+  if(s===ASHS){if(o.kind==='tree'&&o.ashT>=0&&simT-o.ashT>20&&!(f&32))return 0;return (f&16)?0:oa;}
+  if(o.kind==='house'&&!o.collapsed&&p<.25)return op;
+  if(s===EMB||(o.kind==='house'&&o.nb+o.ni===0&&o.ne+o.na===o.cells.length)){if(f&1)return (f&16)?0:oa;return o.efrac*255>MV[i]+(o.kind==='house'?0:40)?oa:(f&2&&((HP[i]+((animT*5)|0))&3)===0?F1:oc);}
+  if((f&1)&&(o.kind==='house'?o.collapsed:p>.62))return oa;
+  if(frontStyle===3)return oc;
+  const pp=o.kind==='house'?(p-.15)/.6:p*1.6;
+  if(frontStyle===2)return BAYER[((i/W|0)&3)*4+((i%W)&3)]*16+8<pp*255?oc:op;
+  const t=(AR*ovr+(256-AR)*MV[i])>>8,b=pp*255-t;if(b<0)return op;if(b<10)return ((HP[i]+((animT*8)|0))&3)?F3:F4;
+  if((f&2)&&HP[i]<70&&((HP[i]+((animT*6)|0))%5)<2)return F2;return oc;}
+function renderObject(o){for(const i of o.pxl){if(OBJ[i]===o.id)OBUF[i]=objColor(o,i,OP[i],OC[i],OA[i],OFL[i],OVR[i]);else if(OBJ2[i]===o.id)OBUF2[i]=objColor(o,i,OP2[i],OC2[i],OA2[i],OFL2[i],OVR2[i]);else continue;const a=OBUF[i],b=OBUF2[i];BASEI[i]=a||b||GBUF[i];OBN[i]=a?OBASE[i]:b?OBASE2[i]:0;OD[i]++;}}
+function renderFront(){frontPx=0;tickFrac=0;fillTA();
+  TBN.fill(0);TDY.fill(0);BTL=[];for(const c of active){const s=STA[c];if(s===IGN||s===BURN){const t=CTILE[c];if(!TBN[t])BTL.push(t);TBN[t]++;if(s===BURN&&burnFrac(c)>.75)TDY[t]++;}}
+  for(const o of objects){if(!o.burns){if(fullDirty)renderObject(o);continue;}const ch=objUpdate(o);let dirty=fullDirty||ch||(o.hot&&((frameN+o.id)%3===0));if(!dirty)for(const c of o.cells)if(CHG[c]){dirty=true;break;}if(dirty)renderObject(o);}
+  if(fullDirty){for(let c=0;c<NC;c++)renderCell(c);}
+  // burning cells redraw at 30 Hz (the front moves about 1 px per update), embers and fresh ash at 15 Hz, staggered by cell
+  else{for(const c of active)if(CHG[c]||((frameN+c)&(STA[c]===EMB?3:1))===0)renderCell(c);for(let k=recentAsh.length-1;k>=0;k--){const c=recentAsh[k];if(STA[c]!==ASHS||simT-TASH[c]>12){recentAsh[k]=recentAsh[recentAsh.length-1];recentAsh.pop();continue;}if(!CHG[c]&&((frameN+c)&3)===0)renderCell(c);}for(const c of chgList)if(STA[c]<IGN||STA[c]>EMB)renderCell(c);}
+  for(const c of chgList)CHG[c]=0;chgList=[];fullDirty=false;
+  IDX.set(BASEI);}
+
+// ---------- flames: one list of emitters for the drawn loops and the DOOM seeds ----------
+const AFL=[];
+function tileFlameVariant(x,y){return (x+y)&1;}
+function flames(cb){const art=frontStyle<=1;
+  for(const t of BTL){const sp=TSPOT[t],dying=TDY[t]>0&&TDY[t]>=TBN[t];let lit=0;
+    for(let k=0;k<sp.length;k+=3){const x=sp[k],y=sp[k+1],i=y*W+x,c=CELL[i],s=STA[c];if(s!==BURN&&s!==IGN)continue;
+      if(s===IGN){if(k===0){const d=DIRF[c],ex=d<8?clamp(x+DX[d]*10,(c%GW)*CS+3,(c%GW)*CS+CS-3):x,ey=d<8?clamp(y+DY[d]*8,((c/GW)|0)*CS+6,((c/GW)|0)*CS+CS-2):y;cb(ex,ey,3,t*8,ey);}continue;}
+      if(lit>=(dying?1:3))break;
+      let on=true;if(art){const b=blockB(c,x>>1,y>>1);on=b>=0;}
+      if(on){lit++;cb(x,y,dying?3:sp[k+2],t*8+k+(dying?5000:0),y);}}}
+  for(const o of objects){if(!o.burns||!o.hot)continue;const p=o.frac;
+    if(o.kind==='house'){const bt=(o.nb+o.ni)/o.cells.length;if(o.nb+o.ni>0&&p<.25){cb(o.spots[5].x,o.spots[5].y,4,o.id*16+5,o.base);}
+      else if(o.nb+o.ni>0){const n=clamp(Math.round(2+bt*6),2,5);for(let k=0;k<n&&k<5;k++){const s=o.spots[k];cb(s.x,s.y,SZ.house,o.id*16+k,o.base);}if(!o.collapsed){cb(o.spots[5].x,o.spots[5].y,4,o.id*16+5,o.base);cb(o.spots[6].x,o.spots[6].y,4,o.id*16+6,o.base);}}
+      else if(o.ne>0){cb(o.fx0+30,o.fy1-6,3,o.id*16+8,o.base);cb(o.fx0+64,o.fy1-8,3,o.id*16+9,o.base);}
+      continue;}
+    if(o.ni+o.nb>0){if(o.ni&&!o.nb){const s=o.spots[0];cb(s.x,s.y,s.sz,o.id*16,o.base);continue;}
+      const dying=p>.9;for(let k=0;k<o.spots.length;k++){const s=o.spots[k];if(o.kind==='tree'){if(k===0&&p>.4)continue;if(p<s.k0*1.4)continue;if(dying&&k>1)continue;}cb(s.x,s.y,o.kind==='tree'&&k?SZ.tree:s.sz,o.id*16+k,o.base);}}
+    else if(o.ne>0&&o.efrac<.6){const s=o.spots[0];cb(s.x,s.y-2,3,o.id*16+7,o.base);}}
+  for(const t of fieldList){const st=FLD[t];if(!st)continue;const x=(t%TW)*32+32,y=((t/TW)|0)*32+31;cb(x,y,st===3?SZ.fA:st===2?SZ.fB:SZ.fC,1000+t,y);}
+  for(const[px,py]of PROPS.torches)cb(px,py-36,SZ.torch,-1,py);
+  cb(PROPS.brazier[0],PROPS.brazier[1]-15,SZ.brz,7,PROPS.brazier[1]);
+  cb(CAMP.x,CAMP.y+2,SZ.camp,9,CAMP.y+6);cb(CAMP.x-7,CAMP.y+3,4,10,CAMP.y+6);
+  cb(PROPS.lantern[0],PROPS.lantern[1]+8,SZ.candle,11,129);
+  for(let k=0;k<AFL.length;k+=5)cb(AFL[k],AFL[k+1],AFL[k+2],AFL[k+3],AFL[k+4]);}
+const FL=[];let flameN=0;
+function drawFlames(){FL.length=0;flameN=0;flames((x,y,sz,key,d)=>FL.push(x,y,sz,key,d));
+  if(flameStyle===0){const idx=[];for(let k=0;k<FL.length;k+=5)idx.push(k);idx.sort((a,b)=>FL[a+4]-FL[b+4]);const ms=animT*1000;
+    for(const k of idx){const x=FL[k],y=FL[k+1],sz=FL[k+2],key=FL[k+3],d=FL[k+4],f=FCAT[sz],w=f[1],h=f[2],n=f[3];let fms=f[4];
+      const vs=FSPR[sz],v=vs[Math.abs(key+((x>>5)+(y>>5)))%vs.length],dyingSlow=key>=5000&&key<5000+NT*8?1.4:1;fms*=dyingSlow;
+      // phase per position (Stardew x*3047 + y*88); fields keep their own clock from when the stage began; post torches share one clock
+      const ph=key===-1?0:key>=1000&&key<1000+NT?(-FLB[key-1000]*1000):(x*3047+y*88+key*131);const fi=(((Math.floor((ms+ph)/fms))%n)+n)%n,a=v[fi];flameN++;
+      // field flames sit in the tile's bottom-right corner and spill up and left, like Tibia's 64 px field boxes. A carried torch leans its top 2 rows 1 px against the walk
+      const ax=sz>=SZ.fA&&sz<=SZ.fC?x-w:x-(w>>1),ay=y-h+1,shiftTop=key<=-100?(key===-101?-1:key===-102?1:0):0;
+      for(let yy=0;yy<h;yy++){const Y=ay+yy;if(Y<0||Y>=H)continue;const sx=yy<2?shiftTop:0;for(let xx=0;xx<w;xx++){const tn=a[yy*w+xx];if(!tn)continue;const X=ax+xx+sx;if(X<0||X>=W)continue;const i=Y*W+X;if(OBN[i]>d||SPD[i]>d)continue;IDX[i]=FTONE[tn];FLM[i]=1;OD[i]++;}}}}
+  else{const sh=DSH,bw=DBW;for(let y=Math.max(1,dbb[1]);y<=Math.min(DBH-2,dbb[3]+1);y++)for(let x=Math.max(1,dbb[0]-2);x<=Math.min(bw-2,dbb[2]+2);x++){const j=y*bw+x,v=DB[j];if(!v)continue;const L=DLV[j]||1;
+      // 3x3 box average before quantizing to 5 tones; small white core
+      const s=(DB[j-bw-1]+DB[j-bw]+DB[j-bw+1]+DB[j-1]+v+DB[j+1]+DB[j+bw-1]+DB[j+bw]+DB[j+bw+1])/9,q=s/L;if(q<.24)continue;
+      const col=q>.9?F5:q>.7?F4:q>.5?F3:q>.34?F2:F1,d=DZ[j];
+      for(let yy=0;yy<=sh;yy++)for(let xx=0;xx<=sh;xx++){const X=(x<<sh)+xx,Y=(y<<sh)+yy;if(Y>=H)continue;const i=Y*W+X;if(OBN[i]>d||SPD[i]>d)continue;IDX[i]=col;FLM[i]=1;OD[i]++;}}}}
+
+// ---------- characters: shadows, rim light, torches, burning status ----------
+const SHW=[3,6,7,6,3];let nearestFires=[],shStamp=1;const SHM=new Uint32Array(NP);
+function fireNear(a){let best=null,bv=0;for(const L of nearestFires){const dx=L[0]-a.x,dy=L[1]-(a.y-14),d=Math.hypot(dx,dy)/32;if(d>4||d<.3)continue;const v=L[2]*(1-d/4.5);if(v>bv){bv=v;best={dx,dy,d,v};}}return best;}
+function drawShadow(cx,cy,hw,hh){for(let r=-hh;r<=hh;r++){const y=cy+r;if(y<0||y>=H)continue;const w=Math.round(hw*Math.sqrt(1-(r/(hh+.5))**2));for(let x=cx-w;x<cx+w;x++){if(x<0||x>=W)continue;const i=y*W+x;if(SPD[i]||OBN[i]>cy+hh||FLM[i]||SHM[i]===shStamp)continue;const v=IDX[i];if(v<N&&!EMIS[v]){IDX[i]=DARK[v];SHM[i]=shStamp;OD[i]++;}}}}
+function drawChar(a,ai){const fx=Math.round(a.x),fy=Math.round(a.y),dI=a.dir===0?0:a.dir===1?1:2,F=FR[a.set][dI][a.moving?a.fr:4],px=F.px,flip=a.dir===3,x0=fx-12,y0=fy-30;
+  const nf=fireNear(a);
+  drawShadow(fx,fy-3,7,2);
+  // fire shadow: a second ellipse stretched away from the nearest fire
+  if(nf&&nf.d<4){const ux=-nf.dx/Math.hypot(nf.dx,nf.dy),uy=-nf.dy/Math.hypot(nf.dx,nf.dy);drawShadow(Math.round(fx+ux*6),Math.round(fy-3+uy*3),8,Math.round(3+Math.abs(uy)*2));}
+  // rim light: direction to the fire quantized to 8; rim where 1 px toward the fire is empty, inner rim where 2 px is. Both tones within 1.5 tiles, rim alone to 3 tiles, none for a character north of the fire
+  let rdx=0,rdy=0,rim=0;if(nf&&nf.d<=3&&!(nf.dy>12&&Math.abs(nf.dx)<Math.abs(nf.dy))){const an=Math.atan2(nf.dy,nf.dx),q=((Math.round(an/(Math.PI/4))%8)+8)%8;rdx=DX[q];rdy=DY[q];rim=nf.d<=1.5?2:1;}
+  const sp=(sx,sy)=>{if(sx<0||sx>23||sy<0||sy>31)return 0;return px[sy*24+(flip?23-sx:sx)];};
+  let hx,hy;const fr=a.moving?a.fr:4;
+  if(a.torch){const st=FR[a.set][dI][4];let hh=dI===0?st.hl:dI===1?st.hr:st.hl;hx=hh[0];hy=hh[1];const off=dI<2?[[1,0],[0,-1],[-1,0],[0,-1],[0,0]][fr]:[[1,0],[0,0],[-1,0],[0,0],[0,0]][fr];hx+=off[0]+(dI===0?-2:dI===1?2:4);hy+=off[1];if(flip)hx=23-hx;}
+  // the torch is held 2 to 3 px out from the hand; only a character facing north draws it behind the body
+  const torchBehind=a.dir===1;
+  const lean=dI===2?(flip?-1:1):0;const drawTorch=()=>{const X=x0+Math.round(hx),Y=y0+Math.round(hy);for(let k=0;k<8;k++){for(let q=0;q<2;q++){const x=X+q-1+lean*Math.round(k*.8),y=Y-k;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x;if(OBN[i]>fy)continue;IDX[i]=k>=6?(q?C1:W0):(q?W1:W3);SPD[i]=fy;OD[i]++;}}
+    const kk=a.moving?(a.dir===2?-101:a.dir===3?-102:-100):-100;AFL.push(X+lean*6,Y-7,SZ.htorch,a===player?-100:kk,torchBehind?fy-1:fy+1);
+    if(a.moving&&a.dir>=2)AFL[AFL.length-2]=a.dir===2?-101:-102;};
+  if(a.torch&&torchBehind)drawTorch();
+  const tint=a.stacks>0?3*N:0;
+  for(let r=0;r<32;r++){const y=y0+r;if(y<0||y>=H)continue;for(let cx=0;cx<24;cx++){const sc=flip?23-cx:cx;let v=px[r*24+sc];if(!v)continue;const x=x0+cx;if(x<0||x>=W)continue;const i=y*W+x;if(OBN[i]>fy)continue;
+    if(a.flash>0)v=WHITE;else{if(rim){if(!sp(cx+rdx,r+rdy))v=RIM;else if(rim===2&&!sp(cx+2*rdx,r+2*rdy)&&v!==OUTL)v=v+2*N;else v+=tint;}else v+=tint;}
+    IDX[i]=v;SPD[i]=fy;OD[i]++;}}
+  if(a.torch&&!torchBehind)drawTorch();
+  if(a.stacks>0){const odd=(tick>>2)&1;AFL.push(fx-5,fy-17,SZ.st,ai*7+1,fy+1,fx+4,fy-8,SZ.st,ai*7+3,fy+1);if(!odd)AFL.push(fx+1,fy-26,SZ.sth,ai*7+5,fy+1);}
+  if(simT-a.hitT<3&&a.hp<a.max){for(let k=0;k<20;k++){const x=fx-10+k,y=fy-36;if(y<0||x<0||x>=W)continue;IDX[y*W+x]=k<Math.round(a.hp/a.max*20)?(a.hp<a.max*.35?RD2:G3):OUTL;IDX[(y+1)*W+x]=OUTL;}}}
+function drawSheep(a,ai){const fx=Math.round(a.x),fy=Math.round(a.y),px=SHEEPF[a.moving?((a.anim/6)|0)&1:0],flip=a.dir===3,x0=fx-10,y0=fy-13;drawShadow(fx,fy-1,7,2);const tint=a.stacks>0?3*N:0;
+  for(let r=0;r<14;r++){const y=y0+r;if(y<0||y>=H)continue;for(let c=0;c<20;c++){let v=px[r*20+(flip?19-c:c)];if(!v)continue;const x=x0+c;if(x<0||x>=W)continue;const i=y*W+x;if(OBN[i]>fy)continue;IDX[i]=a.flash>0?WHITE:v+tint;SPD[i]=fy;OD[i]++;}}
+  if(a.stacks>0)AFL.push(fx-3,fy-6,SZ.st,ai*7+1,fy+1,fx+4,fy-4,SZ.sth,ai*7+3,fy+1);}
+function drawPrints(){for(const p of prints){const fade=p.t>7?(p.t-7)/3:0;for(let yy=0;yy<p.h;yy++)for(let xx=0;xx<p.w;xx++){const x=p.x+xx,y=p.y+yy;if(x<0||y<0||x>=W||y>=H)continue;if((xx===0||xx===p.w-1)&&(yy===0||yy===p.h-1))continue;const i=y*W+x;if(OBN[i]||MS[i]<fade*255)continue;const v=IDX[i];if(v<N&&!EMIS[v]){IDX[i]=v>=A0&&v<=A3?C2:DARK[DARK[v]];OD[i]++;}}}}
+const ents=[];
+function drawActors(){AFL.length=0;shStamp++;ents.length=0;for(const a of actorsAll())ents.push(a);ents.sort((a,b)=>a.y-b.y);
+  for(let k=0;k<ents.length;k++){const a=ents[k];if(a.kind==='sheep')drawSheep(a,k+30);else drawChar(a,k);}}
+
+// ---------- smoke draw: the field through a 2x2 cluster threshold (or Bayer 4), then hero puffs ----------
+let smokeDraw=0,smokePx=0;
+function drawSmoke(){smokePx=0;const cs=SCS,fw=SFW,fh=SFH,half=cs>>1,bay=smokeDraw===1;
+  for(let by=-1;by<fh;by++){const ya=clamp(by,0,fh-1),yb=clamp(by+1,0,fh-1),py0=by*cs+half;
+    for(let bx=-1;bx<fw;bx++){const xa=clamp(bx,0,fw-1),xb=clamp(bx+1,0,fw-1),k00=ya*fw+xa,k10=ya*fw+xb,k01=yb*fw+xa,k11=yb*fw+xb;
+      const m00=SMK[k00]+SOT[k00]+STM[k00],m10=SMK[k10]+SOT[k10]+STM[k10],m01=SMK[k01]+SOT[k01]+STM[k01],m11=SMK[k11]+SOT[k11]+STM[k11];if(m00<44&&m10<44&&m01<44&&m11<44)continue;
+      const ss=SMK[k00]+SMK[k10]+SMK[k01]+SMK[k11],so=SOT[k00]+SOT[k10]+SOT[k01]+SOT[k11],st4=STM[k00]+STM[k10]+STM[k01]+STM[k11],fam=st4>ss+so?2:so>ss?1:0;
+      const px0=bx*cs+half;
+      for(let yy=0;yy<cs;yy++){const y=py0+yy;if(y<0||y>=H)continue;const fy=(yy+.5)/cs;
+        for(let xx=0;xx<cs;xx++){const x=px0+xx;if(x<0||x>=W)continue;const i=y*W+x;if(FLM[i]===1)continue;const fx=(xx+.5)/cs,w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
+          const d=m00*w00+m10*w10+m01*w01+m11*w11;
+          const thr=bay?44+BAYER[(y&3)*4+(x&3)]*11:44+MS[i]*.6;if(d<thr)continue;const m=d-thr;let col;
+          if(fam===2)col=m>50?ST1:ST0;else if(fam===1)col=m>40?C0:SM0;else col=m>80?SM1:m>22?SM2:SM3;
+          IDX[i]=col;FLM[i]=2;OD[i]++;smokePx++;}}}}
+  for(const p of puffs){const u=p.t/p.life,s=Math.round((p.s0+(p.s1-p.s0)*Math.min(1,u*1.6))/2)*2,M=PUFFM[clamp((s-4)>>1,0,PUFFM.length-1)],sz=M.s,x0=Math.round(p.x-sz/2),y0=Math.round(p.y-sz/2),fade=Math.max(0,(u-.6)/.4);
+    const c1=p.kind===2?ST1:p.kind===1?SM2:ST0,c2=p.kind===2?ST0:p.kind===1?SM1:SM3,c3=p.kind===2?ST0:p.kind===1?SM0:SM2,three=sz>=16;
+    for(let yy=0;yy<sz;yy++){const y=y0+yy;if(y<0||y>=H)continue;for(let xx=0;xx<sz;xx++){const t=M.a[yy*sz+xx];if(!t)continue;const x=x0+xx;if(x<0||x>=W)continue;const i=y*W+x;if(FLM[i]===1)continue;
+      const edge=Math.hypot(xx+.5-sz/2,yy+.5-sz/2)>sz/2-2;if(MS[i]<fade*255+(edge?40:0))continue;IDX[i]=t===1?c1:t===3&&three?c3:c2;FLM[i]=2;OD[i]++;}}}}
+
+// ---------- combat draw ----------
+function blit16(a,w,h,x0,y0,dep){for(let yy=0;yy<h;yy++){const y=y0+yy;if(y<0||y>=H)continue;for(let xx=0;xx<w;xx++){const v=a[yy*w+xx];if(!v)continue;const x=x0+xx;if(x<0||x>=W)continue;const i=y*W+x;if(dep!==undefined&&(OBN[i]>dep||SPD[i]>dep))continue;IDX[i]=v;FLM[i]=1;OD[i]++;}}}
+function drawCombat(){
+  for(const d of decals){const age=animT-d.start;if(age<0)continue;const tx=(d.t%TW)*32,ty=((d.t/TW)|0)*32,fade=age>1?(age-1)/3.5:0;
+    for(let y=ty;y<ty+32&&y<H;y++)for(let x=tx;x<tx+32;x++){const i=y*W+x,r=Math.hypot(x-tx-15.5,(y-ty-17)*1.25)/15+(MV[(i+d.v*4111)%NP]-128)/600;if(r>1||OBN[i]||FLM[i])continue;if(MS[i]<fade*255)continue;const v=IDX[i];if(v>=N||EMIS[v])continue;IDX[i]=r<.55?C0:DARK[v];OD[i]++;}}
+  for(const f of fieldFlash){if(f.f-->0){const tx=(f.t%TW)*32,ty=((f.t/TW)|0)*32;for(let y=ty+4;y<ty+30&&y<H;y++)for(let x=tx+4;x<tx+28;x++){if(((x>>1)+(y>>1))&1)continue;IDX[y*W+x]=F5;}}}
+  for(let k=fieldFlash.length-1;k>=0;k--)if(fieldFlash[k].f<=0)fieldFlash.splice(k,1);
+  for(const a of areas){const age=animT-a.start;if(age<0)continue;let ms=age*1000,fi=0;while(fi<FXF-1&&ms>=FXMS[fi]){ms-=FXMS[fi];fi++;}const x=(a.t%TW)*32+16,y=((a.t/TW)|0)*32+32;blit16(AREA[a.v][fi],FXW,FXW,x-28,y-50,y+2);}
+  for(const m of missiles){const k=Math.min(1,m.t),x=Math.round(m.x0+(m.x1-m.x0)*k),y=Math.round(m.y0+(m.y1-m.y0)*k);blit16(MIS[m.dir],16,16,x-8,y-8);}
+  for(const h of hits){const a=h.a,fi=Math.min(8,(h.t/.1)|0);blit16(HBF[fi],42,40,Math.round(a.x)-21,Math.round(a.y)-34,Math.round(a.y)+2);}
+  for(const f of floaters){const str=String(f.v),a=f.a,x0=Math.round(a.x-str.length*3),y0=Math.round(a.y-40-f.t*48);if(f.t>.833&&((f.t*20)|0)&1)continue;
+    for(let n=0;n<str.length;n++){const g=DIG[+str[n]];for(let r=0;r<9;r++)for(let c=0;c<5;c++)if(g[r][c]==='#')for(const[dx,dy]of [[-1,0],[1,0],[0,-1],[0,1]]){const x=x0+n*6+c+dx,y=y0+r+dy;if(x>=0&&y>=0&&x<W&&y<H&&IDX[y*W+x]!==F3)IDX[y*W+x]=OUTL;}
+      for(let r=0;r<9;r++)for(let c=0;c<5;c++)if(g[r][c]==='#'){const x=x0+n*6+c,y=y0+r;if(x>=0&&y>=0&&x<W&&y<H)IDX[y*W+x]=F3;}}}}
+function drawEmbers(){const one=emb1;for(let j=0;j<PN;j++){if(PL[j]<=0)continue;const f=1-PL[j]/PML[j],ty=PT[j],x=PXa[j]|0,y=PYa[j]|0;if(x<0||y<1||x>=W-1||y>=H-1)continue;const i=y*W+x;
+    if(ty===0){if(f>.85&&(j&1))continue;const col=[F5,F4,F4,F3,F3,F2,F1][Math.min(6,f*7|0)];IDX[i]=col;OD[i]++;if(!one&&f<.7){IDX[i+1]=col;IDX[i-W]=col;IDX[i-W+1]=col;OD[i+1]++;}}
+    else if(ty===1){IDX[i]=f<.5?F5:F4;if(PSZ[j]>1&&!one)IDX[i-W]=F4;}
+    else if(ty===2){IDX[i]=f<.5?B4:B3;}else{IDX[i]=f<.5?C1:C0;}}}
+function drawRain(){const sl=windX*windV*.05;for(let k=0;k<220;k++){const sp=320+hash2(k,3)*140,y=(hash2(k,2)*(H+20)+animT*sp)%(H+20)-10,x=((hash2(k,1)*W+animT*sp*sl)%W+W)%W;for(let q=0;q<6;q++){const X=(x+sl*q)|0,Y=(y+q)|0;if(X<0||Y<0||X>=W||Y>=H)continue;IDX[Y*W+X]=q>=4?S4:S3;}}}
+
+// ---------- light: sources into a light map at 32, 8 or 4 px, flickering by VFX #5's 10 Hz strings, drawn through a 2x2 cluster dither band ----------
+const QSTY=['m','mmnmmommommnonmmonqnmmo','nmonqnmomnmomomno','jklmnopqrstuvwxyzyxwvutsrqponmlkj'];
+const flick=(s,ph)=>{const S=QSTY[s],ch=S.charCodeAt((((animT*10)|0)+ph)%S.length);return clamp((ch-97)/12,.55,1.35);};
+let LSZ=8,LW=80,LH=45,LM=new Float32Array(LW*LH),lightSrc=0;
+function setLight(s){LSZ=s;LW=W/s;LH=Math.ceil(H/s);LM=new Float32Array(LW*LH);}
+function addLight(x,y,r,v){lightSrc++;const cs=LSZ,r2=r*r;for(let cy=Math.max(0,((y-r)/cs)|0);cy<=Math.min(LH-1,((y+r)/cs)|0);cy++){const dy=((cy+.5)*cs-y)*1.25,dy2=dy*dy;if(dy2>r2)continue;
+  for(let cx=Math.max(0,((x-r)/cs)|0);cx<=Math.min(LW-1,((x+r)/cs)|0);cx++){const dx=(cx+.5)*cs-x,d2=dx*dx+dy2;if(d2>=r2)continue;const q=1-d2/r2;LM[cy*LW+cx]+=v*q*q;}}}
+function buildLights(){LM.fill(0);lightSrc=0;nearestFires=[];const nf=(x,y,v)=>nearestFires.push([x,y,v]);
+  for(const t of BTL){const x=(t%TW)*32+16,y=((t/TW)|0)*32+18,f=Math.min(1,TBN[t]/((32/CS)**2)*1.5),dy=TDY[t]>=TBN[t]?.6:1,v=.75*f*dy*flick(1,t*7);addLight(x,y,64,v);nf(x,y,v);}
+  for(const o of objects){if(!o.hot)continue;const cx=(o.fx0+o.fx1)/2,cy=o.kind==='house'?o.fy0+20:o.base-24;if(o.nb+o.ni>0){const v=(o.kind==='house'?1.3:1)*flick(1,o.id*5);addLight(cx,cy,o.kind==='house'?132:100,v);nf(cx,cy,v*1.4);}else{addLight(cx,o.base-6,60,.3);}}
+  for(const t of fieldList){const st=FLD[t];if(!st)continue;const x=(t%TW)*32+16,y=((t/TW)|0)*32+18,v=[0,.4,.6,.85][st]*flick(2,t);addLight(x,y,[0,40,66,92][st],v);nf(x,y,v);}
+  for(const[px,py]of PROPS.torches){const v=.85*flick(2,0);addLight(px,py-30,72,v);nf(px,py-30,v);}
+  {const v=1*flick(1,3);addLight(PROPS.brazier[0],PROPS.brazier[1]-14,80,v);nf(PROPS.brazier[0],PROPS.brazier[1]-14,v);}
+  {const v=1.15*flick(1,9);addLight(CAMP.x,CAMP.y-6,96,v);nf(CAMP.x,CAMP.y-6,v);}
+  addLight(PROPS.lantern[0],PROPS.lantern[1]+6,52,.6*flick(2,4));
+  addLight(LCX,LCY-6,128,.7*flick(3,0));nf(LCX,LCY-4,.6);
+  for(const a of actorsAll()){if(a.torch){const v=.8*flick(2,(a.x|0)&15);addLight(a.x,a.y-22,64,v);if(a!==player)nf(a.x+3,a.y-26,v*.8);}if(a.stacks>0){addLight(a.x,a.y-14,70,.6);}}
+  for(const m of missiles){const k=Math.min(1,m.t);addLight(m.x0+(m.x1-m.x0)*k,m.y0+(m.y1-m.y0)*k,90,1);}
+  for(const a of areas){const age=animT-a.start;if(age<0||age>.82)continue;addLight((a.t%TW)*32+16,((a.t/TW)|0)*32+16,90,1.2*(1-age/.82));}
+  if(timeMode!=='day')for(const o of objects)if(o.kind==='house'&&o.burns&&o.st===NONE)for(const wx of [o.fx0+20,o.fx0+76])addLight(wx,o.fy0+86,36,.45);}
+// bands at 0.2 and 0.5 of the light range, dithered by the 2x2 cluster map over 0.026 (about 2 to 3 px on a 3-tile pool)
+let litPx=0;const LT1=.3,LT2=.62,LDB=.026;
+function lightPass(){litPx=0;const cs=LSZ,lw=LW,lh=LH,half=cs>>1;
+  for(let by=-1;by<lh;by++){const ya=clamp(by,0,lh-1),yb=clamp(by+1,0,lh-1),py0=by*cs+half;
+    for(let bx=-1;bx<lw;bx++){const xa=clamp(bx,0,lw-1),xb=clamp(bx+1,0,lw-1),a=LM[ya*lw+xa],b=LM[ya*lw+xb],c=LM[yb*lw+xa],d=LM[yb*lw+xb],mn=Math.min(a,b,c,d),mx=Math.max(a,b,c,d);if(mx*1.8<LT1-LDB)continue;const px0=bx*cs+half;
+      const flat=mn>LT2+LDB?2:(mn>LT1+LDB&&mx*1.8<LT2-LDB)?1:mx<LT1-LDB?0:-1;
+      if(flat>=0){for(let yy=0;yy<cs;yy++){const y=py0+yy;if(y<0||y>=H)continue;for(let xx=0;xx<cs;xx++){const x=px0+xx;if(x<0||x>=W)continue;const i=y*W+x,v=IDX[i];if(v>=N)continue;const tr=FLM[i]===2&&mn*1.8>LT1+LDB?Math.max(flat,mn*1.8>LT2+LDB?2:1):flat;if(tr){IDX[i]=v+tr*N;litPx++;OD[i]++;}}}continue;}
+      for(let yy=0;yy<cs;yy++){const y=py0+yy;if(y<0||y>=H)continue;const fy=(yy+.5)/cs,l0=a+(c-a)*fy,l1=b+(d-b)*fy;
+        for(let xx=0;xx<cs;xx++){const x=px0+xx;if(x<0||x>=W)continue;const i=y*W+x,v=IDX[i];if(v>=N)continue;let L=l0+(l1-l0)*(xx+.5)/cs+(MS[i]/255-.5)*LDB;if(FLM[i]===2)L*=1.8;
+          if(L>LT2){IDX[i]=v+2*N;litPx++;OD[i]++;}else if(L>LT1){IDX[i]=v+N;litPx++;OD[i]++;}}}}}}
+// heat haze: whole-pixel row offsets above big fires
+let haze=true;const HROW=new Uint16Array(W);
+function applyHaze(){const t=animT,rows=[];for(const o of objects)if(o.burns&&o.nb>0&&o.frac>.2)rows.push([o.fx0-10,o.fx1+10,o.top-30,o.top+24]);for(const tt of fieldList)if(FLD[tt]===3){const x=(tt%TW)*32,y=((tt/TW)|0)*32;rows.push([x-12,x+36,y-40,y+4]);}
+  rows.push([CAMP.x-14,CAMP.x+14,CAMP.y-50,CAMP.y-22]);
+  for(const[x0,x1,y0,y1]of rows)for(let y=Math.max(0,y0);y<Math.min(H,y1);y++){const dx=Math.round(Math.sin(y*.9+t*9)*1.1);if(!dx)continue;const a=Math.max(1,x0),b=Math.min(W-1,x1);for(let x=a;x<b;x++)HROW[x]=IDX[y*W+x+dx];for(let x=a;x<b;x++)IDX[y*W+x]=HROW[x];}}
+
+// ---------- final pass and x-ray views ----------
+let view='normal',flameStyle=0;
+const HEAT=new Uint32Array(256);for(let i=0;i<256;i++){const t=i/255;HEAT[i]=pack(t<.5?20+t*2*40:60+(t-.5)*2*195,t<.5?24+t*2*150:174+(t-.5)*2*81,t<.5?60+t*2*170:230+(t-.5)*2*25);}
+const COSTC=[pack(16,22,52),pack(22,38,84),pack(28,58,120),pack(36,110,150),pack(70,170,140),pack(170,210,100),pack(245,200,80),pack(255,110,70)];
+const dim=(c,k)=>(255<<24)|((((c>>16)&255)*k)<<16)|((((c>>8)&255)*k)<<8)|(((c&255)*k)|0);
+const MATC=[pack(40,80,50),pack(120,100,50),pack(20,60,50),pack(110,70,40),pack(80,80,90),pack(30,50,110),pack(160,40,120),pack(80,40,110),pack(60,60,60),pack(120,80,50),pack(170,140,60)];
+const STC=[0,pack(255,230,80),pack(255,130,40),pack(200,40,40),pack(40,40,40)];
+function finalPass(){
+  if(view==='normal'){for(let i=0;i<NP;i++)out32[i]=pal[IDX[i]];}
+  else if(view==='cost'){for(let i=0;i<NP;i++){const n=2+OD[i];out32[i]=COSTC[n>9?7:n-2];}}
+  else if(view==='grid'){for(let i=0;i<NP;i++)out32[i]=dim(pal[IDX[i]],.8);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(x%CS===0||y%CS===0)out32[i]=pack(255,150,60);else if((x%SCS===0||y%SCS===0)&&((x+y)&1))out32[i]=pack(110,190,255);else if(x%LSZ===LSZ>>1&&y%LSZ===LSZ>>1)out32[i]=pack(255,240,120);}}
+  else if(view==='active'){for(let i=0;i<NP;i++)out32[i]=dim(pal[IDX[i]],.3);const box=(c,col,fill)=>{const x0=(c%GW)*CS,y0=((c/GW)|0)*CS;for(let y=0;y<CS&&y0+y<H;y++)for(let x=0;x<CS;x++){if(!fill&&x&&y&&x<CS-1&&y<CS-1)continue;if(fill&&((x+y)&1))continue;out32[(y0+y)*W+x0+x]=col;}};
+    for(const c of LAVAC)box(c,pack(220,60,200),0);for(const t of fieldList){const x0=(t%TW)*32,y0=((t/TW)|0)*32;for(let k=0;k<32;k++){out32[y0*W+x0+k]=out32[Math.min(H-1,y0+31)*W+x0+k]=out32[(y0+k)*W+x0]=out32[(y0+k)*W+x0+31]=pack(255,90,170);}}
+    for(const c of active){const s=STA[c];box(c,STC[s],0);if(s===IGN)box(c,STC[s],1);if(s===BURN&&rollNow(c))box(c,pack(255,255,255),1);}}
+  else{const pv=view;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,c=CELL[i];let col;
+    if(pv==='fuel'){const m=MAT[c];col=STA[c]===ASHS?pack(32,32,32):!ign16(c)?(m===WATER?pack(16,32,74):pack(56,56,56)):(()=>{const f=FUEL0[c]?FUEL[c]/FUEL0[c]:0,big=Math.min(1,FUEL0[c]/30);return pack(30,f*(90+big*140),f*200+30);})();if((STA[c]===BURN||STA[c]===IGN)&&((x+y+tick)&2))col=pack(255,130,40);}
+    else if(pv==='moist'){const m=MOIST[c]/255;col=MAT[c]===WATER?pack(20,40,120):pack(30+m*20,40+m*80,50+m*200);}
+    else if(pv==='state'){const s=STA[c];col=s?STC[s]:dim(MATC[MAT[c]],1);if(s===NONE&&DEAD[c])col=STC[4];}
+    else if(pv==='progress'){const s=STA[c];col=s===BURN?HEAT[(burnFrac(c)*255)|0]:s===IGN?HEAT[20]:s===EMB?pack(120,60+embFrac(c)*80,60+embFrac(c)*80):s===ASHS?pack(150,150,150):pack(18,20,30);}
+    else if(pv==='map'){let v=MV[i];if(STA[c]===IGN||STA[c]===BURN){const b=blockB(c,x>>1,y>>1);v=b>=0?255:clamp(128+b*60,0,250)|0;col=b>=0?pack(255,140,60):pack(v*.6,v*.6,v*.7);}else col=pack(v,v,v);if((x&127)===0||(y&127)===0)col=pack(90,140,255);}
+    else if(pv==='smoke'){const k=Math.min(SFH-1,(y/SCS)|0)*SFW+((x/SCS)|0),s=Math.min(1,SMK[k]/80),o=Math.min(1,SOT[k]/80),st=Math.min(1,STM[k]/80);col=pack(20+st*235+s*170,16+st*235+s*170+o*30,18+s*170+o*90+st*60);if((((x/SCS)|0)+((y/SCS)|0))&1)col=dim(col,.85);}
+    else if(pv==='light'){const k=Math.min(LH-1,(y/LSZ)|0)*LW+((x/LSZ)|0);const lv=LM[k];col=HEAT[clamp(lv*110,0,255)|0];if(Math.abs(lv-LT1)<.02||Math.abs(lv-LT2)<.02)col=pack(255,255,255);if((((x/LSZ)|0)+((y/LSZ)|0))&1)col=dim(col,.85);}
+    if(pv!=='map'&&(x%CS===0||y%CS===0))col=dim(col,.7);out32[i]=col;}
+    if(view==='state')for(const c of active){const d=DIRF[c];if(d>7)continue;const cx=(c%GW)*CS+(CS>>1),cy=((c/GW)|0)*CS+(CS>>1),L=Math.max(2,CS>>2);for(let k=0;k<=L;k++){const x=cx+DX[d]*k,y=cy+DY[d]*k;if(x>=0&&y>=0&&x<W&&y<H)out32[y*W+x]=pack(255,255,255);}}}
+  const tp=now();ctx.putImageData(img,0,0);LSUB.put+=now()-tp;
+  if(shake>.5){const s=cv.getBoundingClientRect().width/W,m=Math.round(shake);cv.style.transform=`translate(${((frameN&1)?m:-m)*s}px,${((frameN&2)?m:-m)*s*.5}px)`;}else if(cv.style.transform)cv.style.transform='';}
+
+// ---------- the frame ----------
+let frameN=0,speed=1,doomAcc=0,smokeAcc=0,embAcc=0;
+const A={sim:0,front:0,flames:0,embers:0,smoke:0,combat:0,chars:0,light:0},T={sim:0,front:0,flames:0,embers:0,smoke:0,combat:0,chars:0,light:0,total:0};
+function emit(dt){
+  for(const t of BTL){const x=(t%TW)*32,y=((t/TW)|0)*32,dying=TDY[t]>=TBN[t]&&TBN[t]>0,f=Math.min(1,TBN[t]/((32/CS)**2));
+    if(rnd()<3*f*dt)ember(x+4+rnd()*24,y+8+rnd()*16);if(rnd()<6*f*dt)spark(x+4+rnd()*24,y+12+rnd()*14);
+    // a burning tile smokes into its top 2x2 field cells (16x16 px), doubled while it dies
+    addSmoke(x+16,y+2,Math.round(170*f*dt*(dying?2:1)+rnd()),0,8);}
+  for(const c of active)if(STA[c]===IGN&&rnd()<3*dt*(CS/32)**2)addSmoke((c%GW+.5)*CS,((c/GW)|0)*CS+4,50,0,4);
+  for(const c of active)if(STA[c]===EMB&&rnd()<.4*dt*(CS/32)**2)addSmoke((c%GW+.5)*CS,((c/GW)|0)*CS,20,0,6);
+  for(const c of active)if(OILc[c]&&STA[c]===BURN)addSmoke((c%GW+.5)*CS,((c/GW)|0)*CS-4,Math.round(200*dt*(CS/32)**2)+1,1,8);
+  for(let c=0;c<NC;c++)if(STEAM[c]&&rnd()<dt*4)addSmoke((c%GW+.5)*CS,((c/GW)|0)*CS,40,2,8);
+  for(const o of objects){if(!o.hot)continue;const burning=o.nb+o.ni>0,cx=(o.fx0+o.fx1)/2;
+    if(o.kind==='house'){if(burning&&o.frac<.25){if(rnd()<dt*3)addSmoke(o.fx0+rnd()*96,o.fy0+54,60,0,8);}
+      else if(burning){if(rnd()<dt*1.5)addPuff(o.fx0+18+rnd()*60,o.top+10,12+rnd()*4,48+rnd()*16,20,8,1);addSmoke(o.fx0+48,o.top+6,Math.round(420*dt)+1,0,18);for(let q=0;q<2;q++)if(rnd()<dt*8)ember(o.fx0+10+rnd()*76,o.top+10+rnd()*30);}
+      else if(rnd()<dt*.8)addPuff(o.fx0+20+rnd()*56,o.fy1-20,10,26,14,4,0);}
+    else if(o.kind==='tree'){if(burning&&o.frac>.1){addSmoke(cx,o.top+6,Math.round(200*dt)+1,0,10);if(rnd()<dt*1.4)addPuff(cx+(rnd()-.5)*16,o.top+8,10+rnd()*2,32+rnd()*8,17,6.5,0);if(rnd()<dt*8)ember(cx+(rnd()-.5)*30,o.top+10+rnd()*30);}else if(!burning&&rnd()<dt*.5)addPuff(cx,o.base-10,6,16,12,3,0);}
+    else if(burning){if(rnd()<dt*4)ember(cx+(rnd()-.5)*16,o.base-12);addSmoke(cx,o.base-18,Math.round(120*dt)+1,0,8);}}
+  if(HOUSE_B&&HOUSE_B.st===NONE){HOUSE_B.puffT=(HOUSE_B.puffT||0)+dt;if(HOUSE_B.puffT>=.6){HOUSE_B.puffT-=.6;addPuff(HOUSE_B.chim.x,HOUSE_B.chim.y,8+rnd()*2,32+rnd()*15,15,5.3,0);}}
+  campT+=dt;if(campT>=.5){campT-=.5;addPuff(CAMP.x+(rnd()-.5)*4,CAMP.y-26,4+rnd()*2,16+rnd()*4,12,3.4,0);}
+  if(rnd()<dt*6)ember(CAMP.x-6+rnd()*12,CAMP.y-14);if(rnd()<dt*8)spark(CAMP.x-6+rnd()*12,CAMP.y-10);
+  for(const[px,py]of PROPS.torches)if(rnd()<dt*1.2)ember(px-2+rnd()*4,py-44);
+  if(rnd()<dt*3)ember(PROPS.brazier[0]-6+rnd()*12,PROPS.brazier[1]-26);
+  for(const a of actorsAll()){if(a.torch&&rnd()<dt*.8)ember(a.x+(a.dir===3?-5:5),a.y-34);
+    if(a.stacks>0){if(rnd()<dt*7)ember(a.x-6+rnd()*12,a.y-14-rnd()*14);a.puffT+=dt;if(a.puffT>=.5){a.puffT-=.5;addPuff(a.x,a.y-30,4,6,30,1,0);}}}
+  for(const m of missiles){const k=Math.min(1,m.t);if(rnd()<dt*30)spark(m.x0+(m.x1-m.x0)*k,m.y0+(m.y1-m.y0)*k);}}
+let campT=0;
+function step(gdt){let t0=now(),t;
+  simT+=gdt;animT+=gdt;let n=0;while(simT>=(tick+1)*.25&&n<16){simTick();n++;}if(simT>(tick+1)*.25)simT=(tick+1)*.25-.001;
+  t=now();A.sim+=t-t0;t0=t;
+  updateEntities(gdt);t=now();A.chars+=t-t0;t0=t;
+  emit(gdt);updEmbers(gdt);t=now();A.embers+=t-t0;t0=t;
+  smokeAcc+=gdt;let ns=0;while(smokeAcc>=1/30&&ns<4){smokeStep(1/30);smokeAcc-=1/30;ns++;}if(ns>=4)smokeAcc=0;updPuffs(gdt);t=now();A.smoke+=t-t0;t0=t;
+  if(flameStyle>0){doomAcc+=gdt;let nd=0;while(doomAcc>=1/30&&nd<4){doomStep();doomAcc-=1/30;nd++;}if(nd>=4)doomAcc=0;}t=now();A.flames+=t-t0;t0=t;
+  updCombat(gdt);A.combat+=now()-t0;frameN++;}
+function render(){let t0=now(),t;OD.fill(0);
+  buildPalette();t=now();LSUB.pal+=t-t0;A.light+=t-t0;t0=t;
+  renderFront();t=now();A.front+=t-t0;t0=t;
+  buildLights();t=now();LSUB.build+=t-t0;A.light+=t-t0;t0=t;if(haze)applyHaze();t=now();LSUB.haze+=t-t0;A.light+=t-t0;t0=t;
+  SPD.fill(0);FLM.fill(0);drawPrints();drawActors();t=now();A.chars+=t-t0;t0=t;
+  drawFlames();t=now();A.flames+=t-t0;t0=t;
+  drawSmoke();t=now();A.smoke+=t-t0;t0=t;
+  drawCombat();t=now();A.combat+=t-t0;t0=t;
+  drawEmbers();if(rain)drawRain();t=now();A.embers+=t-t0;t0=t;
+  lightPass();t=now();LSUB.apply+=t-t0;A.light+=t-t0;t0=t;finalPass();t=now();LSUB.final+=t-t0;A.light+=t-t0;}
+const LSUB={pal:0,build:0,haze:0,apply:0,final:0,put:0};
+
+// ---------- loop and HUD ----------
+let last=now(),hudN=0,secT=0,netSec=[0,0],netRate=[0,0],lastTick=0;
+let onScreen=true,liveF=12;const wakeUp=()=>{liveF=12;};
+if(window.IntersectionObserver)new IntersectionObserver(es=>{onScreen=es[es.length-1].isIntersecting;wakeUp();}).observe(cv);
+for(const ev of ['pointerdown','pointermove','pointerup','wheel','keydown','keyup','input','change','click','resize'])addEventListener(ev,wakeUp,true);
+function skipFrame(){if(!onScreen)return true;if(!paused){liveF=12;return false;}return liveF--<=0;}
+const f2=v=>v.toFixed(2),nf0=v=>Math.round(v).toLocaleString('en-US');
+function uploads(){const st=NC*4,sm=SFN*3,lm=LW*LH,db=flameStyle>0?DBW*DBH:0;return {st,sm,lm,db,ps:st*4+sm*30+lm*60+db*30};}
+function hudText(){let nb=0,ne=0;for(const c of active){if(STA[c]===EMB)ne++;else nb++;}const u=uploads(),over=T.total>16.7,tiles=nb*(CS/32)**2;
+  return `tick ${tick}${paused?' (paused)':''} · ${timeMode} · wind ${windV?['→','↘','↓','↙','←','↖','↑','↗'][windDir]+' '+windV+' m/s':'calm'}${rain?' · rain':''} · spread grid ${CS} px = ${GW}x${GH} = ${nf0(NC)} cells, rolls ${(32/CS)} per s per cell · front ${['art map, smooth','art map, per tile','Bayer 4','whole tile'][frontStyle]} · flames ${['drawn loops','DOOM 1:1','DOOM 1:2'][flameStyle]} · smoke ${SCS} px ${smokeDraw?'Bayer 4':'2x2 clusters'} · embers ${emb1?'1 px':'2x2 + sparks'} · light map ${LSZ} px<br>`+
+  `sim ${f2(T.sim)} · burn front ${f2(T.front)} · flames ${f2(T.flames)} · embers ${f2(T.embers)} · smoke ${f2(T.smoke)} · combat ${f2(T.combat)} · characters ${f2(T.chars)} · light and palette ${f2(T.light)} ms<br>`+
+  `<b>total ${f2(T.total)} ms</b> <span class="bar"><i class="${over?'hot2':''}" style="width:${Math.min(100,T.total/16.7*100).toFixed(1)}%"></i></span> of 16.7 · sim tick ${simMs.toFixed(3)} ms · burning ${nb} cells (${tiles.toFixed(1)} tiles), embers ${ne} · rolls this tick ${rollsTick}, neighbour checks ${cellsTick} · burn front drew ${nf0(frontPx)} px · flames ${flameStyle?`DOOM buffer ${DBW}x${DBH}, ${nf0(doomCells)} cells swept per step`:`${flameN} loops`}<br>`+
+  `smoke field ${SFW}x${SFH} = ${nf0(SFN)} cells, ${nf0(SFN*3)} B · embers ${pUse}/512 · puffs ${puffs.length}/64 · light map ${LW}x${LH} = ${nf0(LW*LH)} cells, ${lightSrc} lights · Godot whole-texture uploads: state ${nf0(u.st)} B per tick, smoke ${nf0(u.sm)} B per step, light ${nf0(u.lm)} B per frame${u.db?`, DOOM ${nf0(u.db)} B per step`:''} = ${nf0(u.ps/1000)} kB/s<br>`+
+  `network (illustrative): full set ${nf0(netRate[0])} B/s, ignite and extinguish events ${nf0(netRate[1])} B/s${capOn?` · cap ${4*(32/CS)**2} ignitions per tick`:''} · you: ${player.hp}/${player.max} hp${player.stacks?`, burning ×${player.stacks}`:''} · crowd ${crowdN}${view==='cost'?' · cost view: dark blue 2 writes per pixel, teal 4, green 5, yellow 6, red 7 or more':''}`;}
+function loop(tn){requestAnimationFrame(loop);if(skipFrame())return;let dt=(tn-last)/1000;last=tn;if(dt>.05)dt=.05;if(dt<0)dt=0;
+  for(const k in A)A[k]=0;
+  if(paused){if(queue.length){for(const a of queue)applyAction(a);queue.length=0;rebuildActive();}}
+  else{const gdt=dt*speed;let left=gdt;while(left>1e-6){const s=Math.min(left,1/30);step(s);left-=s;}}
+  render();let tot=0;for(const k in A){T[k]+=(A[k]-T[k])*.08;tot+=A[k];}T.total+=(tot-T.total)*.08;
+  if(tick!==lastTick){netSec[0]+=netFull*(tick-lastTick);netSec[1]+=netEv*(tick-lastTick);lastTick=tick;}
+  secT+=dt;if(secT>=1){secT-=1;netRate=netSec;netSec=[0,0];}
+  if(++hudN%10===0)$('hud').innerHTML=hudText();}
+
+// ---------- UI ----------
+let tool='walk';
+const mark=(sel,attr,v)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle('on',b.dataset[attr]===String(v)));
+const group=(sel,attr,fn)=>document.querySelectorAll(sel).forEach(b=>b.onclick=()=>fn(b.dataset[attr]));
+const setTool=v=>{tool=v;mark('#tools button','t',v);};
+const setGridUI=v=>{if(+v!==CS)setGrid(+v,true);mark('#grid button','g',v);};
+const setFront=v=>{frontStyle=+v;fullDirty=true;mark('#front button','fs',v);};
+const setFlame=v=>{flameStyle=+v;if(flameStyle>0)setDoom(flameStyle===1?0:1);mark('#flame button','fl',v);};
+const setEmb=v=>{emb1=v==='1';mark('#emb button','em',v);};
+const setSmk=v=>{if(+v!==SCS)setSmoke(+v);mark('#smk button','sc',v);};
+const setSDraw=v=>{smokeDraw=+v;mark('#sdraw button','sd',v);};
+const setLightUI=v=>{if(+v!==LSZ)setLight(+v);mark('#light button','lm',v);};
+const setView=v=>{view=v;mark('#views button','v',v);};
+const setTime=v=>{timeMode=v;mark('#tod button','tm',v);};
+group('#tools button','t',setTool);group('#grid button','g',setGridUI);group('#front button','fs',setFront);group('#flame button','fl',setFlame);group('#emb button','em',setEmb);
+group('#smk button','sc',setSmk);group('#sdraw button','sd',setSDraw);group('#light button','lm',setLightUI);group('#views button','v',setView);group('#tod button','tm',setTime);
+group('#fbsz button','fb',v=>{fbSize=+v;mark('#fbsz button','fb',v);});
+const syncWind=()=>{document.querySelectorAll('#wind button').forEach(b=>b.classList.toggle('on',+b.dataset.d===(windV?windDir:-1)));$('wv').value=windV;$('wvl').textContent=windV;updateWind();};
+document.querySelectorAll('#wind button').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(d<0)windV=0;else{windDir=d;if(!windV)windV=3;}syncWind();});
+$('wv').oninput=e=>{windV=+e.target.value;syncWind();};
+const tog=(id,get,set)=>{const b=$(id);b.onclick=()=>{set(!get());b.classList.toggle('on',get());};return ()=>b.classList.toggle('on',get());};
+const syncRain=tog('rain',()=>rain,v=>rain=v);tog('haze',()=>haze,v=>haze=v);tog('cap',()=>capOn,v=>capOn=v);
+const syncPause=tog('pause',()=>paused,v=>paused=v);const syncTorch=tog('torch',()=>player.torch,v=>player.torch=v);
+const setTileSteps=v=>{tileSteps=v;$('tsteps').classList.toggle('on',v);player.route=null;player.tx=null;vill.route=null;};$('tsteps').onclick=()=>setTileSteps(!tileSteps);
+const setSpeed=v=>{speed=+v;$('speed').value=v;$('speedv').textContent=v+'x';};$('speed').oninput=e=>setSpeed(e.target.value);
+const setCrowd=v=>{crowdN=+v;$('crowd').value=v;$('crowdv').textContent=v;for(let k=crowdN;k<20;k++)crowd[k].live=false;};$('crowd').oninput=e=>setCrowd(e.target.value);
+const stepTick=()=>{const was=paused;for(let f=0;f<15;f++)step(1/60);};
+$('step').onclick=stepTick;
+function resetFire(){for(let c=0;c<NC;c++){const m=OMAT[c];MAT[c]=m;STA[c]=NONE;FUEL[c]=FUEL0[c]=BURNT[m];MOIST[c]=BASEM[m];AGE[c]=OILc[c]=DEAD[c]=STEAM[c]=COOL[c]=REGS[c]=WETF[c]=0;}
+  tick=0;simT=0;queue.length=0;recentAsh.length=0;FLD.fill(0);fieldList=[];DECAL.fill(0);PL.fill(0);puffs.length=0;missiles.length=0;areas.length=0;decals.length=0;floaters.length=0;hits.length=0;prints.length=0;
+  SMK.fill(0);SOT.fill(0);STM.fill(0);if(DB)DB.fill(0);dbb=[DBW,DBH,-1,-1];for(const o of objects){o.collapsed=false;o.ashT=-1;o.st=NONE;o.frac=0;}
+  for(const a of actorsAll())a.stacks=0;rebuildActive();fullDirty=true;DECC.fill(0);}
+$('reset').onclick=resetFire;
+$('seed').onclick=()=>{seed=1+((rnd()*9999)|0);buildWorld();setGrid(CS,false);resetFire();};
+function art32(){setGridUI(32);setFront(0);setFlame(0);setEmb('0');setSmk(8);setSDraw(0);setLightUI(8);}
+function vfx6(){setGridUI(8);setFront(2);setFlame(2);setSDraw(1);setEmb('1');}
+// showcase: dusk, wind to the east, house B and the meadow beside it burning; the player in front with a torch
+const SHOW_T=[24];
+function showcase(){art32();setView('normal');setTool('walk');setTime('night');rain=false;syncRain();paused=false;syncPause();windDir=0;windV=4;syncWind();setSpeed(1);setCrowd(0);setTileSteps(false);resetFire();
+  player.torch=true;syncTorch();Object.assign(player,{x:372,y:238,dir:3,moving:false,fr:4,route:null,tx:null,ty:null,stacks:0,hp:player.max,ashy:0});vill.hold=true;Object.assign(vill,{x:452,y:250,dir:3,moving:false,route:null});
+  Object.assign(sheep,{x:92,y:334,route:null,wait:30,stacks:0,dead:0});
+  // the house catches first; the meadow east of it 6 s later, so the front is mid-sweep when the frame is taken
+  // the ground under the player is wet from a bucket, so he stays at the edge of the fire with his torch
+  cellsInRect(336,192,416,256,c=>{MOIST[c]=255;WETF[c]=1;markChg(c);});
+  // the house starts 9 s into its burn (roof flames, not yet collapsed); the meadow beside it catches now, so the front is young when the frame is taken
+  for(const c of HOUSE_B.cells){ignite(c,4);STA[c]=BURN;FUEL[c]=Math.max(1,FUEL0[c]-Math.round(9*32/CS));TIGN[c]=TBRN[c]=-9;ITK[c]=-36;}
+  for(let y=5;y<=10;y++)ignite(cellAtPx(6*32+6,y*32+16),4);rebuildActive();
+  const run=n=>{for(let k=0;k<n;k++)for(let f=0;f<15;f++)step(1/60);};run(SHOW_T[0]);
+  for(const k in A)A[k]=0;render();$('hud').innerHTML=hudText();}
+group('button[data-demo]','demo',d=>{if(d==='showcase')showcase();else if(d==='vfx6')vfx6();else art32();});
+function canvasXY(e){const r=cv.getBoundingClientRect();return[clamp(Math.floor((e.clientX-r.left)/r.width*W),0,W-1),clamp(Math.floor((e.clientY-r.top)/r.height*H),0,H-1)];}
+let down=false,lastTile=-1;
+const act=(e,first)=>{const[x,y]=canvasXY(e);
+  if(tool==='walk'){player.tx=x;player.ty=clamp(y,24,H-8);vill.hold=false;return;}
+  if(tool==='fireball'){if(first)castFireball(x,y);return;}
+  if(tool==='field'||tool==='wall'){if(first)castArea(tool,x,y);return;}
+  const key=tool==='ignite'?CELL[y*W+x]:tileAt(x,y);if(!first&&key===lastTile)return;lastTile=key;
+  if(tool==='ignite'){queue.push({k:'ign',x,y});for(let q=0;q<4;q++)spark(x,y);}
+  else if(tool==='water'){queue.push({k:'water',x,y});for(let q=0;q<18;q++)spawn(x+(rnd()-.5)*20,y-6,(rnd()-.5)*90,-50-rnd()*70,.4+rnd()*.3,2,1);steamBurst(x,y-8,3);
+    for(const a of actorsAll())if(Math.hypot(a.x-x,a.y-y)<36&&a.stacks){a.stacks=0;steamBurst(a.x,a.y-12,5);}}
+  else if(tool==='oil')queue.push({k:'oil',x,y});
+  else queue.push({k:'grow',x,y});
+  if(paused){for(const a of queue)applyAction(a);queue.length=0;rebuildActive();}};
+cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}act(e,true);e.preventDefault();});
+cv.addEventListener('pointermove',e=>{if(down&&tool!=='walk')act(e,false);});
+addEventListener('pointerup',()=>{down=false;lastTile=-1;});addEventListener('pointercancel',()=>{down=false;lastTile=-1;});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
+const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'},VS=['normal','fuel','moist','state','progress','map','smoke','light','active','grid','cost'],TOOLS=['walk','ignite','water','fireball','field','wall','oil','regrow'];
+let viaPtr=false;addEventListener('pointerdown',()=>{viaPtr=true;},true);addEventListener('keydown',()=>{viaPtr=false;},true);
+const dropFocus=e=>{const el=e.target;if(viaPtr&&el&&(el.tagName==='SELECT'||el.tagName==='INPUT'&&/^(range|checkbox|radio)$/.test(el.type)))el.blur();};
+addEventListener('change',dropFocus);addEventListener('pointerup',e=>{if(e.target&&e.target.type==='range')dropFocus(e);});
+addEventListener('keydown',e=>{const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key.toLowerCase();
+  if(KM[k]){keys[KM[k]]=1;vill.hold=false;e.preventDefault();return;}
+  if(k>='1'&&k<='8')setTool(TOOLS[+k-1]);
+  else if(k==='v')setView(VS[(VS.indexOf(view)+1)%VS.length]);
+  else if(k==='r'){rain=!rain;syncRain();}
+  else if(k===' '){paused=!paused;syncPause();e.preventDefault();}
+  else if(k==='n')stepTick();});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])keys[KM[k]]=0;});
+addEventListener('blur',()=>{keys.l=keys.r=keys.u=keys.d=0;});
+// whole-number canvas scale: the stage is a multiple of 640 px wide plus its 2 px border. Narrower screens shrink the canvas to fit
+function fit(){const st=cv.parentElement,m=st.parentElement,cs=getComputedStyle(m),w=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;st.style.width=w>=640?Math.floor(w/640)*640+2+'px':'';}
+addEventListener('resize',fit);fit();
+
+// ---------- start ----------
+buildWorld();setGrid(32,false);setSmoke(8);setLight(8);setDoom(0);updateWind();syncWind();setCrowd(4);
+window.fire32={T,A,FSPR,FCAT,objects,player,
+  stats:()=>({CS,NC,active:active.length,frontPx,flameN,doomCells,pUse,puffs:puffs.length,smokePx,litPx,lightSrc,tick,simT,palette:N,simMs}),
+  actors:()=>actorsAll(),vill,sheep,_t:{PROLL,ROLLS,TUNE,regrid:()=>setGrid(CS,false)},
+  set:(k,v)=>({grid:setGridUI,front:setFront,flame:setFlame,embers:setEmb,smoke:setSmk,sdraw:setSDraw,light:setLightUI,view:setView,time:setTime,crowd:setCrowd,speed:setSpeed}[k])(String(v)),
+  demo:d=>d==='showcase'?showcase():d==='vfx6'?vfx6():art32(),reset:resetFire,setPaused:v=>{paused=v;syncPause();},
+  ignite:(x,y)=>{queue.push({k:'ign',x,y});},
+  // frontTest(mat, wind): a uniform field of one material, column 0 lit, sim ticks only. Returns the front speed in tiles per second from 64 px to 512 px
+  frontTest:(mat,wv,sd,wd)=>{const ws=windV,wdd=windDir,sv=seed;windV=wv||0;windDir=wd||0;updateWind();seed=sd||1;resetFire();for(let c=0;c<NC;c++){MAT[c]=mat;FUEL[c]=FUEL0[c]=BURNT[mat];MOIST[c]=BASEM[mat];COOL[c]=255;}testing=true;
+    const first=new Float32Array(GW).fill(-1);for(let cy=0;cy<GH;cy++)ignite(cy*GW,4);rebuildActive();
+    for(let k=0;k<1200;k++){simT=(tick+1)*.25;simTick();for(let c=0;c<NC;c++){const x=c%GW;if(STA[c]!==NONE&&first[x]<0)first[x]=tick*.25;}if(first[GW-1]>=0)break;}
+    const a=Math.round(64/CS),b=Math.round(512/CS),v=first[b]>0?(512-64)/32/(first[b]-first[a]):0;testing=false;windV=ws;windDir=wdd;seed=sv;updateWind();resetFire();for(let c=0;c<NC;c++)PH[c]=hash(c%GW,(c/GW)|0,0,seed)&3;return +v.toFixed(3);},step:(n)=>{for(let k=0;k<(n||1);k++)step(1/60);},render,
+  // bench(n): n frames back to back, without waiting for the display. Returns mean ms per layer and the total
+  bench:n=>{const r={sim:0,front:0,flames:0,embers:0,smoke:0,combat:0,chars:0,light:0};for(const k in LSUB)LSUB[k]=0;for(let f=0;f<n;f++){for(const k in A)A[k]=0;step(1/60);render();for(const k in A)r[k]+=A[k];}let tot=0;for(const k in r){r[k]=+(r[k]/n).toFixed(3);tot+=r[k];}r.total=+tot.toFixed(3);for(const k in LSUB)r['L_'+k]=+(LSUB[k]/n).toFixed(3);r.litPx=litPx;return r;}};
+requestAnimationFrame(loop);
+})();
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>

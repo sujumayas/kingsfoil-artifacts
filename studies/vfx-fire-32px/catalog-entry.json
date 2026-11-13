@@ -1,0 +1,70 @@
+{
+ "id": "vfx-fire-32px",
+ "type": "study",
+ "path": "/vfx-fire-32px-topdown-pixel.html",
+ "title": "Top-down pixel fire at 32 px: scaling the fire engine to 32x32 tiles and 24x32 characters",
+ "short": "Fire at 32 px",
+ "nav": "Fire 32",
+ "summary": "The fire engine of VFX #6 rebuilt for 32 px tiles and 24x32 characters on a 640x360 canvas: spread rolled once per second per tile, a painted burn-order front, flames that overflow their tile as in Tibia, smoke and light fields that stay small, and measured costs for every layer.",
+ "series": {
+  "id": "vfx",
+  "number": 12
+ },
+ "date": "2026-11-13",
+ "updated": "2026-11-13",
+ "thumb": "/thumbs/vfx-fire-32px.png",
+ "tags": {
+  "genre": [
+   "mmorpg",
+   "rpg"
+  ],
+  "perspective": [
+   "top-down-3-4"
+  ],
+  "art-style": [
+   "pixel-art"
+  ],
+  "engine": [
+   "godot-4",
+   "godot-web-compat",
+   "web-canvas"
+  ],
+  "platform": [
+   "web",
+   "low-end"
+  ],
+  "project": [
+   "asterion-online"
+  ],
+  "domain": [
+   "vfx"
+  ],
+  "concept": [
+   "fire"
+  ],
+  "technique": [
+   "fire-spread",
+   "dither-threshold",
+   "light-map",
+   "advection-field",
+   "palette-lut",
+   "sprite-atlas",
+   "area-masks",
+   "damage-over-time",
+   "autotile-dual-grid",
+   "random-tick"
+  ]
+ },
+ "stats": {
+  "words": 31962,
+  "techniques": 33,
+  "figures": 38,
+  "games": 27,
+  "sources": 193
+ },
+ "pair": "vfx-fire-32px-sandbox",
+ "_sandbox": {
+  "title": "Fire 32 Sandbox (playable)",
+  "path": "/vfx-fire-32px-sandbox.html"
+ }
+}

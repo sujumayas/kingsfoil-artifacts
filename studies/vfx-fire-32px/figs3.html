@@ -1,0 +1,205 @@
+<!--FIG smokecluster-->
+<figure class="fig" data-demo="smokecluster" id="fig-smokecluster">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One smoke field, three cell sizes, two ways to draw the edge</h4><span class="illu">Emission, rise and wobble are illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="Five by three grass tiles. Two tiles on the bottom row burn with small flames on charred ground and a grey smoke plume rises from them and drifts with the wind"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="cs" role="group" aria-label="Smoke cell size"><button type="button" data-v="4">4 px cells</button><button type="button" class="on" data-v="8">8 px cells</button><button type="button" data-v="16">16 px cells</button></div>
+    <div class="seg" data-seg="m" role="group" aria-label="Edge drawing"><button type="button" class="on" data-v="cl">2x2 clusters</button><button type="button" data-v="bay">Bayer 4x4</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Wind <input type="range" data-k="w" min="-3" max="3" step="1" value="2"><output data-o="w"></output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The field is one byte per cell. It advects, wobbles from per-row and per-column tables built once per tick, and loses density with a floor [I, note 16]. Here it advects at 30 Hz, rises 26 px/s and keeps half its density each second, as the Sandbox does [S6]. A 32 px tile covers 16 cells of 8 px, so a burning tile emits into its top 2x2 cells and the smoke starts as a plume [I, note 15]. The draw samples the field bilinearly at every art pixel and compares it with a threshold. With 2x2 clusters the threshold is a Bayer matrix laid on 2x2 px blocks, so no edge step is smaller than 2 px. Nano Combat scales its smoke dither so it is "not as small as a pixel" [V, S139]. Bayer 4x4 per pixel is the VFX #6 look, and its lone pixels read as noise at 32 px [V, S3]. The lone-pixel counter counts pixels whose four neighbours all differ from them. Change the cell size and the plume changes shape. At 16 px cells it comes out in squares, which the bilinear sample only partly hides. The report's measured costs move far less than the look. The cluster draw costs the same as Bayer, so the look is the only argument [I, note 16, measured]. The live time is this browser on a 160x96 crop, not the report's 640x360 benchmark.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG puffs-->
+<figure class="fig" data-demo="puffs" id="fig-puffs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Hero puffs by source, measured in tiles of column</h4><span class="illu">Amber values are this figure's or the Sandbox's</span></div>
+  <div class="h3-side">
+    <div class="stage" style="max-width:322px"><canvas width="160" height="208" aria-label="A grass strip with a smoke source at the bottom, such as a chimney on a red roof or a burning house. Grey puffs grow as they rise. A ruler on the left marks tiles above the source and an amber bar marks the column height the report gives"></canvas><div class="hud" data-hud style="left:auto;right:6px"></div></div>
+    <dl class="h3-facts" data-facts></dl>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="s" role="group" aria-label="Source"><button type="button" data-v="camp">Campfire</button><button type="button" class="on" data-v="chim">Chimney</button><button type="button" data-v="tree">Tree</button><button type="button" data-v="house">House</button><button type="button" data-v="steam">Steam</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Sources <input type="range" data-k="n" min="1" max="4" step="1" value="1"><output data-o="n"></output></label>
+    <button type="button" class="btn ghost" data-b="burst">Steam burst</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each source throws drawn puffs that grow as they rise, with the start size, end size, rise speed, column height and rate of the D2 table [I, note 15]. The ruler counts tiles above the source and the amber bar is the column the table gives. Column height in tiles tells a player how big the fire is. A 3-tile chimney column is 27% of the screen height and a 6-tile house column 53% [I, note 15]. A puff has two tones, and three from 16 px. A puff starts to break into 2x2 chunks at 60% of its life, as in the Sandbox, instead of fading its alpha, which would leave the palette [I, note 11; S6]. House smoke is dark grey. Steam is 8 to 12 white puffs of 6 to 8 px in 0.3 s, rising 30 px/s for 0.5 to 1 s [I, note 15]. The report gives no rise speed or rate for the tree, so the figure uses the Sandbox's. All puffs share one cap of 64 alive, and a puff that would pass it is refused. RimWorld stops all smoke motes at 15 fires for the same reason [V, S88]. Three burning houses at 3 puffs per second already fill the cap, so wildfire smoke stays in the field (D1).</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG embers-->
+<figure class="fig" data-demo="embers" id="fig-embers">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Embers at 2x2 px and sparks at 1 px, against 1 px for everything</h4><span class="illu">Spawn rates and speeds are illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="Two identical fires on grass at night. On the left the embers are small square blocks and a few single-pixel sparks. On the right every ember is a single pixel"></canvas><div class="hud" data-hud></div></div>
+  <div class="h3-fr" data-lab style="--n:2"><span><b>32 px rule</b>2x2 embers, 1 px sparks</span><span><b>VFX #6 look</b>1 px embers</span></div>
+  <div class="ctl">
+    <div class="seg" data-seg="s" role="group" aria-label="Fire"><button type="button" data-v="torch">Torch</button><button type="button" data-v="camp">Campfire</button><button type="button" class="on" data-v="bon">Bonfire</button><button type="button" data-v="house">Burning house</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>At 32 px an ember is a 2x2 block that lives 0.5 to 1.5 s and cools from pale yellow to dark red. A spark is 1 px, or 1x2 px, in the two hottest tones and lives 3 to 8 frames. A 3x3 chunk comes only from explosions and roof collapses [I, note 11]. Slynyrd builds particles from a "2x2px particle" that moves 1 px per frame and flutters by cutting its top half every other frame [V, S131]. Both sides follow the report's counts alive, 1 to 3 for a torch, 4 to 8 for a campfire, 10 to 20 for a bonfire and 20 to 40 for a burning house [I, note 11]. On the right the same embers drawn 1 px read as the sensor noise VFX #11 found in 1 px snow flakes [V, S3]. The 32 px rule keeps a pool of 512, VFX #6 had 256 [S6]. A particle costs about 7 ns to update and draw, so the pool size is an art choice, not a cost one [I, note 16, measured].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG burnchar-->
+<figure class="fig" data-demo="burnchar" id="fig-burnchar">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A burning character, Asterion's recipe against Tibia's</h4><span class="illu">The 1 s burn tick is the Sandbox's</span></div>
+  <div class="stage" style="max-width:514px"><canvas width="128" height="96" aria-label="A 24 by 32 pixel character in a red hat and blue coat stands on grass while burning. Two small flames sit at the shoulder and the hip, embers rise, a small grey puff leaves the head and an orange damage number floats up once a second"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Recipe"><button type="button" class="on" data-v="ast">Asterion recipe</button><button type="button" data-v="tib">Tibia: hit effect and number</button></div>
+    <button type="button" class="btn ghost" data-b="field">Add a field hit</button>
+    <label><input type="checkbox" data-k="walk"> Walk in place</label>
+  </div>
+  <div class="ctl">
+    <label><input type="checkbox" data-k="tint" checked> Warm tint <span class="h3-tag ours">Asterion</span></label>
+    <label><input type="checkbox" data-k="fl" checked> Two 8x10 flames <span class="h3-tag ours">Asterion</span></label>
+    <label><input type="checkbox" data-k="head" checked> 6x8 head flame <span class="h3-tag ours">Asterion</span></label>
+    <label><input type="checkbox" data-k="emb" checked> 2x2 embers <span class="h3-tag ours">Asterion</span></label>
+    <label><input type="checkbox" data-k="puff" checked> Head puff <span class="h3-tag ours">Asterion</span></label>
+    <label><input type="checkbox" data-k="flash" checked> White flash <span class="h3-tag ours">Asterion</span></label>
+    <label><input type="checkbox" data-k="num" checked> Orange number <span class="h3-tag ship">Tibia</span></label>
+    <label><input type="checkbox" data-k="hit"> Hit effect <span class="h3-tag ship">Tibia</span></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia draws nothing on a burning character. <code>CONDITION_FIRE</code> sets a HUD icon, and each tick shows <code>CONST_ME_HITBYFIRE</code>, 9 frames of 100 ms at 42x40 px, and one orange number [V, S18, S17, S19, S12]. Everything else here is an Asterion addition [I, lead]. The tint is the burning row of the palette, R x1.0, G x0.7 and B x0.6, and it costs no draw. Two 8x10 flames of 4 frames at 100 ms sit at the shoulder and the hip, 2 frames apart. A 6x8 head flame shows on even ticks. Embers of 2x2 px rise at 6 to 8 per second, and one 4x4 puff leaves every 0.5 s, rising 0.5 px per frame for 1 s [I, note 13]. Each damage tick brings a 50 ms white flash and an orange number. The number copies OTClient. It is 11 px tall, lives 1,000 ms, starts 8 px down and rises 48 px, fades from 833 ms and merges with a number of the same colour under 400 ms old [V, S30, S31, S40, S41]. Its colour is <code>TEXTCOLOR_ORANGE</code>, (255, 153, 0) [V, S17; I, note 13]. "Add a field hit" lands 20 damage 200 ms after the next tick, and the two show as one number. The report does not give Asterion a burn tick interval, so the figure uses the Sandbox's 1 s. Emerald's 32x32 burn flames on a 24x32 body would hide it, which is why these flames are a quarter of the body [I, note 13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG torchwalk-->
+<figure class="fig" data-demo="torchwalk" id="fig-torchwalk">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The carried torch through four walk frames and four facings</h4><span class="illu">Torch, offsets and layering are proposals, not shipped data</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="128" height="48" aria-label="The same character four times, facing south, east, north and west, each holding a torch. The torch moves 1 pixel with each walk frame. Facing north the body hides part of the torch"></canvas><div class="hud" data-hud></div></div>
+  <div class="h3-fr" data-dirs><span><b>South</b>after the body</span><span><b>East</b>after the body</span><span><b>North</b>before the body</span><span><b>West</b>after the body</span></div>
+  <div class="h3-fr" data-frs><span>0 · (+1, 0)</span><span>1 · (0, -1)</span><span>2 · (-1, 0)</span><span>3 · (0, -1)</span></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="play" aria-pressed="false">Pause the walk</button>
+    <button type="button" class="btn ghost" data-b="step">Next frame</button>
+    <label><input type="checkbox" data-k="lean" checked> Lean while walking</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia never draws a carried torch. The server takes the brightest item in any slot as the player's light, and that is all [V, S22, S39]. A drawn torch is an Asterion addition with its own rules [I, lead]. The stick is 2x8 px and the flame about 6x8, a quarter of the character's height. Torches on posts and walls stay 10x16 [I, lead; note 13]. The flame is a 4-frame loop of 100 ms with its base still, on its own clock, so pausing or stepping the walk leaves it burning. The second row under the strip is the hand offset per walk frame facing south, (+1, 0), (0, -1), (-1, 0), (0, -1). Facing east or west the swing runs along x instead [I, note 13]. In side view the torch is held 4 px forward with the stick tilted 6 px, as the Sandbox draws it [S6]. Only a character facing north draws the torch behind the body. Facing west the east frame is mirrored, the held hand stays the near arm, and the torch stays in front [S6]. While walking, the top 2 flame rows shift 1 px against the walk, which this figure shows facing east and west [I, note 13]. No shipped game's per-frame torch offsets were found. A per-tile light map ignores the 1 px swing, so only the rim light follows the hand [I, note 13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG rimlight-->
+<figure class="fig" data-demo="rimlight" id="fig-rimlight">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A 1 px warm rim toward the fire, and a shadow turned away from it</h4><span class="illu">Light falloff on the ground is illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A character stands on grass at dusk beside a campfire. The edge of the character facing the fire is outlined in warm orange, one or two pixels deep, and a dark shadow falls on the ground on the side away from the fire. Drag on the picture to move the fire"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Lighting"><button type="button" class="on" data-v="rim">Palette rim, 1 px</button><button type="button" data-v="add">Additive glow</button></div>
+    <label><input type="checkbox" data-k="orb" checked> Orbit</label>
+    <label><input type="checkbox" data-k="rings" checked> Distance steps</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Drag on the picture to move the fire. The character is drawn with the rim test of the §7 shader. Find the nearest fire within 4 tiles and quantize its direction to 8 steps. A pixel is rim if it is opaque and the pixel 1 px toward the fire is transparent, and inner rim if the pixel 2 px toward it is. Rim takes the warm highlight entry and inner rim the warm mid entry, by palette row lookup, so no pixel leaves the palette. Both tones show within 1.5 tiles (the amber ring), rim alone out to 3 tiles (the orange ring), and nothing beyond or for a character north of the fire, behind it [I, note 13]. A 1 px rim is about 4% of a 24 px sprite and reads at 2x and 3x [I, notes 11, 13]. Pixel Beef lights the outermost pixels of each sprite the same way [V, S135]. Within 4 tiles a fire adds one shadow, an ellipse 16 px wide and 6 to 10 px tall pushed away from the fire, one shade darker, with no pixel darkened twice. That is the Sandbox's version of note 13's rotated shadow, which Graveyard Keeper does with a shadow sprite per light [V, S116; I, note 13; S6]. Switch to the additive glow and the character takes orange on every channel, the ground fills with colours from no palette, and nothing marks which side faces the fire. No shipped game uses this alpha-edge rim [I, note 13]. Its cost was not measured, two extra texture taps per fragment on 768 pixels per character.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG sootwalk-->
+<figure class="fig" data-demo="sootwalk" id="fig-sootwalk">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fire fields as terrain, and soot prints after the ash</h4><span class="illu">Map, routes and the flare drawing are this figure's</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="Five by three tiles of grass, grey ash and three burning fire fields. A character walks from tile to tile around the fields, leaves small dark footprints after crossing the ash, and sometimes steps into a field and takes damage"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <button type="button" class="btn" data-b="in">Step into the field</button>
+    <div class="seg" data-seg="pr" role="group" aria-label="Print size"><button type="button" class="on" data-v="35">Prints 3x5 px</button><button type="button" data-v="46">Prints 4x6 px</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a tile to walk there. In Tibia a fire field is terrain. <code>Tile::queryAdd</code> refuses a damaging field for a player only on a pathfinding move, so a route goes around it, and a manual step goes through [V, S20]. "Step into the field" makes that manual step. It costs 20 damage on entry, as in the Sandbox, with a 3-frame flare of 16x8 px in the tile's bottom third and 4 embers kicked from the feet [I, note 13; S6]. Asterion adds the soot prints Tibia lacks. After an ash or charred tile the walker leaves 2 prints per tile for the next 3 tiles, darkening the ground with a soot shift instead of carving depth, and they fade over 10 s, Tibia's footprint time [I, note 13; V, S3]. Note 13 and the Sandbox use 3x5 px. VFX #11 found 3x5 did not read at 1x and drew 4x6 px. On contact frames 0 and 2 over ash, 2 grey 2x2 particles rise 4 px and fade in 300 ms. A burning player should not light grass by walking, or one player becomes a moving spread source [I, note 13]. No game we read draws soot or ash prints [I, note 13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG crowd-->
+<figure class="fig" data-demo="crowd" id="fig-crowd">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Fifty torches on one screen, and what to drop first</h4><span class="illu">View size, routes and the live counters are this figure's</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="320" height="180" aria-label="A plaza at night, ten by five and a half tiles, with a campfire in the middle. Up to fifty characters carrying torches walk from tile to tile, lighting the ground around them in warm bands. Some of them are burning"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <label class="rng">Players <input type="range" data-k="n" min="0" max="50" step="5" value="20"><output data-o="n"></output></label>
+    <label class="rng">Burning <input type="range" data-k="b" min="0" max="10" step="1" value="3"><output data-o="b"></output></label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="cs" role="group" aria-label="Light map cells"><button type="button" data-v="32">Light map, 1 cell per tile</button><button type="button" class="on" data-v="8">8 px cells</button></div>
+    <label class="rng">Drop level <input type="range" data-k="drop" min="0" max="4" step="1" value="0"><output data-o="drop"></output></label>
+  </div>
+  <ol class="h3-drop" data-drop><li>Embers and smoke for others more than 6 tiles away</li><li>The head flame on other burning players</li><li>The rim light for others</li><li>A merge window of 800 ms for their numbers</li></ol>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every player carries a torch, and the burning ones add the E1 overlay. Each torch is one light at the hand with Tibia's radius 7, full out to 2 tiles and zero at 7 [V, S22, S39; I, note 13]. OTClient has no light cap. It rebuilds its one-texel-per-tile map only when a hash of the inputs changes [V, S39]. Here the hash changes whenever a torch crosses a light cell, so a walking crowd rebuilds about every frame, as the report expects. The light map is drawn in the Sandbox's two bands at 0.3 and 0.62 through a narrow dither [S6]. Lights stay cheap. The report measured an 8 px map from 30 sources at 0.021 ms on the desktop [I, note 16, measured]. Overlays and particles are what to cap, in the order of the list. Embers and smoke go first for other players more than 6 tiles away, then the head flame on other burning players, then the rim light for others, then a wider merge window for their numbers, 400 to 800 ms. The tint and the HUD icon are never dropped [I, note 13]. The red hat is the local player, who keeps everything. This view is 10 by 5.6 tiles, a quarter of the 640x360 screen, so a crowd stands 4 times denser here. No Godot cost for many burning sprites on low-end web was measured [I, note 13].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG areas-->
+<figure class="fig" data-demo="areas" id="fig-areas">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Tibia's areas, built from one 32 px effect per tile</h4><span class="illu">Effect drawings and the shortened field stages are this figure's</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="224" height="224" aria-label="Seven by seven grass tiles. A great fireball lays a fire effect on every tile of a disc, centre first and then in rings, and the flames overlap so the grid disappears. Other shapes are a plus, a 3 by 3 square of fire fields and a row of five fields. Click a tile to cast there"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sh" role="group" aria-label="Spell"><button type="button" class="on" data-v="gfb">Great fireball, 37</button><button type="button" data-v="exp">Explosion, 5</button><button type="button" data-v="bomb">Fire bomb, 9</button><button type="button" data-v="wall">Fire wall, 5</button></div>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="st" role="group" aria-label="Start times"><button type="button" class="on" data-v="ring">Centre first, rings 75 ms apart</button><button type="button" data-v="all">All at once</button><button type="button" data-v="rnd">Random 0 to 300 ms</button></div>
+    <div class="seg" data-seg="va" role="group" aria-label="Variants"><button type="button" class="on" data-v="pos">Variant by position</button><button type="button" data-v="one">One variant</button></div>
+  </div>
+  <div class="ctl">
+    <label class="rng">Cast again after <input type="range" data-k="rep" min="0" max="800" step="50" value="0"><output data-o="rep"></output></label>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a tile to cast there. Tibia never draws a big explosion sprite. A great fireball is FIREAREA on <code>AREA_CIRCLE3X3</code>, 37 tiles. The explosion rune is EXPLOSIONAREA on <code>AREA_CROSS1X1</code>, 5 tiles. The fire bomb puts field 1487 on <code>AREA_SQUARE1X1</code>, 9 tiles, and the fire wall puts it on <code>AREA_WALLFIELD</code>, 5 tiles [V, S23, S24, S25, S26]. FIREAREA is 53x53 px, 1.66 tiles, so neighbours overlap by about 21 px and the grid disappears under the overlap [V, S12; I, note 17]. Turn on the tile grid to see it. It runs 40 ms and then 13 x 60 ms, 820 ms, and EXPLOSIONAREA 12 x 50 ms plus one 100 ms frame [V, S12; I, note 17]. The client picks a variant from the tile position [V, S28, S35]. Start the centre first and each ring 75 ms later, as the Sandbox does, or add a random 0 to 300 ms, so 37 tiles do not flash in step [I, note 14; S6]. "Cast again after" repeats the spell on the same tiles. Mehah refuses a second copy of an effect while the first is no older than 75 ms x max(phases / 3, 1), 350 ms for FIREAREA, and otherwise delays the new copy by a third of the old one's duration [V, S35, S37; I, note 18]. Each effect tile leaves a scorch that fades over 4.5 s, as in the Sandbox [S6]. With no click the figure casts at the centre every 2 s. The fields burn through their three stages in 6 s here, where Canary's data takes 200, 148 and 98 s [V, S14]. At 640x360 a great fireball covers 7x7 tiles, 35% of the screen width [I, note 14].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG missile-->
+<figure class="fig" data-demo="missile" id="fig-missile">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A missile flies 150 x sqrt(d) ms, and the impact has two clocks</h4><span class="illu">Missile and effect drawings are the Sandbox's</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="256" height="160" aria-label="Eight by five grass tiles. A character on the left throws fireballs at tiles. Each fireball slides in a straight line to its tile and bursts into a fire effect"></canvas><div class="hud" data-hud></div></div>
+  <svg class="h3-tl" role="img" aria-label="Two rows of frame boxes for the impact effect: 14 frames of 75 ms in the classic client against 40 ms and then 13 frames of 60 ms in the per-frame data, with a marker at the frame playing"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="tm" role="group" aria-label="Effect timing"><button type="button" class="on" data-v="pf">Per-frame data, 820 ms</button><button type="button" data-v="cl">Classic 75 ms frames, 1,050 ms</button></div>
+    <label><input type="checkbox" data-k="ai"> Afterimages</label>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a tile to throw a fireball at it. OTClient's missile lasts <code>m_duration = 150 * sqrt(m_delta.length())</code> ms, with the distance Euclidean in tiles, and slides in a straight line as one still sprite chosen by direction [V, S29, S36]. One tile takes 150 ms, 6.7 tiles/s. Nine tiles take 450 ms, 20 tiles/s. A 7-tile missile moves 9.4 px per frame at 60 fps [I, note 14]. Every missile lands within 150 to 450 ms on screen, so combat reads fast at any range. Tibia applies the damage when the server sends the missile, so the flight is visual only [V, S11]. The impact has two timing models. The classic client gives every effect frame 75 ms [V, S28, S17; I, note 18]. Current Tibia data stores a time per frame, and FIREAREA runs 40 ms and then 13 x 60 ms, 820 ms [V, S12; I, note 17]. The two must not be mixed in one client. Afterimages are 2 copies 10 px apart, 1 and 2 palette steps darker, an option the report allows for a 12 to 16 px head [I, note 14].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG explode-->
+<figure class="fig" data-demo="explode" id="fig-explode">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Explosion, scorch decal and whole-pixel shake</h4><span class="illu">Explosion drawing and debris paths are this figure's</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="Five by three grass tiles. An explosion flashes white, grows into an orange ball, breaks into grey puffs and throws small debris, leaving a dark scorch mark that fades. The picture shakes by a few whole pixels"></canvas><div class="hud" data-hud></div></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sz" role="group" aria-label="Size"><button type="button" class="on" data-v="32">1-tile hit, 32x32</button><button type="button" data-v="64">64 px blast</button></div>
+    <label><input type="checkbox" data-k="shake" checked> Shake</label>
+  </div>
+  <div class="ctl">
+    <div class="seg" data-seg="sk" role="group" aria-label="Shake preset"><button type="button" data-v="0">0 px</button><button type="button" data-v="1">1 px</button><button type="button" class="on" data-v="2">2 px</button><button type="button" data-v="6">6 px</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Click a tile to set off an explosion. The plan for a 1-tile hit is one 32x32 sprite of 6 to 8 frames at 75 ms. Frame 1 is a white or pale yellow flash of 20 to 24 px, frames 2 to 4 grow to 32 px and the rest break into 2 or 3 grey puffs. A 64 px blast runs 10 to 12 frames at 70 to 80 ms. Debris is 2 to 6 particles of 2x2 px living 300 to 500 ms. There is one white frame only [I, notes 11, 14]. The Sandbox has no 64 px blast [S6]. Each hit leaves a 32x32 scorch decal, faded on the client over 3 to 5 s, 4.5 s in the Sandbox. Lasting scars belong to the spread system [I, note 14; S6]. Shake is whole pixels, trauma squared under a 6 px cap, half on the vertical, decaying 1.5 per second, with no rotation [V, S11]. The presets are 0 px for your own fireball, 1 px for your fire bomb, 2 px for a big blast within 3 tiles and 6 px for a boss slam, and 0 for strangers' spells, because everyone casts in an MMO [I, note 14]. No shipped game gives an explosion shake amplitude at this size [I, note 14]. The juice study found every shake method within 0.05 ms of none [V, S11].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG costs-->
+<figure class="fig" data-demo="costs" id="fig-costs">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What each part of the fire engine costs at 640x360</h4><span class="illu">Browser numbers on one machine, not Godot</span></div>
+  <div class="ctl" style="margin-top:0">
+    <div class="seg" data-seg="g" role="group" aria-label="Group"><button type="button" class="on" data-v="flames">Flames</button><button type="button" data-v="world">Front, smoke, light</button><button type="button" data-v="frame">Whole frame and uploads</button></div>
+  </div>
+  <svg class="chart h3-chart" viewBox="0 0 600 300" role="img" aria-label="Log-scale bars of the measured costs from section 6a against the 16.7 ms frame"></svg>
+  <div class="h3-leg" data-leg></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every bar is a row of §6a, measured on an Apple M4 Pro in Chromium 153 [I, note 16, measured; S7]. The light bar is the GPU run median, a desktop. The dark bar is the same build under a 6x CPU throttle, a low-end proxy and not a phone, and the percentage is its share of a 16.7 ms frame. The scale is logarithmic, so each grid line is ten times the last. The noise shader and the uploads have no throttled figure, because the throttle does not slow the GPU process. They show the Metal time and the SwiftShader software renderer instead. Pixel passes come close to the 4 times pixel ratio between 320x180 and 640x360, and fields stay flat. A DOOM band at 1:1 is the only flame cost that matters, 2.52 ms throttled, for a look the noise shader gives for 0.022 ms of GPU time. These are browser JavaScript and WebGL2 numbers. They are not Godot numbers. No <code>ImageTexture.update()</code>, GDScript loop or phone was measured.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tilesizes-->
+<figure class="fig" data-demo="tilesizes" id="fig-tilesizes">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Flame sizes as a fraction of each game's tile, on a 32 px tile</h4><span class="illu">Grey shapes stand for Asterion's 24x32 character, not game art</span></div>
+  <div class="h3-cards" data-games role="group" aria-label="Games with a flame size in the table"></div>
+  <p class="h3-sub">No tile size in the table</p>
+  <div class="h3-chips" data-chips role="group" aria-label="Games without a tile size"></div>
+  <dl class="h3-card" data-card aria-live="polite"></dl>
+  <figcaption>Each box is the §6c row's flame or effect size as a fraction of its own game's tile, multiplied by 32 so it stands on an Asterion tile [V for sizes; I for fractions]. Where a row lists several sizes the box shows the first, and for Asterion the campfire. Games are sorted by tile size. The grey shape beside each tile is Asterion's 24x32 character, the same in every box, so the flames compare with a player. Click a game to read its row. Only sourced cells are filled, and an empty cell stays empty. Flames in the most Asterion-like game overflow their tile. Tibia's field reaches 1.5 tiles and its area flame 1.66. Stardew's flames sit inside half a tile, and RPG Maker MV's battle cells are 4 tiles across. Map flames are short loops of 4 to 8 frames at 66 to 150 ms, one-shot effects run 7 to 14 frames at 35 to 100 ms and liquids 150 to 500 ms [I for the grouping].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Sortable scorecard with a radar comparison</h4></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected techniques"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three techniques on the radar, and the oldest pick drops off. Ratings are author judgement, in the order Simplicity · Speed · Pixel taste · Mood · Interactivity. Sort by Sum and Tibia's own answer leads. Areas built from 1-tile effects (F1) score 23, and a cluster of drawn art driven by tile state follows at 22. The radar starts on F1 against the noise fire shader (B5, 17), which looks like programmer art next to 32 px tiles until a painted mask tames it, and the burn-order map (C1, 21), the one per-pixel technique that earns its place because nothing else hides square fronts. The plumbing rows G1 to G4 and H1 score low because nobody sees them. G3 decides whether the first fireball freezes the browser [I].</figcaption>
+</figure>
+<!--/FIG-->

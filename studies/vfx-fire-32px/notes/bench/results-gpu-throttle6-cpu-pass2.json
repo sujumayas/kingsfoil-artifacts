@@ -1,0 +1,134 @@
+{
+ "config": "gpu-throttle6",
+ "browser_version": "153.0.8010.12",
+ "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+ "machine": "arm64",
+ "started": "2026-11-13 01:01:26",
+ "cpu": {
+  "info": {
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+   "cores": 14,
+   "timer_resolution_ms": 0.09999996423721313,
+   "loops640": {
+    "mean_box_px": 351,
+    "mean_opaque_px": 195.5
+   },
+   "loops320": {
+    "mean_box_px": 87.75,
+    "mean_opaque_px": 52.2
+   },
+   "sink": 2726313
+  },
+  "results": [
+   {
+    "name": "palette/640x360/Uint16 index -> RGBA via Uint32 lookup",
+    "median_ms": 0.38846,
+    "p95_ms": 0.42083,
+    "p10_ms": 0.36071,
+    "p90_ms": 0.41538,
+    "min_ms": 0.35714,
+    "samples": 31,
+    "calls": 838,
+    "bytes_out": 921600
+   },
+   {
+    "name": "palette/640x360/putImageData + 1 px sync, software canvas",
+    "median_ms": 0.2,
+    "p95_ms": 0.21458,
+    "p10_ms": 0.19259,
+    "p90_ms": 0.20612,
+    "min_ms": 0.18519,
+    "samples": 31,
+    "calls": 1597
+   },
+   {
+    "name": "palette/640x360/putImageData + 1 px sync, accelerated canvas",
+    "median_ms": 0.19804,
+    "p95_ms": 0.21489,
+    "p10_ms": 0.18868,
+    "p90_ms": 0.20769,
+    "min_ms": 0.18182,
+    "samples": 31,
+    "calls": 1605
+   },
+   {
+    "name": "palette/320x180/Uint16 index -> RGBA via Uint32 lookup",
+    "median_ms": 0.10101,
+    "p95_ms": 0.10918,
+    "p10_ms": 0.09813,
+    "p90_ms": 0.10816,
+    "min_ms": 0.08929,
+    "samples": 31,
+    "calls": 3150,
+    "bytes_out": 230400
+   },
+   {
+    "name": "palette/320x180/putImageData + 1 px sync, software canvas",
+    "median_ms": 0.05787,
+    "p95_ms": 0.06536,
+    "p10_ms": 0.05459,
+    "p90_ms": 0.06171,
+    "min_ms": 0.05368,
+    "samples": 31,
+    "calls": 5540
+   },
+   {
+    "name": "palette/320x180/putImageData + 1 px sync, accelerated canvas",
+    "median_ms": 0.05848,
+    "p95_ms": 0.09903,
+    "p10_ms": 0.05389,
+    "p90_ms": 0.06289,
+    "min_ms": 0.05102,
+    "samples": 31,
+    "calls": 5405
+   },
+   {
+    "name": "frame/default at 640x360",
+    "median_ms": 4.9,
+    "p95_ms": 5.65,
+    "p10_ms": 4.06667,
+    "p90_ms": 5.5,
+    "min_ms": 3.66667,
+    "samples": 31,
+    "calls": 82,
+    "layers_ms": {
+     "spread tick (4 Hz, 1 in 15 frames)": 0.002,
+     "ground copy (stand-in)": 0.0437,
+     "burn front (art map, 20%)": 0.5453,
+     "drawn loops (150)": 0.2085,
+     "embers (512, mixed)": 0.0225,
+     "smoke 80x45 advect + draw (bilinear, zero spans skipped)": 0.7015,
+     "light map 8 px build + apply (flat runs)": 1.6397,
+     "palette pass": 0.3835,
+     "putImageData + 1 px sync": 0.2128
+    }
+   },
+   {
+    "name": "frame/default at 320x180",
+    "median_ms": 1.24444,
+    "p95_ms": 1.28889,
+    "p10_ms": 1.15556,
+    "p90_ms": 1.27778,
+    "min_ms": 1.13333,
+    "samples": 31,
+    "calls": 269,
+    "layers_ms": {
+     "spread tick (4 Hz, 1 in 15 frames)": 0.0073,
+     "ground copy (stand-in)": 0.0083,
+     "burn front (art map, 20%)": 0.1698,
+     "drawn loops (150)": 0.062,
+     "embers (512, mixed)": 0.0288,
+     "smoke 80x45 advect + draw (bilinear, zero spans skipped)": 0.2933,
+     "light map 8 px build + apply (flat runs)": 0.5798,
+     "palette pass": 0.1177,
+     "putImageData + 1 px sync": 0.0742
+    }
+   }
+  ]
+ },
+ "seconds": 7.9,
+ "console_errors_and_warnings": [
+  "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently",
+  "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+ ]
+}

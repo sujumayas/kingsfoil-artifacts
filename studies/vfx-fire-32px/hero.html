@@ -1,0 +1,19 @@
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-txt">
+      @@SERIES@@
+      <p class="by">Kingsfoil Studios · Research study · November 2026</p>
+      <h1>Top-down pixel fire at 32 px: scaling the fire engine to 32x32 tiles and 24x32 characters</h1>
+      <p class="deck">VFX #6 built a fire engine on 8 px cells at 320x180, with flames a few pixels tall. Asterion Online has 32 px tiles and 24x32 characters, so the canvas grows to 640x360 and holds 4 times the pixels. We measured every fire layer at that size. The whole frame grows 3.0 to 3.9 times, to 0.624 ms on the desktop and 4.90 ms under a 6x CPU throttle, and two per-pixel passes, light and smoke, are most of it. The data does not have to grow. The server keeps one fire cell per tile and rolls spread once a second, which keeps VFX #6's material table and holds every front under a walking player. The art grows instead. Flames overflow the tile as Tibia's do, the burn is drawn per pixel through a painted map, and embers and smoke move in 2x2 clusters. Aimed at Godot 4 on the web.</p>
+      <div class="hero-act">
+        <a class="btn warm big" href="vfx-fire-32px-sandbox.html">Play the Fire 32 Sandbox ↗</a>
+        <a class="btn ghost big" href="#summary">Read the summary</a>
+      </div>
+    </div>
+    <figure class="hero-fig fig" data-demo="hero" id="fig-hero">
+      <div class="stage"><canvas width="304" height="144" aria-label="A live strip of a meadow at dusk on 32 pixel tiles. A grass fire sweeps from left to right. Its edge glows in a 2 pixel rim, a dark scorch band follows and the ground behind it is charred. A campfire and a torch on a post burn with drawn flame loops, smoke rises in clusters of 2 by 2 pixels and a character 24 by 32 pixels walks by with a torch."></canvas><div class="hud" data-hud></div></div>
+      <div class="hero-tiers" role="group" aria-label="Look"><button type="button" data-v="0">VFX #6 look</button><button type="button" data-v="1">32 px look</button></div>
+      <figcaption>Live, and timed on your device. The strip is drawn at native art pixels and shown at 2x. Each 32 px tile catches at its own time, about one tile a second, and burns for 5 s. The burn is the Fire 32 Sandbox's continuous front. Each 2x2 px block reads the tiles' ignition times bilinearly, less up to 0.9 s of jitter from a painted burn-order map, so the edge never follows the tile grid. A 2 px edge glows, and a scorch zone and char follow (C1, C2). Flames are loops of 5 tones sized by the tile, embers are 2x2 px and smoke puffs are drawn in 2x2 clusters (B1, D2, D3). The light pools come from an 8 px light map with a narrow dither band (A3). Switch to the VFX #6 look to see the old settings at the new size, with a Bayer 4 burn, 4-tone flames 8 px tall, 1 px embers and Bayer smoke. The HUD shows this strip's own frame in ms. For the full 640x360 frame our benchmark measured 0.624 ms on the desktop and 4.90 ms on the 6x throttle (§6a). Scene and timing are illustrative.</figcaption>
+    </figure>
+  </div>
+</header>

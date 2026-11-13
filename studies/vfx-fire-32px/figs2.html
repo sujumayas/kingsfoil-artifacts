@@ -1,0 +1,176 @@
+<!-- Figures 2 (Agent F): flames at 32 px (B1 to B6), the burn front and the burnt world (C1 to C5) and lava (F4). FIG blocks, mapped to sections in build.py -->
+<!--FIG loops-->
+<figure class="fig" data-demo="loops" id="fig-loops">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The flame ladder drawn against the 32 px tile</h4><span class="illu">Ladder is the study's inference from packs</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A row of six fires on grass at dusk with a dotted 32 px tile grid. From left, a candle on a dish, a torch on a post, a 24 by 32 px character holding a torch, a brazier, a campfire in a stone ring and a bonfire one tile wide and one and a half tiles tall"></canvas></div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="play">Pause</button>
+    <button type="button" class="btn ghost" data-b="step">Step one frame</button>
+    <label><input type="checkbox" data-k="thin"> VFX #6 look, 3 tones and 1 px licks</label>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each flame runs its own clock, so no two pulse together. The ladder is a candle of 4x8 px with 3 tones and a white core, a torch on a post of 10x16 px in 6 frames of 100 ms, a brazier of 16x20 px in 6 frames of 110 ms, a campfire of 24x28 px in 8 frames with 5 tones and a purple edge, and a bonfire of 32x48 px in 8 frames of 130 ms [I, note 11; lead]. A torch carried by a 24x32 character is about 6x8 px [I, lead]. Every loop holds its bottom 3 rows and lets a 2x2 or 2x3 tongue pinch off and rise 3 px per frame, as in the Sandbox [S6]. The loops are the Sandbox's own, built in code. The Sandbox has no bonfire. Tick the VFX #6 look and the same flames drop to 3 tones and grow single-pixel licks, which read as thin next to 32 px tiles. Step one frame shows the held base and the rising tongue. Copying a cached frame costs 0.22 µs per flame, so 150 flames cost 0.034 / 0.213 ms [I, note 16, measured]. No artist gives tone or frame counts per flame size, so the ladder is read off packs [I, note 11].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tibiafield-->
+<figure class="fig" data-demo="tibiafield" id="fig-tibiafield">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A Tibia fire bomb with flames that spill out of their tiles</h4><span class="illu">Variant shapes illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="128" aria-label="A three by three block of 32 px grass tiles on fire. Each flame is taller and wider than its tile and spills up and to the left. A character walks across the middle row, behind the flames of the row below and in front of the row above"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="st" role="group" aria-label="Stage"><button type="button" class="on" data-v="1">Stage 1</button><button type="button" data-v="2">Stage 2</button><button type="button" data-v="3">Stage 3</button></div>
+    <label><input type="checkbox" data-k="one"> One variant everywhere</label>
+    <label><input type="checkbox" data-k="clip"> Clip each flame to its tile</label>
+    <label><input type="checkbox" data-k="num"> Variant numbers</label>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia's fire field 2118 has 5 frames of 120 ms and a box of (15, 17, 49, 47) in a 64x64 canvas. Stages 2119 and 2120 run 5 x 100 ms in boxes of 49x54 and 38x40 px [V, S12, S14]. Large sprites are drawn from the tile's bottom-right corner, so a stage 1 flame spills about 17 px into the tile to its left and 15 px into the tile above [V, S34; I, note 10]. The flames here are the Sandbox's sprites of 46x46, 44x50 and 34x36 px [S6]. Each tile picks 1 of 16 drawings by <code>x % 4, y % 4</code>, as OTClient's <code>m_numPatternX = m_position.x % numPatternX</code> does, and runs its own clock [V, S32]. Tick "One variant everywhere" and all nine tiles share drawing 0 and one clock, which is the stamped look. Tick "Clip each flame to its tile" and the field turns into nine small fires in boxes. The walker is y-sorted, so the flames of the row below cover his legs and the row above stays behind him. Without that sort he would walk under a flame from the tile below [I]. The cost is 80 sprites of texture per stage and one draw per burning tile, about 0.22 µs [I, note 16, measured]. We do not know whether Tibia's 16 variants are 16 shapes or 16 crops of one picture [U, note 10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dying-->
+<figure class="fig" data-demo="dying" id="fig-dying">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A campfire and a fire field dying in three stages</h4><span class="illu">Campfire sizes and pool radii illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="Night grass with a campfire in a stone ring on the left and a Tibia fire field on the right, each with a warm pool of light around it. The fires step through three stages, each smaller and dimmer than the last"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="st" role="group" aria-label="Stage"><button type="button" class="on" data-v="auto">Auto</button><button type="button" data-v="1">Stage 1</button><button type="button" data-v="2">Stage 2</button><button type="button" data-v="3">Stage 3</button></div>
+    <label><input type="checkbox" data-k="only"> Size only</label>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia's campfire 1998 plays 5 x 100 ms at light 7, item 1999 plays 4 x 100 ms at light 5 and item 2000 plays 6 x 300 ms at light 3 [V, S12]. The campfire gets smaller, slower and dimmer at once. The fire field is the second fire. Its boxes are 49x47, 49x54 and 38x40 px, its frames 120, 100 and 100 ms and its light 7, 5 and 3, with Canary stage times of 200, 148 and 98 s [V, S12, S14]. So the field gets dimmer at each step, but its stage 2 sprite is taller than stage 1 and its frames get faster, and only stage 3 is smaller. The campfire sizes here are drawn for the figure, and each pool's radius is 7 px per light level. Tick "Size only" and the sprites shrink while frame time and light stay at stage 1, which reads as a bug [I]. The report follows Tibia's slow dying campfire over the physics of <code>f = 1.5 / sqrt(D)</code>, which would make a small flame puff faster [S2]. A stage change costs one sprite swap and one light change per tile [I, note 10].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG doom32-->
+<figure class="fig" data-demo="doom32" id="fig-doom32">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The DOOM fire at 32 px, with the height rule and smoothing before quantizing</h4></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="128" aria-label="A DOOM-style fire 32 px wide rising from a stone ring at night, next to a 24 by 32 px character for scale"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="k" role="group" aria-label="Buffer ratio"><button type="button" class="on" data-v="1">1:1</button><button type="button" data-v="2">1:2</button></div>
+    <div class="seg" data-seg="loop" role="group" aria-label="Loop"><button type="button" class="on" data-v="in">In place</button><button type="button" data-v="db">Double-buffered</button></div>
+    <label class="rng">Source heat L <input type="range" data-k="L" min="3" max="36" step="1" value="14"><output data-o="L"></output></label>
+    <label class="rng">Decay chance p <input type="range" data-k="p" min="0.25" max="1" step="0.05" value="0.5"><output data-o="p"></output></label>
+    <div class="seg" data-seg="tn" role="group" aria-label="Tones"><button type="button" data-v="37">37 tones</button><button type="button" class="on" data-v="5">5 tones</button></div>
+    <div class="seg" data-seg="sm" role="group" aria-label="Smoothing"><button type="button" data-v="none">No smoothing</button><button type="button" class="on" data-v="box">3x3 average</button><button type="button" data-v="lode">Lode kernel</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The loop is the §7 code. Each cell copies to the row above into a column shifted +1 to -2 and loses a level when <code>r &amp; 1</code> is set, so p is 0.5 [S1]. Other values of p use an independent decay roll. The source row holds L across the middle and tapers at the edges so the buffer reads as a campfire, and the height is measured live as the row where half the middle columns are lit. For a clean, double-buffered loop the rule is <code>R50 = (L - c + 1) / p</code> rows, times 2 at 1:2 [I, note 12]. The in-place loop burns taller, about 2.6 L rows at p = 0.5, because a no-decay write lands in a column not yet processed this frame [I, notes 12, 18, measured]. Switch the loop and watch the height. At L 14 a 28 px campfire comes out about 36 px tall in place. Pick 37 tones and no smoothing for the raw look, about three quarters lone pixels. At 5 tones the lone share is 8.6% at L 36 and 25.3% at L 8, and a 3x3 average before the tone lookup brings it near 0.3% [I, note 12, measured]. The tone table has unequal bands with a small white core in the top 2 or 3 levels. At 1:2 each lone pixel becomes a lone 2x2 cluster. "Lode kernel" averages the four cells below, here applied at draw time. A 32x48 campfire costs 0.0086 / 0.057 ms at 1:1 and 0.0026 / 0.016 ms at 1:2 [I, note 16, measured].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG noisefire-->
+<figure class="fig" data-demo="noisefire" id="fig-noisefire">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A noise flame cut to 5 tones on a burning roof</h4><span class="illu">CPU emulation of a shader</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="A plank house at night whose roof burns with a large mass of flame in five bands of red, orange and yellow, shaped into tall tongues"></canvas></div>
+  <div class="ctl">
+    <label class="rng">Octaves <input type="range" data-k="oct" min="1" max="5" step="1" value="3"><output data-o="oct"></output></label>
+    <div class="seg" data-seg="snap" role="group" aria-label="Snap"><button type="button" class="on" data-v="1">1 px</button><button type="button" data-v="2">2 px</button></div>
+    <div class="seg" data-seg="fps" role="group" aria-label="Stepped time"><button type="button" data-v="8">8 fps</button><button type="button" class="on" data-v="12">12 fps</button><button type="button" data-v="free">Every frame</button></div>
+    <label><input type="checkbox" data-k="mask" checked> Painted mask</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The sketch from B5. Time is stepped with <code>t = floor(TIME * fps) / fps</code> for a hand-drawn frame rate. Two value-noise reads scroll up at different speeds, 1 noise unit per tile. Heat is the shape mask times the noise mix, and <code>q = floor(heat * tones)</code> picks one of 5 ramp tones [I, note 12]. Simple Pixelated Fire ships the same idea for Godot with up to 5 palette thresholds [V, S167, S166]. Untick "Painted mask" and the flame fills a plain box, which looks like every other shader fire. Here the shader runs on the CPU at figure size, so its readout is this browser's time, not a GPU's. Our benchmark measured the full 640x360 screen at 5 octaves at 0.022 ms of GPU time on Metal and 0.510 ms of wall time on SwiftShader [I, note 16, measured]. A phone GPU may be 10 to 30 times slower in fill, which is an estimate [I, note 16].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG stacked-->
+<figure class="fig" data-demo="stacked" id="fig-stacked">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One small loop stacked three times, against jitter and particles</h4></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="96" aria-label="Three campfires in stone rings at night. Each campfire flame is built from small copies of one short flame loop"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Method"><button type="button" class="on" data-v="stack">Three copies, three seeds</button><button type="button" data-v="sync">Three copies, one seed</button><button type="button" data-v="one">One copy</button><button type="button" data-v="jit">Jitter, additive</button><button type="button" data-v="spd">Particles only</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Stardew Valley draws its campfire from one 12x11 loop of 4 x 100 ms three times, with seeds <code>x*3047 + y*88</code>, <code>x*2047 + y*98</code> and <code>x*2077 + y*98</code> at screen offsets of (12, -8), (20, 0) and (12, 12) [V, S47, S48]. Here the loop stays at 1:1 and the offsets are halved to our tile, because Stardew's 3x scale on a 4x world breaks the pixel grid [I, note 10]. "One seed" puts the three copies in step, and the stack pulses as one flame. "Jitter, additive" is Terraria's way, 7 extra draws with additive colour (50, 50, 50) and offsets of up to about 3 px, reseeded about 12 times a second [V, S82, S83]. "Particles only" is Shattered Pixel Dungeon's way, one additive square every 30 ms per burning cell, living 0.6 s and rising under 160 px/s² at our scale [V, S67, S68; I, note 17]. The readout counts the colours that leave the palette. The two additive methods add dozens to hundreds. A stacked copy costs one flame draw, 0.22 µs, and particles about 7 ns each [I, note 16, measured].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG burnmap-->
+<figure class="fig" data-demo="burnmap" id="fig-burnmap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Two tiles burning through the burn-order map from one entry side</h4><span class="illu">This study's proposal, no shipped tile game</span></div>
+  <div class="stage" style="max-width:482px"><canvas width="96" height="64" aria-label="Six grass tiles at dusk. The two middle tiles burn. A glowing line of fire crosses them from the chosen side in ragged clusters, followed by a dark scorch band and charred ground"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="dir" role="group" aria-label="Fire came from"><button type="button" class="on" data-v="0">W</button><button type="button" data-v="1">NW</button><button type="button" data-v="2">N</button><button type="button" data-v="3">NE</button><button type="button" data-v="4">E</button><button type="button" data-v="5">SE</button><button type="button" data-v="6">S</button><button type="button" data-v="7">SW</button></div>
+    <label class="rng">Burn progress b <input type="range" data-k="b" min="0" max="1" step="0.01" value="0.4"><output data-o="b"></output></label>
+    <label><input type="checkbox" data-k="auto" checked> Play</label>
+    <label class="rng">Noise weight a <input type="range" data-k="a" min="0" max="0.8" step="0.05" value="0.4"><output data-o="a"></output></label>
+    <label class="rng">Edge <input type="range" data-k="rim" min="1" max="3" step="0.5" value="2"><output data-o="rim"></output></label>
+    <label class="rng">Scorch <input type="range" data-k="sc" min="0.5" max="5" step="0.5" value="2.5"><output data-o="sc"></output></label>
+    <div class="seg" data-seg="map" role="group" aria-label="Threshold map"><button type="button" class="on" data-v="art">Painted clusters</button><button type="button" data-v="bay">Bayer 4x4</button></div>
+    <label><input type="checkbox" data-k="showT"> Show T</label>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The test of §7. Each art pixel has a threshold <code>T = (1 - a) * clamp(dot(u, -e) / s + 0.5, 0, 1) + a * N</code>, where u is the pixel's place in its tile, e the direction the fire came from, s is 1 for sides and the square root of 2 for diagonals, and N the painted cluster map [I, note 12]. With <code>d = b - T</code>, pixels with d below 0 are grass, then come the edge, the scorch band and char. The band widths are set in px of the ramp, <code>(1 - a) / 32</code> per px. The edge here is 2 px, 1 px of glow and the rest dark red, as the Sandbox draws it [S6]. The readout measures the bands on the canvas. A side entry gives the set widths, but a diagonal entry gives bands about 1.4 times wider across the front and twice as wide along a row, because s stretches the ramp over the diagonal [I]. The map is world-anchored, so the two tiles burn in different clusters. Bayer 4x4 turns the front into a regular pattern of single pixels. It is 8 to 17% cheaper [I, note 16, measured]. The pass costs 1.8 ns per burning pixel, 0.082 / 0.515 ms with a fifth of the screen burning [I, note 16, measured].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG arrival-->
+<figure class="fig" data-demo="arrival" id="fig-arrival">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Per-tile progress against a continuous arrival-time front</h4><span class="illu">The study's own construction, untested in a shipped game</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Twelve grass tiles burning from the left. Each tile runs its own burn from its own side, so the char stops in straight steps at tile borders"></canvas></div><p class="pl"><b>Per-tile progress.</b> The §7 shader. T restarts at every border.</p></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="The same fire drawn from ignition times blended between tile centres. The front is one ragged curve that crosses tile borders without a step"></canvas></div><p class="pl"><b>Arrival time.</b> One texel per tile, blended between tile centres.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="new">New fire</button>
+    <label><input type="checkbox" data-k="tex"> Show ignition-time texels</label>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Both sides draw the same fire. Each tile rolls once per second from the second it caught, so neighbours catch on different seconds. On the left each tile runs its own burn from its entry side, and two neighbours that caught on different ticks meet in a straight step on their shared edge [I, note 12]. On the right the time each tile caught sits in one texel per tile, and a linear filter blends it between tile centres, sampled once per 2x2 px block with the Sandbox's 8 px warp. A pixel burns when <code>now - t_arrival</code> passes the cluster map's jitter of up to 0.9 s [I, note 12; S6]. A tile that has not caught counts as now plus 6 s, as in the Sandbox, or the blend pulls the front ahead of the fire [S6]. The readout counts pixel pairs where char meets unburnt grass across a tile border. Tick "Show ignition-time texels" to see the nearest texels on the left and the blended field on the right, with the glowing edge in white. Band widths now change with front speed, because the time gradient changes [I]. The format the report gives is half floats against a rolling epoch, 480 bytes per view [I]. Nothing here has been measured in Godot.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tileswap-->
+<figure class="fig" data-demo="tileswap" id="fig-tileswap">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Whole-tile swap and a dual-grid scorch autotile on the same burn</h4><span class="illu">Autotile shapes illustrative</span></div>
+  <div class="pair">
+    <div><div class="stage"><canvas width="128" height="96" aria-label="Grass tiles that flip to charred ground one whole square at a time as the fire reaches them"></canvas></div><p class="pl"><b>Whole-tile swap.</b> Each tile flips to its burnt picture at once.</p></div>
+    <div><div class="stage"><canvas width="128" height="96" aria-label="The same burn drawn as rounded charred blobs with a dark rim, whose edges sit between the tile centres"></canvas></div><p class="pl"><b>Dual-grid autotile.</b> One burnt bit per tile, shapes drawn between tile centres.</p></div>
+  </div>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="new">New fire</button>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>These are the cheapest fallbacks. Project Zomboid swaps every object on a burnt square to its <code>burntTile</code>, and Pokémon Emerald swaps ash grass to clean grass after a puff [V, S98, S64, S65]. On the left the burn moves as a board of switches. On the right one burnt bit per tile feeds a dual grid of 15 or 16 tiles offset by half a tile, so the scar gets rounded corners and its edge moves in 16 px steps [V, S3; I, note 12]. The shapes here come from blending the four corner bits, with a dark rim, in place of drawn tiles. Copying a 32x32 tile by progress costs 0.011 / 0.066 ms with 10% of the screen burning and 0.116 / 0.720 ms at 100%, 3.6 times cheaper than the burn-order map, and nothing in a cached tile layer between changes [I, note 16, measured]. The swap is right for the end state and wrong for a moving front.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG tilestates-->
+<figure class="fig" data-demo="tilestates" id="fig-tilestates">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One tile's life, from fresh grass to regrown grass</h4><span class="illu">Regrowth timings are the study's proposal</span></div>
+  <div class="stage" style="max-width:482px"><canvas width="96" height="64" aria-label="Six grass tiles at dusk. The top middle tile goes through its states, catching, burning, dying, embers, ash, bare dirt, sprouts, short grass and full grass"></canvas></div>
+  <svg class="chart" style="max-width:482px;margin-top:8px" viewBox="0 0 400 52" role="img" aria-label="A strip of ten segments for the states 0 to 6 of the tile, with a marker at the current time. Segments the server stores have a gold border, the dying segment is dashed"></svg>
+  <div class="ctl">
+    <button type="button" class="btn ghost" data-b="play">Pause</button>
+    <label class="rng">Time <input type="range" data-k="t" min="0" max="999" step="1" value="0"></label>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The strip gives each state an equal width, whatever it lasts. The readout gives the time since the tile caught. The server stores states 0, 1, 2, 4, 5 and 6 plus the entry direction. Dying is derived on each client from the time since ignition and the hashed burn length, so VFX #6's event list stays as it was [I, note 15]. The Sandbox burns green grass for 5 rolls, where the report's table gives 3 s, because 3 rolls let fronts die [S6]. Embers last 4 to 10 s with glowing clusters of at least 2x2 px. Ash is a whole-tile swap, and the scar regrows through bare dirt, sprouts and short grass, 5 to 10 minutes in all [I, note 15]. Char is the ramp's darkest warm purple, not black, and ash is grey in 2x2 blocks [I, note 11; S6]. A 4-frame loop at 10 fps shows fewer than 2 loops in VFX #6's 0.75 s grass burn, which reads as a flash [I, note 15]. No pixel game publishes ash-to-grass timings [I, note 15].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG house-->
+<figure class="fig" data-demo="house" id="fig-house">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">A 3x3 house and a pine burning in stages</h4><span class="illu">Stages are the study's proposal</span></div>
+  <div class="stage click" style="max-width:482px"><canvas width="160" height="160" aria-label="A wooden house with a red shingle roof, three tiles wide and deep, and a pine tree in front of its right corner, on grass at dusk. Clicking an edge tile of the house or the tree sets it alight"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="sp" role="group" aria-label="Speed"><button type="button" data-v="1">1x</button><button type="button" class="on" data-v="4">4x</button></div>
+    <button type="button" class="btn ghost" data-b="reset">Reset</button>
+    <label><input type="checkbox" data-k="grid" checked> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left alone for 2 s, the figure lights one edge tile and the trunk itself, plays the fire to ash and starts again. Click any of the house's 8 edge tiles to take over. The inner tile takes no outside fire, as RimWorld refuses fire on <code>OccupiedRect().ContractedBy(1)</code> [V, S89]. Each house tile is a fuel cell that rolls once per second against its neighbours, with the Sandbox's wood values of 0.30 per roll and 30 rolls of burning [S6]. The house is one object whose look follows the burnt fraction. Any burning tile puts smoke under the eaves. At 25% flames come through the roof, at 60% the roof collapses to charred rafters with a one-off burst of embers and smoke, and at 100% only charred wall stumps stand [I, note 15]. Every client agrees, because the fraction comes from server state. The pine is one fuel cell at the trunk. It shows one flame at the base while catching, then flames climbing the crown over the first third of the burn, then bare black branches and a stump [I, note 15]. Each stage costs one object swap, and the collapse needs no message [I, note 15]. No devlog shows house collapse stages [I, note 15].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG lava-->
+<figure class="fig" data-demo="lava" id="fig-lava">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Lava at 32 px, three ways to make it move slowly</h4><span class="illu">Crack and plate art illustrative</span></div>
+  <div class="stage" style="max-width:642px"><canvas width="160" height="128" aria-label="A pool of five lava tiles on night grass. Dark crust plates float on glowing cracks that slowly change. The pool has a dark rim on its lava side and a red glow band on the ground around it"></canvas></div>
+  <div class="ctl">
+    <div class="seg" data-seg="m" role="group" aria-label="Method"><button type="button" class="on" data-v="tib">Tibia frames</button><button type="button" data-v="sdv">Stardew checkerboard</button><button type="button" data-v="pal">Palette cycle</button></div>
+    <label><input type="checkbox" data-k="edge" checked> Crust rim and glow band</label>
+    <label><input type="checkbox" data-k="light" checked> Light</label>
+    <label><input type="checkbox" data-k="fast"> 4x speed</label>
+    <label><input type="checkbox" data-k="grid"> Tile grid</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Tibia's classic lava is opaque 32x32 art in a 4x2 pattern with 3 synchronised frames of 500 ms and light 4 in red-orange colour 193 [V, S12, S14, S43]. Stardew's volcano lava reuses the water animation, 10 frames of 200 ms with two variants in a checkerboard by <code>(x + y) % 2</code>, and scrolls about 6 px/s at our scale [V, S50, S51; I, note 18]. "Palette cycle" is the report's plan. Four variants by <code>x % 2, y % 2</code>, crust plates with cracks 2 to 3 px wide, and five hot entries on the crack pixels cycled 8 steps per second, a 625 ms period [I, note 14]. The Sandbox cycles its lava every 300 ms [S6]. The rim is 2 to 3 px dark on the lava side and the glow band 2 px on the ground side, and one light with a radius of 4 tiles covers the pool, as the plan puts one light per 3x3 block [I, note 14]. A palette cycle costs one uniform per frame for any number of lava tiles [I, note 14]. Tick "4x speed" and the lava reads as water painted orange. Neither game palette-cycles in code. Both swap frames [I, note 18].</figcaption>
+</figure>
+<!--/FIG-->
