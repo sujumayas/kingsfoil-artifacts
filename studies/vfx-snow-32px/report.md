@@ -1284,7 +1284,7 @@ Sweeping downwind means the last obstacle passed is the nearest one upwind of th
 
 The Sandbox [S3] is one hand-written page with a native 640x360 canvas, shown at 2x from a viewport of about 1,340 px. It plays the eight layers of §7 in plain JavaScript and ports the engine of the VFX #1 sandbox [S2]. This section describes the page as built.
 
-**The world.** A winter village corner on 32x32 px tiles, 20 wide by 11.25 tall, with a log house, pines, a fence, rocks, a lamp post, a path, a frozen pond and a well. All art is drawn in code with 1 px dark outlines and clusters in place of stray pixels.
+**The world.** A winter village corner on 32x32 px tiles, 20 wide by 11.25 tall, with a log house, pines, a fence, rocks, a lamp post, a path, a frozen pond and a well. All world art is drawn in code with 1 px dark outlines and clusters in place of stray pixels. The characters are SpriteFusion pixel art: two bodies, an adventurer and an elder villager, generated at 32 px, turned to 8 directions and given 4-frame walks, then cropped to 24x32, quantised to 14 or 15 palette slots each and recoloured into 7 sets (coat, scarf, dress, shawl and hair). The frames ship inside the page at 4 bits per pixel.
 
 **Actors.** A player, a villager and a crowd of 0 to 20 others in 24x32 px frames, drawn about 20 px wide and 30 px tall. A fox of 20x12 px. The walk has 4 frames of 8 px each, 400 ms per tile, with steps on frames 0 and 2. A "tile steps" toggle makes every actor walk tile to tile.
 
@@ -1300,7 +1300,7 @@ The Sandbox [S3] is one hand-written page with a native 640x360 canvas, shown at
 
 **Flakes.** Far 560 at 1 px, mid 300 at 2 px and near 150 at 3 px, with 10% of the near ones at 4 px. That is 1,010 alive and about 2,100 to 2,200 px, 0.9 to 0.97% of the screen. They fall 26, 42 and 64 px/s. The near layer has height and a shadow dot, and deposits 2 units on landing. The "1 px" mode covers 0.39%.
 
-**Light and palette.** 77 base colours in 6 versions (plain, sun shadow, wet, wet shadow, frost, frost shadow) make 462 entries, plus 2 warm palettes for the lamp and window pools.
+**Light and palette.** 171 base colours (77 for the world, 94 for the 7 character sets) in 6 versions (plain, sun shadow, wet, wet shadow, frost, frost shadow) make 1,026 entries, plus 2 warm palettes for the lamp and window pools.
 
 **Controls and HUD.** Weather, wind, speed 1 to 16x, shovel and add-snow tools, a crowd slider of 0 to 20 and a tile-steps toggle. The scale controls are field mode, sampling, threshold style, shading, flake size, footprint mode and sink cap. Nine views show the picture, depth, exposure, sun shadow, packed, wet, the tile bands, the field grid and a cost view. Three demo buttons set the showcase frame, the VFX #1 settings and the 32 px defaults [V, S3].
 
