@@ -77,7 +77,8 @@
    "blurb": "One Kingsfoil game per study. Patterns from structural twins, traced through patch notes and postmortems, turned into a Curve Spec we can tune and playtest.",
    "order": [
     "curves-hearthguard",
-    "curves-matchrpg"
+    "curves-matchrpg",
+    "curves-asterion"
    ],
    "upcoming": [
     {
@@ -87,10 +88,6 @@
     {
      "title": "Merge Arena",
      "blurb": "Auto-battler: shop odds, rounds and comeback rules."
-    },
-    {
-     "title": "Asterion",
-     "blurb": "Tibia-like MMORPG: skill by use, death penalty and the long curve."
     }
    ],
    "nav_label": "Curves series"
@@ -2586,6 +2583,125 @@
      "glide-thrust",
      "parry-pogo",
      "verb-state-machine"
+    ]
+   },
+   "maturity": "prototype"
+  },
+  {
+   "id": "curves-asterion",
+   "type": "study",
+   "path": "/curves-asterion.html",
+   "title": "Asterion difficulty and learning curves: skill by use, the death penalty and the long curve of a Tibia-like MMORPG",
+   "short": "Asterion curves",
+   "nav": "Asterion",
+   "summary": "Difficulty, learning and power curves for Asterion, a Tibia-like MMORPG for five friends: the cubic exp curve, skills by use, the 10 % death penalty and the corpse run, traced through Tibia, Ultima Online, EverQuest, RuneScape and their modern heirs into a Curve Spec, a playtest protocol, a curve lab and an Asterion Atlas of every creature, item and spell.",
+   "series": {
+    "id": "curves",
+    "number": 3
+   },
+   "date": "2026-11-13",
+   "updated": "2026-11-13",
+   "thumb": "/thumbs/curves-asterion.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat"
+    ],
+    "platform": [
+     "web",
+     "desktop"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "difficulty-curves"
+    ],
+    "technique": [
+     "exp-curve",
+     "skill-by-use",
+     "death-drops",
+     "corpse-run",
+     "recoverable-leak",
+     "party-share",
+     "level-gates",
+     "playtest-metrics"
+    ]
+   },
+   "stats": {
+    "words": 29692,
+    "techniques": 14,
+    "figures": 19,
+    "games": 37,
+    "sources": 167
+   },
+   "pair": "curves-asterion-sandbox"
+  },
+  {
+   "id": "curves-asterion-sandbox",
+   "type": "sandbox",
+   "path": "/curves-asterion-lab.html",
+   "title": "Asterion curve lab (playable)",
+   "series": {
+    "id": "curves",
+    "number": 3
+   },
+   "short": "Asterion curves sandbox",
+   "summary": "Playable companion to the study.",
+   "pair": "curves-asterion",
+   "date": "2026-11-13",
+   "updated": "2026-11-13",
+   "thumb": "/thumbs/curves-asterion.png",
+   "tags": {
+    "genre": [
+     "mmorpg",
+     "rpg"
+    ],
+    "perspective": [
+     "top-down-3-4"
+    ],
+    "art-style": [
+     "pixel-art"
+    ],
+    "engine": [
+     "godot-4",
+     "godot-web-compat"
+    ],
+    "platform": [
+     "web",
+     "desktop"
+    ],
+    "project": [
+     "asterion-online"
+    ],
+    "domain": [
+     "design"
+    ],
+    "concept": [
+     "difficulty-curves"
+    ],
+    "technique": [
+     "exp-curve",
+     "skill-by-use",
+     "death-drops",
+     "corpse-run",
+     "recoverable-leak",
+     "party-share",
+     "level-gates",
+     "playtest-metrics"
     ]
    },
    "maturity": "prototype"

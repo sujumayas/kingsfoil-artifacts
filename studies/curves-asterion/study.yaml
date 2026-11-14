@@ -1,0 +1,26 @@
+# Study config — read by studykit and by the recipe (build.py) via studykit.ctx(__file__).
+id: curves-asterion   # must match the item id in site/catalog.json (run `python -m studykit register curves-asterion`)
+format: design-curves   # formats.yaml; layout and rules in docs/formats/design-curves.md
+kind: recipe
+page: curves-asterion.html
+report: report.md
+sandbox:
+  page: curves-asterion-lab.html
+  source: sandbox.html
+qa:
+  max_page_kb: 1000        # the Atlas tab adds about 350 KB of static cards to a 500 KB study page
+page_text:                # study-specific copy the design-curves recipe reads
+  game: Asterion          # must match the "*In <game>.*" card marker
+  lab_name: the curve lab
+  lab_blurb: Drag the knobs from the Curve Spec (the exp divisor and stages, the skill slope and bases, the magic multiplier, the death loss and its bend, the corpse window, party size and share) and watch level, sword skill and magic level climb one axis of hours, the minutes a death costs by level, and whether a 45-minute session at level L ends with a rung.
+  context_title: Context
+  byline_month: November 2026
+figs_after: {C3: [corpserun], D2: [partyshare]}
+index_chips: [{q: "tibia|tibiantis|forgotten server", label: "Tibia and OT"}, {q: "ultima|koster", label: "Ultima Online"}, {q: "everquest", label: "EverQuest"}, {q: "runescape", label: "RuneScape"}, {q: "valheim|gorgon|albion|haven", label: "Friend servers"}, {q: "warcraft|exile|elden|final fantasy", label: "The soft end"}]
+atlas:                    # the Atlas tab (docs/formats/design-curves.md): cards from atlas/data.json + atlas/roles-*.json
+  title: Asterion Atlas
+  intro: Every creature, item and spell in Asterion at commit 8836106a (2026-09-11), as the content YAML defines it. Names are the game's own, in Spanish. The role line under each name is the study's one-sentence reading of what the entry is for and where it sits on the curve. Band is the creature's farm level, the level at which a hundred kills make one level (D69). Prices are shop prices in gold; every shopkeeper buys back at 30 %. Sprites are the game's own, packed by `atlas/make_atlas.py`.
+thumb:                    # homepage card: crop of the live hero chart, 1440x900 viewport
+  from: page
+  crop: [744, 200, 1335, 533]
+  wait: 5000

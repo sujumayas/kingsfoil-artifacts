@@ -19,6 +19,7 @@ site/                 the deployed website (committed, prebuilt). Netlify publis
   nav.json            per-page links for the top bar, generated the same way
   nav.js              the shared top bar and end-of-study links (hand-written; every page loads it)
   favicon.svg         browser-tab icon, linked by the homepage and added to every other page by nav.js
+  assets/             study files too big to inline, named <study-id>-<what>.<ext> (the Asterion Atlas sprite sheet). Listed in the manifest by `studykit index`
 formats.yaml          registered study formats: template recipe, sandbox rule, page names, format doc
 studies/<id>/         one folder per study (id = catalog id)
   study.yaml          config: page names, report, sandbox, thumbnail recipe, QA budget

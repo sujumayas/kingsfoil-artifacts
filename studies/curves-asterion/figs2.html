@@ -1,0 +1,101 @@
+<!-- Asterion curve figures, part 2 (figs B). Demos in demos2.js: deathcost, corpserun, session, partyshare, gearladder, bestiary, dashboard. -->
+<!--FIG deathcost-->
+<figure class="fig" data-demo="deathcost" id="fig-deathcost">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Minutes lost by one death, by level</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Log chart of the minutes needed to re-earn one death from level 1 to 120 under Asterion's flat 10 percent, Tibia 8.41's level-scaled loss and a proposed curve, with the 30 to 60 minute session band shaded"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="ov" role="group" aria-label="Exp per hour ladder"><button type="button" class="on" data-v="x1">Band ladder</button><button type="button" data-v="x3">Band ×3 overhead</button><button type="button" data-v="1500">1,500 exp/h</button></div>
+    <label><input type="checkbox" data-k="logx"> Log level axis</label>
+    <label><input type="checkbox" data-k="bless"> Tibia with 5 blessings</label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Proposed loss <input type="range" min="1" max="20" step="1" value="5" data-k="pct"><output data-o="pct"></output></label>
+    <label><input type="checkbox" data-k="scaled" checked> Taper above level 24 (24/L)</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Yellow: Asterion loses 10 % of total exp at any level [K] <code>corpse.go:43,367</code>, divided by the exp/h the balance harness measures on each band's creature (384 at level 1, 5,409 at 8, 210,981 at 50, 660,520 at 120, interpolated) [K] <code>levels.txt</code>, <code>band.py</code>. "Band ×3" divides that rate by three for walking, eating and looting [I]; 1,500 exp/h is the harness's own default [K] <code>balance.go:128</code>. Blue: Tibia 8.41's loss, flat 10 % below 24, then ((L+50)/100)·50·(L²−5L+8) exp, applied to Asterion's exp table, which is Tibia's formula [V] notes/02 Q2; five blessings refund 40 %. Pink: a proposed rule read from the slider, illustrative. Green band: "about one session" [K] <code>vision-es.md:89-90</code>. The calibration test prices a rat death at 52 min at level 8 under 480 exp/h [K] <code>phase5_test.go:36-57</code>; the harness ladder makes it 5. Hover for a level.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG corpserun-->
+<figure class="fig" data-demo="corpserun" id="fig-corpserun">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The corpse run against the 30-minute window</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 120" role="img" aria-label="Live simulation of a respawned player walking from the temple to a corpse at a chosen distance while the 30-minute corpse clock runs down"></svg>
+  <div class="ctl">
+    <label class="rng">Distance to the corpse <input type="range" min="50" max="600" step="10" value="300" data-k="d"><output data-o="d"></output></label>
+    <label class="rng">Level <input type="range" min="1" max="120" step="1" value="8" data-k="lv"><output data-o="lv"></output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Minutes at the temple before leaving <input type="range" min="0" max="28" step="1" value="3" data-k="delay"><output data-o="delay"></output></label>
+    <label><input type="checkbox" data-k="party"> A friend walks with you</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>The clock runs at 60× real time. Own corpse 900 s plus 900 s of bones, 30 minutes in all [K] <code>corpse.go:29-30</code>; the player respawns at the town temple [K] <code>corpse.go:385-390</code> and walks one tile every ceil(1000·150/speed/50)·50 ms with speed 300 + 4 per level, so 500 ms at level 1, 450 at 10, 400 at 20, 350 at 34, 300 at 51, 250 at 76, 200 at 114 [K] <code>game.go:89,100,123</code>. The farthest Akron quest step is 459 tiles from town, 3.8 min at level 1 [K] <code>GDD.md:380</code>. The friend is 20 levels higher (illustrative) and can hold the bag, since any player may loot a corpse [K] <code>corpse.go:69-74</code>. The heartstone is destroyed by death, so it never shortens this walk [K] <code>recall.go:117</code>. The minutes at the temple are the only knob that threatens the window on Akron.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG session-->
+<figure class="fig" data-demo="session" id="fig-session">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">One session at level L, minute by minute</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 150" role="img" aria-label="Stacked horizontal bar of a play session split into the walk out, hunting, walks back after deaths and the walk home, with a second bar showing the exp gained as a share of the current level"></svg>
+  <div class="ctl">
+    <label class="rng">Level <input type="range" min="1" max="120" step="1" value="15" data-k="lv"><output data-o="lv"></output></label>
+    <label class="rng">Session <input type="range" min="20" max="180" step="5" value="45" data-k="len"><output data-o="len"></output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Death risk per fight <input type="range" min="0" max="3" step="0.25" value="0.25" data-k="risk"><output data-o="risk"></output></label>
+    <label><input type="checkbox" data-k="stone"> Heartstone home</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Hunting earns the band ladder's exp/h for the level [K] <code>levels.txt</code>; the band creature gives step(L)/100 exp, so kills per hour follow from D69 [K] <code>GDD.md:411</code>. The walk out is 120 + 4·L tiles, illustrative, scaled so the level-8 hunt sits about as far as Akron's farthest quest step (459 tiles) [K] <code>GDD.md:380</code>, at the level's beat [K] <code>game.go:100</code>. Death risk per fight is a slider because the harness finds it binary per creature, 0 % or 100 %, with the band ladder admitting creatures at 10 % or less [K] <code>levels.txt</code>, 01 Q3. Each death costs 10 % of exp [K] <code>corpse.go:43</code> plus the walk out again; swings are one per 2 s [K] <code>game.go:143</code> for half the hunting time [K] <code>balance.go:129</code>, each a sword try [K] <code>skills.go:30-45</code>. The sword level assumed for the rung fraction is illustrative. The vision's session is 45 minutes [K] <code>vision-es.md</code> §2.5.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG partyshare-->
+<figure class="fig" data-demo="partyshare" id="fig-partyshare">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Exp per member per hour, party of 1 to 5</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 210" role="img" aria-label="Bars of exp per member per hour as a share of solo play for party sizes one to five, with a bonus slider and an optional level-gap rule that cuts members out"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="mode" role="group" aria-label="Targets"><button type="button" class="on" data-v="one">One creature shared</button><button type="button" data-v="each">One creature each</button></div>
+    <label class="rng">Party bonus <input type="range" min="0" max="100" step="5" value="20" data-k="bonus"><output data-o="bonus"></output></label>
+  </div>
+  <div class="ctl">
+    <label class="rng">Level gap, lowest to highest <input type="range" min="0" max="40" step="1" value="0" data-k="gap"><output data-o="gap"></output></label>
+    <label><input type="checkbox" data-k="rule"> Tibia's 2/3 level rule</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion adds 20 % to the whole kill, then splits it equally among party members within 30 tiles and one floor who dealt damage; the killer keeps the remainder [K] <code>party.go:63,68,82,796-814</code>. There is no level rule and no bonus by party size or role [K] 01 Q1 gaps. "One creature each" assumes the spawn has a band creature per member, which the harness cannot test [K] <code>party.go:57-62</code>. The 2/3 rule is Tibia's: shared exp needs the lowest level at two thirds of the highest or more [V] notes/02 card 4; here members whose level fails it are cut out, with the party spread evenly from level 30 up to the gap. Tibia's bonus steps by vocation count (20/35/70/100 %) have no equivalent in a game without classes [V] notes/02 card 4. Absolute exp/h uses the band ladder at level 30 [K] <code>levels.txt</code>. Hover a party size.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG gearladder-->
+<figure class="fig" data-demo="gearladder" id="fig-gearladder">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The gear ladder: 131 level gates and three magic gates</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Items with a minimum level drawn as small rungs on a level axis in nine lanes by kind, plus a magic-level lane with the three wands"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="zoom" role="group" aria-label="Level range"><button type="button" class="on" data-v="120">Levels 0 to 120</button><button type="button" data-v="40">Zoom 0 to 40</button></div>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Every item with a <code>min_level</code> in the content, 131 of 369, from <code>atlas/data.json</code> [K]; rungs stack where several items share a level, and a hover or focus names them and links to the Atlas card. Sixty-one of the 131 sit between levels 11 and 20 and eighteen past 35 [K] 01 Q4. Wands gate on magic level, not character level: 10, 15 and 20, at 1,200, 8,000 and 24,000 gold [K] <code>content/items/vara_*.yaml:8</code>, <code>high-tier-items.md:71-73</code>; the two high gates came down from 25 and 50 on 2026-09-11 [K] <code>GDD.md:245</code>. Blue lines: the boats to Ingwen and Gorothland, which the designer calls the level ladder, 1 to 35, 35 to 100, 100 and up [K] D147, <code>GDD.md:492</code>. Past level 40 a character changes gear five times in 80 levels.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG bestiary-->
+<figure class="fig" data-demo="bestiary" id="fig-bestiary">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Bestiary: 232 creatures by band, exp and HP</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 260" role="img" aria-label="Scatter of every creature with its farm level on the x axis and exp per kill or HP on a log y axis, coloured by world, sized by HP, bosses ringed"></svg>
+  <div class="ctl">
+    <div class="seg" data-seg="y" role="group" aria-label="Vertical axis"><button type="button" class="on" data-v="exp">Exp per kill</button><button type="button" data-v="hp">HP</button></div>
+    <label><input type="checkbox" data-k="w0" checked> <span style="color:#7fd6a0">Akron</span></label>
+    <label><input type="checkbox" data-k="w1" checked> <span style="color:#8ea8ff">Ingwen</span></label>
+    <label><input type="checkbox" data-k="w2" checked> <span style="color:#e08a3a">Gorothland</span></label>
+    <label><input type="checkbox" data-k="w3" checked> <span style="color:#e07ab0">Boggland</span></label>
+    <label><input type="checkbox" data-k="w4" checked> <span style="color:#9e94ad">No spawn (quest bosses)</span></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>All 240 creature files from <code>atlas/data.json</code> less the eight training dummies with no exp [K]. Dot area follows HP, colour the world the creature spawns in, a ring marks the 33 bosses and 40 creatures have no spawn entry (summoned or quest bosses) [K] <code>data.summary.json</code>. With exp on the y axis every dot sits on one dotted line, because D69 derives exp from the farm level: exp = (exp(L+1) − exp(L)) / 100, so a hundred kills of your band's creature is one level at any level [K] <code>GDD.md:411</code>, checked against all 232 rows. Switch to HP to see the tuning that is not derived: Boggland's 88 species from band 75 up and Gorothland's thick-skinned 3,000 to 5,500 HP elites [K] 01 Q4. Hover names a creature; click opens its Atlas card.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG dashboard-->
+<figure class="fig" data-demo="dashboard" id="fig-dashboard">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">What the telemetry can measure: events to metrics</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 400" role="img" aria-label="Bipartite graph linking the telemetry events the server emits, with proposed ones in grey, to the eleven metrics of the measurement plan; clicking a node highlights its links"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Left: the events the server writes as JSONL when started with <code>-telemetry &lt;path&gt;</code>, off on the live deploy [K] <code>docs/systems/telemetry.md</code>, <code>deploy/pull-telemetry.sh:14</code>; grey italics are the nine additions proposed in notes/09 §5.2, one <code>emit</code> call each at an existing site, no client message. Right: the eleven derived metrics of 09 §5.3, from the censo funnel (M1) to the group's level gap (M11). Click an event or a metric to read its definition and see what it feeds; the graph walks through the metrics on its own. With five players the metrics give medians and "did it happen" answers, not percentages [K] 09 §5.6.</figcaption>
+</figure>
+<!--/FIG-->

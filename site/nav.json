@@ -417,6 +417,22 @@
     "href": "curves-hearthguard.html",
     "name": "#1 Hearthguard"
    },
+   "next": {
+    "href": "curves-asterion.html",
+    "name": "#3 Asterion"
+   }
+  },
+  "curves-asterion.html": {
+   "kind": "study",
+   "series": "curves",
+   "label": "Curves series",
+   "name": "#3 Asterion",
+   "short": "Asterion",
+   "pair": "curves-asterion-lab.html",
+   "prev": {
+    "href": "curves-matchrpg.html",
+    "name": "#2 MatchRPG"
+   },
    "next": null
   },
   "curves-hearthguard-lab.html": {
@@ -442,6 +458,22 @@
    "prev": {
     "href": "curves-hearthguard-lab.html",
     "name": "#1 Hearthguard"
+   },
+   "next": {
+    "href": "curves-asterion-lab.html",
+    "name": "#3 Asterion"
+   }
+  },
+  "curves-asterion-lab.html": {
+   "kind": "sandbox",
+   "series": "curves",
+   "label": "Curves series",
+   "name": "#3 Asterion",
+   "short": "Asterion",
+   "pair": "curves-asterion.html",
+   "prev": {
+    "href": "curves-matchrpg-lab.html",
+    "name": "#2 MatchRPG"
    },
    "next": null
   },

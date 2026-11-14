@@ -1,0 +1,353 @@
+{
+ "bosses": [
+  "abanderado_sin_compania",
+  "beda_el_zapador",
+  "capataz_de_la_presa",
+  "ceniza_de_raben",
+  "ceniza_la_vieja",
+  "cerdoso_el_porfiado",
+  "cobrador_del_vado",
+  "colmillo_de_la_linde",
+  "contador_de_los_difuntos",
+  "el_acorazado",
+  "el_borranombres",
+  "el_castellano_sin_blason",
+  "el_centinela_de_orm",
+  "el_mercader_de_la_ultima_sal",
+  "el_rey_de_la_bajamar",
+  "escribano_de_la_arena",
+  "gorm_el_ogro",
+  "harrek_del_peaje",
+  "harvek_el_intendente",
+  "la_fundidora_de_ceniza",
+  "la_tejedora_de_la_sima",
+  "maese_beltran_el_acreedor",
+  "ordo_el_capataz",
+  "portero_del_diezmo",
+  "rastreador_del_capitan",
+  "roldan_el_mal_nombrado",
+  "rompedor_de_engranajes",
+  "saqueador_de_fosas",
+  "sargento_de_los_sacos",
+  "troll_del_embarcadero",
+  "ulric_del_cinto_rojo",
+  "verdugo_de_la_puerta",
+  "vigia_del_horno"
+ ],
+ "counts": {
+  "creatures": 240,
+  "items": 369,
+  "spells": 45
+ },
+ "creatures_in_several_worlds": [
+  "arana_de_cueva",
+  "cuervo_carronero",
+  "esqueleto",
+  "goblin_de_la_linde",
+  "rata_parda",
+  "sapo_de_cueva",
+  "tragamusgo",
+  "troll_de_la_cantera",
+  "vigia_de_hueso"
+ ],
+ "creatures_per_world": {
+  "akron": 48,
+  "boggland": 88,
+  "gorothland": 20,
+  "ingwen": 44,
+  "none": 40
+ },
+ "creatures_without_spawn": [
+  "ceniza_la_vieja",
+  "cerdoso_el_porfiado",
+  "la_tejedora_de_la_sima",
+  "beda_el_zapador",
+  "ordo_el_capataz",
+  "espantapajaros",
+  "muneco_de_nieve",
+  "armadura_vacia",
+  "maniqui_de_costurera",
+  "gargola_de_piedra",
+  "ulric_del_cinto_rojo",
+  "colmillo_de_la_linde",
+  "ceniza_de_raben",
+  "troll_del_embarcadero",
+  "harrek_del_peaje",
+  "maton_del_peaje",
+  "vigia_del_horno",
+  "el_borranombres",
+  "la_fundidora_de_ceniza",
+  "cuervo_de_ceniza",
+  "sargento_de_los_sacos",
+  "escribano_de_la_arena",
+  "harvek_el_intendente",
+  "guardia_del_granero",
+  "rastreador_del_capitan",
+  "abanderado_sin_compania",
+  "roldan_el_mal_nombrado",
+  "soldado_sin_bandera",
+  "capataz_de_la_presa",
+  "rompedor_de_engranajes",
+  "maese_beltran_el_acreedor",
+  "hombre_de_beltran",
+  "saqueador_de_fosas",
+  "contador_de_los_difuntos",
+  "el_mercader_de_la_ultima_sal",
+  "sepulturero_de_la_sal",
+  "portero_del_diezmo",
+  "verdugo_de_la_puerta",
+  "el_castellano_sin_blason",
+  "lanza_de_la_torre"
+ ],
+ "creatures_without_spawn_count": 40,
+ "intents_missing_comment": 101,
+ "intents_translated": 0,
+ "items_dropped_somewhere": 195,
+ "items_per_kind": {
+  "ammo": 6,
+  "armor-body": 25,
+  "armor-feet": 5,
+  "armor-head": 17,
+  "armor-legs": 19,
+  "armor-other": 43,
+  "container": 21,
+  "currency": 3,
+  "food": 25,
+  "light": 6,
+  "material": 39,
+  "other": 16,
+  "potion": 14,
+  "quest": 5,
+  "shield": 20,
+  "tool": 17,
+  "weapon-distance": 22,
+  "weapon-melee": 63,
+  "weapon-wand": 3
+ },
+ "items_sold_somewhere": 141,
+ "minmax": {
+  "creatures": {
+   "aggro_range": [
+    0,
+    10
+   ],
+   "armor": [
+    0,
+    60
+   ],
+   "attack": [
+    0,
+    168
+   ],
+   "dmg": [
+    0,
+    285
+   ],
+   "exp": [
+    0,
+    15052
+   ],
+   "farm_level": [
+    0,
+    175
+   ],
+   "flee_at": [
+    0.0,
+    1.0
+   ],
+   "hp": [
+    12,
+    999999
+   ],
+   "id": [
+    1,
+    261
+   ],
+   "keep_distance": [
+    3,
+    4
+   ],
+   "outfit": [
+    101,
+    386
+   ],
+   "range": [
+    1,
+    6
+   ],
+   "skill": [
+    0,
+    174
+   ],
+   "speed": [
+    1,
+    300
+   ],
+   "sprite_px": [
+    32,
+    128
+   ]
+  },
+  "items": {
+   "armor": [
+    0,
+    25
+   ],
+   "attack": [
+    3,
+    80
+   ],
+   "capacity": [
+    4,
+    100
+   ],
+   "defense": [
+    10,
+    25
+   ],
+   "edible": [
+    0,
+    24
+   ],
+   "heal": [
+    6,
+    130
+   ],
+   "id": [
+    1,
+    369
+   ],
+   "light": [
+    6,
+    10
+   ],
+   "mana": [
+    55,
+    160
+   ],
+   "min_level": [
+    1,
+    120
+   ],
+   "range": [
+    1,
+    8
+   ],
+   "speed": [
+    30,
+    65
+   ],
+   "sprite_px": [
+    32,
+    32
+   ],
+   "value": [
+    1,
+    10000
+   ],
+   "weapon_mana": [
+    3,
+    12
+   ],
+   "worth": [
+    1,
+    24000
+   ]
+  },
+  "spells": {
+   "cast_ms": [
+    600,
+    2000
+   ],
+   "cooldown_ms": [
+    2000,
+    45000
+   ],
+   "create_count": [
+    1,
+    1
+   ],
+   "duration_ms": [
+    5000,
+    60000
+   ],
+   "id": [
+    1,
+    45
+   ],
+   "length": [
+    4,
+    5
+   ],
+   "mana": [
+    0,
+    195
+   ],
+   "min_ml": [
+    0,
+    11
+   ],
+   "power": [
+    3,
+    90
+   ],
+   "power_ml": [
+    1,
+    14
+   ],
+   "radius": [
+    1,
+    3
+   ],
+   "range": [
+    0,
+    6
+   ],
+   "sprite_px": [
+    32,
+    64
+   ],
+   "tick_ms": [
+    2000,
+    3000
+   ]
+  }
+ },
+ "sheet": {
+  "bytes": 368900,
+  "cells": 654,
+  "fallbacks": {
+   "blank": 0,
+   "effect": 13,
+   "effect_names": {
+    "electric_field": 1,
+    "poison_field": 1,
+    "portal": 11
+   }
+  },
+  "quantized": true,
+  "rows": 26
+ },
+ "spells_per_group": {
+  "attack": 18,
+  "healing": 5,
+  "support": 22
+ },
+ "spells_taught_somewhere": 42,
+ "sprite_px": {
+  "creatures": {
+   "128": 7,
+   "32": 24,
+   "48": 150,
+   "64": 5,
+   "96": 54
+  },
+  "items": {
+   "32": 369
+  },
+  "spells": {
+   "32": 34,
+   "64": 11
+  }
+ }
+}
