@@ -1,0 +1,21 @@
+<!-- Figures the recipe fills from the report: scorecard and timeline. twins, backlog and stack are generated in build.py. -->
+<!--FIG score-->
+<figure class="fig" data-demo="score" id="fig-score">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Scorecard: sortable heat table and radar comparison</h4><span class="illu">Author judgement</span></div>
+  <div class="score-wrap">
+    <div class="tbl" style="margin:0"><table class="heat"><thead></thead><tbody></tbody></table></div>
+    <div class="radar-box"><svg class="chart" role="img" aria-label="Radar comparison of selected pattern cards"></svg><div class="radar-keys"></div></div>
+  </div>
+  <figcaption>Click a column header to sort. Click rows to compare up to three pattern cards on the radar; the oldest pick drops off. The radar starts on the three highest sums. Ratings are author judgement in the order Fun impact · Evidence · Cheapness · Fit · Testability. A low sum can still be a must-have.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG timeline-->
+<figure class="fig" data-demo="timeline" id="fig-timeline">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Where the patterns came from: a timeline of the twins</h4></div>
+  <div class="tl-lanes"></div>
+  <div class="tl-detail readout" aria-live="polite"></div>
+  <div class="tl-gens" role="group" aria-label="Filter by generation"></div>
+  <ul class="tl-list"></ul>
+  <figcaption>Hover or tap a dot to read the event, or filter by generation. Items without a single year appear only in the list.</figcaption>
+</figure>
+<!--/FIG-->

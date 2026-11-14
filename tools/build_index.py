@@ -379,6 +379,9 @@ upsert("/catalog.json", "Catalog (v2)", "Rich data model: items, series, tags, s
 upsert("/taxonomy.json", "Taxonomy", "Controlled vocabulary of facets and tag values.", cat["updated"])
 for f in sorted(glob.glob(f"{SITE}/thumbs/*")):
     upsert("/thumbs/" + os.path.basename(f), "Thumbnail " + os.path.basename(f), "Card thumbnail", cat["updated"])
+for f in sorted(glob.glob(f"{SITE}/assets/*")):  # study assets too big to inline (sprite sheets, reference images); new files join, existing entries keep their text
+    if "/assets/" + os.path.basename(f) not in known:
+        upsert("/assets/" + os.path.basename(f), "Asset " + os.path.basename(f), "Study asset referenced by a page", cat["updated"])
 for i in cat["items"]:  # new pages join the manifest; existing entries keep their text
     if i["path"] not in known and os.path.exists(SITE + i["path"]):
         upsert(i["path"], i["title"], i.get("summary", ""), i.get("date", cat["updated"]))

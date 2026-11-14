@@ -16,6 +16,14 @@ what worked before, and judged by taste. The method below replaces the generic a
   plots the study's Curve Spec (§11) with sliders for the tuning knobs, so the team can tune by feel before
   touching the game. Thumbnail: `thumb: from: page` or `from: sandbox` with the lab's main canvas.
 
+- **Atlas tab**, optional (first used by `curves-asterion`): when the game has a large cast of creatures, items and
+  spells the report keeps naming, the study page gets a second top-level tab, "<Game> Atlas", with one picture-led
+  card per entry (sprite, name, a role line of at most 14 words in design terms, a stat strip, loot or sources).
+  The data is extracted from the game repo by `studies/<id>/atlas/make_atlas.py` into `atlas/data.json` (committed),
+  role lines live in `atlas/roles-*.json`, and the packed 64 px sprite sheet goes to `site/assets/<id>-atlas.png`
+  (`studykit index` lists `site/assets/*` in the manifest). `build.py` renders the cards as static HTML, so the page
+  still rebuilds byte for byte; `#atlas` and `#atlas-<slug>` deep-link into the tab. Spec: `studies/curves-asterion/notes/ATLAS-SPEC.md`.
+
 ## Starting a Curves study
 
 Run `/game-research-site` with this prompt, filled in:

@@ -1,0 +1,86 @@
+
+=== el reloj de las habilidades ===
+    base × mult^(nivel−10), una sola pendiente (D149): 1,08 espada/distancia/escudo, 1,1 pesca
+    un intento = un golpe = 2 s
+habilidad     nivel     este nivel     acumulados      golpeando      acumulado
+espada           12             54            104          3 min          7 min
+espada           15             68            292         10 min         19 min
+espada           18             85            529         18 min         35 min
+espada           20             99            720         24 min         48 min
+espada           25            146           1349         45 min         90 min
+espada           30            215           2277         76 min          2.5 h
+espada           40            465           5648          3.1 h          6.3 h
+espada           50           1005          12932          7.2 h         14.4 h
+espada           60           2171          28663         15.9 h         31.8 h
+espada           70           4687          62631         34.8 h         69.6 h
+espada           80          10120         135967         75.5 h        151.1 h
+espada           90          21849         294306        163.5 h        327.0 h
+espada          100          47171         636150        353.4 h        706.8 h
+espada          110         101840        1374175        763.4 h       1526.9 h
+espada          120         219866        2967521       1648.6 h       3297.2 h
+
+distancia        12             32             62          2 min          4 min
+distancia        15             40            173          6 min         12 min
+distancia        18             51            315         10 min         21 min
+distancia        20             59            429         14 min         29 min
+distancia        25             88            806         27 min         54 min
+distancia        30            129           1362         45 min          1.5 h
+distancia        40            279           3383          1.9 h          3.8 h
+distancia        50            603           7752          4.3 h          8.6 h
+distancia        60           1302          17187          9.5 h         19.1 h
+distancia        70           2812          37566         20.9 h         41.7 h
+distancia        80           6072          81567         45.3 h         90.6 h
+distancia        90          13109         176568         98.1 h        196.2 h
+distancia       100          28303         381672        212.0 h        424.1 h
+distancia       110          61104         824484        458.0 h        916.1 h
+distancia       120         131919        1780489        989.2 h       1978.3 h
+
+escudo           12            108            208          7 min         14 min
+escudo           15            136            585         20 min         39 min
+escudo           18            171           1060         35 min         71 min
+escudo           20            199           1444         48 min          1.6 h
+escudo           25            293           2707          1.5 h          3.0 h
+escudo           30            431           4566          2.5 h          5.1 h
+escudo           40            931          11313          6.3 h         12.6 h
+escudo           50           2011          25885         14.4 h         28.8 h
+escudo           60           4342          57352         31.9 h         63.7 h
+escudo           70           9375         125292         69.6 h        139.2 h
+escudo           80          20241         271972        151.1 h        302.2 h
+escudo           90          43699         588654        327.0 h        654.1 h
+escudo          100          94343        1272348        706.9 h       1413.7 h
+escudo          110         203681        2748402       1526.9 h       3053.8 h
+escudo          120         439733        5935097       3297.3 h       6594.6 h
+
+pesca            12             22             42           84 s          3 min
+pesca            15             29            121          4 min          8 min
+pesca            18             38            226          8 min         15 min
+pesca            20             47            315         10 min         21 min
+pesca            25             75            629         21 min         42 min
+pesca            30            122           1137         38 min         76 min
+pesca            40            317           3277          1.8 h          3.6 h
+pesca            50            822           8834          4.9 h          9.8 h
+pesca            60           2134          23255         12.9 h         25.8 h
+pesca            70           5536          60668         33.7 h         67.4 h
+pesca            80          14359         157716         87.6 h        175.2 h
+pesca            90          37243         409440        227.5 h        454.9 h
+pesca           100          96600        1062361        590.2 h       1180.4 h
+pesca           110         250556        2755873       1531.0 h       3062.1 h
+pesca           120         649879        7148417       3971.3 h       7942.7 h
+
+    «este nivel» = intentos para pasar del nivel anterior a éste. «golpeando» = segundos de
+    espada en el aire hasta llegar. «acumulado» supone que la mitad de una sesión se va
+    en caminar, buscar y volver al pueblo.
+
+=== la curva de experiencia ===
+nivel             exp        Δ exp       hp
+1                   0            0      150
+2                 100          100      155
+3                 200          100      160
+5                 800          600      170
+8                4200         3400      185
+10               9300         5100      195
+12              17600         8300      205
+15              37800        20200      220
+20              98800        61000      245
+25             204800       106000      270
+30             368300       163500      295

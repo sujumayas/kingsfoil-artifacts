@@ -430,5 +430,29 @@
   "title": "SpeedRunner Verbs Sandbox (playable)",
   "description": "Playable companion to the study.",
   "date": "2026-11-13"
+ },
+ {
+  "path": "/thumbs/curves-asterion.png",
+  "title": "Thumbnail curves-asterion.png",
+  "description": "Card thumbnail",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/assets/curves-asterion-atlas.png",
+  "title": "Asset curves-asterion-atlas.png",
+  "description": "Study asset referenced by a page",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/curves-asterion.html",
+  "title": "Asterion difficulty and learning curves: skill by use, the death penalty and the long curve of a Tibia-like MMORPG",
+  "description": "Difficulty, learning and power curves for Asterion, a Tibia-like MMORPG for five friends: the cubic exp curve, skills by use, the 10 % death penalty and the corpse run, traced through Tibia, Ultima Online, EverQuest, RuneScape and their modern heirs into a Curve Spec, a playtest protocol, a curve lab and an Asterion Atlas of every creature, item and spell.",
+  "date": "2026-11-13"
+ },
+ {
+  "path": "/curves-asterion-lab.html",
+  "title": "Asterion curve lab (playable)",
+  "description": "Playable companion to the study.",
+  "date": "2026-11-13"
  }
 ]

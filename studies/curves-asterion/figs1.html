@@ -1,0 +1,71 @@
+<!-- Asterion curve figures, part 1 (demos1.js): expcurve, skilltries, magiclevel, walkbeat, onboarding, experiments. The hero demo lives in hero.html. -->
+<!--FIG expcurve-->
+<figure class="fig" data-demo="expcurve" id="fig-expcurve">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Exp per level: Asterion's cubic, Tibia's, RuneScape's and OT stages</h4><span class="illu">Stages illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Log chart of total exp needed to reach each level from 1 to 150: Asterion's cubic, Tibia's identical cubic, RuneScape's exponential table and an optional exp-stages variant"></svg>
+  <div class="ctl">
+    <label class="rng">EXP_SCALE <input type="range" min="25" max="400" step="5" value="100" data-k="sc"><output data-o="sc">1.00×</output></label>
+    <label class="rng">Exp stages <input type="range" min="1" max="50" step="1" value="1" data-k="st"><output data-o="st">off</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Asterion needs <code>exp(L) = (((L−6)·L + 17)·L − 12) / 6 × 100</code> to be level L, integer division, so L2 is 100 and L8 is 4,200 [K] <code>server/internal/game/stats.go:15-25</code>. That is Tibia's cubic <code>(50/3)(L³ − 6L² + 17L − 12)</code> to the point, unchanged since 7.x [V, E1], so the blue line sits under the yellow one until you move EXP_SCALE. RuneScape's table is <code>floor(Σ floor(l + 300·2^(l/7)) / 4)</code>, 13,034,431 at 99 [V]. The vertical dashes are the world gates, Ingwen at about 35 and Gorothland at about 100 [K]. The stages slider adds an Open Tibia style multiplier table (×M below 20, M/4 to 50, M/10 to 100, 1 above) and plots the exp a player would have to earn at 1× to climb it; the bands are ours [I]. Since D69 a creature pays <code>(exp(L+1) − exp(L)) / 100</code> at its farm level, so the readout's "band kills" is always a hundred at 1× [K] <code>docs/GDD.md:411</code>. Hover or tap for a level.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG skilltries-->
+<figure class="fig" data-demo="skilltries" id="fig-skilltries">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Swings per sword rung: 1.08 now, 1.1 and 1.2 in Tibia, the August knee</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 250" role="img" aria-label="Log chart of the melee swings needed to leave each sword skill level from 10 to 120, for Asterion's 1.08 slope, a slider slope, Tibia's knight 1.1 and paladin 1.2, and the D87 knee"></svg>
+  <div class="ctl">
+    <label class="rng">skillMult <input type="range" min="102" max="130" step="1" value="108" data-k="m"><output data-o="m">1.08</output></label>
+    <label class="rng">Session swinging <input type="range" min="10" max="100" step="5" value="50" data-k="d"><output data-o="d">50 %</output></label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Leaving sword level s costs <code>50 × 1.08^(s − 10)</code> swings, truncated; distance has base 30, shielding 100, fishing 20 and 1.1 [K] <code>skills.go:101-106</code>. One swing is one try every 2,000 ms [K] <code>game.go:143</code>, so 1,800 swings an hour at full duty and 900 at the harness's 50 % session assumption [K] <code>balance.go:129</code>. From 10 to 50 that is 12,932 swings and 14.4 hours of session, 70 is 69.6 h and 100 is 707 h, which match the harness's <code>-skills</code> table [K]. Tibia's knight uses the same base 50 with 1.1 and the paladin 1.2 [V, E1], so a Tibia knight needs 22,130 swings to 50 and 2.66 M to 100 [I]. The grey knee is the shape between D87 (3 Aug 2026) and D149 (30 Aug): ×1.25 to 40 and then the old 1.8 slope, which made 45 to 46 cost 763,000 swings [K] <code>docs/GDD.md:435,494</code>. Since D149 every combat reader sees half a rung per level, <code>rung = 10 + (s − 10)/2</code> [K] <code>skills.go:119-121</code>, so 1.08 buys about what a Tibia knight's 1.1 does in felt power. Gates at 40, 50 and 70 are the golem's <code>min_skill</code> and the two achievements [K].</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG magiclevel-->
+<figure class="fig" data-demo="magiclevel" id="fig-magiclevel">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Mana per magic level: 1.4 for everyone vs Tibia's vocations, and the wand gates</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 260" role="img" aria-label="Log chart of total mana spent to reach magic levels 1 to 25 for multipliers 1.4, 1.1, 3.0 and 4.0, with a right axis in hours at the chosen mana rate and the three wand gates marked"></svg>
+  <div class="ctl">
+    <label class="rng">Mana per hour <input type="range" min="300" max="6000" step="100" value="600" data-k="r"><output data-o="r">600 mana/h (food only)</output></label>
+    <button type="button" class="btn" data-b="fed">Food only, 600</button><button type="button" class="btn" data-b="wand">Wand, 5,400</button>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Magic level counts mana spent: <code>mana_to_next(ml) = 1600 × 1.4^ml</code> [K] <code>skills.go:249-251</code>. Magic 10 is 111,698 mana in total. On food alone regeneration is 1 mana per 6 s, 600 an hour [K] <code>game.go:157</code>, so 186 hours; a <code>vara de la chispa</code> firing 3 mana every 2 s spends 5,400 an hour, 21 hours, but needs magic 10 first [K] <code>content/items/vara_de_la_chispa.yaml:8</code>. A mana potion is 60 gold for 55 to 75 mana [K] <code>tomas.yaml:110</code>, so magic 10 bought with potions is about 103,000 gold. The wand gates are magic 10, 15 and 20, priced 1,200, 8,000 and 24,000 gold [K] <code>docs/systems/high-tier-items.md:71-73</code>; the two high gates were 25 and 50 until 11 Sep 2026. Tibia's constants are 1.1 for sorcerers and druids, 1.4 for paladins and 3.0 for knights [V, E1], so Asterion puts every player on the paladin's curve; D10 rejected Open Tibia's vocation-less 4.0 [K] <code>docs/GDD.md:361</code>. <code>manaForNextML</code> saturates at magic 45 [K] <code>skills.go:247-248</code>. Hover or tap for a magic level.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG walkbeat-->
+<figure class="fig" data-demo="walkbeat" id="fig-walkbeat">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The walk beat: ms per tile by level, quantised to 50 ms</h4></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 240" role="img" aria-label="Step chart of milliseconds per tile from level 1 to 150, the raw speed curve beneath it, the version with the speed boots and the stale GDD table, with the beat levels marked"></svg>
+  <div class="ctl">
+    <label class="rng">baseSpeed <input type="range" min="250" max="350" step="5" value="300" data-k="b"><output data-o="b">300</output></label>
+    <label class="rng">speedPerLevel <input type="range" min="1" max="8" step="1" value="4" data-k="p"><output data-o="p">+4 a level</output></label>
+    <label><input type="checkbox" data-k="boots"> botas de siete leguas, +55</label>
+  </div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Speed is <code>300 + 4 × (L − 1)</code>, derived and never stored [K] <code>game.go:89,123</code>, and a step takes <code>ceil(1000 × 150 / speed / 50) × 50</code> ms, the tile friction 150 rounded up to the 50 ms tick [K] <code>game.go:100</code>, <code>docs/GDD.md:208</code>. So a level is only felt where the rounding changes: 10, 20, 34, 51, 76 and 114 [K]. The faint line is the unrounded value. The boots add 55 speed at level 15 for 2,500 gold, sized to cross exactly one beat between 15 and 30 [K] <code>docs/GDD.md:211</code>, <code>tomas.yaml:10</code>. The grey steps are the GDD's own table, 280 + 5 with beats at 5, 12, 20, 31 and 45, which has been stale since D137 and D138 on 21 Aug 2026 [K] <code>docs/GDD.md:209-210</code>. F-095 raised the per-level speed from 3 to 5 in July because "the beat boundaries, not the constant, make a level felt"; the sliders show what each pair of constants does to where the boundaries fall [K]. Hover or tap for a level.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG onboarding-->
+<figure class="fig" data-demo="onboarding" id="fig-onboarding">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">The censo chain as a funnel: five verbs, 360 exp, ten minutes</h4><span class="illu">Drop-offs and minutes illustrative</span></div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 230" role="img" aria-label="Funnel of the five censo quest steps: each bar is the share of a hundred new characters still in the chain, labelled with the exp, level, gold and minute reached"></svg>
+  <div class="ctl"><label class="rng">Drop per step <input type="range" min="0" max="30" step="1" value="10" data-k="d"><output data-o="d">10 %</output></label></div>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>El censo de La Tortuga Coja is the optional tutorial: Elba in the temple asks for five things everyone in town can do, walk the town, kill a rat, buy from Tomás, find the chests, ask Sila for a heartstone, and each hand-in pays 72 exp and 8 gold [K] <code>content/quests/censo_tortuga_coja.yaml</code>, <code>docs/systems/onboarding.md</code>. The YAML's own comment sizes the chain at twenty tiles from the temple and ten minutes; our minutes per step are a guess inside that [I]. Five hand-ins are 360 exp, level 3 with 40 to spare toward 400 [K] <code>stats.go:15-25</code>. The chain resets on death and its rewards are quest items [K]. No funnel exists today because telemetry is off [K] <code>deploy/pull-telemetry.sh:14</code>; with it on, <code>quest_step</code> carries the seconds since the previous step and §13 turns that into M1. The bars fill on their own; drag the slider to see what a drop rate does to completion.</figcaption>
+</figure>
+<!--/FIG-->
+<!--FIG experiments-->
+<figure class="fig" data-demo="experiments" id="fig-experiments">
+  <div class="fig-h"><span class="fig-n">Fig. @N</span><h4 class="fig-t">Natural experiments on a strip: 29 twin changes and Asterion's own 15</h4></div>
+  <div class="ctl">
+    <div class="seg" data-seg="set" role="group" aria-label="Which set"><button type="button" class="on" data-v="twins">Twins, 1999 to 2025</button><button type="button" data-v="asterion">Asterion, Jul to Sep 2026</button></div>
+    <div class="seg" data-seg="sys" role="group" aria-label="System"><button type="button" class="on" data-v="all">All</button><button type="button" data-v="death">Death</button><button type="button" data-v="skill">Skill</button><button type="button" data-v="curve">Curve</button><button type="button" data-v="onboarding">Onboarding</button><button type="button" data-v="session">Session</button></div>
+  </div>
+  <svg class="chart" style="max-width:620px;margin:0 auto" viewBox="0 0 360 200" role="img" aria-label="Dot strip of natural experiments by year, one lane per system: death penalty, skill by use, long-curve pacing, onboarding, session"></svg>
+  <div class="readout" data-ro aria-live="polite"></div>
+  <figcaption>Each dot is one row of the §9 table, placed by the year the change shipped and in the lane of the system it touched; the lane is our filing [I]. Click a dot to read the change, the reaction and the lesson; left alone, the figure walks through them. The second set is Asterion's own decisions log from 13 Jul to 30 Aug 2026 [K] <code>docs/GDD.md</code> §9, fifteen dated changes that each moved a single constant: nine came from a playtest sentence, four from the balance harness, one from a bug measurement. The twins' grades are the table's (E1 data, E2 designer statement, E3 community consensus); Asterion's rows are the designer's stated reasons, E2, with harness arithmetic for the before and after. The cleanest experiment in either set is D87 to D149: a request about level 18 produced a knee, the knee produced a wall nobody saw for 27 days, and the fix went back to Tibia's shape with a gentler slope.</figcaption>
+</figure>
+<!--/FIG-->

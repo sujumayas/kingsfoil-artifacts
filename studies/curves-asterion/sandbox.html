@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asterion curve lab</title>
+<meta name="description" content="Drag the knobs of Asterion's progression constants and see the long curve of level, sword skill and magic level over hours of play, the cost of a death in minutes at every level, one session at level L, corpse run odds and party share. A model of main 8836106a and of the balance harness's exp/h ladder.">
+<style>
+:root{--bg:#0e0c12;--panel:#17141d;--text:#e8e2f0;--muted:#a59db3;--warm:#ffc870;--blue:#8ea8ff;--red:#ff8f7a;--green:#7fd6a0;--pink:#e59bff;--grid:#1d1924;--line:#2a2433}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+header h1{margin:0 0 4px;font-size:1.5rem;letter-spacing:.01em}
+header p{margin:0 0 6px;color:var(--muted)}
+header nav a{margin-right:14px}
+.layout{display:grid;gap:16px;margin-top:14px;grid-template-columns:minmax(0,1fr);grid-template-areas:"sum" "long" "knobs" "death" "session" "corpse" "party"}
+@media (min-width:900px){.layout{grid-template-columns:340px minmax(0,1fr);grid-template-areas:"knobs sum" "knobs long" "knobs death" "knobs session" "knobs corpse" "knobs party"}
+ .knobs-in{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}}
+.panel{background:var(--panel);border-radius:10px;padding:14px;min-width:0}
+.panel h2{margin:0 0 4px;font-size:1.05rem}
+.cap{color:var(--muted);font-size:.85rem;margin:4px 0 0}
+.watch{color:var(--text);font-size:.85rem;margin:6px 0 0;border-left:3px solid var(--warm);padding-left:8px}
+#sum{grid-area:sum}#long{grid-area:long}#knobs{grid-area:knobs;padding:0;background:none}#death{grid-area:death}#session{grid-area:session}#corpse{grid-area:corpse}#party{grid-area:party}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{background:var(--grid);border-radius:8px;padding:10px}
+.card .k{font-size:.78rem;color:var(--muted)}
+.card .v{font-size:1.3rem;font-weight:650;font-variant-numeric:tabular-nums}
+.card .s{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.card.ok .v{color:var(--green)}.card.bad .v{color:var(--red)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--muted);margin:6px 0 2px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend i.d{border-top-style:dashed}
+.legend b{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:5px}
+.legend s{display:inline-block;width:12px;height:9px;vertical-align:middle;margin-right:5px;text-decoration:none;opacity:.55}
+.chart{width:100%}
+.chart svg{display:block;width:100%;height:auto}
+.knobs-in{background:var(--panel);border-radius:10px;padding:12px 14px}
+fieldset{border:0;border-top:1px solid var(--line);margin:0;padding:10px 0 8px}
+fieldset:first-of-type{border-top:0}
+legend{font-weight:650;font-size:.92rem;padding:0}
+.src{font-size:.72rem;color:var(--muted);margin:1px 0 6px;overflow-wrap:anywhere}
+.row{display:grid;grid-template-columns:84px minmax(0,1fr) 54px;align-items:center;gap:8px;margin:3px 0}
+.row label{font-size:.82rem}
+.row output{font-variant-numeric:tabular-nums;text-align:right;font-size:.85rem;color:var(--warm)}
+.row.mod output{font-weight:700}
+.row.dim{opacity:.45}
+input[type=range]{width:100%;accent-color:var(--warm);margin:0;height:26px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+button{font:inherit;font-size:.85rem;background:var(--grid);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button.on{border-color:var(--warm);color:var(--warm)}
+button.sm{font-size:.72rem;padding:2px 7px}
+.grp{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 0 4px}
+.grp .seg{margin:0}
+.chk{display:flex;gap:8px;align-items:center;font-size:.85rem;margin:4px 0}
+.chk.mod{color:var(--warm)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#status{font-size:.8rem;color:var(--green);min-height:1.2em;margin-top:6px}
+#fallback{display:none;width:100%;height:170px;margin-top:6px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;font:12px/1.4 ui-monospace,Menlo,monospace}
+.note{font-size:.8rem;color:var(--muted)}
+.tag{font-size:.72rem;color:var(--warm);border:1px solid var(--warm);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+.fixed{font-size:.78rem;color:var(--muted);margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.ladder{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;margin:4px 0 6px}
+.ladder label{display:block;font-size:.72rem;color:var(--muted)}
+.ladder input{width:100%;min-width:0;font:inherit;font-size:.8rem;background:var(--grid);color:var(--warm);border:1px solid var(--line);border-radius:5px;padding:3px 5px;font-variant-numeric:tabular-nums}
+.ladder input.mod{font-weight:700;border-color:var(--warm)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.85rem;margin:4px 0 6px}
+.ctl .row{flex:1 1 220px;margin:0;grid-template-columns:70px minmax(0,1fr) 44px}
+table.out{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums;margin-top:8px;table-layout:fixed}
+table.out th,table.out td{padding:4px 2px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+table.out th{color:var(--muted);font-weight:600}
+table.out td.n{text-align:right;color:var(--warm);font-weight:650;width:30%}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Asterion curve lab</h1>
+<p>A model of Asterion's progression constants at main 8836106a (PR #183, 2026-09-11) and of the exp/h ladder its balance harness reports. It is not the game. Nothing on this page is measured in play: the server's telemetry is off, so every line is the code's formulas run against the harness's kill rates.</p>
+<nav><a href="curves-asterion.html">Read the study</a><a href="index.html">All artifacts</a></nav>
+</header>
+
+<div class="layout">
+<section class="panel" id="sum" aria-label="Summary">
+<div class="cards" id="cards"></div>
+<p class="cap">Model. Hours are hunting hours at the exp/h ladder below (harness <code>-levels</code>, 60 trials at 8 levels, median safe creature of the player's band, divided by OVERHEAD). Death cost is exp lost at the bottom of the level divided by that level's exp/h. Skill and magic assume every hour is spent at the swing rate and mana rate set in the knobs. No value here is measured.</p>
+</section>
+
+<section class="panel" id="long">
+<h2>The long curve: level, sword and magic over hours of play</h2>
+<div class="legend" id="lg-long"></div>
+<div class="ctl"><span class="seg" role="group" aria-label="Hours axis"><button type="button" data-logx="1">Log hours</button><button type="button" data-logx="0">Linear</button></span><label class="chk" id="cmp-wrap"><input type="checkbox" id="cmp"> Exp stages: compare without stages</label></div>
+<div class="chart" id="c-long"></div>
+<p class="cap" id="cap-long"></p>
+<p class="watch" id="w-long"></p>
+</section>
+
+<aside id="knobs" aria-label="Tuning knobs"><div class="knobs-in" id="knobs-in"></div></aside>
+
+<section class="panel" id="death">
+<h2>Death cost by level</h2>
+<div class="legend"><span><i style="border-color:var(--warm)"></i>Exp lost, your knobs</span><span><i style="border-color:var(--green)"></i>Plus the corpse run, both ways</span><span><i class="d" style="border-color:var(--blue)"></i>Current build</span><span><i class="d" style="border-color:var(--red)"></i>Tibia 8.41 level-scaled loss</span><span><s style="background:var(--warm)"></s>About one session</span></div>
+<div class="chart" id="c-death"></div>
+<p class="cap" id="cap-death"></p>
+<p class="watch" id="w-death"></p>
+</section>
+
+<section class="panel" id="session">
+<h2>A session at level L</h2>
+<div class="ctl"><div class="row"><label for="k-L">Level L</label><input type="range" id="k-L" min="1" max="150" step="1"><output for="k-L" id="o-L"></output></div></div>
+<div class="legend"><span><s style="background:var(--blue);opacity:1"></s>Walk out</span><span><s style="background:var(--green);opacity:1"></s>Hunting</span><span><s style="background:var(--red);opacity:1"></s>Corpse runs (expected)</span><span><s style="background:var(--muted);opacity:1"></s>Walk back</span></div>
+<div class="chart" id="c-sess"></div>
+<table class="out" id="t-sess" aria-label="Session outcomes"></table>
+<p class="cap" id="cap-sess"></p>
+<p class="watch" id="w-sess"></p>
+</section>
+
+<section class="panel" id="corpse">
+<h2>Corpse run odds</h2>
+<div class="legend" id="lg-corpse"></div>
+<div class="chart" id="c-corpse"></div>
+<p class="cap" id="cap-corpse"></p>
+<p class="watch" id="w-corpse"></p>
+</section>
+
+<section class="panel" id="party">
+<h2>Party share</h2>
+<div class="legend" id="lg-party"></div>
+<div class="chart" id="c-party"></div>
+<p class="cap" id="cap-party"></p>
+<p class="watch" id="w-party"></p>
+</section>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+// ---------- constants from the repo, as quoted in notes/01-current-build.md (main 8836106a) ----------
+var LADDER_L=[1,5,8,15,25,50,80,120];                       // harness levels run (-levels 1,5,8,15,25,50,80,120 -trials 60)
+var LADDER_K=["l1","l5","l8","l15","l25","l50","l80","l120"];
+var LADDER_V=[384,2361,5409,19663,37617,210981,410169,660520]; // median safe band creature exp/h, realistic kit (notes/harness/hours.py)
+var BEATS=[10,20,34,51,76,114];                              // levels where the quantised step changes (game.go:91-123)
+var GEAR_GATES=[[15,"raben 15"],[25,"campanas 25"],[40,"juramento 40"]]; // shop tiers by min_level (01 Q4)
+var WANDS=[10,15,20];                                        // wand min_magic_level (content/items/vara_*.yaml:8)
+var STAGE_BANDS=[[1,8],[9,20],[21,50],[51,255]];
+var TIB_VOC=[{n:"Knight",ml:3.0,hp:15,mana:5},{n:"Paladin",ml:1.4,hp:10,mana:15},{n:"Mage",ml:1.1,hp:5,mana:30}]; // notes/02 Q1
+var WORN_SLOTS=9;                                            // slots other than the container (equipment.go:468-469)
+
+// ---------- pure functions, ported from the Go code as quoted in 01-current-build.md ----------
+// stats.go:15-25: total exp to be level L, integer division. L1 = 0, L2 = 100, L8 = 4,200.
+function expForLevel(L,scale){if(L<1)L=1;var v=Math.trunc((((L-6)*L+17)*L-12)/6)*100;return Math.max(0,v)*(scale==null?1:scale);}
+function expStep(L,scale){return expForLevel(L+1,scale)-expForLevel(L,scale);}
+// skills.go:101-106: tries to go from `level` to level+1 = base x mult^(level-10), truncated. Levels start at 10.
+function skillTries(level,base,mult){return Math.floor(base*Math.pow(mult,level-10));}
+// skills.go:247-251: mana spent to go from ml to ml+1 = 1600 x mult^ml, saturating at 45.
+function manaForML(ml,mult){return Math.floor(1600*Math.pow(mult,Math.min(ml,45)));}
+// game.go:89,123: speed 300 + 4 x (L-1), never persisted.
+function speedForLevel(L){return 300+4*(Math.max(L,1)-1);}
+// game.go:100: step duration = ceil(1000 x 150 / speed / 50) x 50 ms.
+function stepMs(L,bonus){return Math.ceil(1000*150/(speedForLevel(L)+(bonus||0))/50)*50;}
+// Tibia 8.41 (notes/02 Q2): exp points lost = ((L+50)/100) x 50(L^2 - 5L + 8) from level 24; flat 10 % below.
+function tibiaLoss841(L,scale){if(L<24)return 0.10*expForLevel(L,scale);return (L+50)/100*50*(L*L-5*L+8)*(scale==null?1:scale);}
+// corpse.go:43,367: exp lost at death. Bottom of level unless `top`. Blessings are the Tibia twin, -8 % each (02 Q2).
+function expLost(L,S,top){var e=S.levelScaled?tibiaLoss841(L,S.expScale):S.deathLoss*(top?expForLevel(L+1,S.expScale)-1:expForLevel(L,S.expScale));return e*Math.max(0,1-0.08*S.blessings);}
+// phase5_test.go:36-57 reads a death as minutes of hunting: exp lost / exp per hour.
+function deathCostMin(expLostPts,eph){return expLostPts/eph*60;}
+function stageMult(L,S){if(!S.stagesOn)return 1;for(var i=0;i<STAGE_BANDS.length;i++)if(L>=STAGE_BANDS[i][0]&&L<=STAGE_BANDS[i][1])return S["stg"+i];return 1;}
+// exp/h at level L: the harness ladder interpolated in level (hours.py), extrapolated past 120 by L/120,
+// times 100/kills-per-level (D69), divided by the session overhead factor, times the exp stage (if on).
+function expPerHour(L,S,noStages){
+  var v;
+  if(L<=LADDER_L[0])v=S[LADDER_K[0]];
+  else if(L>=LADDER_L[7])v=S[LADDER_K[7]]*L/LADDER_L[7];
+  else for(var i=0;i<7;i++)if(L>=LADDER_L[i]&&L<=LADDER_L[i+1]){v=S[LADDER_K[i]]+(S[LADDER_K[i+1]]-S[LADDER_K[i]])*(L-LADDER_L[i])/(LADDER_L[i+1]-LADDER_L[i]);break;}
+  return Math.max(1,v)*(100/S.d69)/S.overhead*(noStages?1:stageMult(L,S));
+}
+// tables: h[L] = hours of hunting to reach level L; t[s] = tries to reach skill s; m[ml] = mana to reach ml.
+function hoursTable(S,noStages){var h=[0,0];for(var L=1;L<255;L++)h[L+1]=h[L]+expStep(L,S.expScale)/expPerHour(L,S,noStages);return h;}
+function levelAtHours(h,tab){var L=1;while(L<254&&tab[L+1]<=h)L++;var a=tab[L],b=tab[L+1];return L+(b>a?Math.min(1,(h-a)/(b-a)):0);}
+function skillTable(base,mult){var t=[],c=0;for(var l=0;l<=10;l++)t[l]=0;for(l=10;l<200;l++){c+=skillTries(l,base,mult);t[l+1]=c;}return t;}
+function skillAt(tries,tab){var s=10;while(s<199&&tab[s+1]<=tries)s++;var a=tab[s],b=tab[s+1];return s+(b>a?Math.min(1,(tries-a)/(b-a)):0);}
+function manaTable(mult){var t=[0],c=0;for(var m=0;m<60;m++){c+=manaForML(m,mult);t[m+1]=c;}return t;}
+function mlAt(mana,tab){var m=0;while(m<59&&tab[m+1]<=mana)m++;var a=tab[m],b=tab[m+1];return m+(b>a?Math.min(1,(mana-a)/(b-a)):0);}
+function triesPerHour(S){return S.swingsPerMin*60*S.swingDuty;}
+function walkMin(tiles,L,bonus){return tiles*stepMs(L,bonus)/60000;}
+// one session at level L: walk out, hunt, expected corpse runs (temple to corpse, one way), walk back
+// (free recall if the heartstone survived; a death destroys it, recall.go:117). Solved by iteration.
+function session(L,S){
+  var walk=walkMin(S.corpseTiles,L),out=walk,hunt=Math.max(0,S.sessionMin-out),deaths=0,corpse=0,back=0;
+  for(var i=0;i<8;i++){deaths=S.deathsPerHour*hunt/60;corpse=deaths*walk;var pDied=1-Math.exp(-deaths);back=S.heartstone?pDied*walk:walk;hunt=Math.max(0,S.sessionMin-out-corpse-back);}
+  var eph=expPerHour(L,S),exp=hunt/60*eph-deaths*expLost(L,S,false),step=expStep(L,S.expScale);
+  return {out:out,hunt:hunt,corpse:corpse,back:back,deaths:deaths,exp:exp,share:exp/step,tries:hunt*S.swingsPerMin*S.swingDuty,eph:eph,walk:walk};
+}
+// party.go:63,68: +PARTY_BONUS on the kill, split equally. Kill rate with n attackers is an assumption (KILL_SCALE).
+function partyShare(n,gap,S){var bonus=(S.shareRange>0&&gap>S.shareRange)?0:S.partyBonus;return (1+bonus)*(1+(n-1)*S.killScale)/n;}
+function gearNoLoss(g){return Math.pow(1-g,WORN_SLOTS);}
+
+// ---------- unit checks against the values 01-current-build.md lists ----------
+(function(){
+  var ok=true,log=[];function chk(n,got,want,tol){var pass=Math.abs(got-want)<=(tol||0);ok=ok&&pass;log.push((pass?"ok   ":"FAIL ")+n+" = "+(+got.toFixed(3))+(pass?"":" (want "+want+")"));}
+  chk("expForLevel(2)",expForLevel(2),100);chk("expForLevel(8)",expForLevel(8),4200);chk("expForLevel(50)",expForLevel(50),1847300);
+  chk("rat death, top of level 4 at 480 exp/h, min",deathCostMin(0.10*(expForLevel(5)-1),480),10,0.1);
+  chk("rat death, bottom of level 8 at 480 exp/h, min",deathCostMin(0.10*expForLevel(8),480),52.5,0.1);
+  chk("sword tries to 50",skillTable(50,1.08)[50],12932);chk("sword tries to 100",skillTable(50,1.08)[100],636150);
+  chk("mana to magic 5",manaTable(1.4)[5],17511);chk("mana to magic 10",manaTable(1.4)[10],111698);
+  chk("stepMs(1)",stepMs(1),500);chk("stepMs(10)",stepMs(10),450);chk("stepMs(51)",stepMs(51),300);
+  chk("Tibia 8.41 loss at 50 = one level",tibiaLoss841(50),112900);
+  (ok?console.info:console.error)("Asterion curve lab unit checks (01-current-build.md)\n"+log.join("\n"));
+})();
+
+// ---------- knob values ----------
+// "Now": the repo at 8836106a. Ladder values are the harness's; OVERHEAD 1 is the harness clock, 3 is 01's session guess.
+var BASE={expScale:1,d69:100,stagesOn:0,stg0:1,stg1:1,stg2:1,stg3:1,hpPer:5,manaPer:10,
+  skillMult:1.08,baseSword:50,baseDist:30,baseShield:100,swingDuty:0.5,swingsPerMin:30,mlMult:1.4,manaPerHour:600,
+  deathLoss:0.10,levelScaled:0,blessings:0,gearDrop:0.10,bagDrops:1,corpseMin:30,corpseTiles:459,heartstone:1,heartCd:5,
+  sessionMin:45,sessionsWeek:3,partySize:1,partyBonus:0.20,shareRange:0,killScale:0.75,deathsPerHour:0.25,overhead:1,
+  l1:384,l5:2361,l8:5409,l15:19663,l25:37617,l50:210981,l80:410169,l120:660520};
+// "Proposed": PLACEHOLDERS. report.md §11 did not exist when this lab was written. Update these from §11:
+//   DEATH_EXP_LOSS 0.10 with the level-scaled option on, CORPSE_MIN 45, PARTY_BONUS 0.20, SKILL_MULT 1.08, EXP_STAGES off.
+var PROPOSED=clone(BASE);PROPOSED.deathLoss=0.10;PROPOSED.levelScaled=1;PROPOSED.corpseMin=30;PROPOSED.partyBonus=0.20;PROPOSED.skillMult=1.08;PROPOSED.stagesOn=0;
+// "Tibia 7.x": the twin (notes/02 Q1, Q2). Sword 1.1 (knight), magic by vocation, flat 10 % loss, bag and 10 % per slot,
+// no shared-exp bonus, no recall stone. HP and mana per level by vocation.
+function tibiaPreset(voc){var v=TIB_VOC[voc],T=clone(BASE);T.skillMult=1.1;T.mlMult=v.ml;T.hpPer=v.hp;T.manaPer=v.mana;T.deathLoss=0.10;T.levelScaled=0;T.blessings=0;T.gearDrop=0.10;T.bagDrops=1;T.heartstone=0;T.partyBonus=0;T.shareRange=0;return T;}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+
+var KN=[
+ {g:"Level curve",items:[
+  {k:"expScale",lab:"Exp scale",min:0.5,max:2,st:0.05,name:"EXP_SCALE x the cubic",at:"server/internal/game/stats.go:15-25",x:1,f:2,
+   fixed:"exp(L) = (((L-6)L + 17)L - 12) / 6 x 100. Creature exp stays as measured, so scaling the cubic scales hours; re-deriving creature exp by D69 would cancel it."},
+  {k:"d69",lab:"Kills/level",min:25,max:400,st:5,name:"D69 divisor: creature exp = (exp(L+1) - exp(L)) / kills",at:"balance sheet, docs/GDD.md:411",tag:"sheet"},
+  {k:"stagesOn",lab:"Exp stages (per-band exp multiplier)",type:"chk",name:"EXP_STAGES",at:"not in Asterion; Open Tibia servers",tag:"proposal"},
+  {k:"stg0",lab:"L1 to 8",min:0.5,max:5,st:0.1,x:1,f:1,stage:1},{k:"stg1",lab:"L9 to 20",min:0.5,max:5,st:0.1,x:1,f:1,stage:1},
+  {k:"stg2",lab:"L21 to 50",min:0.5,max:5,st:0.1,x:1,f:1,stage:1},{k:"stg3",lab:"L51 up",min:0.5,max:5,st:0.1,x:1,f:1,stage:1},
+  {k:"hpPer",lab:"HP/level",min:3,max:15,st:1,name:"HP per level (145 + 5L); MANA per level (100 + 10L)",at:"stats.go:46, game.go:280"},
+  {k:"manaPer",lab:"Mana/level",min:5,max:30,st:1,fixed:"Informational: feeds the session panel's HP and mana at level L."}]},
+ {g:"Skills by use",items:[
+  {k:"skillMult",lab:"Mult",min:1.04,max:1.20,st:0.01,name:"skillMult (one slope since D149)",at:"skills.go:106",x:1,f:2,fixed:"Tibia knight 1.1, paladin sword 1.2. Fishing stays 1.1 here."},
+  {k:"baseSword",lab:"Sword base",min:20,max:100,st:5,name:"skillBase sword / distance / shielding",at:"skills.go:102"},
+  {k:"baseDist",lab:"Distance base",min:10,max:60,st:5},
+  {k:"baseShield",lab:"Shield base",min:40,max:200,st:10},
+  {k:"swingDuty",lab:"Swing duty",min:0.2,max:0.9,st:0.05,name:"SWING_DUTY, share of session time swinging",at:"balance.go:129 (harness assumption)",pct:1},
+  {k:"swingsPerMin",lab:"Swings/min",min:10,max:60,st:1,name:"attackInterval 2,000 ms = 30 swings a minute",at:"game.go:143"},
+  {k:"mlMult",lab:"ML mult",min:1.1,max:4,st:0.1,name:"magic: mana to next = 1600 x m^ml",at:"skills.go:249-251",x:1,f:1,fixed:"Tibia mage 1.1, paladin 1.4, knight 3.0 (D10 chose 1.4)."},
+  {k:"manaPerHour",lab:"Mana/h",min:0,max:20000,st:100,name:"MANA_PER_HOUR spent",at:"game.go:157: fed regen 600/h; vara de la chispa 5,400/h"}]},
+ {g:"Death",items:[
+  {k:"deathLoss",lab:"Exp loss",min:0,max:0.25,st:0.01,name:"deathExpLoss",at:"corpse.go:43,367",pct:1},
+  {k:"levelScaled",lab:"Tibia 8.41 level-scaled loss instead",type:"chk",name:"((L+50)/100) x 50(L^2 - 5L + 8) exp from level 24",at:"notes/02-tibia-lineage.md Q2",tag:"proposal"},
+  {k:"blessings",lab:"Blessings",min:0,max:5,st:1,name:"blessings bought, -8 % loss each",at:"Tibia 8.41 value; Asterion has none",tag:"twin"},
+  {k:"gearDrop",lab:"Gear drop",min:0,max:0.5,st:0.01,name:"gearDropChance per worn slot",at:"equipment.go:473",pct:1},
+  {k:"bagDrops",lab:"Bag always drops",type:"chk",name:"container slot drops whole",at:"equipment.go:486-505"},
+  {k:"corpseMin",lab:"Corpse min",min:5,max:60,st:1,name:"playerCorpseDecay + playerBonesDecay",at:"corpse.go:29-30 (900 s + 900 s)",u:" min"},
+  {k:"corpseTiles",lab:"Corpse tiles",min:50,max:3000,st:10,name:"CORPSE_TILES, temple to hunting ground",at:"docs/GDD.md:380: black iron step 7 is 459 steps",tag:"assumption",
+   fixed:"WALK_MS_PER_TILE, derived: 500 ms to level 9, 450 from 10, 400 from 20, 350 from 34, 300 from 51, 250 from 76, 200 from 114 (game.go:89,100,123)."},
+  {k:"heartstone",lab:"Heartstone recall (free, destroyed by death)",type:"chk",name:"heartstone",at:"recall.go:43,61,117"},
+  {k:"heartCd",lab:"Stone CD",min:0,max:30,st:1,name:"templeRecallCooldown",at:"recall.go:43 (D113: 30 to 5)",u:" min"}]},
+ {g:"Session and group",items:[
+  {k:"sessionMin",lab:"Session",min:20,max:180,st:5,name:"SESSION_MIN",at:"docs/vision-es.md: 45-minute sessions",u:" min"},
+  {k:"sessionsWeek",lab:"Per week",min:1,max:14,st:1,name:"SESSIONS_PER_WEEK",at:"assumption"},
+  {k:"partySize",lab:"Party",min:1,max:5,st:1,name:"PARTY_SIZE",at:"party.go:796-814: members within 30 tiles, one floor"},
+  {k:"partyBonus",lab:"Bonus",min:0,max:0.5,st:0.05,name:"partySharedExpBonusPct",at:"party.go:63",pct:1,plus:1},
+  {k:"shareRange",lab:"Share gap",min:0,max:40,st:1,name:"SHARE_RANGE, max level gap for the bonus (0 = no rule)",at:"not in Asterion",tag:"proposal"},
+  {k:"killScale",lab:"Kill scale",min:0,max:1,st:0.05,name:"KILL_SCALE, kill rate each extra member adds",at:"assumption; the harness runs one attacker (01 Q1 gap)",tag:"assumption",x:1,f:2},
+  {k:"deathsPerHour",lab:"Deaths/h",min:0,max:2,st:0.05,name:"DEATHS_PER_HOUR of hunting",at:"assumption; 01 Q5: first death in hour two or three",tag:"assumption",f:2},
+  {k:"overhead",lab:"Overhead",min:1,max:5,st:0.5,name:"OVERHEAD on the ladder (1 = harness clock, 3 = 01's session guess)",at:"01 Q2, Q3: the harness adds 10 s a kill and no walking",x:1,f:1},
+  {type:"ladder",name:"EXP_PER_HOUR ladder by level",at:"harness -levels, median safe band creature, realistic kit (notes/harness/hours.py)"}]}
+];
+
+// ---------- state ----------
+var KEY="asterion-curve-lab-v1";
+var S=clone(BASE),V={L:8,logx:1,voc:0,cmp:1};
+function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,V:V}));}catch(e){}}
+var META={};KN.forEach(function(g){g.items.forEach(function(it){if(it.k)META[it.k]=it;});});
+try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){
+  if(saved.S&&typeof saved.S==="object")for(var k in BASE){var v=saved.S[k];if(typeof v!=="number"||!isFinite(v))continue;var it=META[k];
+    if(it&&it.type==="chk")S[k]=v?1:0;else if(it&&it.min!=null){v=Math.min(it.max,Math.max(it.min,v));S[k]=it.st>=1?Math.round(v):v;}else S[k]=Math.max(1,Math.round(v));}
+  if(saved.V&&typeof saved.V==="object"){if(saved.V.L>=1&&saved.V.L<=150)V.L=saved.V.L|0;V.logx=saved.V.logx?1:0;if(saved.V.voc>=0&&saved.V.voc<=2)V.voc=saved.V.voc|0;V.cmp=saved.V.cmp?1:0;}}}catch(e){}
+
+// ---------- formatting ----------
+function fmtVal(it,v){if(it.pct)return (it.plus?"+":"")+Math.round(v*100)+"%";var s=it.f!=null?v.toFixed(it.f):String(Math.round(v));if(it.x)s="x"+s;if(it.u)s+=it.u;return s;}
+function fmtI(n){return Math.round(n).toLocaleString("en-US");}
+function fmtH(h){if(!isFinite(h))return "n/a";if(h<1)return Math.round(h*60)+" min";if(h<100)return h.toFixed(1)+" h";return fmtI(h)+" h";}
+function fmtMin(m){if(!isFinite(m))return "n/a";if(m<1)return m.toFixed(1)+" min";if(m<120)return Math.round(m)+" min";return (m/60).toFixed(1)+" h";}
+function f1(x){return x.toFixed(1);}
+function fmtNum(v){var a=Math.abs(v);return a>=10000?(v/1000).toFixed(0)+"k":a>=1000?(v/1000).toFixed(1).replace(/\.0$/,"")+"k":a>=10?String(Math.round(v)):String(+v.toFixed(2));}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+
+// ---------- knobs ----------
+var inputs=[],chks=[],lads=[];
+function buildKnobs(){
+  var box=document.getElementById("knobs-in"),h="";
+  h+='<fieldset><legend>Presets</legend><div class="seg" role="group" aria-label="Preset"><button type="button" data-preset="now">Now</button><button type="button" data-preset="pro">Proposed<span class="tag">§11</span></button><button type="button" data-preset="tib">Tibia 7.x</button><button type="button" id="reset">Reset</button></div>';
+  h+='<div class="src">Tibia twin vocation (dashed lines and the Tibia preset)</div><div class="seg" role="group" aria-label="Tibia vocation">'+TIB_VOC.map(function(v,i){return '<button type="button" class="sm" data-voc="'+i+'">'+v.n+' (magic '+v.ml.toFixed(1)+')</button>';}).join("")+'</div>';
+  h+='<div id="status" role="status"></div></fieldset>';
+  KN.forEach(function(g,gi){
+    h+='<fieldset><div class="grp"><legend>'+g.g+'</legend><span class="seg"><button type="button" class="sm" data-gnow="'+gi+'" title="This group back to the current build">now</button><button type="button" class="sm" data-gpro="'+gi+'" title="This group to the proposed values">proposed</button></span></div>';
+    g.items.forEach(function(it){
+      if(it.name)h+='<div class="src"><code>'+it.name+'</code> · '+it.at+(it.tag?'<span class="tag">'+it.tag+'</span>':'')+'</div>';
+      if(it.type==="chk"){h+='<label class="chk"><input type="checkbox" data-k="'+it.k+'"> '+it.lab+'</label>';}
+      else if(it.type==="ladder"){h+='<div class="ladder">'+LADDER_K.map(function(k,i){return '<div><label for="k-'+k+'">Level '+LADDER_L[i]+'</label><input type="number" id="k-'+k+'" data-k="'+k+'" min="1" max="9999999" step="1" inputmode="numeric"></div>';}).join("")+'</div><div class="fixed">exp/h, interpolated between these levels and scaled by L/120 past 120. Best safe targets earn 2 to 5x more (01 Q3), often on another continent.</div>';}
+      else{var id="k-"+it.k;h+='<div class="row'+(it.stage?' stage':'')+'"><label for="'+id+'">'+it.lab+'</label><input type="range" id="'+id+'" data-k="'+it.k+'" min="'+it.min+'" max="'+it.max+'" step="'+it.st+'"><output for="'+id+'"></output></div>';}
+      if(it.fixed)h+='<div class="fixed">'+it.fixed+'</div>';
+    });
+    h+='</fieldset>';
+  });
+  h+='<div class="actions"><button type="button" id="copy">Copy settings</button></div><textarea id="fallback" readonly aria-label="Settings to copy"></textarea>';
+  h+='<p class="note">Sliders start at the current build (main 8836106a). Rows in bold differ from it. Settings save in this browser when it allows it.</p>';
+  box.innerHTML=h;
+  box.querySelectorAll("input[type=range]").forEach(function(el){var it=META[el.dataset.k];inputs.push({el:el,it:it});
+    el.addEventListener("input",function(){change(it.k,parseFloat(el.value));});});
+  box.querySelectorAll("input[type=checkbox]").forEach(function(el){var it=META[el.dataset.k];chks.push({el:el,it:it});
+    el.addEventListener("change",function(){change(it.k,el.checked?1:0);});});
+  box.querySelectorAll("input[type=number]").forEach(function(el){lads.push(el);
+    el.addEventListener("change",function(){var v=Math.max(1,Math.round(parseFloat(el.value)||1));change(el.dataset.k,v);});});
+  box.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){var p=b.dataset.preset;applyPreset(p==="now"?BASE:p==="pro"?PROPOSED:tibiaPreset(V.voc),p==="now"?"Current build values (main 8836106a).":p==="pro"?"Proposed values. Placeholders until report.md §11 is written.":"Tibia 7.x "+TIB_VOC[V.voc].n.toLowerCase()+": sword 1.1, magic "+TIB_VOC[V.voc].ml.toFixed(1)+", flat 10 % loss, no shared exp, no recall stone.");});});
+  box.querySelectorAll("[data-voc]").forEach(function(b){b.addEventListener("click",function(){V.voc=+b.dataset.voc;save();sync();render();setStatus("Tibia twin: "+TIB_VOC[V.voc].n+". Dashed magic line uses "+TIB_VOC[V.voc].ml.toFixed(1)+".");});});
+  box.querySelectorAll("[data-gnow],[data-gpro]").forEach(function(b){b.addEventListener("click",function(){var pro=b.dataset.gpro!=null,gi=+(pro?b.dataset.gpro:b.dataset.gnow),P=pro?PROPOSED:BASE,prev=metrics(S);
+    KN[gi].items.forEach(function(it){if(it.k)S[it.k]=P[it.k];else if(it.type==="ladder")LADDER_K.forEach(function(k){S[k]=P[k];});});save();sync();var M=render();setStatus(KN[gi].g+" group to "+(pro?"proposed":"current build")+" values."+moved(prev,M));});});
+  document.getElementById("reset").addEventListener("click",function(){S=clone(BASE);V={L:8,logx:1,voc:0,cmp:1};try{localStorage.removeItem(KEY);}catch(e){}sync();render();setStatus("Reset to the current build (main 8836106a).");});
+  document.getElementById("copy").addEventListener("click",copy);
+  var L=document.getElementById("k-L");L.addEventListener("input",function(){V.L=+L.value;save();sync();render();});
+  document.querySelectorAll("[data-logx]").forEach(function(b){b.addEventListener("click",function(){V.logx=+b.dataset.logx;save();sync();render();});});
+  document.getElementById("cmp").addEventListener("change",function(e){V.cmp=e.target.checked?1:0;save();render();});
+}
+function same(a,b){return Math.abs(a-b)<1e-6;}
+function change(k,v){var it=META[k],prev=metrics(S),old=S[k];S[k]=v;save();sync();var M=render();
+  var name=it?(it.name&&it.name.length<40?it.name:it.lab):"EXP_PER_HOUR at level "+k.slice(1);
+  var ft=it&&it.type!=="chk"&&it.type!=="ladder"?function(x){return fmtVal(it,x);}:it&&it.type==="chk"?function(x){return x?"on":"off";}:fmtI;
+  setStatus(name+" "+ft(old)+" → "+ft(v)+"."+moved(prev,M));}
+function applyPreset(P,msg){var prev=metrics(S);S=clone(P);save();sync();var M=render();setStatus(msg+moved(prev,M));}
+function sync(){
+  inputs.forEach(function(o){var it=o.it,el=o.el,v=S[it.k],b=BASE[it.k];el.value=v;el.nextElementSibling.textContent=fmtVal(it,v);
+    el.parentNode.classList.toggle("mod",!same(v,b));el.parentNode.classList.toggle("dim",!!it.stage&&!S.stagesOn);
+    el.parentNode.title=same(v,b)?"Current build value":"Changed. Current build: "+fmtVal(it,b)+". Proposed: "+fmtVal(it,PROPOSED[it.k]);});
+  chks.forEach(function(o){o.el.checked=!!S[o.it.k];o.el.parentNode.classList.toggle("mod",!same(S[o.it.k],BASE[o.it.k]));});
+  lads.forEach(function(el){el.value=S[el.dataset.k];el.classList.toggle("mod",!same(S[el.dataset.k],BASE[el.dataset.k]));});
+  var isP=function(p){for(var k in p)if(!same(p[k],S[k]))return false;return true;};
+  document.querySelector('[data-preset="now"]').classList.toggle("on",isP(BASE));
+  document.querySelector('[data-preset="pro"]').classList.toggle("on",isP(PROPOSED));
+  document.querySelector('[data-preset="tib"]').classList.toggle("on",isP(tibiaPreset(V.voc)));
+  document.querySelectorAll("[data-voc]").forEach(function(b){b.classList.toggle("on",+b.dataset.voc===V.voc);});
+  document.querySelectorAll("[data-logx]").forEach(function(b){b.classList.toggle("on",+b.dataset.logx===V.logx);});
+  document.getElementById("k-L").value=V.L;document.getElementById("o-L").textContent="L"+V.L;
+  document.getElementById("cmp").checked=!!V.cmp;document.getElementById("cmp-wrap").style.display=S.stagesOn?"":"none";
+}
+function setStatus(t){document.getElementById("status").textContent=t;}
+
+// ---------- summary metrics and the status line ----------
+var MDEF=[["h20","hours to level 20",fmtH],["h50","hours to level 50",fmtH],["h100","hours to level 100",fmtH],["d8","death at level 8",fmtMin],["d30","death at 30",fmtMin],["d60","death at 60",fmtMin],["sword100","sword after 100 h",f1],["ml100","magic after 100 h",f1],["sess","session share of a level",function(x){return Math.round(x*100)+"%";}]];
+function metrics(S){var tab=hoursTable(S),tph=triesPerHour(S),st=skillTable(S.baseSword,S.skillMult),mt=manaTable(S.mlMult);
+  var dm=function(L){return deathCostMin(expLost(L,S,false),expPerHour(L,S));};
+  return {h20:tab[20],h50:tab[50],h100:tab[100],d8:dm(8),d30:dm(30),d60:dm(60),sword100:skillAt(100*tph,st),ml100:mlAt(100*S.manaPerHour,mt),sess:session(V.L,S).share,tab:tab,st:st,mt:mt};}
+function moved(a,b){var out=[];MDEF.forEach(function(d){var x=a[d[0]],y=b[d[0]];if(Math.abs(x-y)>Math.max(1e-9,0.005*Math.abs(x)))out.push(d[1]+" "+d[2](x)+" → "+d[2](y));});return out.length?" Moved: "+out.join("; ")+".":" Nothing on the summary cards moved.";}
+
+// ---------- copy ----------
+function settingsText(){var g=function(x){return +(+x).toFixed(4);};
+  return ["# Asterion curve lab settings (model of main 8836106a)",
+  "expScale = "+g(S.expScale)+"  # x the cubic, stats.go:15-25","d69Kills = "+S.d69+"  # creature exp = step / kills, docs/GDD.md:411",
+  "expStages = "+(S.stagesOn?"on":"off")+"  # L1-8 x"+g(S.stg0)+", L9-20 x"+g(S.stg1)+", L21-50 x"+g(S.stg2)+", L51+ x"+g(S.stg3),
+  "hpPerLevel = "+S.hpPer+"  # stats.go:46","manaPerLevel = "+S.manaPer+"  # game.go:280",
+  "skillMult = "+g(S.skillMult)+"  # skills.go:106","skillBase = "+S.baseSword+" / "+S.baseDist+" / "+S.baseShield+"  # sword / distance / shielding, skills.go:102",
+  "swingDuty = "+g(S.swingDuty)+"  # balance.go:129","swingsPerMin = "+S.swingsPerMin+"  # attackInterval, game.go:143",
+  "magicMult = "+g(S.mlMult)+"  # skills.go:250","manaPerHour = "+S.manaPerHour,
+  "deathExpLoss = "+g(S.deathLoss)+"  # corpse.go:43","levelScaledLoss = "+(S.levelScaled?"on (Tibia 8.41)":"off"),"blessings = "+S.blessings,
+  "gearDropChance = "+g(S.gearDrop)+"  # equipment.go:473","bagDrops = "+(S.bagDrops?"on":"off"),
+  "corpseWindowMin = "+S.corpseMin+"  # corpse.go:29-30","corpseTiles = "+S.corpseTiles,"heartstone = "+(S.heartstone?"on":"off")+", cooldown "+S.heartCd+" min  # recall.go:43",
+  "sessionMin = "+S.sessionMin+"; sessionsPerWeek = "+S.sessionsWeek,"partySize = "+S.partySize+"; partyBonus = "+g(S.partyBonus)+"  # party.go:63","shareRange = "+S.shareRange+"; killScale = "+g(S.killScale),
+  "deathsPerHour = "+g(S.deathsPerHour)+"; overhead = "+g(S.overhead),
+  "expPerHour ladder = "+LADDER_K.map(function(k,i){return "L"+LADDER_L[i]+": "+S[k];}).join(", ")].join("\n");}
+function showFallback(txt){var ta=document.getElementById("fallback");ta.style.display="block";ta.value=txt;ta.focus();ta.select();setStatus("Copy blocked here. Select the text below and copy it.");}
+function copy(){var txt=settingsText();try{if(!navigator.clipboard||!navigator.clipboard.writeText)throw new Error("no clipboard");
+  navigator.clipboard.writeText(txt).then(function(){setStatus("Copied the settings as constants.");document.getElementById("fallback").style.display="none";},function(){showFallback(txt);});}catch(e){showFallback(txt);}}
+
+// ---------- charts (SVG by hand) ----------
+var NS="http://www.w3.org/2000/svg";
+function niceTicks(lo,hi,n){var span=hi-lo||1,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,st=(m<1.5?1:m<3?2:m<7?5:10)*p,out=[];for(var v=Math.ceil(lo/st)*st;v<=hi+1e-9;v+=st)out.push(+v.toFixed(10));return out;}
+function logTicks(lo,hi){var out=[];for(var e=Math.floor(Math.log10(lo));e<=Math.ceil(Math.log10(hi));e++)[1,2,5].forEach(function(m){var v=m*Math.pow(10,e);if(v>=lo*0.999&&v<=hi*1.001)out.push(v);});return out;}
+function chart(id,o){
+  var el=document.getElementById(id),W=Math.max(280,Math.round(el.clientWidth||600)),sm=W<520,H=o.h?o.h(sm):(sm?220:260);
+  var pl=sm?36:44,pr=o.y2?(sm?34:42):10,pt=o.pt!=null?o.pt:20,pb=o.pb!=null?o.pb:22,pw=W-pl-pr,ph=H-pt-pb,fs=sm?10.5:12;
+  var lo=o.y0,hi=o.y1;
+  if(lo==null||hi==null){var all=[];o.series.forEach(function(s){if(s.ax2)return;s.pts.forEach(function(p){if(isFinite(p[1])&&(!o.log||p[1]>0))all.push(p[1]);});});(o.hl||[]).forEach(function(h){all.push(h.y);});
+    if(lo==null)lo=Math.min.apply(null,all);if(hi==null)hi=Math.max.apply(null,all)*(o.log?1.25:1.08);if(o.log&&o.y0==null)lo/=1.25;if(hi<=lo)hi=lo+1;}
+  var ly=function(v){return o.log?Math.log(v):v;},lx=function(x){return o.logx?Math.log(Math.max(x,1e-9)):x;};
+  var X=function(x){return pl+(lx(x)-lx(o.x0))/(lx(o.x1)-lx(o.x0))*pw;};
+  var Y=function(v){var t=(ly(Math.max(v,o.log?1e-9:-1e9))-ly(lo))/(ly(hi)-ly(lo));return pt+ph-Math.max(-0.02,Math.min(1.02,t))*ph;};
+  var Y2=function(v){var t=(v-o.y2.lo)/(o.y2.hi-o.y2.lo);return pt+ph-Math.max(-0.02,Math.min(1.02,t))*ph;};
+  var YY=function(se,v){return se.ax2?Y2(v):Y(v);};
+  var s='<svg xmlns="'+NS+'" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="'+esc(o.label)+'">';
+  s+='<rect x="'+pl+'" y="'+pt+'" width="'+pw+'" height="'+ph+'" fill="#1a1720"/>';
+  (o.vband||[]).forEach(function(b){var x0=Math.max(pl,X(b.x0)),x1=Math.min(W-pr,X(b.x1));if(x1>x0)s+='<rect x="'+x0.toFixed(1)+'" y="'+pt+'" width="'+(x1-x0).toFixed(1)+'" height="'+ph+'" fill="'+b.c+'" opacity="'+(b.op||0.16)+'"/>';if(b.t&&x1>x0)s+='<text x="'+(x0+4).toFixed(1)+'" y="'+(pt+fs+3)+'" fill="'+b.c+'" font-size="'+(fs-1)+'">'+b.t+'</text>';});
+  (o.hband||[]).forEach(function(b){var y0=Y(b.y1),y1=Y(b.y0);s+='<rect x="'+pl+'" y="'+y0.toFixed(1)+'" width="'+pw+'" height="'+(y1-y0).toFixed(1)+'" fill="'+b.c+'" opacity=".16"/>';if(b.t)s+='<text x="'+(W-pr-4)+'" y="'+(y0+fs).toFixed(1)+'" fill="'+b.c+'" font-size="'+(fs-1)+'" text-anchor="end">'+b.t+'</text>';});
+  var tk=o.log?logTicks(lo,hi):niceTicks(lo,hi,sm?4:5);
+  tk.forEach(function(v){if(v<lo-1e-9||v>hi+1e-9)return;s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="#2a2433" stroke-width="1"/><text x="'+(pl-5)+'" y="'+(Y(v)+4).toFixed(1)+'" fill="#a59db3" font-size="'+fs+'" text-anchor="end">'+(o.yfmt||fmtNum)(v)+'</text>';});
+  if(o.y2){niceTicks(o.y2.lo,o.y2.hi,sm?4:5).forEach(function(v){if(v<o.y2.lo-1e-9||v>o.y2.hi+1e-9)return;s+='<text x="'+(W-pr+5)+'" y="'+(Y2(v)+4).toFixed(1)+'" fill="'+(o.y2.c||"#a59db3")+'" font-size="'+fs+'" text-anchor="start">'+(o.y2.fmt||fmtNum)(v)+'</text>';});}
+  (o.xt||[]).forEach(function(t){var x=X(t[0]);if(x<pl-1||x>W-pr+1)return;var half=String(t[1]).length*fs*0.29,anc="middle";if(x+half>W-1){anc="end";x=W-pr;}else if(x-half<pl-2){anc="start";x=pl;}
+    s+='<text x="'+x.toFixed(1)+'" y="'+(H-6)+'" fill="#6f6780" font-size="'+(fs-0.5)+'" text-anchor="'+anc+'">'+t[1]+'</text>';});
+  (o.hl||[]).forEach(function(h){var y=Y(h.y).toFixed(1);s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+h.c+'" stroke-width="'+(h.w||1.2)+'"'+(h.dash?' stroke-dasharray="'+h.dash+'"':'')+'/>';if(h.t)s+='<text x="'+(h.left?pl+4:W-pr-3)+'" y="'+(+y-4)+'" fill="'+h.c+'" font-size="'+(fs-0.5)+'" text-anchor="'+(h.left?"start":"end")+'">'+h.t+'</text>';});
+  (o.vl||[]).forEach(function(v){var xx=X(v.x);if(xx<pl-1||xx>W-pr+1)return;var x=xx.toFixed(1);s+='<line x1="'+x+'" x2="'+x+'" y1="'+pt+'" y2="'+(pt+ph)+'" stroke="'+v.c+'" stroke-width="1.2" stroke-dasharray="'+(v.dash||"3 3")+'"/>';if(v.t){var anc=xx+String(v.t).length*fs*0.55>W-pr?"end":"start";s+='<text x="'+(anc==="end"?xx-3:xx+3).toFixed(1)+'" y="'+(o.vlTop?pt-6-(v.row||0)*12:pt+11+(v.row||0)*12)+'" fill="'+v.c+'" font-size="'+(fs-1)+'" text-anchor="'+anc+'">'+v.t+'</text>';}});
+  var lastM={l:-99,r:-99};(o.marks||[]).slice().sort(function(a,b){return a.y-b.y;}).forEach(function(m){var yv=m.ax2?Y2(m.y):Y(m.y),y=yv.toFixed(1),side=m.ax2?"r":"l",lab=Math.abs(lastM[side]-yv)>=fs+1;if(lab)lastM[side]=yv;
+    if(m.ax2)s+='<line x1="'+(W-pr-7)+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+m.c+'" stroke-width="1.5"/>'+(lab?'<text x="'+(W-pr-9)+'" y="'+(+y+4)+'" fill="'+m.c+'" font-size="'+(fs-2)+'" text-anchor="end" opacity=".85">'+m.t+'</text>':'');
+    else s+='<line x1="'+pl+'" x2="'+(pl+7)+'" y1="'+y+'" y2="'+y+'" stroke="'+m.c+'" stroke-width="1.5"/>'+(lab?'<text x="'+(pl+9)+'" y="'+(+y+4)+'" fill="'+m.c+'" font-size="'+(fs-2)+'" opacity=".85">'+m.t+'</text>':'');});
+  o.series.forEach(function(se){
+    if(!se.noLine){var d="";se.pts.forEach(function(p,i){if(!isFinite(p[1])||(o.log&&!se.ax2&&p[1]<=0))return;d+=(d===""?"M":"L")+X(p[0]).toFixed(1)+" "+YY(se,p[1]).toFixed(1);});
+      s+='<path d="'+d+'" fill="none" stroke="'+se.c+'" stroke-width="'+(se.w||2)+'"'+(se.dash?' stroke-dasharray="'+se.dash+'"':'')+(se.op?' opacity="'+se.op+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';}
+    if(se.dots)se.pts.forEach(function(p){if(!isFinite(p[1]))return;s+='<circle cx="'+X(p[0]).toFixed(1)+'" cy="'+YY(se,p[1]).toFixed(1)+'" r="'+(se.r||(sm?2.6:3.2))+'" fill="'+(se.hollow?"none":se.c)+'" stroke="'+se.c+'" stroke-width="1.4"><title>'+esc(se.tip?se.tip(p):fmtNum(p[1]))+'</title></circle>';});
+  });
+  s+='</svg>';el.innerHTML=s;
+}
+// a single stacked bar of a session
+function bar(id,segs,total,ticks){
+  var el=document.getElementById(id),W=Math.max(280,Math.round(el.clientWidth||600)),sm=W<520,H=70,pl=6,pw=W-12,fs=sm?10.5:12,x=pl;
+  var s='<svg xmlns="'+NS+'" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="One session split into walking, hunting and corpse runs">';
+  s+='<rect x="'+pl+'" y="10" width="'+pw+'" height="30" fill="#1a1720"/>';
+  segs.forEach(function(g){var w=Math.max(0,g.v/total*pw);s+='<rect x="'+x.toFixed(1)+'" y="10" width="'+w.toFixed(1)+'" height="30" fill="'+g.c+'"><title>'+esc(g.t+": "+fmtMin(g.v))+'</title></rect>';
+    if(w>44)s+='<text x="'+(x+w/2).toFixed(1)+'" y="30" fill="#0e0c12" font-size="'+fs+'" font-weight="600" text-anchor="middle">'+fmtMin(g.v)+'</text>';x+=w;});
+  ticks.forEach(function(t){var tx=pl+t/total*pw;s+='<line x1="'+tx.toFixed(1)+'" x2="'+tx.toFixed(1)+'" y1="40" y2="46" stroke="#6f6780"/><text x="'+tx.toFixed(1)+'" y="60" fill="#6f6780" font-size="'+(fs-0.5)+'" text-anchor="'+(t===0?"start":t>=total?"end":"middle")+'">'+t+(t>=total?" min":"")+'</text>';});
+  s+='</svg>';el.innerHTML=s;
+}
+
+// ---------- render ----------
+function tibS(S){var T=clone(S);T.expScale=1;T.stagesOn=0;T.d69=100;return T;}
+function render(){
+  var M=metrics(S);
+  renderCards(M);renderLong(M);renderDeath();renderSession();renderCorpse();renderParty();
+  return M;
+}
+function renderCards(M){
+  var sess=S.sessionMin/60,wk=sess*S.sessionsWeek,inBand=function(m){return m>=0.5*S.sessionMin&&m<=1.5*S.sessionMin;};
+  var hours=function(L,h){return {k:"Hours to level "+L,v:fmtH(h),s:fmtI(h/sess)+" sessions of "+S.sessionMin+" min, "+(h/wk<1?"under a week":(h/wk).toFixed(1)+" weeks at "+S.sessionsWeek+" a week")};};
+  var death=function(L,m){return {k:"One death at level "+L,v:fmtMin(m),s:"exp only; plus "+fmtMin(2*walkMin(S.corpseTiles,L))+" corpse run both ways",cls:inBand(m)?"ok":m>1.5*S.sessionMin?"bad":""};};
+  var tph=triesPerHour(S),sh=skillAt(100*tph,skillTable(S.baseShield,S.skillMult));
+  var C=[hours(20,M.h20),hours(50,M.h50),hours(100,M.h100),death(8,M.d8),death(30,M.d30),death(60,M.d60),
+    {k:"Sword after 100 h",v:f1(M.sword100),s:"shielding "+f1(sh)+" at "+fmtI(tph)+" tries an hour"},
+    {k:"Magic level after 100 h",v:f1(M.ml100),s:"at "+fmtI(S.manaPerHour)+" mana an hour spent"}];
+  document.getElementById("cards").innerHTML=C.map(function(c){return '<div class="card'+(c.cls?" "+c.cls:"")+'"><div class="k">'+c.k+'</div><div class="v">'+c.v+'</div><div class="s">'+c.s+'</div></div>';}).join("");
+}
+function renderLong(M){
+  var xs=[],i,h;
+  if(V.logx){for(i=0;i<=120;i++)xs.push(Math.pow(10,i/120*Math.log10(2000)));}else{for(h=0;h<=2000;h+=10)xs.push(h);}
+  var tab=M.tab,tabNo=S.stagesOn?hoursTable(S,true):null,tabT=hoursTable(tibS(S)),st=M.st,stT=skillTable(S.baseSword,1.1),mt=M.mt,voc=TIB_VOC[V.voc],mtT=manaTable(voc.ml),tph=triesPerHour(S);
+  var lev=[],sw=[],ml=[],levT=[],swT=[],mlT=[],levNo=[],maxL=0,maxML=0;
+  xs.forEach(function(x){var a=levelAtHours(x,tab),b=skillAt(x*tph,st),c=mlAt(x*S.manaPerHour,mt);lev.push([x,a]);sw.push([x,b]);ml.push([x,c]);maxL=Math.max(maxL,a,b);maxML=Math.max(maxML,c);
+    levT.push([x,levelAtHours(x,tabT)]);swT.push([x,skillAt(x*tph,stT)]);var cT=mlAt(x*S.manaPerHour,mtT);mlT.push([x,cT]);maxML=Math.max(maxML,cT);if(tabNo)levNo.push([x,levelAtHours(x,tabNo)]);});
+  var y1=Math.max(60,Math.ceil(maxL*1.08/10)*10),y2hi=Math.max(25,Math.ceil(maxML)+2);
+  var series=[{pts:levT,c:"#ffc870",dash:"5 4",w:1.3,op:0.6},{pts:swT,c:"#7fd6a0",dash:"5 4",w:1.3,op:0.6},{pts:mlT,c:"#e59bff",dash:"5 4",w:1.3,op:0.6,ax2:1}];
+  if(tabNo&&V.cmp)series.push({pts:levNo,c:"#8ea8ff",dash:"6 4",w:1.6});
+  series.push({pts:lev,c:"#ffc870",w:2.4},{pts:sw,c:"#7fd6a0",w:2.4},{pts:ml,c:"#e59bff",w:2.4,ax2:1});
+  var marks=BEATS.map(function(b){return {y:b,t:"beat "+b,c:"#8ea8ff"};}).concat(GEAR_GATES.map(function(g){return {y:g[0],t:g[1],c:"#a59db3"};}),WANDS.map(function(w){return {y:w,t:"wand ML "+w,c:"#e59bff",ax2:1};}));
+  var vl=[];[[35,"L35 Ingwen"],[100,"L100 Gorothland"]].forEach(function(r,k){var hx=tab[r[0]];if(hx>=(V.logx?1:0)&&hx<=2000)vl.push({x:hx,t:r[1],c:"#6f6780",row:k});});
+  chart("c-long",{label:"Level, sword skill and magic level against hours of play",x0:V.logx?1:0,x1:2000,logx:V.logx,y0:0,y1:y1,pt:32,vlTop:1,vl:vl,
+    y2:{lo:0,hi:y2hi,c:"#e59bff"},series:series,marks:marks,hl:y1>=255?[{y:255,c:"#6f6780",dash:"2 4",t:"max level 255 (stats.go:53)"}]:[],h:function(sm){return sm?260:320;},
+    xt:V.logx?[[1,"1 h"],[3,"3"],[10,"10"],[30,"30"],[100,"100"],[300,"300"],[1000,"1,000"],[2000,"2,000 h"]]:[[0,"0 h"],[500,"500"],[1000,"1,000"],[1500,"1,500"],[2000,"2,000 h"]]});
+  document.getElementById("lg-long").innerHTML='<span><i style="border-color:var(--warm)"></i>Level (left axis)</span><span><i style="border-color:var(--green)"></i>Sword skill (left)</span><span><i style="border-color:var(--pink)"></i>Magic level (right axis)</span><span><i class="d" style="border-color:var(--muted)"></i>Tibia 7.x '+voc.n.toLowerCase()+': sword 1.1, magic '+voc.ml.toFixed(1)+'</span>'+(tabNo&&V.cmp?'<span><i class="d" style="border-color:var(--blue)"></i>Level without stages</span>':'');
+  var L100=levelAtHours(100,tab),s100=skillAt(100*tph,st),m100=mlAt(100*S.manaPerHour,mt),L10=levelAtHours(10,tab),s10=skillAt(10*tph,st);
+  document.getElementById("cap-long").innerHTML="Model. Level: the cubic divided by the exp/h ladder (harness <code>-levels</code>, median safe creature of the player's band, interpolated between the 8 levels run, divided by OVERHEAD x"+S.overhead.toFixed(1)+"). Sword: floor(base x mult^(s-10)) tries a level at "+S.swingsPerMin+" swings a minute and "+Math.round(S.swingDuty*100)+" % duty = "+fmtI(tph)+" tries an hour (skills.go:101-106); shielding costs exactly 2x, distance 0.6x. Magic: 1600 x "+S.mlMult.toFixed(1)+"^ml mana at "+fmtI(S.manaPerHour)+" mana an hour (skills.go:249-251). Dashed: the same model with Tibia 7.x constants. Left marks: walk-beat levels (game.go:100) and shop tiers by min_level; right marks: wand gates by magic level. Nothing here is measured.";
+  document.getElementById("w-long").textContent="Watch: at hour 10 this reads level "+L10.toFixed(1)+" and sword "+s10.toFixed(1)+"; at hour 100, level "+L100.toFixed(1)+", sword "+s100.toFixed(1)+", magic "+m100.toFixed(1)+". The creature roster was sized for skill about equal to level (skills.go:97-100); a gap past 20 points means the roster, not the slope, is the knob.";
+}
+function renderDeath(){
+  var you=[],plus=[],now=[],tib=[],leave=null,L;
+  for(L=2;L<=150;L++){var e=expPerHour(L,S),m=deathCostMin(expLost(L,S,false),e),w=2*walkMin(S.corpseTiles,L);you.push([L,m]);plus.push([L,m+w]);now.push([L,deathCostMin(expLost(L,BASE,false),expPerHour(L,BASE))]);tib.push([L,deathCostMin(tibiaLoss841(L,S.expScale),e)]);if(leave==null&&m>1.5*S.sessionMin)leave=L;}
+  chart("c-death",{label:"Minutes of hunting lost by one death, by level",x0:1,x1:150,log:1,y0:1,hband:[{y0:0.5*S.sessionMin,y1:1.5*S.sessionMin,c:"#ffc870",t:"about one session ("+S.sessionMin+" min)"}],
+    series:[{pts:now,c:"#8ea8ff",dash:"6 4",w:1.6},{pts:tib,c:"#ff8f7a",dash:"5 4",w:1.8},{pts:plus,c:"#7fd6a0",w:2},{pts:you,c:"#ffc870",w:2.4}],
+    xt:[[1,"L1"],[25,"25"],[50,"50"],[75,"75"],[100,"100"],[125,"125"],[150,"L150"]],yfmt:function(v){return v>=60?+(v/60).toFixed(1)+" h":v+" min";}});
+  var g=S.gearDrop,pNo=gearNoLoss(g);
+  document.getElementById("cap-death").innerHTML="Model. Exp lost at the bottom of level L ("+(S.levelScaled?"Tibia 8.41 level-scaled rule":Math.round(S.deathLoss*100)+" % of exp, corpse.go:43,367")+(S.blessings?", "+S.blessings+" blessings at -8 % each":"")+") divided by the ladder's exp/h at that level, in minutes. Dying at the top of a level costs up to twice this (phase5_test.go:55-57). Green adds the corpse run both ways: "+S.corpseTiles+" tiles at the level's step beat. Gear: nine worn slots at "+Math.round(g*100)+" % each leave "+Math.round(pNo*100)+" % of deaths with no gear lost and "+(WORN_SLOTS*g).toFixed(2)+" pieces expected"+(S.bagDrops?"; the bag always drops (equipment.go:486-505)":"; the bag is kept")+". Skills and magic are never lost. Red dashed: Tibia 8.41 read as exp points on this ladder, no blessings. Blue dashed: the current build.";
+  document.getElementById("w-death").textContent="Watch: where the warm line leaves the band, one death costs more than a session. "+(leave?"It leaves at level "+leave+".":"It stays inside the band to level 150.")+" Design target (vision §2.5): about one session. Loss is about L/30 of an hour-per-level, so it grows with level while hours per level do not (01 Takeaway 2).";
+}
+function renderSession(){
+  var L=V.L,r=session(L,S),hp=145+S.hpPer*L,mana=100+S.manaPer*L;
+  var ticks=niceTicks(0,S.sessionMin,4).filter(function(t){return t<0.88*S.sessionMin;});ticks.push(S.sessionMin);
+  bar("c-sess",[{v:r.out,c:"#8ea8ff",t:"Walk out"},{v:r.hunt,c:"#7fd6a0",t:"Hunting"},{v:r.corpse,c:"#ff8f7a",t:"Corpse runs (expected)"},{v:r.back,c:"#a59db3",t:"Walk back"}],S.sessionMin,ticks);
+  var rows=[["Exp gained",fmtI(r.exp)+" of the "+fmtI(expStep(L,S.expScale))+" this level needs ("+Math.round(r.share*100)+" %)"],
+    ["Hunting time",fmtMin(r.hunt)+" at "+fmtI(r.eph)+" exp/h"],
+    ["Walk one way",fmtMin(r.walk)+" for "+S.corpseTiles+" tiles at "+stepMs(L)+" ms a tile (speed "+speedForLevel(L)+")"],
+    ["Expected deaths",r.deaths.toFixed(2)+" at "+S.deathsPerHour.toFixed(2)+" an hour; each costs "+fmtI(expLost(L,S,false))+" exp ("+fmtMin(deathCostMin(expLost(L,S,false),r.eph))+") plus the walk"],
+    ["Skill tries",fmtI(r.tries)+" swings landed; sword needs "+fmtI(skillTries(Math.max(10,Math.round(L)),S.baseSword,S.skillMult))+" at skill "+Math.max(10,L)],
+    ["Pools at L"+L,hp+" HP, "+mana+" mana (145 + "+S.hpPer+"L, 100 + "+S.manaPer+"L)"]];
+  document.getElementById("t-sess").innerHTML=rows.map(function(x){return '<tr><th>'+x[0]+'</th><td>'+x[1]+'</td></tr>';}).join("");
+  document.getElementById("cap-sess").innerHTML="Model. A "+S.sessionMin+"-minute session at level "+L+": walk from the temple to the hunting ground ("+S.corpseTiles+" tiles), hunt at the ladder's exp/h, run back to the corpse after each expected death (respawn is at the temple, the heal is free, npc.go:234-249), and come home"+(S.heartstone?" by heartstone when it survived the session (a death destroys it, recall.go:117)":" on foot (no recall stone)")+". Deaths per hour is an assumption, not a harness number: the harness's death risk is a cliff per creature, 0 % or 100 % (01 Q3).";
+  document.getElementById("w-sess").textContent="Watch: hunting should fill most of the bar. Here it is "+Math.round(r.hunt/S.sessionMin*100)+" % of the session, and the session is worth "+Math.round(r.share*100)+" % of a level. Under 50 % hunting time means the walk, not the curve, is what the player feels.";
+}
+function renderCorpse(){
+  var L=V.L,st=stepMs(L),you=[],boots=[],friend=[],x,maxT=S.corpseMin*60000/st,maxB=S.corpseMin*60000/stepMs(L,55);
+  for(x=0;x<=4000;x+=50){you.push([x,walkMin(x,L)]);boots.push([x,walkMin(x,L,55)]);friend.push([x,2*walkMin(x,L)]);}
+  var series=[{pts:you,c:"#ffc870",w:2.4},{pts:boots,c:"#7fd6a0",dash:"5 4",w:1.6}];
+  if(S.partySize>1)series.push({pts:friend,c:"#8ea8ff",dash:"2 4",w:1.6});
+  chart("c-corpse",{label:"Minutes to walk back to the corpse against distance from the temple",x0:0,x1:4000,y0:0,y1:Math.max(S.corpseMin*1.4,walkMin(4000,L)*1.05),series:series,
+    vband:[{x0:0,x1:Math.min(4000,maxT),c:"#7fd6a0",t:"you reach it: up to "+fmtI(maxT)+" tiles"}],hl:[{y:S.corpseMin,c:"#ff8f7a",t:"corpse window "+S.corpseMin+" min",left:1}],
+    vl:[{x:459,c:"#6f6780",t:"black iron step 7, 459 tiles"}],pt:30,vlTop:1,xt:[[0,"0 tiles"],[1000,"1,000"],[2000,"2,000"],[3000,"3,000"],[4000,"4,000 tiles"]],yfmt:function(v){return v+" min";}});
+  document.getElementById("lg-corpse").innerHTML='<span><i style="border-color:var(--warm)"></i>You at level '+L+', '+st+' ms a tile</span><span><i class="d" style="border-color:var(--green)"></i>With botas de siete leguas (+55 speed, level 15)</span>'+(S.partySize>1?'<span><i class="d" style="border-color:var(--blue)"></i>A friend of your level walks the bag to the temple and back</span>':'')+'<span><s style="background:var(--green)"></s>Corpse reached inside the window</span>';
+  document.getElementById("cap-corpse").innerHTML="Model. One-way walk from the temple at level "+L+" ("+speedForLevel(L)+" speed, "+st+" ms a tile, game.go:89,100) against the "+S.corpseMin+"-minute corpse window (corpse.go:29-30). The heartstone cannot shorten this: a death destroys it (recall.go:117), and its "+S.heartCd+"-minute cooldown only shapes the trip home after hunting. "+(S.partySize>1?"With "+S.partySize+" in the party a friend standing at the corpse recovers the bag at once; the dashed blue line is their round trip to hand it over at the temple and return to the hunt, the time the party loses.":"Solo, nobody else is at the corpse: set PARTY_SIZE above 1 to see a friend's walk.")+" Boots: +55 speed crosses one beat at levels 15 to 30 (docs/GDD.md:211).";
+  document.getElementById("w-corpse").textContent="Watch: the window covers "+fmtI(maxT)+" tiles one way at level "+L+" ("+fmtI(maxB)+" with boots). Akron's longest known walk is 459 tiles, "+fmtMin(walkMin(459,L))+" here, so the window is "+(walkMin(459,L)>0?(S.corpseMin/walkMin(459,L)).toFixed(0):"n/a")+" such walks. Ingwen and Boggland distances are unmeasured.";
+}
+function renderParty(){
+  var L=V.L,eph=expPerHour(L,S),cols=["#a59db3","#8ea8ff","#7fd6a0","#ffc870","#ff8f7a"],series=[],n,gap,y1=1;
+  for(n=1;n<=5;n++){var pts=[];for(gap=0;gap<=40;gap++){var v=partyShare(n,gap,S);pts.push([gap,v]);y1=Math.max(y1,v);}series.push({pts:pts,c:cols[n-1],w:n===S.partySize?2.8:1.5,op:n===S.partySize?1:0.7});}
+  chart("c-party",{label:"Exp per member per hour as a share of soloing, by level gap",x0:0,x1:40,y0:0,y1:Math.ceil(y1*1.15*10)/10,series:series,hl:[{y:1,c:"#a59db3",t:"solo",left:1}],
+    vl:S.shareRange>0?[{x:S.shareRange,c:"#ff8f7a",t:"SHARE_RANGE "+S.shareRange+" levels"}]:[],pt:30,vlTop:1,xt:[[0,"gap 0"],[10,"10"],[20,"20"],[30,"30"],[40,"40 levels"]],yfmt:function(v){return "x"+v.toFixed(1);}});
+  document.getElementById("lg-party").innerHTML=[1,2,3,4,5].map(function(k){return '<span><i style="border-color:'+cols[k-1]+'"></i>'+k+(k===1?" (solo)":" members")+'</span>';}).join("");
+  var yours=partyShare(S.partySize,0,S);
+  document.getElementById("cap-party").innerHTML="Model. party.go:63,68: +"+Math.round(S.partyBonus*100)+" % on the whole kill, then an equal split among eligible members within 30 tiles and one floor. Exp per member = solo exp/h x (1 + bonus) x (1 + (n-1) x KILL_SCALE) / n; KILL_SCALE "+S.killScale.toFixed(2)+" is how much of a solo kill rate each extra attacker adds (the harness cannot run two attackers, party.go:57-62). At level "+L+" solo is "+fmtI(eph)+" exp/h; a party of "+S.partySize+" earns "+fmtI(eph*yours)+" per member. "+(S.shareRange>0?"Past a level gap of "+S.shareRange+" the bonus is lost and the kill is only split.":"No level-gap rule in the build: SHARE_RANGE 0.");
+  document.getElementById("w-party").textContent="Watch: with the bonus at "+Math.round(S.partyBonus*100)+" % a pair breaks even with soloing when each extra member adds "+((2/(1+S.partyBonus)-1)*100).toFixed(0)+" % of a solo kill rate; five need "+((5/(1+S.partyBonus)-1)/4*100).toFixed(0)+" % each. Below that a group is a social choice, not an exp choice.";
+}
+
+buildKnobs();sync();render();setStatus("Current build values (main 8836106a).");
+var rt;window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(render,80);});
+})();
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>

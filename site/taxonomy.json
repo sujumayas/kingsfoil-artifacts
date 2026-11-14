@@ -821,6 +821,31 @@
      "id": "verb-kits",
      "label": "Verb kits",
      "desc": "Power-ups and cards that hand the player a verb set for a level"
+    },
+    {
+     "id": "skill-by-use",
+     "label": "Skill by use",
+     "desc": "Skills rise by practising them, with geometric tries per rung and no classes"
+    },
+    {
+     "id": "exp-curve",
+     "label": "Exp curve",
+     "desc": "Experience per level as a cubic or exponential, exp stages and rested exp"
+    },
+    {
+     "id": "corpse-run",
+     "label": "Corpse run",
+     "desc": "Recover the bag you dropped where you died, inside a timed window"
+    },
+    {
+     "id": "party-share",
+     "label": "Party exp share",
+     "desc": "Split exp among the party with a bonus and a level range"
+    },
+    {
+     "id": "level-gates",
+     "label": "Level gates",
+     "desc": "Minimum level and magic level on items, zones and boats as the curve's rungs"
     }
    ]
   },
